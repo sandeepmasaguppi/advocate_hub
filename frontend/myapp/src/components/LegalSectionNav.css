@@ -1,0 +1,281 @@
+/* ============================================================
+   LegalSectionNav.css — Navigation for 4 Legal Sections
+   Supports White & Dark Themes
+   ============================================================ */
+
+.ls-nav-wrap {
+  width: 100%;
+  position: sticky;
+  top: 70px;
+  z-index: 95;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Light Theme */
+.ls-nav-wrap.ls-light {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+}
+
+/* Dark Theme */
+.ls-nav-wrap.ls-dark,
+[data-theme="dark"] .ls-nav-wrap,
+.theme-dark .ls-nav-wrap {
+  background: rgba(11, 19, 32, 0.94) !important;
+  border-bottom: 1px solid #1e293b !important;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.35) !important;
+}
+
+.ls-nav-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* ── Brand Badge ── */
+.ls-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.ls-brand-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.ls-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ls-brand-kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.ls-dark .ls-brand-kicker {
+  color: #60a5fa;
+}
+
+.ls-brand-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.ls-dark .ls-brand-title {
+  color: #f1f5f9;
+}
+
+/* ── 4 Pills Horizontal Scroll ── */
+.ls-pills-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ls-pills-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.ls-nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ls-dark .ls-nav-pill {
+  color: #94a3b8;
+  background: #111c2e;
+  border-color: #1e293b;
+}
+
+.ls-nav-pill:hover {
+  color: #1e293b;
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.ls-dark .ls-nav-pill:hover {
+  color: #f8fafc;
+  background: #1e293b;
+}
+
+.ls-pill-icon {
+  font-size: 15px;
+}
+
+.ls-pill-label {
+  font-weight: 600;
+}
+
+.ls-pill-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  color: #475569;
+  letter-spacing: 0.2px;
+}
+
+.ls-dark .ls-pill-badge {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+/* Active Pill Style */
+.ls-nav-pill.active {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  color: #ffffff !important;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.ls-nav-pill.active .ls-pill-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+/* ── Controls (Language & Theme) ── */
+.ls-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.ls-lang-pill-wrap {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.ls-dark .ls-lang-pill-wrap {
+  background: #111c2e;
+  border-color: #1e293b;
+}
+
+.ls-lang-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ls-dark .ls-lang-btn {
+  color: #94a3b8;
+}
+
+.ls-lang-btn.active {
+  background: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ls-dark .ls-lang-btn.active {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+/* Theme Toggle Button */
+.ls-theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ls-dark .ls-theme-toggle-btn {
+  background: #111c2e;
+  border-color: #1e293b;
+  color: #f8fafc;
+}
+
+.ls-theme-toggle-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Mobile Responsive ── */
+@media (max-width: 992px) {
+  .ls-nav-wrap {
+    top: 60px;
+  }
+  .ls-nav-inner {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+  .ls-brand-text {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .ls-nav-inner {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .ls-nav-brand {
+    display: none;
+  }
+  .ls-pills-scroll {
+    flex: 1;
+  }
+  .ls-nav-pill {
+    padding: 6px 10px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  .ls-pill-badge {
+    display: none;
+  }
+  .ls-theme-toggle-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+}

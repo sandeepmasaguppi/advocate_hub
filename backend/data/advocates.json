@@ -1991,7 +1991,7 @@
     "barCouncil": "Bar Council of Kerala",
     "barId": "67",
     "experience": "3–5 years",
-    "rating": 0,
+    "rating": 4,
     "cases": 0,
     "fee": "654565",
     "phone": "9108717353",
@@ -2001,7 +2001,16 @@
     "bio": "jkb",
     "avatar": "/uploads/santosh-malaji-88.jpg",
     "status": "approved",
-    "passwordHash": "scrypt$0bd2fd23b49143a2c38ca331343cc420$a435509400225209063fb419054ea12e70aabe53cf137f63d80e5408b8cc6e944a8521030165752ebbdb3acb00ef3497a471f0a0da6a70c03da6ee311510174a"
+    "passwordHash": "scrypt$0bd2fd23b49143a2c38ca331343cc420$a435509400225209063fb419054ea12e70aabe53cf137f63d80e5408b8cc6e944a8521030165752ebbdb3acb00ef3497a471f0a0da6a70c03da6ee311510174a",
+    "ratings": {
+      "1": {
+        "score": 4,
+        "clientName": "Sandeep",
+        "comment": "",
+        "date": "2026-10-02T07:21:39.172Z"
+      }
+    },
+    "ratingCount": 1
   },
   {
     "id": 89,

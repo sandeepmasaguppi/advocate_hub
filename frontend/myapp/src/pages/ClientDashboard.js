@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { getAdvocates, getAdvocateRatingSummary, submitAdvocateRating } from "../data/Advocatesstore";
+import { getAdvocates, loadAdvocates, getAdvocateRatingSummary, submitAdvocateRating } from "../data/Advocatesstore";
 import { assetUrl, api } from "../data/api";
 import { getTheme, setTheme as setGlobalTheme } from "../data/themeStore";
 import "./ClientDashboard.css";
@@ -19,34 +19,20 @@ const AVATAR_PRESETS = [
 
 const PAY_I18N = {
   en: {
-    modalTitle: "ONE-TIME ADVOCATE CONSULTATION ACTIVATION",
-    modalBadge: "🔒 CONSULTATION FEE · ₹10 ONLY",
-    casePreviewTitle: "PREPARED CASE INQUIRY (UPPERCASE PREVIEW):",
-    advocateTarget: "STARTING CONSULTATION WITH:",
-    amountLabel: "ONE-TIME ADVOCATE FEE:",
-    reasonTitle: "📌 WHY A ₹10 FEE IS REQUESTED (MAINTENANCE & STORAGE):",
-    reasonDesc: "This nominal ₹10 fee is collected once per advocate to activate direct consultation chat, app maintenance, cloud server deployment (App Deploy), and secure chat/document storage. Once activated for this advocate, you can chat continuously without paying again.",
-    scannerInstruction: "Scan this PhonePe QR code or transfer ₹10 to PhonePe Number 9108717353 (UPI ID: 9108717353-3@ybl):",
-    verifyBtn: "✓ I Have Paid ₹10 via PhonePe — Start Chat with Advocate →",
-    verifyingBtn: "⏳ Verifying PhonePe UPI Transaction with Bank...",
-    successBtn: "✅ Payment Confirmed! Sending Message to Advocate...",
-    cancelBtn: "Cancel & Return to Chat",
-    lifetimeNotice: "Permanent Consultation Access Granted for this Advocate",
+    modalBadge: "🔒 ONE-TIME ACTIVATION · ₹10",
+    purposeNote: "Nominal ₹10 fee for direct consultation chat, app maintenance & secure cloud storage. Pay once, chat continuously.",
+    verifyBtn: "✓ I Have Paid ₹10 — Start Chat →",
+    verifyingBtn: "⏳ Verifying Payment...",
+    successBtn: "✅ Payment Confirmed! Starting Chat...",
+    cancelBtn: "Cancel",
   },
   kn: {
-    modalTitle: "ವಕೀಲರ ಸಮಾಲೋಚನೆ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ (ಒಂದು ಬಾರಿ ₹10)",
-    modalBadge: "🔒 ಸಮಾಲೋಚನಾ ಶುಲ್ಕ · ಕೇವಲ ₹10",
-    casePreviewTitle: "ಸಿದ್ಧಪಡಿಸಿದ ಕೇಸ್ ವಿಚಾರಣಾ ಸಂದೇಶ (MESSAGE PREVIEW):",
-    advocateTarget: "ಸಮಾಲೋಚನೆ ಪ್ರಾರಂಭಿಸುವ ವಕೀಲರು:",
-    amountLabel: "ಒಂದು ಬಾರಿಯ ವಕೀಲರ ಸಮಾಲೋಚನಾ ಶುಲ್ಕ:",
-    reasonTitle: "📌 ₹10 ಶುಲ್ಕವನ್ನು ಏಕೆ ಕೇಳಲಾಗುತ್ತಿದೆ? (ನಿರ್ವಹಣೆ ಮತ್ತು ಸಂಗ್ರಹಣೆ):",
-    reasonDesc: "ಈ ₹10 ಶುಲ್ಕವನ್ನು ಈ ವಕೀಲರೊಂದಿಗೆ ನೇರ ಚಾಟ್ ಪ್ರಾರಂಭಿಸಲು, ಅಪ್ಲಿಕೇಶನ್ ನಿರ್ವಹಣೆ (App Maintenance), ಕ್ಲೌಡ್ ನಿಯೋಜನೆ (App Deploy) ಮತ್ತು ಡೇಟಾ ಸುರಕ್ಷಿತ ಸಂಗ್ರಹಣೆಗಾಗಿ (Secure Storage) ಮಾತ್ರ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತಿದೆ. ಒಬ್ಬ ವಕೀಲರಿಗೆ ಇದು ಕೇವಲ ಒಂದು ಬಾರಿ ಮಾತ್ರ ಅನ್ವಯವಾಗುತ್ತದೆ. ಒಮ್ಮೆ ಪಾವತಿಸಿದ ನಂತರ ಈ ವಕೀಲರೊಂದಿಗೆ ಪುನಃ ಎಂದಿಗೂ ಶುಲ್ಕವಿಲ್ಲದೆ ನಿರಂತರವಾಗಿ ಚಾಟ್ ಮಾಡಬಹುದು.",
-    scannerInstruction: "ಈ ಫೋನ್ ಪೇ (PhonePe) QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ಅಥವಾ PhonePe ಸಂಖ್ಯೆ 9108717353 (UPI ID: 9108717353-3@ybl) ಗೆ ₹10 ಕಳುಹಿಸಿ:",
-    verifyBtn: "✓ PhonePe ಮೂಲಕ ₹10 ಪಾವತಿಸಲಾಗಿದೆ — ವಕೀಲರಿಗೆ ಸಂದೇಶ ಕಳುಹಿಸಿ →",
-    verifyingBtn: "⏳ ಫೋನ್ ಪೇ ಪಾವತಿಯನ್ನು ಬ್ಯಾಂಕ್‌ನೊಂದಿಗೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...",
-    successBtn: "✅ ಪಾವತಿ ಯಶಸ್ವಿಯಾಗಿದೆ! ಸಂದೇಶ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ...",
-    cancelBtn: "ರದ್ದುಮಾಡಿ & ಚಾಟ್‌ಗೆ ಹಿಂತಿರುಗಿ",
-    lifetimeNotice: "ಈ ವಕೀಲರೊಂದಿಗೆ ಶಾಶ್ವತ ಸಮಾಲೋಚನೆ ಚಾಟ್ ಪ್ರವೇಶ ನೀಡಲಾಗಿದೆ",
+    modalBadge: "🔒 ಒಂದು ಬಾರಿಯ ಶುಲ್ಕ · ₹10",
+    purposeNote: "ನೇರ ಸಮಾಲೋಚನೆ ಚಾಟ್, ಅಪ್ಲಿಕೇಶನ್ ನಿರ್ವಹಣೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಕ್ಲೌಡ್ ಸಂಗ್ರಹಣೆಗಾಗಿ ₹10 ಶುಲ್ಕ. ಒಮ್ಮೆ ಪಾವತಿಸಿ, ನಿರಂತರವಾಗಿ ಚಾಟ್ ಮಾಡಿ.",
+    verifyBtn: "✓ ₹10 ಪಾವತಿಸಲಾಗಿದೆ — ಚಾಟ್ ಪ್ರಾರಂಭಿಸಿ →",
+    verifyingBtn: "⏳ ಪಾವತಿ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...",
+    successBtn: "✅ ಪಾವತಿ ದೃಢಪಟ್ಟಿದೆ! ಆರಂಭವಾಗುತ್ತಿದೆ...",
+    cancelBtn: "ರದ್ದುಮಾಡಿ",
   },
 };
 
@@ -55,7 +41,8 @@ const PAY_I18N = {
 export default function ClientDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialSearch = searchParams.get("search") || searchParams.get("speciality") || "";
+  const initialAdvocateId = Number(searchParams.get("advocateId") || 0);
+  const initialSearch = initialAdvocateId ? "" : (searchParams.get("search") || searchParams.get("speciality") || "");
   const initialPrefill = searchParams.get("prefill") || "";
   const clientId = Number(localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY) || 0);
 
@@ -67,7 +54,28 @@ export default function ClientDashboard() {
     } catch { return null; }
   }, []);
 
-  const advocates = useMemo(() => getAdvocates().filter(a => a.status === "approved"), []);
+  const [advocates, setAdvocates] = useState(() => getAdvocates().filter(a => a.status === "approved"));
+
+  useEffect(() => {
+    let isMounted = true;
+    loadAdvocates().then((list) => {
+      if (isMounted && Array.isArray(list)) {
+        setAdvocates(list.filter((a) => a.status === "approved"));
+      }
+    }).catch(() => {});
+
+    const handleUpdate = () => {
+      if (isMounted) {
+        setAdvocates(getAdvocates().filter((a) => a.status === "approved"));
+      }
+    };
+    window.addEventListener("law4u_advocates_updated", handleUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("law4u_advocates_updated", handleUpdate);
+    };
+  }, []);
+
   const [search, setSearch] = useState(initialSearch);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const filteredAdvocates = useMemo(() => {
@@ -179,16 +187,22 @@ export default function ClientDashboard() {
     }
   }, [isPrefillAlreadySent, searchParams, navigate]);
 
-  // Only show "Choose an Advocate" if this is a fresh unsent case query
-  const hasFreshFilterQuery = Boolean(initialSearch || initialPrefill || searchParams.get("caseId")) && !isPrefillAlreadySent;
+  const targetAdvocateFromParam = initialAdvocateId
+    ? advocates.find((a) => Number(a.id) === initialAdvocateId)
+    : null;
+
+  // Only show "Choose an Advocate" if this is a fresh unsent case query without a specified advocate
+  const hasFreshFilterQuery = !initialAdvocateId && Boolean(initialSearch || initialPrefill || searchParams.get("caseId")) && !isPrefillAlreadySent;
 
   const [selected, setSelected] = useState(() => {
+    if (targetAdvocateFromParam) return targetAdvocateFromParam;
     if (isPrefillAlreadySent && activeAdvocate) return activeAdvocate;
     if (hasFreshFilterQuery) return null;
     return activeAdvocate || advocates[0] || null;
   });
 
   const [mobileChatActive, setMobileChatActive] = useState(() => {
+    if (targetAdvocateFromParam) return true;
     return Boolean(!hasFreshFilterQuery && (activeAdvocate || advocates[0]));
   });
 
@@ -301,12 +315,25 @@ export default function ClientDashboard() {
     reader.readAsDataURL(file);
   };
 
-  // Sync search and prefill if searchParams change
+  // Sync advocateId, search and prefill if searchParams change
   useEffect(() => {
+    const targetAdvId = Number(searchParams.get("advocateId") || 0);
+    if (targetAdvId) {
+      const match = advocates.find((a) => Number(a.id) === targetAdvId);
+      if (match) {
+        setSelected(match);
+        setMobileChatActive(true);
+        if (clientId) {
+          sessionStorage.setItem(`law4u_active_chat_${clientId}`, String(match.id));
+          localStorage.setItem(`law4u_active_chat_${clientId}`, String(match.id));
+        }
+      }
+    }
+
     const q = searchParams.get("search") || searchParams.get("speciality");
-    if (q) {
+    if (q && !targetAdvId) {
       setSearch(q);
-      // Only reset selection if this is a fresh inquiry
+      // Only reset selection if this is a fresh inquiry without a targeted advocate
       if (!isPrefillAlreadySent) {
         setSelected(null);
       }
@@ -315,7 +342,7 @@ export default function ClientDashboard() {
     if (pf && !isPrefillAlreadySent) {
       setMessage(pf);
     }
-  }, [searchParams, isPrefillAlreadySent]);
+  }, [searchParams, advocates, clientId, isPrefillAlreadySent]);
 
 
   useEffect(() => {
@@ -802,6 +829,7 @@ export default function ClientDashboard() {
                   sessionStorage.setItem(`law4u_active_chat_${clientId}`, String(a.id));
                   localStorage.setItem(`law4u_active_chat_${clientId}`, String(a.id));
                 }
+                navigate(`/client-dashboard?advocateId=${a.id}`, { replace: true });
               }}
               className={`wa-advocate-row ${selected && selected.id === a.id ? "selected" : ""}`}
             >
@@ -1030,7 +1058,7 @@ export default function ClientDashboard() {
           )}
         </div>
 
-        <div className="wa-conversation-canvas">
+        <div className={`wa-conversation-canvas ${messages.length === 0 ? "empty-canvas" : ""}`}>
           {!selected ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", padding: 32, textAlign: "center" }}>
               <div className="wa-empty-consult-icon">
@@ -1070,19 +1098,71 @@ export default function ClientDashboard() {
           ) : messages.length === 0 ? (
             !isAdvocatePaid(selected.id) ? (
               <div className="wa-adv-first-consult-box">
-                <div className="wa-first-consult-icon">⚖️</div>
-                <div className="wa-first-consult-title">
-                  {lang === "kn"
-                    ? `${selected.name} ಅವರೊಂದಿಗೆ ಸಮಾಲೋಚನೆ ಪ್ರಾರಂಭಿಸಿ`
-                    : `Start Consultation with ${selected.name}`}
+                <div className="wa-first-consult-header">
+                  <div className="wa-first-consult-avatar">
+                    {selected.avatar ? (
+                      <img src={assetUrl ? assetUrl(selected.avatar) : selected.avatar} alt="" />
+                    ) : (
+                      <span>{(selected.name || "A").replace(/^Adv\.\s*/i, "").charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className="wa-first-consult-title-wrap">
+                    <span className="wa-first-consult-badge">
+                      <span>🛡️</span>
+                      <span>{lang === "kn" ? "ಅಧಿಕೃತ ವಕೀಲರ ಸಮಾಲೋಚನೆ" : "Verified Advocate Consultation"}</span>
+                    </span>
+                    <h3 className="wa-first-consult-title">
+                      {lang === "kn"
+                        ? `${selected.name} ಅವರೊಂದಿಗೆ ಸಮಾಲೋಚನೆ ಪ್ರಾರಂಭಿಸಿ`
+                        : `Start Consultation with ${selected.name}`}
+                    </h3>
+                  </div>
                 </div>
-                <div className="wa-first-consult-desc">
+
+                <p className="wa-first-consult-desc">
                   {lang === "kn"
-                    ? `ಈ ವಕೀಲರೊಂದಿಗೆ ನೇರ ಚಾಟ್ ಪ್ರಾರಂಭಿಸಲು ಕೇವಲ ₹10 ಒಂದು ಬಾರಿಯ ಸಮಾಲೋಚನಾ ಶುಲ್ಕ ಅನ್ವಯಿಸುತ್ತದೆ. ಸಂದೇಶ ಕಳುಹಿಸಿದಾಗ PhonePe ಸ್ಕ್ಯಾನರ್ ಕಾಣಿಸಿಕೊಳ್ಳುತ್ತದೆ.`
+                    ? `ಕೆಳಗೆ ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಟೈಪ್ ಮಾಡಿ ಕಳುಹಿಸಿ. ಕೇವಲ ₹10 ಒಂದು ಬಾರಿಯ ಶುಲ್ಕದೊಂದಿಗೆ ನೀವು ${selected.name} ಅವರೊಂದಿಗೆ ನಿರಂತರವಾಗಿ ಚಾಟ್ ಮಾಡಬಹುದು.`
                     : `Type your message below and click Send. A nominal one-time ₹10 fee activates direct chat with ${selected.name}. Once paid, you can chat continuously.`}
+                </p>
+
+                <div className="wa-first-consult-features">
+                  <div className="wa-fc-feat-item">
+                    <span className="wa-fc-feat-icon">⚡</span>
+                    <span>{lang === "kn" ? "ತಕ್ಷಣದ ಸಕ್ರಿಯತೆ" : "Instant Activation"}</span>
+                  </div>
+                  <div className="wa-fc-feat-item">
+                    <span className="wa-fc-feat-icon">🔒</span>
+                    <span>{lang === "kn" ? "₹10 ಒಂದು ಬಾರಿ" : "₹10 One-Time Fee"}</span>
+                  </div>
+                  <div className="wa-fc-feat-item">
+                    <span className="wa-fc-feat-icon">♾️</span>
+                    <span>{lang === "kn" ? "ಅನಿಯಮಿತ ಚಾಟ್" : "Continuous Chat"}</span>
+                  </div>
                 </div>
+
+                <div className="wa-first-consult-chips">
+                  <span className="wa-fc-chips-label">{lang === "kn" ? "ತ್ವರಿತ ಸಂದೇಶಗಳು (ಕ್ಲಿಕ್ ಮಾಡಿ):" : "Quick Starters (Click to fill):"}</span>
+                  <div className="wa-fc-chips-list">
+                    {[
+                      lang === "kn" ? `ನಮಸ್ಕಾರ ವಕೀಲರೇ, ನನಗೆ ${selected.speciality || "ಕಾನೂನು"} ವಿಷಯದಲ್ಲಿ ಸಲಹೆ ಬೇಕಾಗಿದೆ.` : `Hello ${selected.name}, I need legal advice regarding my matter.`,
+                      lang === "kn" ? "ನನ್ನ ಪ್ರಕರಣದ ಬಗ್ಗೆ ಚರ್ಚಿಸಲು ಸಮಯ ನಿಗದಿಪಡಿಸಬಹುದೇ?" : "Can we schedule a consultation to discuss my case?",
+                    ].map((chip, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="wa-fc-chip-btn"
+                        onClick={() => setMessage(chip)}
+                      >
+                        💬 {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="wa-first-consult-pill">
-                  📱 PhonePe: <strong>9108717353</strong> (UPI: <strong>9108717353-3@ybl</strong>) · ₹10 {lang === "kn" ? "ಒಂದು ಬಾರಿ ಮಾತ್ರ" : "One-Time Fee"}
+                  <span>⚡ {lang === "kn" ? "QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮೂಲಕ ತಕ್ಷಣದ ಸಕ್ರಿಯತೆ" : "Instant Activation via QR Scanner"}</span>
+                  <span className="wa-fc-dot">•</span>
+                  <span>₹10 {lang === "kn" ? "ನಿರ್ವಹಣೆ ಮತ್ತು ಕ್ಲೌಡ್ ಸಂಗ್ರಹಣೆ" : "App Maintenance & Cloud Storage"}</span>
                 </div>
               </div>
             ) : (
@@ -1129,17 +1209,14 @@ export default function ClientDashboard() {
       </div>
 
       {/* ========================================================
-          ONE-TIME ₹10 PLATFORM FEE PAYMENT MODAL (HIGH Z-INDEX)
+          SIMPLIFIED ELEGANT PAYMENT MODAL (MOBILE & DESKTOP)
           ======================================================== */}
       {showPaymentModal && (
         <div className="wa-pay-overlay" onClick={() => !isProcessingPayment && setShowPaymentModal(false)}>
           <div className={`wa-pay-card ${theme === "dark" ? "dark" : ""}`} onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
+            {/* Header */}
             <div className="wa-pay-header">
-              <div className="wa-pay-header-left">
-                <div className="wa-pay-badge">{pt.modalBadge}</div>
-                <h2 className="wa-pay-title">{pt.modalTitle}</h2>
-              </div>
+              <span className="wa-pay-badge">{pt.modalBadge}</span>
               <div className="wa-pay-header-actions">
                 <button
                   type="button"
@@ -1162,86 +1239,73 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            {/* Uppercase Case Inquiry Preview */}
-            <div className="wa-pay-case-box">
-              <span className="wa-pay-case-label">{pt.casePreviewTitle}</span>
-              <div className="wa-pay-case-text">
-                "{(pendingMessage || message || "").toUpperCase()}"
-              </div>
-              <div className="wa-pay-case-target">
-                {pt.advocateTarget} <strong>{(selected?.name || "ADVOCATE").toUpperCase()}</strong> · {((selected?.speciality || selected?.practiceArea) || "LEGAL CONSULTATION").toUpperCase()}
-              </div>
-            </div>
-
-            {/* Reason for Fee Callout Box */}
-            <div className="wa-pay-reason-box">
-              <div className="wa-pay-reason-title">{pt.reasonTitle}</div>
-              <div className="wa-pay-reason-desc">{pt.reasonDesc}</div>
-            </div>
-
-            {/* Scanner & Fee Amount Grid */}
-            <div className="wa-pay-body-grid">
-              <div className="wa-scanner-card">
-                <div className="wa-scanner-badge">🟣 PhonePe / UPI SCAN & PAY ₹10</div>
-                <div className="wa-qr-frame">
-                  <div className="wa-scanner-laser" />
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=9108717353-3@ybl&pn=Chetan&am=10&cu=INR&tn=Advocate%20Hub%20Consultation%20${encodeURIComponent(selected?.name || "Advocate")}`)}`}
-                    alt="PhonePe UPI QR Scanner"
-                    className="wa-qr-img"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                      const fb = document.getElementById("wa-qr-fallback-svg");
-                      if (fb) fb.style.display = "block";
-                    }}
-                  />
-                  <svg id="wa-qr-fallback-svg" style={{ display: "none", width: 160, height: 160 }} viewBox="0 0 100 100">
-                    <rect width="100" height="100" fill="#ffffff" />
-                    <rect x="10" y="10" width="24" height="24" fill="#000" />
-                    <rect x="14" y="14" width="16" height="16" fill="#fff" />
-                    <rect x="18" y="18" width="8" height="8" fill="#000" />
-                    <rect x="66" y="10" width="24" height="24" fill="#000" />
-                    <rect x="70" y="14" width="16" height="16" fill="#fff" />
-                    <rect x="74" y="18" width="8" height="8" fill="#000" />
-                    <rect x="10" y="66" width="24" height="24" fill="#000" />
-                    <rect x="14" y="70" width="16" height="16" fill="#fff" />
-                    <rect x="18" y="74" width="8" height="8" fill="#000" />
-                    <rect x="42" y="14" width="6" height="6" fill="#000" />
-                    <rect x="52" y="24" width="6" height="6" fill="#000" />
-                    <rect x="42" y="42" width="16" height="16" fill="#5f259f" />
-                    <rect x="66" y="46" width="6" height="6" fill="#000" />
-                    <rect x="78" y="56" width="6" height="6" fill="#000" />
-                    <rect x="42" y="66" width="6" height="6" fill="#000" />
-                    <rect x="54" y="74" width="6" height="6" fill="#000" />
-                    <rect x="66" y="80" width="14" height="10" fill="#000" />
-                  </svg>
+            {/* Advocate Strip */}
+            <div className="wa-pay-adv-strip">
+              <div className="wa-pay-adv-left">
+                <div className="wa-pay-adv-avatar">
+                  {selected?.avatar ? (
+                    <img src={assetUrl ? assetUrl(selected.avatar) : selected.avatar} alt="" />
+                  ) : (
+                    <span>{(selected?.name || "A").replace(/^Adv\.\s*/i, "").charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
-                <div className="wa-scanner-phonepe-box">
-                  <div className="wa-scanner-number">
-                    📱 PhonePe: <strong>9108717353</strong>
+                <div className="wa-pay-adv-info">
+                  <div className="wa-pay-adv-name">
+                    {selected?.name} <span className="wa-pay-verified-check">✓</span>
                   </div>
-                  <div className="wa-scanner-upi-id">
-                    UPI ID: <strong>9108717353-3@ybl</strong>
+                  <div className="wa-pay-adv-spec">
+                    {selected?.speciality || selected?.practiceArea || "Legal Consultation"}
                   </div>
                 </div>
-                <div className="wa-scanner-apps">PhonePe · GPay · Paytm · Any UPI App</div>
               </div>
-
-              <div className="wa-pay-amount-info">
-                <div className="wa-pay-fee-row">
-                  <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--wa-text-secondary)" }}>{pt.amountLabel}</span>
-                  <span className="wa-pay-amount-val">₹10.00</span>
-                </div>
-                <p className="wa-pay-instruction">{pt.scannerInstruction}</p>
-                <ul className="wa-pay-features-list">
-                  <li>{pt.lifetimeNotice}</li>
-                  <li>{lang === "kn" ? "ನೇರವಾಗಿ ಅನುಮೋದಿತ ವಕೀಲರಿಗೆ ಸಂದೇಶ ರವಾನೆ" : "Instant message delivery directly to specialist advocate"}</li>
-                  <li>{lang === "kn" ? "ಸುರಕ್ಷಿತ ಕ್ಲೌಡ್ ಡೇಟಾಬೇಸ್ ಸಂಗ್ರಹಣೆ" : "End-to-end encrypted consultation storage"}</li>
-                </ul>
-              </div>
+              <div className="wa-pay-fee-badge">₹10</div>
             </div>
 
-            {/* Confirm / Pay Button */}
+            {/* QR Scanner Center */}
+            <div className="wa-pay-scanner-wrap">
+              <div className="wa-qr-frame">
+                <div className="wa-scanner-laser" />
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`upi://pay?pa=9108717353-3@ybl&pn=Chetan&am=10&cu=INR&tn=Advocate%20Hub%20Consultation%20${encodeURIComponent(selected?.name || "Advocate")}`)}`}
+                  alt="UPI QR Scanner"
+                  className="wa-qr-img"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const fb = document.getElementById("wa-qr-fallback-svg");
+                    if (fb) fb.style.display = "block";
+                  }}
+                />
+                <svg id="wa-qr-fallback-svg" style={{ display: "none", width: 130, height: 130 }} viewBox="0 0 100 100">
+                  <rect width="100" height="100" fill="#ffffff" />
+                  <rect x="10" y="10" width="24" height="24" fill="#000" />
+                  <rect x="14" y="14" width="16" height="16" fill="#fff" />
+                  <rect x="18" y="18" width="8" height="8" fill="#000" />
+                  <rect x="66" y="10" width="24" height="24" fill="#000" />
+                  <rect x="70" y="14" width="16" height="16" fill="#fff" />
+                  <rect x="74" y="18" width="8" height="8" fill="#000" />
+                  <rect x="10" y="66" width="24" height="24" fill="#000" />
+                  <rect x="14" y="70" width="16" height="16" fill="#fff" />
+                  <rect x="18" y="74" width="8" height="8" fill="#000" />
+                  <rect x="42" y="14" width="6" height="6" fill="#000" />
+                  <rect x="52" y="24" width="6" height="6" fill="#000" />
+                  <rect x="42" y="42" width="16" height="16" fill="#5f259f" />
+                  <rect x="66" y="46" width="6" height="6" fill="#000" />
+                  <rect x="78" y="56" width="6" height="6" fill="#000" />
+                  <rect x="42" y="66" width="6" height="6" fill="#000" />
+                  <rect x="54" y="74" width="6" height="6" fill="#000" />
+                  <rect x="66" y="80" width="14" height="10" fill="#000" />
+                </svg>
+              </div>
+              <div className="wa-scanner-apps">PhonePe · Google Pay · Paytm · UPI</div>
+            </div>
+
+            {/* Simple Purpose Note */}
+            <div className="wa-pay-purpose-card">
+              <span className="wa-pay-purpose-icon">🛠️</span>
+              <p className="wa-pay-purpose-text">{pt.purposeNote}</p>
+            </div>
+
+            {/* Action Buttons */}
             <div className="wa-pay-actions">
               <button
                 type="button"

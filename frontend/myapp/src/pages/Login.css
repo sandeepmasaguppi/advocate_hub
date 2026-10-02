@@ -298,10 +298,11 @@
 .am-alt-sub a {
   color: #0284c7;
   font-weight: 600;
-  text-decoration: none;
+  text-decoration: none !important;
 }
 .am-alt-sub a:hover {
-  text-decoration: underline;
+  text-decoration: none !important;
+  color: #0369a1;
 }
 
 .am-back-link {

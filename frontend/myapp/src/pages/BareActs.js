@@ -1,13 +1,27 @@
-// BareActs.js — Bare Acts Browser Page
-import React, { useState, useMemo } from "react";
+// ============================================================
+//  BareActs.js — Indian Bare Acts & Statutory Enactments Browser
+//  Part of the 4 Legal Sections:
+//    1. Ask a Question  2. Legal Documents  3. Bare Acts  4. Legal News
+//  Supports White & Dark Themes with English & Kannada translations
+// ============================================================
+
+import React, { useState, useMemo, useEffect } from "react";
+import { getTheme } from "../data/themeStore";
 import "./BareActs.css";
 
-const CATEGORIES = [
-  "All","Criminal","Civil","Family","Property",
-  "Corporate","Labour","Constitutional","New Acts",
+export const CATEGORIES_EN = [
+  "All", "Criminal", "Civil", "Family", "Property",
+  "Corporate", "Labour", "Constitutional", "New Acts",
 ];
 
-const BARE_ACTS = [
+export const CATEGORIES_KN = [
+  "ಎಲ್ಲಾ", "ಕ್ರಿಮಿನಲ್", "ಸಿವಿಲ್", "ಕೌಟುಂಬಿಕ", "ಆಸ್ತಿ",
+  "ಕಾರ್ಪೊರೇಟ್", "ಕಾರ್ಮಿಕ", "ಸಂವಿಧಾನ", "ಹೊಸ ಕಾಯ್ದೆಗಳು",
+];
+
+export const CATEGORIES = CATEGORIES_EN;
+
+export const BARE_ACTS = [
   { id: 1,  icon: "📕", title: "Bharatiya Nyaya Sanhita (BNS), 2023",          shortName: "BNS",    category: "Criminal",      year: 2023, sections: 358, desc: "Replaces IPC. Comprehensive criminal law covering all offences and punishments.", isNew: true,  popular: true  },
   { id: 2,  icon: "📘", title: "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023", shortName: "BNSS",  category: "Criminal",      year: 2023, sections: 531, desc: "Replaces CrPC. Criminal procedure code governing investigation and trial.", isNew: true,  popular: true  },
   { id: 3,  icon: "📗", title: "Bharatiya Sakshya Adhiniyam (BSA), 2023",      shortName: "BSA",    category: "Criminal",      year: 2023, sections: 170, desc: "Replaces Indian Evidence Act. Rules of evidence in Indian courts.", isNew: true,  popular: true  },
@@ -32,20 +46,39 @@ const BARE_ACTS = [
   { id: 22, icon: "🔨", title: "SARFAESI Act, 2002",                           shortName: "SARFAESI",category: "Corporate",    year: 2002, sections: 41,  desc: "Empowers banks to recover NPAs without court intervention.", isNew: false, popular: false },
 ];
 
-const CAT_COLORS = {
-  Criminal:"#dc2626", Civil:"#2563eb", Family:"#16a34a",
-  Property:"#7c3aed", Corporate:"#ea580c", Labour:"#d97706",
-  Constitutional:"#0891b2", "New Acts":"#059669",
+export const CAT_COLORS = {
+  Criminal: "#dc2626",
+  Civil: "#2563eb",
+  Family: "#16a34a",
+  Property: "#7c3aed",
+  Corporate: "#ea580c",
+  Labour: "#d97706",
+  Constitutional: "#0891b2",
+  "New Acts": "#059669",
 };
 
-function ActCard({ act, onRead }) {
+function downloadActFile(act) {
+  const content = `ADVOCATES HUB — INDIAN STATUTORY REPOSITORY\n\nTITLE: ${act.title}\nSHORT IDENTIFIER: ${act.shortName}\nCATEGORY: ${act.category}\nYEAR OF ENACTMENT: ${act.year}\nTOTAL SECTIONS: ${act.sections}\n\nSUMMARY & OVERVIEW:\n${act.desc}\n\n=========================================\nSAMPLE PROVISIONS & SECTIONS\n=========================================\n\nSection 1 — Short title, extent and commencement\n(1) This Act may be called the ${act.title}.\n(2) It extends to the whole of India.\n(3) It shall come into force on such date as the Central Government may, by notification in the Official Gazette, appoint.\n\nSection 2 — Definitions and Interpretations\nIn this Act, unless the context otherwise requires:\n(a) "appropriate Government" means the Central or State Government;\n(b) "court" means the designated court of competent jurisdiction under Indian procedural laws;\n(c) "notification" means an official notification published in the Gazette of India.\n\nSection 3 — Jurisdiction & Enforcement\nThe provisions of this Act apply throughout the territory of India to all persons and proceedings.\n\n=========================================\nProvided for legal education & professional advocacy by Advocates Hub (https://advocateshub.in)\n`;
+
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${act.shortName}_Bare_Act.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function ActCard({ act, onRead, onDownload, isKn }) {
   return (
     <div className="ba-card">
       <div className="ba-card-top">
         <div className="ba-act-icon">{act.icon}</div>
         <div className="ba-act-badges">
-          {act.isNew && <span className="ba-badge new">🆕 New</span>}
-          {act.popular && <span className="ba-badge popular">🔥 Popular</span>}
+          {act.isNew && <span className="ba-badge new">{isKn ? "🆕 ಹೊಸದು" : "🆕 New"}</span>}
+          {act.popular && <span className="ba-badge popular">{isKn ? "🔥 ಜನಪ್ರಿಯ" : "🔥 Popular"}</span>}
         </div>
       </div>
       <div className="ba-short-name" style={{ color: CAT_COLORS[act.category] || "#6366f1" }}>
@@ -55,70 +88,118 @@ function ActCard({ act, onRead }) {
       <p className="ba-act-desc">{act.desc}</p>
       <div className="ba-act-meta">
         <span className="ba-act-year">📅 {act.year}</span>
-        <span className="ba-act-sections">📋 {act.sections} Sections</span>
-        <span className="ba-act-cat" style={{ background: (CAT_COLORS[act.category] || "#6366f1") + "18", color: CAT_COLORS[act.category] || "#6366f1" }}>
+        <span className="ba-act-sections">📋 {act.sections} {isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"}</span>
+        <span
+          className="ba-act-cat"
+          style={{
+            background: (CAT_COLORS[act.category] || "#6366f1") + "18",
+            color: CAT_COLORS[act.category] || "#6366f1",
+          }}
+        >
           {act.category}
         </span>
       </div>
       <div className="ba-card-actions">
-        <button className="ba-btn-read" onClick={() => onRead(act)}>📖 Read Act</button>
-        <button className="ba-btn-download" onClick={() => alert(`Downloading ${act.shortName} PDF…`)}>⬇ PDF</button>
+        <button type="button" className="ba-btn-read" onClick={() => onRead(act)}>
+          📖 {isKn ? "ಕಾಯಿದೆ ಓದಿ" : "Read Act"}
+        </button>
+        <button
+          type="button"
+          className="ba-btn-download"
+          onClick={() => onDownload(act)}
+          title="Download act details"
+        >
+          ⬇ {isKn ? "ಡೌನ್‌ಲೋಡ್" : "Download"}
+        </button>
       </div>
     </div>
   );
 }
 
-function ReadModal({ act, onClose }) {
+function ReadModal({ act, onClose, onDownload, isKn }) {
   const [activeSection, setActiveSection] = useState(1);
   const SAMPLE_SECTIONS = [
-    { no: 1, title: "Short title, extent and commencement", content: `(1) This Act may be called the ${act.title}.\n(2) It extends to the whole of India.\n(3) It shall come into force on such date as the Central Government may, by notification in the Official Gazette, appoint.` },
-    { no: 2, title: "Definitions", content: `In this Act, unless the context otherwise requires—\n\n(a) "appropriate Government" means—\n    (i) in relation to a matter concerning the Union territory, the Central Government;\n    (ii) in relation to a matter concerning a State, the State Government;\n\n(b) "court" means the court referred to in section 6;\n\n(c) such other terms as defined within this enactment...` },
-    { no: 3, title: "Application", content: `The provisions of this Act shall apply to all persons within the territory of India, unless otherwise specified by a subsequent provision or exemption notified by the appropriate authority under the provisions herein.` },
+    {
+      no: 1,
+      title: "Short title, extent and commencement",
+      content: `(1) This Act may be called the ${act.title}.\n(2) It extends to the whole of India.\n(3) It shall come into force on such date as the Central Government may, by notification in the Official Gazette, appoint.`,
+    },
+    {
+      no: 2,
+      title: "Definitions and Interpretations",
+      content: `In this Act, unless the context otherwise requires—\n\n(a) "appropriate Government" means—\n    (i) in relation to a matter concerning the Union territory, the Central Government;\n    (ii) in relation to a matter concerning a State, the State Government;\n\n(b) "court" means the court referred to in section 6;\n\n(c) such other terms as defined within this enactment...`,
+    },
+    {
+      no: 3,
+      title: "Application and Jurisdiction",
+      content: `The provisions of this Act shall apply to all persons within the territory of India, unless otherwise specified by a subsequent provision or exemption notified by the appropriate authority under the provisions herein.`,
+    },
   ];
 
   return (
-    <div className="ba-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="ba-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="ba-modal">
-        <div className="ba-modal-header" style={{ borderBottom: `3px solid ${CAT_COLORS[act.category] || "#6366f1"}` }}>
+        <div
+          className="ba-modal-header"
+          style={{ borderBottom: `3px solid ${CAT_COLORS[act.category] || "#6366f1"}` }}
+        >
           <div>
-            <div className="ba-modal-short" style={{ color: CAT_COLORS[act.category] || "#6366f1" }}>{act.shortName}</div>
+            <div className="ba-modal-short" style={{ color: CAT_COLORS[act.category] || "#6366f1" }}>
+              {act.shortName}
+            </div>
             <h3 className="ba-modal-title">{act.title}</h3>
-            <div className="ba-modal-meta">Year: {act.year} · {act.sections} Sections · {act.category}</div>
+            <div className="ba-modal-meta">
+              {isKn ? "ವರ್ಷ:" : "Year:"} {act.year} · {act.sections} {isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"} · {act.category}
+            </div>
           </div>
-          <button className="ba-modal-close" onClick={onClose}>✕</button>
+          <button type="button" className="ba-modal-close" onClick={onClose} aria-label="Close modal">
+            ✕
+          </button>
         </div>
+
         <div className="ba-modal-body">
           <div className="ba-modal-sidebar">
-            <div className="ba-sections-title">Sections</div>
-            {SAMPLE_SECTIONS.map(s => (
-              <button key={s.no}
+            <div className="ba-sections-title">{isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"}</div>
+            {SAMPLE_SECTIONS.map((s) => (
+              <button
+                key={s.no}
+                type="button"
                 className={`ba-section-item ${activeSection === s.no ? "active" : ""}`}
-                onClick={() => setActiveSection(s.no)}>
+                onClick={() => setActiveSection(s.no)}
+              >
                 <span className="ba-section-no">§ {s.no}</span>
                 <span className="ba-section-name">{s.title}</span>
               </button>
             ))}
             <div className="ba-more-sections">
-              + {act.sections - 3} more sections available in full version
+              + {act.sections - 3} {isKn ? "ಹೆಚ್ಚಿನ ಸೆಕ್ಷನ್‌ಗಳು ಲಭ್ಯವಿವೆ" : "more sections available in full enactment"}
             </div>
           </div>
+
           <div className="ba-modal-content">
-            {SAMPLE_SECTIONS.filter(s => s.no === activeSection).map(s => (
+            {SAMPLE_SECTIONS.filter((s) => s.no === activeSection).map((s) => (
               <div key={s.no}>
-                <h4 className="ba-content-title">Section {s.no} — {s.title}</h4>
+                <h4 className="ba-content-title">
+                  Section {s.no} — {s.title}
+                </h4>
                 <div className="ba-content-text">
                   {s.content.split("\n").map((line, i) => (
-                    <p key={i} style={{ marginBottom: line === "" ? 8 : 4 }}>{line}</p>
+                    <p key={i} style={{ marginBottom: line === "" ? 8 : 4 }}>
+                      {line}
+                    </p>
                   ))}
                 </div>
               </div>
             ))}
           </div>
         </div>
+
         <div className="ba-modal-footer">
-          <span className="ba-modal-note">📖 Showing sample sections. Download PDF for complete act.</span>
-          <button className="ba-btn-download" onClick={() => alert(`Downloading ${act.shortName} PDF…`)}>
-            ⬇ Download Full PDF
+          <span className="ba-modal-note">
+            📖 {isKn ? "ಮಾದರಿ ಸೆಕ್ಷನ್‌ಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ. ಪೂರ್ಣ ವಿವರಗಳಿಗೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ." : "Showing official statutory sample. Download text for complete enactment."}
+          </span>
+          <button type="button" className="ba-btn-download" onClick={() => onDownload(act)}>
+            ⬇ {isKn ? "ಪೂರ್ಣ ಕಾಯ್ದೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ" : "Download Full Text"}
           </button>
         </div>
       </div>
@@ -127,50 +208,90 @@ function ReadModal({ act, onClose }) {
 }
 
 export default function BareActs() {
-  const [activeCat, setActiveCat]   = useState("All");
-  const [search,    setSearch]      = useState("");
-  const [showNew,   setShowNew]     = useState(false);
-  const [showPop,   setShowPop]     = useState(false);
-  const [sortBy,    setSortBy]      = useState("popular");
-  const [readModal, setReadModal]   = useState(null);
+  const [theme, setTheme] = useState(getTheme);
+
+  useEffect(() => {
+    const handleTheme = (e) => setTheme(e?.detail || getTheme());
+    window.addEventListener("law4u_theme_change", handleTheme);
+    return () => window.removeEventListener("law4u_theme_change", handleTheme);
+  }, []);
+
+  const [lang, setLang] = useState(() => {
+    try {
+      return localStorage.getItem("law4u_home_lang") || "en";
+    } catch {
+      return "en";
+    }
+  });
+
+  useEffect(() => {
+    const handleLang = (e) => {
+      if (e?.detail) setLang(e.detail);
+      else {
+        try {
+          setLang(localStorage.getItem("law4u_home_lang") || "en");
+        } catch {}
+      }
+    };
+    window.addEventListener("law4u_lang_change", handleLang);
+    return () => window.removeEventListener("law4u_lang_change", handleLang);
+  }, []);
+
+  const isKn = lang === "kn";
+
+  const [activeCat, setActiveCat] = useState("All");
+  const [search, setSearch] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showPop, setShowPop] = useState(false);
+  const [sortBy, setSortBy] = useState("popular");
+  const [readModal, setReadModal] = useState(null);
 
   const filtered = useMemo(() => {
     let list = [...BARE_ACTS];
     if (activeCat !== "All") {
-      if (activeCat === "New Acts") list = list.filter(a => a.isNew);
-      else list = list.filter(a => a.category === activeCat);
+      if (activeCat === "New Acts") list = list.filter((a) => a.isNew);
+      else list = list.filter((a) => a.category === activeCat);
     }
-    if (showNew) list = list.filter(a => a.isNew);
-    if (showPop) list = list.filter(a => a.popular);
+    if (showNew) list = list.filter((a) => a.isNew);
+    if (showPop) list = list.filter((a) => a.popular);
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(a =>
-        a.title.toLowerCase().includes(q) ||
-        a.shortName.toLowerCase().includes(q) ||
-        a.desc.toLowerCase().includes(q)
+      list = list.filter(
+        (a) =>
+          a.title.toLowerCase().includes(q) ||
+          a.shortName.toLowerCase().includes(q) ||
+          a.desc.toLowerCase().includes(q)
       );
     }
     if (sortBy === "popular") list.sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
     if (sortBy === "year_new") list.sort((a, b) => b.year - a.year);
     if (sortBy === "year_old") list.sort((a, b) => a.year - b.year);
-    if (sortBy === "az")       list.sort((a, b) => a.shortName.localeCompare(b.shortName));
+    if (sortBy === "az") list.sort((a, b) => a.shortName.localeCompare(b.shortName));
     if (sortBy === "sections") list.sort((a, b) => b.sections - a.sections);
     return list;
   }, [activeCat, search, showNew, showPop, sortBy]);
 
   return (
-    <div className="ba-page">
-
+    <div className={`ba-page ${theme === "dark" ? "ba-dark" : "ba-light"}`}>
       {/* Header */}
       <div className="ba-header">
         <div className="ba-header-inner">
-          <h1 className="ba-title">Bare Acts</h1>
-          <p className="ba-subtitle">Browse, read and download Indian laws and legislation</p>
+          <span className="ba-header-badge">
+            {isKn ? "📜 ಭಾರತೀಯ ಅಧಿಕೃತ ಕಾಯ್ದೆಗಳು" : "📜 Official Statutes & Legislation"}
+          </span>
+          <h1 className="ba-title">
+            {isKn ? "ಭಾರತೀಯ ಕಾಯಿದೆಗಳು ಮತ್ತು ಸಂಹಿತೆಗಳು" : "Indian Bare Acts & Statutory Codes"}
+          </h1>
+          <p className="ba-subtitle">
+            {isKn
+              ? "ಭಾರತದ ಎಲ್ಲಾ ಪ್ರಮುಖ ಕ್ರಿಮಿನಲ್, ಸಿವಿಲ್ ಮತ್ತು ಕಾರ್ಪೊರೇಟ್ ಕಾಯಿದೆಗಳನ್ನು ಓದಿ ಮತ್ತು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ."
+              : "Browse, read and download complete Indian legislation including the new criminal laws (BNS, BNSS, BSA 2023)."}
+          </p>
           <div className="ba-header-stats">
-            <span>📚 {BARE_ACTS.length}+ Acts</span>
-            <span>🆕 {BARE_ACTS.filter(a => a.isNew).length} New Acts (2023)</span>
-            <span>🔥 {BARE_ACTS.filter(a => a.popular).length} Popular Acts</span>
-            <span>⬇ Free PDF Download</span>
+            <span>📚 {BARE_ACTS.length}+ {isKn ? "ಕಾಯಿದೆಗಳು" : "Enacted Acts"}</span>
+            <span>🆕 {BARE_ACTS.filter((a) => a.isNew).length} {isKn ? "ಹೊಸ ಕಾಯಿದೆಗಳು (೨೦೨೩)" : "New Acts (2023)"}</span>
+            <span>🔥 {BARE_ACTS.filter((a) => a.popular).length} {isKn ? "ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "Popular Codes"}</span>
+            <span>⬇ {isKn ? "ಉಚಿತ ಡೌನ್‌ಲೋಡ್" : "Free Download"}</span>
           </div>
         </div>
       </div>
@@ -179,11 +300,27 @@ export default function BareActs() {
       <div className="ba-new-banner">
         <span className="ba-new-icon">🆕</span>
         <div>
-          <strong>New Criminal Laws 2023 — Now Available!</strong>
-          <span> BNS, BNSS and BSA have replaced IPC, CrPC and Indian Evidence Act effective July 2024.</span>
+          <strong>
+            {isKn
+              ? "ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳು ೨೦೨೩ — ಈಗ ಲಭ್ಯ!"
+              : "New Criminal Laws 2023 — Active & In Effect!"}
+          </strong>
+          <span>
+            {" "}
+            {isKn
+              ? "BNS, BNSS ಮತ್ತು BSA ಕಾಯ್ದೆಗಳು IPC, CrPC ಮತ್ತು ಭಾರತೀಯ ಸಾಕ್ಷ್ಯ ಕಾಯ್ದೆಯ ಬದಲಿಗೆ ಜಾರಿಗೆ ಬಂದಿವೆ."
+              : "BNS, BNSS and BSA have superseded IPC, CrPC and Indian Evidence Act across all courts."}
+          </span>
         </div>
-        <button className="ba-new-btn" onClick={() => { setActiveCat("New Acts"); setShowNew(true); }}>
-          View New Acts →
+        <button
+          type="button"
+          className="ba-new-btn"
+          onClick={() => {
+            setActiveCat("New Acts");
+            setShowNew(true);
+          }}
+        >
+          {isKn ? "ಹೊಸ ಕಾಯ್ದೆಗಳನ್ನು ನೋಡಿ →" : "View New Acts →"}
         </button>
       </div>
 
@@ -191,61 +328,129 @@ export default function BareActs() {
       <div className="ba-filter-bar">
         <div className="ba-search-wrap">
           <span>🔍</span>
-          <input className="ba-search" placeholder="Search acts by name or keyword…"
-            value={search} onChange={e => setSearch(e.target.value)} />
-          {search && <button onClick={() => setSearch("")}>✕</button>}
+          <input
+            className="ba-search"
+            placeholder={
+              isKn
+                ? "ಕಾಯ್ದೆಯ ಹೆಸರು ಅಥವಾ ಕೀವರ್ಡ್ ಮೂಲಕ ಹುಡುಕಿ (ಉದಾ: BNS, IPC, RERA)..."
+                : "Search acts by title, short name or keyword (e.g. BNS, IPC, RERA)..."
+            }
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button type="button" onClick={() => setSearch("")} aria-label="Clear search">
+              ✕
+            </button>
+          )}
         </div>
+
         <div className="ba-filter-toggles">
           <label className="ba-toggle">
-            <input type="checkbox" checked={showNew} onChange={e => setShowNew(e.target.checked)} />
-            🆕 New Acts Only
+            <input
+              type="checkbox"
+              checked={showNew}
+              onChange={(e) => setShowNew(e.target.checked)}
+            />
+            <span>{isKn ? "🆕 ಹೊಸ ಕಾಯಿದೆಗಳು ಮಾತ್ರ" : "🆕 New Acts Only"}</span>
           </label>
           <label className="ba-toggle">
-            <input type="checkbox" checked={showPop} onChange={e => setShowPop(e.target.checked)} />
-            🔥 Popular Only
+            <input
+              type="checkbox"
+              checked={showPop}
+              onChange={(e) => setShowPop(e.target.checked)}
+            />
+            <span>{isKn ? "🔥 ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "🔥 Popular Only"}</span>
           </label>
         </div>
-        <select className="ba-sort" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-          <option value="popular">Popular First</option>
-          <option value="year_new">Newest First</option>
-          <option value="year_old">Oldest First</option>
-          <option value="az">A–Z</option>
-          <option value="sections">Most Sections</option>
+
+        <select
+          className="ba-sort"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          aria-label="Sort Bare Acts"
+        >
+          <option value="popular">{isKn ? "ಜನಪ್ರಿಯ ಮೊದಲು" : "Popular First"}</option>
+          <option value="year_new">{isKn ? "ಹೊಸ ವರ್ಷ ಮೊದಲು" : "Newest First"}</option>
+          <option value="year_old">{isKn ? "ಹಳೆಯ ವರ್ಷ ಮೊದಲು" : "Oldest First"}</option>
+          <option value="az">{isKn ? "ವರ್ಣಮಾಲೆ A–Z" : "A–Z Short Name"}</option>
+          <option value="sections">{isKn ? "ಹೆಚ್ಚು ಸೆಕ್ಷನ್‌ಗಳು" : "Most Sections"}</option>
         </select>
       </div>
 
       {/* Category tabs */}
       <div className="ba-cat-tabs">
-        {CATEGORIES.map(cat => (
-          <button key={cat} className={`ba-cat-tab ${activeCat === cat ? "active" : ""}`}
-            onClick={() => setActiveCat(cat)}
-            style={activeCat === cat && cat !== "All" ? { borderColor: CAT_COLORS[cat], color: CAT_COLORS[cat], background: (CAT_COLORS[cat] || "#6366f1") + "14" } : {}}>
-            {cat}
-          </button>
-        ))}
+        {CATEGORIES_EN.map((cat, idx) => {
+          const label = isKn ? CATEGORIES_KN[idx] || cat : cat;
+          const isActive = activeCat === cat;
+          return (
+            <button
+              key={cat}
+              type="button"
+              className={`ba-cat-tab ${isActive ? "active" : ""}`}
+              onClick={() => setActiveCat(cat)}
+              style={
+                isActive && cat !== "All"
+                  ? {
+                      borderColor: CAT_COLORS[cat],
+                      color: CAT_COLORS[cat],
+                      background: (CAT_COLORS[cat] || "#6366f1") + "18",
+                    }
+                  : {}
+              }
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="ba-body">
         <div className="ba-results-bar">
-          Showing <strong>{filtered.length}</strong> act{filtered.length !== 1 ? "s" : ""}
+          {isKn ? (
+            <>
+              ಒಟ್ಟು <strong>{filtered.length}</strong> ಕಾಯ್ದೆಗಳು ಲಭ್ಯವಿವೆ
+            </>
+          ) : (
+            <>
+              Showing <strong>{filtered.length}</strong> statutory enactment
+              {filtered.length !== 1 ? "s" : ""}
+            </>
+          )}
         </div>
+
         {filtered.length === 0 ? (
           <div className="ba-empty">
             <div style={{ fontSize: 48 }}>📚</div>
-            <h3>No acts found</h3>
-            <p>Try a different search term or category</p>
+            <h3>{isKn ? "ಯಾವುದೇ ಕಾಯ್ದೆ ಕಂಡುಬಂದಿಲ್ಲ" : "No Bare Acts Found"}</h3>
+            <p>
+              {isKn
+                ? "ದಯವಿಟ್ಟು ಬೇರೆ ಕೀವರ್ಡ್ ಅಥವಾ ವರ್ಗವನ್ನು ಪ್ರಯತ್ನಿಸಿ"
+                : "Try searching with a different keyword or selecting 'All' category."}
+            </p>
           </div>
         ) : (
           <div className="ba-grid">
-            {filtered.map(act => (
-              <ActCard key={act.id} act={act} onRead={setReadModal} />
+            {filtered.map((act) => (
+              <ActCard
+                key={act.id}
+                act={act}
+                onRead={setReadModal}
+                onDownload={downloadActFile}
+                isKn={isKn}
+              />
             ))}
           </div>
         )}
       </div>
 
       {readModal && (
-        <ReadModal act={readModal} onClose={() => setReadModal(null)} />
+        <ReadModal
+          act={readModal}
+          onClose={() => setReadModal(null)}
+          onDownload={downloadActFile}
+          isKn={isKn}
+        />
       )}
     </div>
   );

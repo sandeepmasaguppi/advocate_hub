@@ -466,7 +466,7 @@ async function registerClient(payload, { byAdmin = false } = {}) {
     city: payload.city || "",
     passwordHash: hashPassword(password),
     sessionVersion: 0,
-    status: payload.status || (byAdmin ? "approved" : "pending"),
+    status: payload.status || "approved",
     createdAt: new Date().toISOString(),
   };
   list.push(record);
@@ -745,7 +745,60 @@ async function route(request, response) {
       });
     }
 
-    // E) Navigation Shortcuts
+    // C2) Human Conversational & Casual Intents
+    const isGratitudeIntent =
+      /\b(thanks|thank\s*you|thx|appreciate\s*it|thank\s*u|dhanyavad|dhanyavadagalu)\b/i.test(cleanQ) ||
+      /(ಧನ್ಯವಾದ|ಧನ್ಯವಾದಗಳು|ತುಂಬಾ ಧನ್ಯವಾದ)/u.test(msg);
+    if (isGratitudeIntent) {
+      const reply = isKn
+        ? `😊 **ತುಂಬಾ ಧನ್ಯವಾದಗಳು!**\n\nನಿಮಗೆ ಸಹಾಯ ಮಾಡಲು ನನಗೆ ಸಂತೋಷವಾಗಿದೆ. ಯಾವುದೇ ಕಾನೂನು ಮಾರ್ಗದರ್ಶನ, ಕಾಯ್ದೆಗಳ ಮಾಹಿತಿ ಅಥವಾ ವಕೀಲರ ಸಮಾಲೋಚನೆ ಅಗತ್ಯವಿದ್ದಲ್ಲಿ ನಾನು ಯಾವಾಗಲೂ ಲಭ್ಯವಿರುತ್ತೇನೆ.\n\nನಿಮ್ಮ ದಿನ ಶುಭವಾಗಿರಲಿ!`
+        : `😊 **You are most welcome!**\n\nI'm delighted I could help clarify things for you. Whenever you have legal questions, need case clarity, or wish to consult a verified advocate, I am always here to assist.\n\nWishing you peace of mind and success with your matter!`;
+      return send(request, response, 200, {
+        text: reply,
+        type: "text",
+      });
+    }
+
+    const isHowAreYouIntent =
+      /\b(how\s*are\s*you|how\s*r\s*u|how\s*do\s*you\s*do|how\s*is\s*it\s*going)\b/i.test(cleanQ) ||
+      /(ಹೇಗಿದ್ದೀರಾ|ಹೇಗಿದ್ದೀರಿ)/u.test(msg);
+    if (isHowAreYouIntent) {
+      const reply = isKn
+        ? `👋 **ನಾನು ಉತ್ತಮವಾಗಿದ್ದೇನೆ, ವಿಚಾರಿಸಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು!**\n\nನಾನು ಭಾರತೀಯ ಕಾನೂನುಗಳು ಮತ್ತು Advocates Hub ವಕೀಲರ ಜಾಲದ ಬಗ್ಗೆ ಸದಾ ಸಕ್ರಿಯನಾಗಿದ್ದೇನೆ. ನೀವು ಹೇಗಿದ್ದೀರಿ? ಇಂದು ನಾನು ನಿಮಗೆ ಯಾವ ಕಾನೂನು ವಿಷಯದಲ್ಲಿ ಸಹಾಯ ಮಾಡಲಿ?`
+        : `👋 **I'm doing great, thank you for asking!**\n\nI am active and ready 24/7 to assist you with Indian law queries, case guidance, and connecting you with verified advocates. How are you doing today? What legal question can I help you resolve?`;
+      return send(request, response, 200, {
+        text: reply,
+        type: "text",
+      });
+    }
+
+    const isWhoAreYouIntent =
+      /\b(who\s*are\s*you|what\s*are\s*you|your\s*name|who\s*made\s*you|about\s*you)\b/i.test(cleanQ) ||
+      /(ನೀವು ಯಾರು|ನಿಮ್ಮ ಹೆಸರೇನು|ಯಾರು ನಿರ್ಮಿಸಿದರು)/u.test(msg);
+    if (isWhoAreYouIntent) {
+      const reply = isKn
+        ? `🤖 **ನಾನು Advocates Hub AI ಕಾನೂನು ಸಹಾಯಕ (AI Legal Assistant).**\n\nನನ್ನ ಮುಖ್ಯ ಉದ್ದೇಶ ಜನಸಾಮಾನ್ಯರಿಗೆ ಭಾರತೀಯ ಕಾನೂನುಗಳನ್ನು ಸುಲಭವಾಗಿ ಅರ್ಥಮಾಡಿಸುವುದು ಮತ್ತು ನೈಜ ನ್ಯಾಯಾಲಯ ಪ್ರಕರಣಗಳಿಗಾಗಿ ಪರಿಶೀಲಿತ ಬಾರ್ ಕೌನ್ಸಿಲ್ ವಕೀಲರೊಂದಿಗೆ ನೇರ ಸಂಪರ್ಕ ಕಲ್ಪಿಸುವುದು.\n\nನಾನು ನಿಮಗೆ ಸಿವಿಲ್, ಕ್ರಿಮಿನಲ್, ಆಸ್ತಿ, ಕೌಟುಂಬಿಕ, ಚೆಕ್ ಬೌನ್ಸ್ ಮತ್ತು ಗ್ರಾಹಕ ಹಕ್ಕುಗಳ ಕುರಿತು ಸಲಹೆ ನೀಡಬಲ್ಲೆ.`
+        : `🤖 **I am the Advocates Hub AI Legal Assistant.**\n\nMy purpose is to demystify Indian law for citizens, provide practical situational clarity, and directly connect you with verified Bar Council advocates across India.\n\nI can help you explore rights under BNS/BNSS, bail procedures, property due diligence, matrimonial disputes, NI Act cheque bounce, and much more.`;
+      return send(request, response, 200, {
+        text: reply,
+        type: "text",
+      });
+    }
+
+    const isFeeIntent =
+      /\b(fee|fees|cost|charge|charges|pricing|how\s*much|rate|rates|consultation\s*fee)\b/i.test(cleanQ) ||
+      /(ಶುಲ್ಕ|ವೆಚ್ಚ|ದರ|ಹಣ|ಖರ್ಚು)/u.test(msg);
+    if (isFeeIntent) {
+      const reply = isKn
+        ? `💰 **Advocates Hub ಸಮಾಲೋಚನೆ ವಿವರ:**\n\n1. ⚡ **ಒಂದು ಬಾರಿಯ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ:**\nಯಾವುದೇ ವಕೀಲರೊಂದಿಗೆ ನೇರ ಚಾಟ್ ಸಮಾಲೋಚನೆ ಆರಂಭಿಸಲು ಮತ್ತು ಕ್ಲೌಡ್ ಸ್ಟೋರೇಜ್ ನಿರ್ವಹಣೆಗಾಗಿ ಕನಿಷ್ಠ ಶುಲ್ಕವಿರುತ್ತದೆ. ಒಮ್ಮೆ ಸಕ್ರಿಯಗೊಳಿಸಿದರೆ ನಿರಂತರವಾಗಿ ಚಾಟ್ ಮಾಡಬಹುದು.\n\n2. 🏛️ **ವಕೀಲರ ಸಮಾಲೋಚನೆ:**\nವಕೀಲರ ಪ್ರೊಫೈಲ್‌ನಲ್ಲಿ ಅವರ ವೈಯಕ್ತಿಕ ಸಮಾಲೋಚನಾ ವಿವರಗಳು ಸ್ಪಷ್ಟವಾಗಿ ನಮೂದಾಗಿರುತ್ತವೆ.\n\n3. 🤖 **AI ಸಹಾಯಕ:**\nನನ್ನೊಂದಿಗೆ ಚಾಟ್ ಮಾಡುವುದು ಮತ್ತು ಕಾನೂನು ಮಾರ್ಗದರ್ಶಿಗಳನ್ನು ಓದುವುದು ಸಂಪೂರ್ಣವಾಗಿ ಉಚಿತವಾಗಿದೆ!`
+        : `💰 **Advocates Hub Consultation Details:**\n\n1. ⚡ **One-Time Advocate Chat Activation:**\nTo initiate direct confidential chat with any verified advocate and support encrypted cloud storage/maintenance, a nominal activation fee applies. Once activated, continuous consultation is unlocked.\n\n2. 🏛️ **Advocate Consultation:**\nEach advocate lists their verified consultation details transparently on their profile.\n\n3. 🤖 **AI Legal Assistant:**\nChatting with me for legal clarity, exploring laws, and searching advocates is completely free!`;
+      return send(request, response, 200, {
+        text: reply,
+        type: "advocates",
+        advocates: topAdvs.map(formatCard),
+      });
+    }
+
     if (/\b(bare\s*acts?|acts|laws?)\b/i.test(cleanQ) && cleanQ.split(/\s+/).length <= 4) {
       return send(request, response, 200, {
         text: isKn

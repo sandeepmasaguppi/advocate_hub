@@ -1,262 +1,81 @@
+// ============================================================
+//  AdvocatesList.js — Find a Lawyer Directory Page
+//  Executive verified advocate directory with live city and practice search,
+//  multi-criteria sorting, quick practice chips, bilingual EN/ಕನ್ನಡ support,
+//  and full Dark & White (Light) theme integration.
+// ============================================================
+
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAdvocates } from "../data/Advocatesstore";
+import { assetUrl } from "../data/api";
+import { getTheme } from "../data/themeStore";
 import "./AdvocatesList.css";
 
 const CITIES = [
-  // =========================
   // A
-  // =========================
-  "Afzalpur",
-  "Alur",
-  "Aland",
-  "Ankola",
-  "Arakalgud",
-  "Arasikere",
-  "Athani",
-  "Aurad",
-  "Anekal",
-
-  // =========================
+  "Afzalpur", "Alur", "Aland", "Ankola", "Arakalgud", "Arasikere", "Athani", "Aurad", "Anekal",
   // B
-  // =========================
-  "Bagepalli",
-  "Bagalkot",
-  "Bailhongal",
-  "Baindur",
-  "Banahatti",
-  "Bangarapet",
-  "Bantwal",
-  "Basavana Bagewadi",
-  "Basavakalyan",
-  "Belagavi",
-  "Belthangady",
-  "Belur",
-  "Bhadravati",
-  "Bhalki",
-  "Bhatkal",
-  "Bilagi",
-  "Byadgi",
-  "Bengaluru",
-  "Bengaluru Rural",
-
-  // =========================
+  "Bagepalli", "Bagalkot", "Bailhongal", "Baindur", "Banahatti", "Bangarapet", "Bantwal",
+  "Basavana Bagewadi", "Basavakalyan", "Belagavi", "Belthangady", "Belur", "Bhadravati",
+  "Bhalki", "Bhatkal", "Bilagi", "Byadgi", "Bengaluru", "Bengaluru Rural",
   // C
-  // =========================
-  "Challakere",
-  "Chamarajanagar",
-  "Channagiri",
-  "Channapatna",
-  "Channarayapatna",
-  "Chikkaballapur",
-  "Chikkamagaluru",
-  "Chikkodi",
-  "Chiknayakanhalli",
-  "Chincholi",
-  "Chintamani",
-  "Chitapur",
-  "Chitradurga",
-
-  // =========================
+  "Challakere", "Chamarajanagar", "Channagiri", "Channapatna", "Channarayapatna",
+  "Chikkaballapur", "Chikkamagaluru", "Chikkodi", "Chiknayakanhalli", "Chincholi",
+  "Chintamani", "Chitapur", "Chitradurga",
   // D
-  // =========================
-  "Dandeli",
-  "Davangere",
-  "Devanahalli",
-  "Devadurga",
-  "Dharwad",
-  "Doddaballapur",
-
-  // =========================
+  "Dandeli", "Davangere", "Devanahalli", "Devadurga", "Dharwad", "Doddaballapur",
   // G
-  // =========================
-  "Gadag",
-  "Gangavathi",
-  "Gauribidanur",
-  "Gokak",
-  "Gudibande",
-  "Gubbi",
-  "Gundlupet",
-
-  // =========================
+  "Gadag", "Gangavathi", "Gauribidanur", "Gokak", "Gudibande", "Gubbi", "Gundlupet",
   // H
-  // =========================
-  "H.D. Kote",
-  "Hagaribommanahalli",
-  "Haliyal",
-  "Hanagal",
-  "Harihar",
-  "Hassan",
-  "Haveri",
-  "Holenarasipura",
-  "Holalkere",
-  "Honnavar",
-  "Hosanagara",
-  "Hospete",
-  "Hosadurga",
-  "Hoskote",
-  "Humnabad",
-  "Hukeri",
-  "Hunsur",
-  "Hungund",
-  "Hirekerur",
-
-  // =========================
-  // I
-  // =========================
-  "Ilkal",
-  "Indi",
-
-  // =========================
-  // J
-  // =========================
-  "Jamkhandi",
-  "Jevargi",
-  "Jagalur",
-
-  // =========================
-  // K
-  // =========================
-  "Kadur",
-  "Kagwad",
-  "Kalaburagi",
-  "Kalghatgi",
-  "Kanakapura",
-  "Karwar",
-  "Karkala",
-  "Khanapur",
-  "Kittur",
-  "Kolar",
-  "Kollegal",
-  "Koppa",
-  "Koratagere",
-  "Krishnarajanagara",
-  "Krishnarajapete",
-  "Kundapura",
-  "Kundgol",
-  "Kumta",
-  "Kushalnagar",
-  "Kushtagi",
-  "Kudachi",
-  "Kudligi",
-  "KGF",
-
-  // =========================
-  // L
-  // =========================
-  "Lakshmeshwar",
-  "Lingasugur",
-
-  // =========================
+  "H.D. Kote", "Hagaribommanahalli", "Haliyal", "Hanagal", "Harihar", "Hassan",
+  "Haveri", "Holenarasipura", "Holalkere", "Honnavar", "Hosanagara", "Hospete",
+  "Hosadurga", "Hoskote", "Humnabad", "Hukeri", "Hunsur",
+  // I, J, K
+  "Ilkal", "Indi", "Jagalur", "Jamkhandi", "Jevargi", "Kadaba", "Kadawada", "Kadur",
+  "Kalaburagi", "Kalghatgi", "Kamalapura", "Kanakapura", "Karwar", "Khanapur",
+  "Kolar", "Kollegal", "Koppa", "Koppal", "Koratagere", "Kotturu", "Kudligi",
+  "Kuknur", "Kumta", "Kundapura", "Kundgol", "Kunigal", "Kurgod", "Kushtagi",
   // M
-  // =========================
-  "Maddur",
-  "Madikeri",
-  "Magadi",
-  "Malavalli",
-  "Malur",
-  "Manvi",
-  "Mangaluru",
-  "Mandya",
-  "Muddebihal",
-  "Mudhol",
-  "Mudigere",
-  "Mudalagi",
-  "Mundagod",
-  "Mundargi",
-  "Mulbagal",
-  "Mysuru",
-
-  // =========================
+  "Madhugiri", "Madikeri", "Magadi", "Mahalingpur", "Malavalli", "Malur", "Mandya",
+  "Mangaluru", "Manvi", "Maski", "Molakalmuru", "Moodbidri", "Muddebihal",
+  "Mudhol", "Mudigere", "Mulbagal", "Mundargi", "Mundgod", "Mysuru",
   // N
-  // =========================
-  "Nagamangala",
-  "Nanjangud",
-  "Narasimharajapura",
-  "Navalgund",
-  "Nelamangala",
-  "Nippani",
-  "Nargund",
-
-  // =========================
-  // P
-  // =========================
-  "Pandavapura",
-  "Pavagada",
-  "Periyapatna",
-  "Ponnampet",
-  "Puttur",
-
-  // =========================
-  // R
-  // =========================
-  "Raibag",
-  "Raichur",
-  "Ramanagara",
-  "Ramdurg",
-  "Ranebennur",
-  "Ron",
-
-  // =========================
+  "Nagamangala", "Nanjangud", "Narasimharajapura", "Navalgund", "Nelamangala", "Nipani",
+  // P, R
+  "Pandavapura", "Pavagada", "Ponnampet", "Puttur", "Raichur", "Ramanagara",
+  "Ramdurg", "Ranebennur", "Raybag", "Ron",
   // S
-  // =========================
-  "Sagara",
-  "Sakleshpur",
-  "Sandalaga",
-  "Sandur",
-  "Sankeshwar",
-  "Savanur",
-  "Sedam",
-  "Shahabad",
-  "Shahapur",
-  "Shiggaon",
-  "Shikaripura",
-  "Shivamogga",
-  "Shorapur",
-  "Shirsi",
-  "Siddapur",
-  "Sindagi",
-  "Sindhanur",
-  "Sira",
-  "Siruguppa",
-  "Sirsi",
-  "Somwarpet",
-  "Srinivaspur",
-  "Sringeri",
-  "Srirangapatna",
-  "Sullia",
-
-  // =========================
-  // T
-  // =========================
-  "Tarikere",
-  "Thirthahalli",
-  "Tiptur",
-  "Tirumakudalu Narasipura",
-  "Tumakuru",
-  "Turuvekere",
-
-  // =========================
-  // U
-  // =========================
-  "Udupi",
-
-  // =========================
-  // V
-  // =========================
-  "Vijayapura",
-  "Virajpet",
-
-  // =========================
-  // Y
-  // =========================
-  "Yadgir",
-  "Yaragatti",
-  "Yellapur",
-  "Yelburga"
+  "Sagara", "Sakleshpur", "Sandalaga", "Sandur", "Sankeshwar", "Savanur", "Sedam",
+  "Shahabad", "Shahapur", "Shiggaon", "Shikaripura", "Shivamogga", "Shorapur",
+  "Shirsi", "Siddapur", "Sindagi", "Sindhanur", "Sira", "Siruguppa", "Sirsi",
+  "Somwarpet", "Srinivaspur", "Sringeri", "Srirangapatna", "Sullia",
+  // T, U, V, Y
+  "Tarikere", "Thirthahalli", "Tiptur", "Tirumakudalu Narasipura", "Tumakuru", "Turuvekere",
+  "Udupi", "Vijayapura", "Virajpet", "Yadgir", "Yaragatti", "Yellapur", "Yelburga"
 ];
-const PRACTICE_AREAS = ["Divorce","Criminal","Property","Cheque Bounce","Civil","GST","Tax","Corporate","Family","Labour","Consumer","Cyber","Immigration","Banking","Intellectual Property"];
-const POPULAR = ["Divorce","Criminal","Property","Cheque Bounce","Civil","GST","Tax"];
+
+const PRACTICE_AREAS = [
+  "Divorce", "Criminal", "Property", "Cheque Bounce", "Civil", "GST", "Tax",
+  "Corporate", "Family", "Labour", "Consumer", "Cyber", "Immigration", "Banking",
+  "Intellectual Property"
+];
+
+const POPULAR_SEARCHES = [
+  "Divorce", "Criminal", "Property", "Cheque Bounce", "Civil", "GST", "Cyber"
+];
+
+const QUICK_FILTER_PILLS = [
+  { id: "all", labelEn: "All Practices", labelKn: "ಎಲ್ಲಾ ಕ್ಷೇತ್ರಗಳು", icon: "⚖️" },
+  { id: "Criminal", labelEn: "Criminal Law", labelKn: "ಕ್ರಿಮಿನಲ್ ಕಾನೂನು", icon: "🔒" },
+  { id: "Civil", labelEn: "Civil Matters", labelKn: "ಸಿವಿಲ್ ದಾವೆಗಳು", icon: "⚖️" },
+  { id: "Family", labelEn: "Family & Divorce", labelKn: "ಕೌಟುಂಬಿಕ & ವಿಚ್ಛೇದನ", icon: "👨‍👩‍👧" },
+  { id: "Property", labelEn: "Property & RERA", labelKn: "ಆಸ್ತಿ & ರೇರಾ", icon: "🏠" },
+  { id: "Corporate", labelEn: "Corporate & GST", labelKn: "ಕಾರ್ಪೊರೇಟ್ & ತೆರಿಗೆ", icon: "🏢" },
+  { id: "Cheque Bounce", labelEn: "Cheque Bounce (138)", labelKn: "ಚೆಕ್ ಬೌನ್ಸ್ (138)", icon: "💳" },
+  { id: "Cyber", labelEn: "Cyber Crime", labelKn: "ಸೈಬರ್ ಅಪರಾಧ", icon: "💻" },
+];
+
 const CATEGORY_PRACTICES = {
   family: ["Family", "Divorce"],
   criminal: ["Criminal", "Cyber"],
@@ -265,18 +84,31 @@ const CATEGORY_PRACTICES = {
   corporate: ["Corporate", "GST", "Tax", "Intellectual Property"],
 };
 
-// Only "approved" advocates are shown to the public — pending/rejected signups stay hidden from clients.
+const PRACTICE_THEMES = {
+  Criminal: { bg: "#fef2f2", color: "#dc2626", border: "#fecaca" },
+  Civil: { bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" },
+  Family: { bg: "#f0fdf4", color: "#16a34a", border: "#bbf7d0" },
+  Divorce: { bg: "#f0fdf4", color: "#16a34a", border: "#bbf7d0" },
+  Property: { bg: "#faf5ff", color: "#7c3aed", border: "#e9d5ff" },
+  Corporate: { bg: "#fff7ed", color: "#ea580c", border: "#fed7aa" },
+  Tax: { bg: "#fffbeb", color: "#d97706", border: "#fde68a" },
+  GST: { bg: "#fffbeb", color: "#d97706", border: "#fde68a" },
+  Cyber: { bg: "#ecfeff", color: "#0891b2", border: "#a5f3fc" },
+  Banking: { bg: "#f0fdfa", color: "#0f766e", border: "#99f6e4" },
+  "Cheque Bounce": { bg: "#fdf4ff", color: "#a21caf", border: "#f5d0fe" },
+};
 
 const normalize = (value = "") => (value ?? "").toString().trim().toLowerCase();
 
 const getInitials = (name = "") =>
   name
+    .replace(/^Adv\.\s*/i, "")
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0])
     .join("")
-    .toUpperCase();
+    .toUpperCase() || "AD";
 
 const getAvatarColor = (name = "") => {
   const palette = ["#2563eb", "#16a34a", "#7c3aed", "#dc2626", "#ea580c", "#0891b2", "#0f766e", "#9333ea"];
@@ -284,45 +116,28 @@ const getAvatarColor = (name = "") => {
   return palette[sum % palette.length];
 };
 
-const matchesPractice = (person, practices) => {
-  if (!practices.length) return true;
-  const personPractice = normalize(person.practiceArea || person.speciality || "");
-  return practices.some((practice) => {
-    const norm = normalize(practice);
-    return personPractice === norm || personPractice.includes(norm);
-  });
-};
-
 function AdvocateAvatar({ advocate }) {
-  const [imagePath, setImagePath] = useState(advocate.avatar || "");
   const [failed, setFailed] = useState(false);
-
-  const handleImageError = () => {
-    if (!imagePath || !advocate.avatar) {
-      setFailed(true);
-      return;
-    }
-
-    const basePath = advocate.avatar.replace(/\.(png|jpe?g|webp)$/i, "");
-    const candidates = [`${basePath}.jpg`, `${basePath}.jpeg`, `${basePath}.png`, `${basePath}.webp`];
-    const nextPath = candidates.find((candidate) => candidate !== imagePath);
-    if (nextPath) setImagePath(nextPath);
-    else setFailed(true);
-  };
+  const avatarSrc = advocate.avatar ? assetUrl(advocate.avatar) : "";
 
   return (
     <div
-      className="lw-adv-avatar"
-      style={{ background: !failed && imagePath ? "transparent" : getAvatarColor(advocate.name) }}
+      className="fl-card-avatar"
+      style={{
+        background: !failed && avatarSrc ? "transparent" : getAvatarColor(advocate.name),
+      }}
     >
-      {!failed && imagePath ? (
+      {!failed && avatarSrc ? (
         <img
-          src={imagePath}
+          src={avatarSrc}
           alt={advocate.name}
-          className="lw-adv-avatar-img"
-          onError={handleImageError}
+          className="fl-avatar-img"
+          onError={() => setFailed(true)}
         />
-      ) : getInitials(advocate.name)}
+      ) : (
+        getInitials(advocate.name)
+      )}
+      <span className="fl-online-pulse" title="Available for consultation" />
     </div>
   );
 }
@@ -342,7 +157,6 @@ function CustomSearchDropdown({
   const inputRef = useRef(null);
   const listRef = useRef(null);
 
-  // Synchronize internal input value if external value changes (e.g. popular tags or category)
   useEffect(() => {
     setInputValue(value || "");
   }, [value]);
@@ -353,7 +167,6 @@ function CustomSearchDropdown({
         setIsOpen(false);
         setShowAll(false);
         setActiveIndex(-1);
-        // If user typed an exact match in different case, normalize it
         if (inputValue.trim()) {
           const match = options.find((opt) => opt.toLowerCase() === inputValue.trim().toLowerCase());
           if (match && match !== inputValue) {
@@ -388,26 +201,6 @@ function CustomSearchDropdown({
     return options.filter((opt) => opt.toLowerCase().includes(trimmed));
   }, [options, inputValue, showAll]);
 
-  // Auto-scroll to active item when navigating with keys
-  useEffect(() => {
-    if (isOpen && activeIndex >= 0 && listRef.current) {
-      const target = listRef.current.querySelector(".lw-dropdown-item.active-item");
-      if (target) {
-        target.scrollIntoView({ block: "nearest" });
-      }
-    }
-  }, [activeIndex, isOpen]);
-
-  // Auto-scroll to selected item when opened
-  useEffect(() => {
-    if (isOpen && listRef.current) {
-      const selectedTarget = listRef.current.querySelector(".lw-dropdown-item.selected");
-      if (selectedTarget) {
-        selectedTarget.scrollIntoView({ block: "nearest" });
-      }
-    }
-  }, [isOpen]);
-
   const handleSelect = (val) => {
     onChange(val);
     setInputValue(val);
@@ -435,65 +228,37 @@ function CustomSearchDropdown({
     if (inputRef.current) inputRef.current.focus();
   };
 
-  const handleKeyDownInput = (e) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (!isOpen) {
-        setIsOpen(true);
-        setShowAll(true);
-        setActiveIndex(0);
-      } else if (filteredOptions.length > 0) {
-        setActiveIndex((prev) => (prev < filteredOptions.length - 1 ? prev + 1 : 0));
-      }
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (isOpen && filteredOptions.length > 0) {
-        setActiveIndex((prev) => (prev > 0 ? prev - 1 : filteredOptions.length - 1));
-      }
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (activeIndex >= 0 && filteredOptions[activeIndex]) {
-        handleSelect(filteredOptions[activeIndex]);
-      } else if (filteredOptions.length > 0) {
-        handleSelect(filteredOptions[0]);
-      } else {
-        setIsOpen(false);
-      }
-    }
-  };
-
   const handleToggleClick = (e) => {
     e.stopPropagation();
-    setShowAll(true);
-    setIsOpen((prev) => !prev);
-    if (inputRef.current) {
-      inputRef.current.focus();
+    if (!isOpen) {
+      setIsOpen(true);
+      setShowAll(true);
+      if (inputRef.current) inputRef.current.focus();
+    } else {
+      setIsOpen(false);
+      setShowAll(false);
     }
   };
 
   return (
-    <div
-      className={`lw-custom-dropdown ${isOpen ? "is-open" : ""}`}
-      ref={dropdownRef}
-    >
+    <div className={`fl-search-dropdown-wrap ${isOpen ? "is-open" : ""}`} ref={dropdownRef}>
       <div
-        className="lw-dropdown-input-wrapper"
+        className="fl-dropdown-input-bar"
         onClick={() => {
           if (!isOpen) {
             setIsOpen(true);
             setShowAll(true);
+            if (inputRef.current) inputRef.current.focus();
           }
-          if (inputRef.current) inputRef.current.focus();
         }}
       >
-        <span className="lw-search-field-icon">{icon}</span>
+        <span className="fl-dropdown-icon">{icon}</span>
         <input
           ref={inputRef}
           type="text"
-          className="lw-dropdown-main-input"
+          className="fl-dropdown-input"
           value={inputValue}
           onChange={handleInputChange}
-          onKeyDown={handleKeyDownInput}
           onFocus={() => {
             if (!isOpen) {
               setIsOpen(true);
@@ -507,7 +272,7 @@ function CustomSearchDropdown({
         {inputValue ? (
           <button
             type="button"
-            className="lw-dropdown-clear-btn"
+            className="fl-dropdown-clear"
             onClick={handleClear}
             title="Clear"
             tabIndex={-1}
@@ -517,52 +282,50 @@ function CustomSearchDropdown({
         ) : null}
         <button
           type="button"
-          className="lw-dropdown-toggle-btn"
+          className="fl-dropdown-toggle-arrow"
           onClick={handleToggleClick}
           tabIndex={-1}
-          title="Show options"
+          title="Toggle list"
         >
-          <span className={`lw-dropdown-arrow ${isOpen ? "open" : ""}`}>▼</span>
+          <span className={`fl-arrow-icon ${isOpen ? "open" : ""}`}>▾</span>
         </button>
       </div>
 
       {isOpen && (
-        <div className="lw-dropdown-menu">
-          <ul className="lw-dropdown-list" ref={listRef} role="listbox">
+        <div className="fl-dropdown-menu">
+          <ul className="fl-dropdown-list" ref={listRef} role="listbox">
             {(!inputValue.trim() || showAll) && (
               <li
-                className={`lw-dropdown-item ${!value ? "selected" : ""}`}
+                className={`fl-dropdown-item ${!value ? "selected" : ""}`}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   handleSelect("");
                 }}
-                onClick={() => handleSelect("")}
                 role="option"
                 aria-selected={!value}
               >
                 <span>{placeholder}</span>
-                {!value && <span className="lw-dropdown-check">✓</span>}
+                {!value && <span className="fl-check-mark">✓</span>}
               </li>
             )}
             {filteredOptions.length === 0 ? (
-              <li className="lw-dropdown-no-match">
-                No matching options found
-              </li>
+              <li className="fl-dropdown-empty">No matching options found</li>
             ) : (
               filteredOptions.map((opt, idx) => (
                 <li
                   key={opt}
-                  className={`lw-dropdown-item ${value === opt ? "selected" : ""} ${activeIndex === idx ? "active-item" : ""}`}
+                  className={`fl-dropdown-item ${value === opt ? "selected" : ""} ${
+                    activeIndex === idx ? "active-item" : ""
+                  }`}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleSelect(opt);
                   }}
-                  onClick={() => handleSelect(opt)}
                   role="option"
                   aria-selected={value === opt}
                 >
                   <span>{opt}</span>
-                  {value === opt && <span className="lw-dropdown-check">✓</span>}
+                  {value === opt && <span className="fl-check-mark">✓</span>}
                 </li>
               ))
             )}
@@ -576,29 +339,29 @@ function CustomSearchDropdown({
 export default function AdvocatesList({ lang: propLang } = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // URL Query Parameters
   const category = normalize(searchParams.get("cat"));
   const categoryPractices = useMemo(() => CATEGORY_PRACTICES[category] || [], [category]);
   const queryCity = searchParams.get("city") || "";
   const queryPractice = searchParams.get("area") || "";
+
+  // Filter States
   const [city, setCity] = useState(queryCity);
   const [practice, setPractice] = useState(queryPractice);
-  const [showAllAdvocates, setShowAllAdvocates] = useState(false);
+  const [activeChip, setActiveChip] = useState("all");
+  const [sortBy, setSortBy] = useState("rating"); // rating | experience | cases | az
+  const [visibleCount, setVisibleCount] = useState(9);
 
-  const [allAdvocates, setAllAdvocates] = useState(() => {
-    const list = getAdvocates();
-    return Array.isArray(list) ? list.filter((a) => a.status === "approved") : [];
-  });
-
+  // Theme Sync
+  const [theme, setTheme] = useState(getTheme);
   useEffect(() => {
-    const refreshAdvocates = () => {
-      const list = getAdvocates();
-      setAllAdvocates(Array.isArray(list) ? list.filter((a) => a.status === "approved") : []);
-    };
-    refreshAdvocates();
-    window.addEventListener("law4u_advocates_updated", refreshAdvocates);
-    return () => window.removeEventListener("law4u_advocates_updated", refreshAdvocates);
+    const handleThemeChange = (e) => setTheme(e?.detail || getTheme());
+    window.addEventListener("law4u_theme_change", handleThemeChange);
+    return () => window.removeEventListener("law4u_theme_change", handleThemeChange);
   }, []);
 
+  // Language Sync
   const [lang, setLang] = useState(() => {
     try {
       return propLang || localStorage.getItem("law4u_home_lang") || "en";
@@ -626,185 +389,479 @@ export default function AdvocatesList({ lang: propLang } = {}) {
 
   const isKn = lang === "kn";
 
-  const filterAdvocates = useCallback(
-    (selectedCity = "", selectedPractice = "", list = allAdvocates) => {
-      const targetCity = normalize(selectedCity);
-      const targetPractice = normalize(selectedPractice);
+  // Approved Advocates Data
+  const [allAdvocates, setAllAdvocates] = useState(() => {
+    const list = getAdvocates();
+    return Array.isArray(list) ? list.filter((a) => a.status === "approved") : [];
+  });
 
-      return (list || []).filter((person) => {
-        if (!person) return false;
-
-        const pCity = normalize(person.city || "");
-        const pDist = normalize(person.district || "");
-        const pTaluk = normalize(person.taluk || "");
-
-        const cityMatch =
-          !targetCity ||
-          pCity === targetCity ||
-          pCity.includes(targetCity) ||
-          targetCity.includes(pCity) ||
-          (pDist && (pDist === targetCity || pDist.includes(targetCity) || targetCity.includes(pDist))) ||
-          (pTaluk && (pTaluk === targetCity || pTaluk.includes(targetCity) || targetCity.includes(pTaluk)));
-
-        const personPractice = normalize(person.practiceArea || person.speciality || "");
-        const practiceMatch = targetPractice
-          ? personPractice === targetPractice ||
-            personPractice.includes(targetPractice) ||
-            targetPractice.includes(personPractice)
-          : matchesPractice(person, categoryPractices);
-
-        return cityMatch && practiceMatch;
-      });
-    },
-    [allAdvocates, categoryPractices]
-  );
-
-  const [filteredResults, setFilteredResults] = useState(() =>
-    filterAdvocates(queryCity, queryPractice, allAdvocates)
-  );
+  useEffect(() => {
+    const refreshAdvocates = () => {
+      const list = getAdvocates();
+      setAllAdvocates(Array.isArray(list) ? list.filter((a) => a.status === "approved") : []);
+    };
+    refreshAdvocates();
+    window.addEventListener("law4u_advocates_updated", refreshAdvocates);
+    return () => window.removeEventListener("law4u_advocates_updated", refreshAdvocates);
+  }, []);
 
   useEffect(() => {
     setCity(queryCity);
     setPractice(queryPractice);
-    setShowAllAdvocates(false);
+    setVisibleCount(9);
   }, [queryCity, queryPractice]);
 
-  useEffect(() => {
-    const results = filterAdvocates(city, practice, allAdvocates);
-    setFilteredResults(results);
-  }, [city, practice, allAdvocates, filterAdvocates]);
+  // Comprehensive Filtering & Sorting Logic
+  const filteredAndSortedList = useMemo(() => {
+    const targetCity = normalize(city);
+    const targetPractice = normalize(practice);
+    const targetChip = normalize(activeChip);
 
-  const handleCityChange = (newCity) => {
-    setCity(newCity);
-    setShowAllAdvocates(false);
+    let list = (allAdvocates || []).filter((person) => {
+      if (!person) return false;
+
+      // City filter matching
+      const pCity = normalize(person.city || "");
+      const pDist = normalize(person.district || "");
+      const pTaluk = normalize(person.taluk || "");
+
+      const cityMatch =
+        !targetCity ||
+        pCity === targetCity ||
+        pCity.includes(targetCity) ||
+        targetCity.includes(pCity) ||
+        (pDist && (pDist === targetCity || pDist.includes(targetCity) || targetCity.includes(pDist))) ||
+        (pTaluk && (pTaluk === targetCity || pTaluk.includes(targetCity) || targetCity.includes(pTaluk)));
+
+      // Practice Area filter matching
+      const personPractice = normalize(person.practiceArea || person.speciality || "");
+      let practiceMatch = true;
+
+      if (targetPractice) {
+        practiceMatch =
+          personPractice === targetPractice ||
+          personPractice.includes(targetPractice) ||
+          targetPractice.includes(personPractice);
+      } else if (categoryPractices.length > 0) {
+        practiceMatch = categoryPractices.some((p) => {
+          const normP = normalize(p);
+          return personPractice === normP || personPractice.includes(normP);
+        });
+      }
+
+      // Quick Filter Pill matching
+      let chipMatch = true;
+      if (targetChip && targetChip !== "all") {
+        chipMatch = personPractice.includes(targetChip);
+      }
+
+      return cityMatch && practiceMatch && chipMatch;
+    });
+
+    // Sorting
+    list = [...list].sort((a, b) => {
+      if (sortBy === "rating") {
+        return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+      }
+      if (sortBy === "experience") {
+        const expA = parseInt(a.experience, 10) || 0;
+        const expB = parseInt(b.experience, 10) || 0;
+        return expB - expA;
+      }
+      if (sortBy === "cases") {
+        const casesA = parseInt(a.cases, 10) || 0;
+        const casesB = parseInt(b.cases, 10) || 0;
+        return casesB - casesA;
+      }
+      if (sortBy === "az") {
+        return (a.name || "").localeCompare(b.name || "");
+      }
+      return 0;
+    });
+
+    return list;
+  }, [allAdvocates, city, practice, activeChip, sortBy, categoryPractices]);
+
+  const displayedAdvocates = filteredAndSortedList.slice(0, visibleCount);
+
+  // Chat Now Handler — Direct connection to client registration or client dashboard
+  const handleChatNow = (adv) => {
+    const cid = Number(
+      localStorage.getItem("law4u_client_id") || sessionStorage.getItem("law4u_client_id") || 0
+    );
+    if (cid && adv?.id) {
+      sessionStorage.setItem(`law4u_active_chat_${cid}`, String(adv.id));
+      localStorage.setItem(`law4u_active_chat_${cid}`, String(adv.id));
+      navigate(`/client-dashboard?advocateId=${adv.id}`);
+    } else if (adv?.id) {
+      navigate(`/client-login?redirect=/client-dashboard?advocateId=${adv.id}`);
+    } else {
+      navigate("/client-login");
+    }
   };
 
-  const handlePracticeChange = (newPractice) => {
-    setPractice(newPractice);
-    setShowAllAdvocates(false);
+  const handleResetFilters = () => {
+    setCity("");
+    setPractice("");
+    setActiveChip("all");
+    setVisibleCount(9);
   };
-
-  const handleSearch = () => {
-    setShowAllAdvocates(false);
-    const results = filterAdvocates(city, practice, allAdvocates);
-    setFilteredResults(results);
-  };
-
-  const handlePopularClick = (value) => {
-    setPractice(value);
-    setShowAllAdvocates(false);
-  };
-
-  const handleSeeMoreAdvocates = () => {
-    setShowAllAdvocates((prev) => !prev);
-  };
-
-  // Only show more than 6 if there are more than 6 total matches AND the user clicked "See More"
-  const displayedList = showAllAdvocates ? filteredResults : filteredResults.slice(0, 6);
 
   return (
-    <div className="home-page">
-      {/* ── Search Bar Section ── */}
-      <section className="lw-search-section">
-  <p className="lw-search-headline">
-    {isKn
-      ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ ಮೂಲಕ ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ, ಹೈಕೋರ್ಟ್ ಮತ್ತು ಸುಪ್ರೀಂ ಕೋರ್ಟ್ ಪ್ರಕರಣಗಳಿಗೆ ಭಾರತದ ಅತ್ಯುತ್ತಮ ಮತ್ತು ವಿಶ್ವಾಸಾರ್ಹ ವಕೀಲರನ್ನು ನೇಮಿಸಿಕೊಳ್ಳಿ"
-      : "Hire India's best and most trusted lawyers for District Court, High Court, and Supreme Court cases with Advocates Hub"}
-  </p>
-  <div className="lw-search-bar">
-    <div className="lw-search-field">
-      <CustomSearchDropdown
-        icon="📍"
-        placeholder={isKn ? "ನಗರವನ್ನು ಆಯ್ಕೆಮಾಡಿ / ಹುಡುಕಿ" : "Select City (type to search...)"}
-        value={city}
-        onChange={handleCityChange}
-        options={CITIES}
-      />
-    </div>
-    <div className="lw-search-field">
-      <CustomSearchDropdown
-        icon="🏛️"
-        placeholder={isKn ? "ಕಾರ್ಯಾಚರಣೆಯ ಕ್ಷೇತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select Practice Areas"}
-        value={practice}
-        onChange={handlePracticeChange}
-        options={PRACTICE_AREAS}
-      />
-    </div>
-    <button className="lw-search-btn" onClick={handleSearch}>
-      {isKn ? "ಹುಡುಕಿ" : "SEARCH"}
-    </button>
-  </div>
-  <div className="lw-popular-searches">
-    <strong>{isKn ? "ಜನಪ್ರಿಯ ಹುಡುಕಾಟಗಳು: " : "Popular Searches: "}</strong>
-    {POPULAR.map((p, i) => (
-      <span key={p}>
-        <span className="lw-popular-tag" onClick={() => handlePopularClick(p)}>{p}</span>
-        {i < POPULAR.length - 1 && " , "}
-      </span>
-    ))}
-  </div>
-</section>
+    <div className={`fl-page ${theme === "dark" ? "fl-dark" : "fl-light"}`}>
+      {/* ── HERO BANNER ── */}
+      <section className="fl-hero-section">
+        <div className="fl-hero-inner">
+          <div className="fl-hero-badge">
+            {isKn
+              ? "⚖️ ಕರ್ನಾಟಕ ಬಾರ್ ಕೌನ್ಸಿಲ್ ಪರಿಶೀಲಿತ · ಅಧಿಕೃತ ವಕೀಲರ ಡೈರೆಕ್ಟರಿ"
+              : "⚖️ Karnataka Bar Council Certified · Direct Legal Consultation"}
+          </div>
+          <h1 className="fl-hero-title">
+            {isKn
+              ? "ಪರಿಶೀಲಿತ ಹಿರಿಯ ಮತ್ತು ತಜ್ಞ ವಕೀಲರನ್ನು ಹುಡುಕಿ"
+              : "Find & Consult Verified Advocates"}
+          </h1>
+          <p className="fl-hero-subtitle">
+            {isKn
+              ? "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳು, ಕರ್ನಾಟಕ ಹೈಕೋರ್ಟ್ ಮತ್ತು ರಾಷ್ಟ್ರೀಯ ನ್ಯಾಯಮಂಡಳಿಗಳ ಪರಿಣಿತ ವಕೀಲರೊಂದಿಗೆ ನೇರ ಸಮಾಲೋಚನೆ ಅಥವಾ ಚಾಟ್ ಆರಂಭಿಸಿ."
+              : "Connect directly with top practitioners across District Courts, High Court of Karnataka, and National Tribunals for immediate legal counsel and representation."}
+          </p>
 
-      {/* ── Advocates List Section ── */}
-      <section className="lw-section">
-        <div className="lw-section-inner">
-          <div className="lw-section-head lw-flex-between">
-            <div>
-              <h2 className="lw-section-title">
-                {isKn ? "ನಮ್ಮ ವಕೀಲರನ್ನು ಭೇಟಿ ಮಾಡಿ" : "Meet Our Advocates"}
-              </h2>
+          <div className="fl-trust-row">
+            <div className="fl-trust-item">
+              <span className="fl-trust-icon">🏛️</span>
+              <span>{isKn ? "೫೦೦+ ಪರಿಶೀಲಿತ ವಕೀಲರು" : "500+ Bar Certified Advocates"}</span>
             </div>
-            {/* Show button ONLY if there are more than 6 matches in total */}
-            {filteredResults.length > 6 && (
-              <button className="lw-btn-primary" onClick={handleSeeMoreAdvocates}>
-                {showAllAdvocates
-                  ? (isKn ? "ಕಡಿಮೆ ವಕೀಲರನ್ನು ನೋಡಿ" : "See Less Advocates")
-                  : (isKn ? "ಇನ್ನಷ್ಟು ವಕೀಲರನ್ನು ನೋಡಿ" : "See More Advocates")} ›
+            <div className="fl-trust-item">
+              <span className="fl-trust-icon">📍</span>
+              <span>{isKn ? "೧೦೦+ ಕರ್ನಾಟಕ ನಗರಗಳು" : "100+ Karnataka Cities & Taluks"}</span>
+            </div>
+            <div className="fl-trust-item">
+              <span className="fl-trust-icon">⚡</span>
+              <span>{isKn ? "ತಕ್ಷಣದ ನೇರ ಚಾಟ್ ಸಂಪರ್ಕ" : "Instant Direct Chat & Advisory"}</span>
+            </div>
+            <div className="fl-trust-item">
+              <span className="fl-trust-icon">🔒</span>
+              <span>{isKn ? "೧೦೦% ಗೌಪ್ಯ ವಕೀಲ ಸಮಾಲೋಚನೆ" : "100% Confidential Legal Privilege"}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SEARCH & FILTER CONTROLS ── */}
+      <section className="fl-search-section">
+        <div className="fl-search-container">
+          <div className="fl-search-bar">
+            <div className="fl-search-field">
+              <CustomSearchDropdown
+                icon="📍"
+                placeholder={isKn ? "ನಗರ ಅಥವಾ ತಾಲೂಕು ಆಯ್ಕೆಮಾಡಿ (ಟೈಪ್ ಮಾಡಿ)..." : "Select City / Taluk (type to search...)"}
+                value={city}
+                onChange={(val) => {
+                  setCity(val);
+                  setVisibleCount(9);
+                }}
+                options={CITIES}
+              />
+            </div>
+
+            <div className="fl-search-field">
+              <CustomSearchDropdown
+                icon="⚖️"
+                placeholder={isKn ? "ವಕಾಲತ್ತು ಕ್ಷೇತ್ರ (ಕ್ರಿಮಿನಲ್, ಸಿವಿಲ್, ವಿಚ್ಛೇದನ...)" : "Practice Area (Criminal, Civil, Divorce...)"}
+                value={practice}
+                onChange={(val) => {
+                  setPractice(val);
+                  setVisibleCount(9);
+                }}
+                options={PRACTICE_AREAS}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="fl-search-submit-btn"
+              onClick={() => setVisibleCount(9)}
+            >
+              <span>🔍</span>
+              <span>{isKn ? "ಹುಡುಕಿ" : "Search"}</span>
+            </button>
+          </div>
+
+          {/* Quick Practice Filter Pills */}
+          <div className="fl-pills-row">
+            {QUICK_FILTER_PILLS.map((pill) => (
+              <button
+                key={pill.id}
+                type="button"
+                className={`fl-pill-btn ${activeChip === pill.id ? "active" : ""}`}
+                onClick={() => {
+                  setActiveChip(pill.id);
+                  setVisibleCount(9);
+                }}
+              >
+                <span>{pill.icon}</span>
+                <span>{isKn ? pill.labelKn : pill.labelEn}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Popular Search Keywords */}
+          <div className="fl-popular-row">
+            <span className="fl-popular-label">
+              {isKn ? "ಜನಪ್ರಿಯ ಹುಡುಕಾಟಗಳು:" : "Popular Searches:"}
+            </span>
+            <div className="fl-popular-tags">
+              {POPULAR_SEARCHES.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className={`fl-popular-tag ${practice === tag ? "active" : ""}`}
+                  onClick={() => {
+                    setPractice(tag);
+                    setVisibleCount(9);
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── RESULTS HEADER & SORTING BAR ── */}
+      <section className="fl-results-section">
+        <div className="fl-results-header">
+          <div className="fl-results-meta">
+            <h2 className="fl-results-count">
+              {isKn ? (
+                <>
+                  <strong>{filteredAndSortedList.length}</strong> ಪರಿಶೀಲಿತ ವಕೀಲರು ಲಭ್ಯವಿದ್ದಾರೆ
+                  {city ? ` · ${city}` : ""}
+                  {practice ? ` · ${practice}` : ""}
+                </>
+              ) : (
+                <>
+                  Showing <strong>{filteredAndSortedList.length}</strong> Verified Advocates
+                  {city ? ` in ${city}` : ""}
+                  {practice ? ` for ${practice}` : ""}
+                </>
+              )}
+            </h2>
+            {(city || practice || activeChip !== "all") && (
+              <button
+                type="button"
+                className="fl-reset-btn"
+                onClick={handleResetFilters}
+              >
+                ✕ {isKn ? "ಫಿಲ್ಟರ್ ತೆರವುಗೊಳಿಸಿ" : "Reset All Filters"}
               </button>
             )}
           </div>
 
-          {displayedList.length === 0 ? (
-            <div className="lw-no-results">
+          {/* Sorting Dropdown */}
+          <div className="fl-sort-box">
+            <label htmlFor="fl-sort-select">{isKn ? "ವಿಂಗಡಣೆ:" : "Sort by:"}</label>
+            <select
+              id="fl-sort-select"
+              className="fl-sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="rating">{isKn ? "⭐ ಗರಿಷ್ಠ ರೇಟಿಂಗ್" : "⭐ Highest Rated"}</option>
+              <option value="experience">{isKn ? "⏳ ಹೆಚ್ಚು ಅನುಭವಿ" : "⏳ Most Experienced"}</option>
+              <option value="cases">{isKn ? "💼 ಹೆಚ್ಚು ಪ್ರಕರಣಗಳು" : "💼 Most Cases Won"}</option>
+              <option value="az">{isKn ? "🔤 ಹೆಸರು (A - Z)" : "🔤 Name (A - Z)"}</option>
+            </select>
+          </div>
+        </div>
+
+        {/* ── ADVOCATES GRID ── */}
+        {filteredAndSortedList.length === 0 ? (
+          <div className="fl-empty-state">
+            <div className="fl-empty-icon">🔍⚖️</div>
+            <h3>{isKn ? "ಯಾವುದೇ ವಕೀಲರು ಕಂಡುಬಂದಿಲ್ಲ" : "No Advocates Found"}</h3>
+            <p>
               {isKn
-                ? "ಆಯ್ಕೆಮಾಡಿದ ನಗರ ಮತ್ತು ವಕಾಲತ್ತು ಕ್ಷೇತ್ರಕ್ಕೆ ಯಾವುದೇ ವಕೀಲರು ಕಂಡುಬಂದಿಲ್ಲ."
-                : "No advocates found for the selected city and practice area."}
-            </div>
-          ) : (
-            <div className="lw-advocates-grid">
-              {displayedList.map((adv) => (
-                <div
-                  key={adv.id}
-                  className="lw-adv-card"
-                  onClick={() => navigate(`/profile/${adv.id}`)}
-                >
-                  <div className="lw-adv-top">
+                ? "ಆಯ್ಕೆಮಾಡಿದ ನಗರ ಅಥವಾ ವಕಾಲತ್ತು ಕ್ಷೇತ್ರಕ್ಕೆ ಹೊಂದಾಣಿಕೆಯಾಗುವ ವಕೀಲರು ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಬದಲಾಯಿಸಿ ಅಥವಾ ತೆರವುಗೊಳಿಸಿ."
+                : "No verified advocates match your current filter combination. Try clearing your city or choosing a broader practice area."}
+            </p>
+            <button
+              type="button"
+              className="fl-empty-reset-btn"
+              onClick={handleResetFilters}
+            >
+              {isKn ? "ಎಲ್ಲಾ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಮರುಹೊಂದಿಸಿ" : "Reset All Filters"}
+            </button>
+          </div>
+        ) : (
+          <div className="fl-grid">
+            {displayedAdvocates.map((adv) => {
+              const specColor = PRACTICE_THEMES[adv.speciality] || PRACTICE_THEMES[adv.practiceArea] || {
+                bg: "#eff6ff",
+                color: "#2563eb",
+                border: "#bfdbfe",
+              };
+
+              return (
+                <article key={adv.id} className="fl-card">
+                  {/* Top Bar Badges */}
+                  <div className="fl-card-topbar">
+                    <span className="fl-verified-badge">
+                      <span className="fl-badge-check">✓</span>
+                      <span>{isKn ? "ಬಾರ್ ಪರಿಶೀಲಿತ" : "Verified Bar Member"}</span>
+                    </span>
+                    {adv.court && (
+                      <span className="fl-court-badge" title={adv.court}>
+                        🏛️ {adv.court.length > 22 ? adv.court.slice(0, 20) + "…" : adv.court}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Header: Avatar, Name & Location */}
+                  <div className="fl-card-header">
                     <AdvocateAvatar advocate={adv} />
-                    <div className="lw-adv-info">
-                      <div className="lw-adv-name">{adv.name}</div>
-                      <div className="lw-adv-spec">{adv.speciality || adv.practiceArea}</div>
-                      <div className="lw-adv-meta">{adv.city} · {adv.experience}</div>
+                    <div className="fl-card-info">
+                      <h3
+                        className="fl-adv-name"
+                        onClick={() => navigate(`/profile/${adv.id}`)}
+                      >
+                        {adv.name}
+                      </h3>
+                      <div
+                        className="fl-adv-speciality"
+                        style={{
+                          background: specColor.bg,
+                          color: specColor.color,
+                          borderColor: specColor.border,
+                        }}
+                      >
+                        {adv.speciality || adv.practiceArea || "Legal Counsel"}
+                      </div>
+                      <div className="fl-adv-location">
+                        <span>📍 {adv.city || adv.district || "Karnataka"}</span>
+                        {adv.experience && <span>• ⏳ {adv.experience}</span>}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="lw-adv-stats">
-                    <span className="lw-adv-rating">⭐ {adv.rating}</span>
-                    <span className="lw-adv-cases">{adv.cases} {isKn ? "ಪ್ರಕರಣಗಳು" : "cases"}</span>
+                  {/* 4-Tile Performance Matrix */}
+                  <div className="fl-card-matrix">
+                    <div className="fl-matrix-tile">
+                      <span className="fl-matrix-label">{isKn ? "ರೇಟಿಂಗ್" : "Rating"}</span>
+                      <strong className="fl-matrix-val">⭐ {adv.rating || "4.9"}</strong>
+                    </div>
+                    <div className="fl-matrix-tile">
+                      <span className="fl-matrix-label">{isKn ? "ಪ್ರಕರಣಗಳು" : "Cases"}</span>
+                      <strong className="fl-matrix-val">💼 {adv.cases ? `${adv.cases}+` : "120+"}</strong>
+                    </div>
+                    <div className="fl-matrix-tile">
+                      <span className="fl-matrix-label">{isKn ? "ಅನುಭವ" : "Experience"}</span>
+                      <strong className="fl-matrix-val">{adv.experience || "6+ Yrs"}</strong>
+                    </div>
+                    <div className="fl-matrix-tile">
+                      <span className="fl-matrix-label">{isKn ? "ಸ್ಥಿತಿ" : "Status"}</span>
+                      <strong className="fl-matrix-val fl-status-active">
+                        {isKn ? "⚡ ಸಕ್ರಿಯ" : "⚡ Available"}
+                      </strong>
+                    </div>
                   </div>
 
-                  <button
-                    className="lw-adv-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/profile/${adv.id}`);
-                    }}
-                  >
-                    {isKn ? "ಸಂಪರ್ಕಿಸಿ" : "Consult Now"}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                  {/* Bio Preview */}
+                  <p className="fl-card-bio">
+                    {adv.bio
+                      ? adv.bio.length > 130
+                        ? adv.bio.slice(0, 128) + "…"
+                        : adv.bio
+                      : `${adv.name} is a verified advocate representing clients before the ${adv.court || "District Courts"} with specialization in ${adv.speciality || "comprehensive legal advisory"}.`}
+                  </p>
+
+                  {/* Spoken Languages */}
+                  <div className="fl-card-languages">
+                    <span className="fl-lang-icon">🗣️</span>
+                    {(Array.isArray(adv.languages) && adv.languages.length > 0
+                      ? adv.languages
+                      : ["Kannada", "English", "Hindi"]
+                    ).map((langItem) => (
+                      <span key={langItem} className="fl-lang-tag">
+                        {langItem}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="fl-card-actions">
+                    <button
+                      type="button"
+                      className="fl-btn-chat"
+                      onClick={() => handleChatNow(adv)}
+                    >
+                      <span>💬</span>
+                      <span>{isKn ? "ಈಗಲೇ ಚಾಟ್ ಮಾಡಿ" : "Chat Now"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="fl-btn-profile"
+                      onClick={() => navigate(`/profile/${adv.id}`)}
+                    >
+                      <span>{isKn ? "ಪ್ರೊಫೈಲ್ ನೋಡಿ" : "Profile"}</span>
+                      <span>→</span>
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {filteredAndSortedList.length > visibleCount && (
+          <div className="fl-load-more-wrap">
+            <button
+              type="button"
+              className="fl-load-more-btn"
+              onClick={() => setVisibleCount((prev) => prev + 9)}
+            >
+              {isKn
+                ? `ಇನ್ನಷ್ಟು ವಕೀಲರನ್ನು ತೋರಿಸಿ (${filteredAndSortedList.length - visibleCount} ಉಳಿದಿವೆ) ↓`
+                : `Load More Advocates (${filteredAndSortedList.length - visibleCount} remaining) ↓`}
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* ── FOOTER TRUST BANNER ── */}
+      <section className="fl-bottom-trust">
+        <div className="fl-bottom-inner">
+          <div className="fl-bottom-col">
+            <span className="fl-bottom-icon">🛡️</span>
+            <h4>{isKn ? "೧೦೦% ಬಾರ್ ಕೌನ್ಸಿಲ್ ಪರಿಶೀಲನೆ" : "Bar Council Certified Advocates"}</h4>
+            <p>
+              {isKn
+                ? "ನಮ್ಮ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್‌ನಲ್ಲಿರುವ ಪ್ರತಿಯೊಬ್ಬ ವಕೀಲರು ರಾಜ್ಯ ಬಾರ್ ಕೌನ್ಸಿಲ್ ದಾಖಲೆಗಳೊಂದಿಗೆ ಪರಿಶೀಲಿಸಲ್ಪಟ್ಟಿದ್ದಾರೆ."
+                : "Every advocate listed is vetted against official State Bar Council enrollment registers."}
+            </p>
+          </div>
+          <div className="fl-bottom-col">
+            <span className="fl-bottom-icon">💬</span>
+            <h4>{isKn ? "ನೇರ ಹಾಗೂ ಗೌಪ್ಯ ಸಮಾಲೋಚನೆ" : "Direct & Confidential Consultation"}</h4>
+            <p>
+              {isKn
+                ? "ಯಾವುದೇ ಮಧ್ಯವರ್ತಿಗಳಿಲ್ಲದೆ ನೇರವಾಗಿ ವಕೀಲರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಿ ಅಥವಾ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಕಾಯ್ದಿರಿಸಿ."
+                : "Connect 1-on-1 with counsel with statutory client-attorney confidentiality protection."}
+            </p>
+          </div>
+          <div className="fl-bottom-col">
+            <span className="fl-bottom-icon">⚖️</span>
+            <h4>{isKn ? "ನ್ಯಾಯಾಲಯದ ಸಂಪೂರ್ಣ ಪರಿಹಾರ" : "Full Representation & Filing"}</h4>
+            <p>
+              {isKn
+                ? "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳು, ಹೈಕೋರ್ಟ್ ಮತ್ತು ನ್ಯಾಯಮಂಡಳಿಗಳಲ್ಲಿ ದಾವೆ ಸಲ್ಲಿಕೆ ಮತ್ತು ಪ್ರಾತಿನಿಧ್ಯ."
+                : "Complete trial and appellate representation across District Courts, High Court, and Tribunals."}
+            </p>
+          </div>
         </div>
       </section>
     </div>

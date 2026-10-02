@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
@@ -39,6 +40,19 @@ function App() {
   }, []);
 
   const location = useLocation();
+
+  // Scroll to top on every route change
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const homeEl = document.getElementById("home-page") || document.querySelector(".home-page");
+    if (homeEl) {
+      try {
+        homeEl.scrollIntoView({ behavior: "instant", block: "start" });
+      } catch (e) {}
+    }
+  }, [location.pathname]);
   const isAdminPortal = location.pathname === '/admin';
   const isAdvocatePortal = location.pathname === '/advocate-dashboard';
   const isAdvocateLogin = location.pathname === '/login';
@@ -51,7 +65,11 @@ function App() {
 
   return (
     <div className={`App ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
-      {!isAdminPortal && !isAdvocatePortal && !isAdvocateLogin && !isClientLogin && !isClientPortal && <Navbar />}
+      {!isAdminPortal && !isAdvocatePortal && !isAdvocateLogin && !isClientLogin && !isClientPortal && (
+        <ErrorBoundary resetKey={location.pathname}>
+          <Navbar />
+        </ErrorBoundary>
+      )}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/profile/:id" element={<Profile />} />
@@ -61,7 +79,7 @@ function App() {
         <Route path="/talk-to-advocate" element={<TalkToAdvocate />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfUse />} />
-        <Route path="/legal-advice" element={<div style={{padding: "100px"}}>Legal Advice Page Content</div>} />
+        <Route path="/legal-advice" element={<Navigate to="/legal-advice/ask-question" replace />} />
         <Route path="/legal-advice/ask-question" element={<AskQuestion />} />
         <Route path="/legal-advice/documents" element={<LegalDocuments />} />
         <Route path="/legal-advice/bare-acts" element={<BareActs />} />

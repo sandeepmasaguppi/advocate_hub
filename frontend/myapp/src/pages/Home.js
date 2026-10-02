@@ -6,18 +6,117 @@ import AdvocatesList from "./AdvocatesList";
 import { getAdvocates } from "../data/Advocatesstore";
 import laptopImage from "../images/Laptop.png";
 
+// Professional stroke-based SVG icons matching Admin Console pattern
+const CATEGORY_ICONS = {
+  family: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 20v-1a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v1" />
+      <circle cx="10" cy="8" r="3.5" />
+      <path d="M21 20v-1a3 3 0 0 0-2-2.8" />
+      <path d="M16 4.5a3.5 3.5 0 0 1 0 7" />
+    </svg>
+  ),
+  criminal: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  ),
+  civil: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="M7 21h10" />
+      <path d="M12 3v18" />
+      <path d="M3 7h18" />
+    </svg>
+  ),
+  corporate: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+      <path d="M6 11h2" />
+      <path d="M6 15h2" />
+      <path d="M10 11h2" />
+      <path d="M10 15h2" />
+    </svg>
+  ),
+  arrowRight: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  ),
+};
+
 const PRACTICE_TYPES_EN = [
-  { icon: "👨‍👩‍👧", label: "Person / Family", category: "family", desc: "Divorce, custody, marriage, adoption, maintenance" },
-  { icon: "🔒", label: "Criminal / Property", category: "criminal", desc: "FIR, bail, property disputes, POCSO, cybercrime" },
-  { icon: "⚖️", label: "Civil / Debt Matter", category: "civil", desc: "Civil suits, debt recovery, money recovery, NI Act" },
-  { icon: "🏢", label: "Corporate Law", category: "corporate", desc: "Company registration, GST, tax, compliance, IPR" },
+  {
+    icon: CATEGORY_ICONS.family,
+    emoji: "👨‍👩‍👧",
+    label: "Person / Family",
+    category: "family",
+    desc: "Divorce, custody, marriage, adoption, maintenance",
+    badge: "Family Law",
+  },
+  {
+    icon: CATEGORY_ICONS.criminal,
+    emoji: "🔒",
+    label: "Criminal / Property",
+    category: "criminal",
+    desc: "FIR, bail, property disputes, POCSO, cybercrime",
+    badge: "Criminal & Disputes",
+  },
+  {
+    icon: CATEGORY_ICONS.civil,
+    emoji: "⚖️",
+    label: "Civil / Debt Matter",
+    category: "civil",
+    desc: "Civil suits, debt recovery, money recovery, NI Act",
+    badge: "Civil & Financial",
+  },
+  {
+    icon: CATEGORY_ICONS.corporate,
+    emoji: "🏢",
+    label: "Corporate Law",
+    category: "corporate",
+    desc: "Company registration, GST, tax, compliance, IPR",
+    badge: "Business & Tax",
+  },
 ];
 
 const PRACTICE_TYPES_KN = [
-  { icon: "👨‍👩‍👧", label: "ವ್ಯಕ್ತಿ / ಕುಟುಂಬ ಕಾನೂನು", category: "family", desc: "ವಿಚ್ಛೇದನ, ಮಕ್ಕಳ ಪಾಲನೆ, ವಿವಾಹ, ದತ್ತು, ಜೀವನಾಂಶ" },
-  { icon: "🔒", label: "ಕ್ರಿಮಿನಲ್ / ಆಸ್ತಿ ವಿವಾದ", category: "criminal", desc: "ಎಫ್‌ಐಆರ್, ಜಾಮೀನು, ಆಸ್ತಿ ಕಲಹಗಳು, ಪೋಕ್ಸೊ, ಸೈಬರ್ ಕ್ರೈಮ್" },
-  { icon: "⚖️", label: "ಸಿವಿಲ್ / ಸಾಲ ವಸೂಲಾತಿ", category: "civil", desc: "ಸಿವಿಲ್ ದಾವೆಗಳು, ಸಾಲ ವಸೂಲಾತಿ, ಹಣಕಾಸು ವಿವಾದ, ಚೆಕ್ ಬೌನ್ಸ್" },
-  { icon: "🏢", label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು", category: "corporate", desc: "ಕಂಪನಿ ನೋಂದಣಿ, ಜಿಎಸ್‌ಟಿ, ತೆರಿಗೆ, ನಿಯಮಾವಳಿಗಳು, ಐಪಿಆರ್" },
+  {
+    icon: CATEGORY_ICONS.family,
+    emoji: "👨‍👩‍👧",
+    label: "ವ್ಯಕ್ತಿ / ಕುಟುಂಬ",
+    category: "family",
+    desc: "ವಿಚ್ಛೇದನ, ಮಕ್ಕಳ ಪಾಲನೆ, ವಿವಾಹ, ದತ್ತು, ಜೀವನಾಂಶ",
+    badge: "ಕುಟುಂಬ ಕಾನೂನು",
+  },
+  {
+    icon: CATEGORY_ICONS.criminal,
+    emoji: "🔒",
+    label: "ಕ್ರಿಮಿನಲ್ / ಆಸ್ತಿ",
+    category: "criminal",
+    desc: "ಎಫ್‌ಐಆರ್, ಜಾಮೀನು, ಆಸ್ತಿ ಕಲಹಗಳು, ಪೋಕ್ಸೊ, ಸೈಬರ್ ಕ್ರೈಮ್",
+    badge: "ಕ್ರಿಮಿನಲ್ ಮತ್ತು ಆಸ್ತಿ",
+  },
+  {
+    icon: CATEGORY_ICONS.civil,
+    emoji: "⚖️",
+    label: "ಸಿವಿಲ್ / ಸಾಲ ಪ್ರಕರಣ",
+    category: "civil",
+    desc: "ಸಿವಿಲ್ ದಾವೆಗಳು, ಸಾಲ ವಸೂಲಾತಿ, ಹಣಕಾಸು ವಿವಾದ, ಚೆಕ್ ಬೌನ್ಸ್",
+    badge: "ಸಿವಿಲ್ ಮತ್ತು ಸಾಲ",
+  },
+  {
+    icon: CATEGORY_ICONS.corporate,
+    emoji: "🏢",
+    label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು",
+    category: "corporate",
+    desc: "ಕಂಪನಿ ನೋಂದಣಿ, ಜಿಎಸ್‌ಟಿ, ತೆರಿಗೆ, ನಿಯಮಾವಳಿಗಳು, ಐಪಿಆರ್",
+    badge: "ಕಾರ್ಪೊರೇಟ್ ಮತ್ತು ತೆರಿಗೆ",
+  },
 ];
 
 const FAQS_EN = [
@@ -36,18 +135,119 @@ const FAQS_KN = [
   { q: "ಯಾವ ರೀತಿಯ ವಕೀಲರು ಲಭ್ಯವಿದ್ದಾರೆ?", a: "ಕ್ರಿಮಿನಲ್, ಕೌಟುಂಬಿಕ, ಆಸ್ತಿ, ಸಿವಿಲ್, ಕಾರ್ಪೊರೇಟ್, ತೆರಿಗೆ, ಗ್ರಾಹಕ ವೇದಿಕೆ, ಸೈಬರ್ ಕ್ರೈಮ್ ಮತ್ತು ಕಾರ್ಮಿಕ ಕಾನೂನು ತಜ್ಞರು ಲಭ್ಯವಿದ್ದಾರೆ." },
 ];
 
+// Professional stroke-based SVG icons for How It Works (matching Admin Console pattern)
+const HOW_ICONS = {
+  search: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  ),
+  choose: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <polyline points="16 11 18 13 22 9" />
+    </svg>
+  ),
+  connect: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d="M8 10h.01" />
+      <path d="M12 10h.01" />
+      <path d="M16 10h.01" />
+    </svg>
+  ),
+  resolve: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  ),
+  arrowRight: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  ),
+};
+
 const HOW_IT_WORKS_EN = [
-  { step: "01", icon: "🔍", title: "Search", desc: "Select your city and legal issue to find matching advocates in your area." },
-  { step: "02", icon: "👤", title: "Choose", desc: "View advocate profiles, experience, and ratings. Pick the best fit." },
-  { step: "03", icon: "💬", title: "Connect", desc: "Chat, call, or schedule a consultation directly with your chosen advocate." },
-  { step: "04", icon: "✅", title: "Resolve", desc: "Get expert legal guidance and resolve your matter with confidence." },
+  {
+    step: "01",
+    icon: HOW_ICONS.search,
+    emoji: "🔍",
+    title: "Search",
+    desc: "Select your city and legal issue to find matching advocates in your area.",
+    tag: "Find Advocates",
+    cta: "Find Lawyers",
+  },
+  {
+    step: "02",
+    icon: HOW_ICONS.choose,
+    emoji: "👤",
+    title: "Choose",
+    desc: "View advocate profiles, experience, and ratings. Pick the best fit.",
+    tag: "Verified Profiles",
+    cta: "Find Lawyers",
+  },
+  {
+    step: "03",
+    icon: HOW_ICONS.connect,
+    emoji: "💬",
+    title: "Connect",
+    desc: "Chat, call, or schedule a consultation directly with your chosen advocate.",
+    tag: "Direct Contact",
+    cta: "Find Lawyers",
+  },
+  {
+    step: "04",
+    icon: HOW_ICONS.resolve,
+    emoji: "✅",
+    title: "Resolve",
+    desc: "Get expert legal guidance and resolve your matter with confidence.",
+    tag: "Legal Success",
+    cta: "Find Lawyers",
+  },
 ];
 
 const HOW_IT_WORKS_KN = [
-  { step: "01", icon: "🔍", title: "ಹುಡುಕಿ", desc: "ನಿಮ್ಮ ನಗರ ಮತ್ತು ಕಾನೂನು ಸಮಸ್ಯೆಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ ನಿಮ್ಮ ಪ್ರದೇಶದ ವಕೀಲರನ್ನು ಹುಡುಕಿ." },
-  { step: "02", icon: "👤", title: "ಆಯ್ಕೆಮಾಡಿ", desc: "ವಕೀಲರ ಪ್ರೊಫೈಲ್, ಅನುಭವ ಮತ್ತು ರೇಟಿಂಗ್‌ಗಳನ್ನು ನೋಡಿ ಸೂಕ್ತ ವಕೀಲರನ್ನು ಆಯ್ಕೆಮಾಡಿ." },
-  { step: "03", icon: "💬", title: "ಸಂಪರ್ಕಿಸಿ", desc: "ನೇರವಾಗಿ ಸಂದೇಶ ಕಳುಹಿಸಿ, ಕರೆ ಮಾಡಿ ಅಥವಾ ಸಮಾಲೋಚನೆ ಸಮಯ ನಿಗದಿಪಡಿಸಿ." },
-  { step: "04", icon: "✅", title: "ಪರಿಹರಿಸಿ", desc: "ತಜ್ಞ ಕಾನೂನು ಮಾರ್ಗದರ್ಶನ ಪಡೆದು ನಿಮ್ಮ ಪ್ರಕರಣವನ್ನು ವಿಶ್ವಾಸದಿಂದ ಪರಿಹರಿಸಿ." },
+  {
+    step: "01",
+    icon: HOW_ICONS.search,
+    emoji: "🔍",
+    title: "ಹುಡುಕಿ",
+    desc: "ನಿಮ್ಮ ನಗರ ಮತ್ತು ಕಾನೂನು ಸಮಸ್ಯೆಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ ನಿಮ್ಮ ಪ್ರದೇಶದ ವಕೀಲರನ್ನು ಹುಡುಕಿ.",
+    tag: "ವಕೀಲರನ್ನು ಹುಡುಕಿ",
+    cta: "ವಕೀಲರನ್ನು ಹುಡುಕಿ",
+  },
+  {
+    step: "02",
+    icon: HOW_ICONS.choose,
+    emoji: "👤",
+    title: "ಆಯ್ಕೆಮಾಡಿ",
+    desc: "ವಕೀಲರ ಪ್ರೊಫೈಲ್, ಅನುಭವ ಮತ್ತು ರೇಟಿಂಗ್‌ಗಳನ್ನು ನೋಡಿ ಸೂಕ್ತ ವಕೀಲರನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+    tag: "ಪರಿಶೀಲಿಸಿದ ಪ್ರೊಫೈಲ್‌ಗಳು",
+    cta: "ವಕೀಲರನ್ನು ಹುಡುಕಿ",
+  },
+  {
+    step: "03",
+    icon: HOW_ICONS.connect,
+    emoji: "💬",
+    title: "ಸಂಪರ್ಕಿಸಿ",
+    desc: "ನೇರವಾಗಿ ಸಂದೇಶ ಕಳುಹಿಸಿ, ಕರೆ ಮಾಡಿ ಅಥವಾ ಸಮಾಲೋಚನೆ ಸಮಯ ನಿಗದಿಪಡಿಸಿ.",
+    tag: "ನೇರ ಸಂಪರ್ಕ",
+    cta: "ವಕೀಲರನ್ನು ಹುಡುಕಿ",
+  },
+  {
+    step: "04",
+    icon: HOW_ICONS.resolve,
+    emoji: "✅",
+    title: "ಪರಿಹರಿಸಿ",
+    desc: "ತಜ್ಞ ಕಾನೂನು ಮಾರ್ಗದರ್ಶನ ಪಡೆದು ನಿಮ್ಮ ಪ್ರಕರಣವನ್ನು ವಿಶ್ವಾಸದಿಂದ ಪರಿಹರಿಸಿ.",
+    tag: "ಕಾನೂನು ಯಶಸ್ಸು",
+    cta: "ವಕೀಲರನ್ನು ಹುಡುಕಿ",
+  },
 ];
 
 const STATS_EN = [
@@ -161,7 +361,7 @@ export default function Home() {
   };
 
   return (
-    <div className="home-page">
+    <div className="home-page" id="home-page">
 
 
       {/* ── SECTION 1: Hero ── */}
@@ -223,10 +423,14 @@ export default function Home() {
         getInitials={getInitials}
       />
 
-      {/* ── SECTION 3: Practice Types ── */}
-      <section className="lw-section lw-practice-section">
+      {/* ── SECTION 3: Practice Types / Find A Lawyer By Category ── */}
+      <section className="lw-section lw-practice-section" id="practice-categories">
         <div className="lw-section-inner">
-          <div className="lw-section-head">
+          <div className="lw-section-head lw-practice-head">
+            <div className="lw-practice-eyebrow">
+              <span className="lw-practice-eyebrow-dot" />
+              <span>{isKn ? "ಕಾನೂನು ವಿಭಾಗಗಳು" : "Legal Specializations"}</span>
+            </div>
             <h2 className="lw-section-title">
               {isKn ? "ವಿಭಾಗವಾರು ವಕೀಲರನ್ನು ಹುಡುಕಿ" : "Find A Lawyer By Category"}
             </h2>
@@ -238,23 +442,43 @@ export default function Home() {
           </div>
           <div className="lw-practice-grid">
             {practiceTypes.map((pt) => (
-              <button
-                key={pt.label}
+              <div
+                key={pt.category}
                 className="lw-practice-card"
                 onClick={() => navigate(`/find-lawyer?cat=${pt.category}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    navigate(`/find-lawyer?cat=${pt.category}`);
+                  }
+                }}
               >
-                <span className="lw-practice-icon">{pt.icon}</span>
-                <div className="lw-practice-label">{pt.label}</div>
-                <div className="lw-practice-desc">{pt.desc}</div>
-                <div className="lw-practice-cta">
-                  {isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ →" : "Find Lawyers →"}
+                <div className="lw-practice-card-top">
+                  <div className="lw-practice-icon-box">
+                    <span className="lw-practice-svg-icon">{pt.icon}</span>
+                  </div>
+                  <span className="lw-practice-badge">
+                    <span className="lw-practice-emoji">{pt.emoji}</span>
+                    <span>{pt.badge}</span>
+                  </span>
                 </div>
-              </button>
+                <div className="lw-practice-body">
+                  <h3 className="lw-practice-label">{pt.label}</h3>
+                  <p className="lw-practice-desc">{pt.desc}</p>
+                </div>
+                <div className="lw-practice-footer">
+                  <span className="lw-practice-cta">
+                    <span>{isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ" : "Find Lawyers"}</span>
+                    <span className="lw-practice-arrow">{CATEGORY_ICONS.arrowRight}</span>
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
           <div className="lw-talk-row">
             <button className="lw-btn-primary lw-btn-lg" onClick={() => navigate("/find-lawyer")}>
-              {isKn ? "💬 ವಕೀಲರೊಂದಿಗೆ ಸಮಾಲೋಚನೆ ನಡೆಸಿ" : "💬 Talk to Lawyer Next"}
+              {isKn ? "💬 ಎಲ್ಲಾ ವಕೀಲರನ್ನು ನೋಡಿ ಮತ್ತು ಸಮಾಲೋಚಿಸಿ" : "💬 Explore All Lawyers & Consult Now"}
             </button>
           </div>
         </div>
@@ -275,9 +499,13 @@ export default function Home() {
       </section>
 
       {/* ── SECTION 5: How It Works ── */}
-      <section className="lw-section lw-how-section">
+      <section className="lw-section lw-how-section" id="how-it-works">
         <div className="lw-section-inner">
-          <div className="lw-section-head" style={{ textAlign: "center" }}>
+          <div className="lw-section-head lw-how-head">
+            <div className="lw-how-eyebrow">
+              <span className="lw-how-eyebrow-dot" />
+              <span>{isKn ? "೪ ಸರಳ ಹಂತಗಳು" : "4 Simple Steps"}</span>
+            </div>
             <h2 className="lw-section-title">
               {isKn ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ ಹೇಗೆ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ" : "How Advocates Hub Works"}
             </h2>
@@ -285,16 +513,61 @@ export default function Home() {
               {isKn ? "೪ ಸರಳ ಹಂತಗಳಲ್ಲಿ ಕಾನೂನು ನೆರವು ಪಡೆಯಿರಿ" : "Get legal help in 4 simple steps"}
             </p>
           </div>
-          <div className="lw-how-grid">
+
+          <div className="lw-how-flow-container">
             {howItWorks.map((step, i) => (
-              <div key={step.step} className="lw-how-card">
-                <div className="lw-how-step">{step.step}</div>
-                <div className="lw-how-icon">{step.icon}</div>
-                <div className="lw-how-title">{step.title}</div>
-                <div className="lw-how-desc">{step.desc}</div>
-                {i < howItWorks.length - 1 && <div className="lw-how-arrow">→</div>}
-              </div>
+              <React.Fragment key={step.step}>
+                <div
+                  className={`lw-how-card lw-how-step-${i + 1}`}
+                  onClick={() => navigate("/find-lawyer")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      navigate("/find-lawyer");
+                    }
+                  }}
+                >
+                  <div className="lw-how-card-top">
+                    <div className="lw-how-icon-box">
+                      <span className="lw-how-svg-icon">{step.icon}</span>
+                    </div>
+                    <div className="lw-how-badge-group">
+                      <span className="lw-how-step-num">{step.step}</span>
+                      <span className="lw-how-badge">
+                        <span className="lw-how-emoji">{step.emoji}</span>
+                        <span>{step.tag}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="lw-how-body">
+                    <h3 className="lw-how-label">{step.title}</h3>
+                    <p className="lw-how-desc">{step.desc}</p>
+                  </div>
+
+                  <div className="lw-how-footer">
+                    <span className="lw-how-cta">
+                      <span>{step.cta}</span>
+                      <span className="lw-how-arrow">{CATEGORY_ICONS.arrowRight}</span>
+                    </span>
+                  </div>
+                </div>
+
+                {i < howItWorks.length - 1 && (
+                  <div className="lw-how-connector" aria-hidden="true">
+                    <span className="lw-how-connector-line" />
+                    <span className="lw-how-connector-arrow">→</span>
+                  </div>
+                )}
+              </React.Fragment>
             ))}
+          </div>
+
+          <div className="lw-talk-row">
+            <button className="lw-btn-primary lw-btn-lg" onClick={() => navigate("/find-lawyer")}>
+              {isKn ? "🚀 ಈಗಲೇ ವಕೀಲರನ್ನು ಹುಡುಕಿ ಪ್ರಾರಂಭಿಸಿ" : "🚀 Find Your Lawyer & Get Started"}
+            </button>
           </div>
         </div>
       </section>

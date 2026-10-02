@@ -2189,64 +2189,286 @@ body, html {
 }
 
 /* First consult welcome box inside chat canvas */
+.wa-conversation-canvas.empty-canvas {
+  justify-content: center;
+  align-items: center;
+  padding: 14px 20px;
+}
+
 .wa-adv-first-consult-box {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  padding: 18px 22px;
+  margin: auto;
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  animation: waFadeInBox 0.25s ease-out;
+}
+
+@keyframes waFadeInBox {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.wa-app-shell.wa-dark .wa-adv-first-consult-box,
+.wa-dark .wa-adv-first-consult-box {
+  background: #111c2e;
+  border-color: #1e293b;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+.wa-first-consult-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.wa-first-consult-avatar {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 36px 28px;
-  margin: auto;
-  max-width: 480px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
-  border: 1.5px dashed #7c3aed;
-  border-radius: 24px;
-  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.08);
+  font-size: 1.15rem;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+  overflow: hidden;
 }
 
-.wa-app-shell.wa-dark .wa-adv-first-consult-box {
-  background: rgba(17, 27, 33, 0.95);
-  border-color: #6366f1;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+.wa-first-consult-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.wa-first-consult-icon {
-  font-size: 2.6rem;
-  margin-bottom: 12px;
+.wa-first-consult-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wa-first-consult-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  width: fit-content;
+}
+
+.wa-app-shell.wa-dark .wa-first-consult-badge,
+.wa-dark .wa-first-consult-badge {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 .wa-first-consult-title {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--wa-text-primary);
-  margin-bottom: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--wa-text-primary, #0f172a);
+  margin: 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wa-app-shell.wa-dark .wa-first-consult-title,
+.wa-dark .wa-first-consult-title {
+  color: #f8fafc;
 }
 
 .wa-first-consult-desc {
-  font-size: 0.88rem;
-  color: var(--wa-text-secondary);
-  line-height: 1.55;
-  margin-bottom: 16px;
+  font-size: 0.81rem;
+  color: var(--wa-text-secondary, #475569);
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+}
+
+.wa-app-shell.wa-dark .wa-first-consult-desc,
+.wa-dark .wa-first-consult-desc {
+  color: #94a3b8;
+}
+
+.wa-first-consult-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wa-fc-feat-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #334155;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.wa-app-shell.wa-dark .wa-fc-feat-item,
+.wa-dark .wa-fc-feat-item {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.wa-fc-feat-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.wa-first-consult-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.wa-fc-chips-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--wa-text-muted, #64748b);
+  letter-spacing: 0.3px;
+}
+
+.wa-app-shell.wa-dark .wa-fc-chips-label,
+.wa-dark .wa-fc-chips-label {
+  color: #94a3b8;
+}
+
+.wa-fc-chips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.wa-fc-chip-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  font-size: 0.775rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 7px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wa-fc-chip-btn:hover {
+  background: #ede9fe;
+  border-color: #8b5cf6;
+  color: #5b21b6;
+  transform: translateX(2px);
+}
+
+.wa-app-shell.wa-dark .wa-fc-chip-btn,
+.wa-dark .wa-fc-chip-btn {
+  background: rgba(30, 41, 59, 0.75);
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.wa-app-shell.wa-dark .wa-fc-chip-btn:hover,
+.wa-dark .wa-fc-chip-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #818cf8;
+  color: #ffffff;
 }
 
 .wa-first-consult-pill {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
   background: #f5f3ff;
   border: 1px solid #ddd6fe;
   color: #6d28d9;
-  font-size: 0.825rem;
-  font-weight: 700;
-  padding: 7px 16px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 6px 12px;
   border-radius: 999px;
 }
 
-.wa-app-shell.wa-dark .wa-first-consult-pill {
-  background: #1e1b4b;
-  border-color: #4338ca;
-  color: #c7d2fe;
+.wa-app-shell.wa-dark .wa-first-consult-pill,
+.wa-dark .wa-first-consult-pill {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: rgba(124, 58, 237, 0.35);
+  color: #c4b5fd;
+}
+
+.wa-first-consult-pill strong {
+  color: #4c1d95;
+  font-weight: 700;
+}
+
+.wa-app-shell.wa-dark .wa-first-consult-pill strong,
+.wa-dark .wa-first-consult-pill strong {
+  color: #ddd6fe;
+}
+
+.wa-fc-dot {
+  opacity: 0.5;
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  .wa-adv-first-consult-box {
+    padding: 14px 14px;
+    border-radius: 14px;
+  }
+  .wa-first-consult-features {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .wa-fc-feat-item {
+    justify-content: flex-start;
+    padding: 5px 8px;
+  }
+  .wa-first-consult-pill {
+    flex-direction: column;
+    gap: 2px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .wa-fc-dot {
+    display: none;
+  }
 }
 
 .wa-search-filter-badge {
@@ -2772,119 +2994,100 @@ body, html {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(11, 20, 26, 0.82);
+  background: rgba(11, 20, 26, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   animation: waFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .wa-pay-card {
   position: relative;
-  width: min(720px, 94vw);
-  max-height: 92vh;
-  overflow-y: auto;
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
   background: #ffffff;
   color: #0f172a;
-  border-radius: 24px;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.1);
-  padding: 28px 30px 24px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  padding: 18px 20px 14px;
   border: 1px solid #e2e8f0;
+  animation: waFadeInCard 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes waFadeInCard {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-card,
 .wa-pay-card.dark {
-  background: #111b21;
+  background: #111c2e;
   color: #e9edef;
-  border-color: #222d34;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
+  border-color: #1e293b;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.65);
 }
 
+/* Header */
 .wa-pay-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 16px;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-header,
-.wa-pay-card.dark .wa-pay-header {
-  border-bottom-color: #222d34;
-}
-
-.wa-pay-header-left {
-  flex: 1;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .wa-pay-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: #ecfdf5;
   color: #047857;
   border: 1px solid #a7f3d0;
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
+  letter-spacing: 0.03em;
 }
 
 .wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-badge,
 .wa-pay-card.dark .wa-pay-badge {
-  background: #064e3b;
+  background: rgba(16, 185, 129, 0.15);
   color: #34d399;
-  border-color: #059669;
-}
-
-.wa-pay-title {
-  font-size: 1.35rem;
-  font-weight: 900;
-  color: #0f172a;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  line-height: 1.3;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-title,
-.wa-pay-card.dark .wa-pay-title {
-  color: #f8fafc;
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 .wa-pay-header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .wa-pay-lang-toggle {
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   color: #0f172a;
-  font-size: 0.825rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .wa-pay-lang-toggle:hover {
   background: #e2e8f0;
-  border-color: #94a3b8;
 }
 
 .wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-lang-toggle,
 .wa-pay-card.dark .wa-pay-lang-toggle {
-  background: #202c33;
+  background: #1e293b;
   border-color: #334155;
   color: #e9edef;
 }
@@ -2892,10 +3095,10 @@ body, html {
 .wa-pay-close-btn {
   background: #f1f5f9;
   border: none;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  font-size: 1.25rem;
+  font-size: 0.95rem;
   color: #64748b;
   cursor: pointer;
   display: flex;
@@ -2911,172 +3114,140 @@ body, html {
 
 .wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-close-btn,
 .wa-pay-card.dark .wa-pay-close-btn {
-  background: #202c33;
+  background: #1e293b;
   color: #94a3b8;
 }
 
-/* Uppercase Case Inquiry Preview */
-.wa-pay-case-box {
+/* Advocate Strip */
+.wa-pay-adv-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-bottom: 18px;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
 }
 
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-case-box,
-.wa-pay-card.dark .wa-pay-case-box {
-  background: #0b141a;
-  border-color: #222d34;
+.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-adv-strip,
+.wa-pay-card.dark .wa-pay-adv-strip {
+  background: #0f172a;
+  border-color: #1e293b;
 }
 
-.wa-pay-case-label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #2563eb;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-case-label,
-.wa-pay-card.dark .wa-pay-case-label {
-  color: #00a884;
-}
-
-.wa-pay-case-text {
-  font-size: 0.95rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #1e293b;
-  line-height: 1.5;
-  background: #ffffff;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  word-break: break-word;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-case-text,
-.wa-pay-card.dark .wa-pay-case-text {
-  background: #111b21;
-  color: #e9edef;
-  border-color: #2a3942;
-}
-
-.wa-pay-case-target {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin-top: 8px;
-  text-transform: uppercase;
-}
-
-.wa-pay-case-target strong {
-  color: #0f172a;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-case-target,
-.wa-pay-card.dark .wa-pay-case-target {
-  color: #8696a0;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-case-target strong,
-.wa-pay-card.dark .wa-pay-case-target strong {
-  color: #e9edef;
-}
-
-/* Fee Reason Box */
-.wa-pay-reason-box {
-  background: #eff6ff;
-  border-left: 4px solid #2563eb;
-  padding: 12px 16px;
-  border-radius: 0 12px 12px 0;
-  margin-bottom: 20px;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-reason-box,
-.wa-pay-card.dark .wa-pay-reason-box {
-  background: #172554;
-  border-left-color: #3b82f6;
-}
-
-.wa-pay-reason-title {
-  font-size: 0.825rem;
-  font-weight: 800;
-  color: #1e40af;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 4px;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-reason-title,
-.wa-pay-card.dark .wa-pay-reason-title {
-  color: #93c5fd;
-}
-
-.wa-pay-reason-desc {
-  font-size: 0.875rem;
-  color: #1e3a8a;
-  line-height: 1.5;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-reason-desc,
-.wa-pay-card.dark .wa-pay-reason-desc {
-  color: #bfdbfe;
-}
-
-/* Two-column layout for Scanner & Amount */
-.wa-pay-body-grid {
-  display: grid;
-  grid-template-columns: 230px 1fr;
-  gap: 22px;
+.wa-pay-adv-left {
+  display: flex;
   align-items: center;
-  margin-bottom: 18px;
+  gap: 10px;
+  min-width: 0;
 }
 
-@media (max-width: 640px) {
-  .wa-pay-body-grid {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-}
-
-/* Scanner Card */
-.wa-scanner-card {
-  background: #ffffff;
-  border: 2px solid #008069;
-  border-radius: 16px;
-  padding: 14px;
-  text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 128, 105, 0.12);
-}
-
-.wa-scanner-badge {
-  background: #008069;
+.wa-pay-adv-avatar {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #008069, #059669);
   color: #ffffff;
-  font-size: 0.725rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  padding: 3px 8px;
-  border-radius: 6px;
-  display: inline-block;
+  font-size: 0.95rem;
+  overflow: hidden;
+}
+
+.wa-pay-adv-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wa-pay-adv-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wa-pay-adv-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-adv-name,
+.wa-pay-card.dark .wa-pay-adv-name {
+  color: #f8fafc;
+}
+
+.wa-pay-verified-check {
+  color: #00a884;
+  font-size: 0.75rem;
+}
+
+.wa-pay-adv-spec {
+  font-size: 0.72rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-adv-spec,
+.wa-pay-card.dark .wa-pay-adv-spec {
+  color: #94a3b8;
+}
+
+.wa-pay-fee-badge {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-fee-badge,
+.wa-pay-card.dark .wa-pay-fee-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+/* Scanner Wrap */
+.wa-pay-scanner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
   margin-bottom: 10px;
 }
 
 .wa-qr-frame {
   position: relative;
-  width: 180px;
-  height: 180px;
-  margin: 0 auto 8px;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 6px;
   background: #ffffff;
-  padding: 8px;
+  padding: 4px;
   border-radius: 12px;
   border: 2px dashed #00a884;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 168, 132, 0.12);
 }
 
 .wa-qr-img {
@@ -3103,159 +3274,68 @@ body, html {
   100% { top: 100%; opacity: 0; }
 }
 
-.wa-scanner-phonepe-box {
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  border-radius: 10px;
-  padding: 8px 10px;
-  margin-top: 6px;
-}
-
-.wa-scanner-number {
-  font-size: 0.825rem;
-  color: #5b21b6;
-  margin-bottom: 3px;
-}
-
-.wa-scanner-number strong {
-  font-size: 0.95rem;
-  color: #4c1d95;
-  letter-spacing: 0.04em;
-}
-
-.wa-scanner-upi-id {
-  font-size: 0.75rem;
-  color: #334155;
-}
-
-.wa-scanner-upi-id strong {
-  color: #0f172a;
-}
-
 .wa-scanner-apps {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: #64748b;
-  margin-top: 6px;
   font-weight: 600;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-scanner-card,
-.wa-pay-card.dark .wa-scanner-card {
-  background: #111b21;
-  border-color: #7c3aed;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.2);
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-scanner-phonepe-box,
-.wa-pay-card.dark .wa-scanner-phonepe-box {
-  background: #1e1b4b;
-  border-color: #4338ca;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-scanner-number,
-.wa-pay-card.dark .wa-scanner-number {
-  color: #c7d2fe;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-scanner-number strong,
-.wa-pay-card.dark .wa-scanner-number strong {
-  color: #e0e7ff;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-scanner-upi-id,
-.wa-pay-card.dark .wa-scanner-upi-id {
-  color: #94a3b8;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-scanner-upi-id strong,
-.wa-pay-card.dark .wa-scanner-upi-id strong {
-  color: #f1f5f9;
+  text-align: center;
 }
 
 .wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-scanner-apps,
 .wa-pay-card.dark .wa-scanner-apps {
-  color: #8696a0;
-}
-
-.wa-pay-amount-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.wa-pay-fee-row {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.wa-pay-amount-val {
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: #008069;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-amount-val,
-.wa-pay-card.dark .wa-pay-amount-val {
-  color: #25d366;
-}
-
-.wa-pay-instruction {
-  font-size: 0.9rem;
-  color: #475569;
-  line-height: 1.5;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-instruction,
-.wa-pay-card.dark .wa-pay-instruction {
   color: #94a3b8;
 }
 
-.wa-pay-features-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Simple Purpose Card */
+.wa-pay-purpose-card {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.825rem;
-  color: #334155;
+  align-items: flex-start;
+  gap: 8px;
+  background: #eff6ff;
+  border-left: 3.5px solid #2563eb;
+  border-radius: 0 10px 10px 0;
+  padding: 8px 10px;
+  margin-bottom: 12px;
 }
 
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-features-list,
-.wa-pay-card.dark .wa-pay-features-list {
-  color: #cbd5e1;
+.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-purpose-card,
+.wa-pay-card.dark .wa-pay-purpose-card {
+  background: #172554;
+  border-left-color: #3b82f6;
 }
 
-.wa-pay-features-list li::before {
-  content: "✓ ";
-  color: #00a884;
-  font-weight: 800;
+.wa-pay-purpose-icon {
+  font-size: 0.9rem;
+  line-height: 1.3;
 }
 
-/* Pay / Verification Action Buttons */
+.wa-pay-purpose-text {
+  font-size: 0.75rem;
+  color: #1e3a8a;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-purpose-text,
+.wa-pay-card.dark .wa-pay-purpose-text {
+  color: #bfdbfe;
+}
+
+/* Action Buttons */
 .wa-pay-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 14px;
-  border-top: 1px solid #e2e8f0;
-  padding-top: 18px;
-}
-
-.wa-app-shell.wa-dark ~ .wa-pay-overlay .wa-pay-actions,
-.wa-pay-card.dark .wa-pay-actions {
-  border-top-color: #222d34;
+  gap: 6px;
 }
 
 .wa-pay-confirm-btn {
   width: 100%;
-  padding: 14px 20px;
-  background: #008069;
+  padding: 11px 16px;
+  background: linear-gradient(135deg, #008069, #059669);
   color: #ffffff;
   border: none;
-  border-radius: 12px;
-  font-size: 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
   display: flex;
@@ -3267,9 +3347,13 @@ body, html {
 }
 
 .wa-pay-confirm-btn:hover:not(:disabled) {
-  background: #015c4b;
+  background: linear-gradient(135deg, #015c4b, #047857);
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(0, 128, 105, 0.45);
+}
+
+.wa-pay-confirm-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .wa-pay-confirm-btn:disabled {
@@ -3285,15 +3369,31 @@ body, html {
   background: transparent;
   border: none;
   color: #64748b;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 6px;
+  padding: 4px;
   transition: color 0.15s ease;
+  text-align: center;
 }
 
 .wa-pay-cancel-btn:hover {
   color: #ef4444;
+}
+
+@media (max-width: 480px) {
+  .wa-pay-card {
+    padding: 14px 14px 12px;
+    border-radius: 18px;
+  }
+  .wa-qr-frame {
+    width: 125px;
+    height: 125px;
+  }
+  .wa-pay-confirm-btn {
+    padding: 10px 14px;
+    font-size: 0.88rem;
+  }
 }
 
 /* ==========================================================================
@@ -3482,21 +3582,17 @@ body, html {
   }
 
   /* Payment Modal on Mobile */
-  .wa-pay-modal {
-    width: 95vw !important;
-    max-width: 95vw !important;
-    max-height: 92vh !important;
-    padding: 16px 14px !important;
-    border-radius: 16px !important;
-  }
-
-  .wa-pay-title {
-    font-size: 1.05rem !important;
+  .wa-pay-card {
+    width: 94vw !important;
+    max-width: 420px !important;
+    max-height: 94vh !important;
+    padding: 16px 16px 14px !important;
+    border-radius: 18px !important;
   }
 
   .wa-qr-frame {
-    width: 150px !important;
-    height: 150px !important;
+    width: 135px !important;
+    height: 135px !important;
   }
 
   /* Profile Modal on Mobile */

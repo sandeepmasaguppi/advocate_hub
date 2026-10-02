@@ -122,7 +122,8 @@ export default function ClientLogin() {
 
       showToast(`Welcome back, ${client.name}! 🎉`, "success");
       setLoading(false);
-      setTimeout(() => navigate("/client-main"), 600);
+      const redirectUrl = new URLSearchParams(window.location.search).get("redirect") || "/client-main";
+      setTimeout(() => navigate(redirectUrl), 600);
     } catch (networkErr) {
       console.error(networkErr);
       setLoading(false);
@@ -212,7 +213,16 @@ export default function ClientLogin() {
         </button>
 
         <p className="am-alt-link">
-          Don't have a client account? <Link to="/talk-to-advocate">Find an Advocate</Link>
+          Don't have a client account?{" "}
+          <Link
+            to={
+              new URLSearchParams(window.location.search).get("redirect")
+                ? `/signup?role=client&redirect=${encodeURIComponent(new URLSearchParams(window.location.search).get("redirect"))}`
+                : "/signup?role=client"
+            }
+          >
+            Register as Client →
+          </Link>
         </p>
 
         <p className="am-alt-sub">
