@@ -5,5 +5,8 @@
     "start": "node server.js",
     "hash-password": "node hash-password.js",
     "setup-env": "node setup-env.js"
+  },
+  "dependencies": {
+    "nodemailer": "^10.0.14"
   }
 }

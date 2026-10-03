@@ -11,7 +11,6 @@ import { getTheme, toggleTheme as toggleGlobalTheme } from "../data/themeStore";
 import "./Login.css";
 
 const SESSION_KEY = "law4u_advocate_id";
-const THEME_KEY = "law4u_advocate_theme";
 
 function ThemeToggle({ theme, onToggle }) {
   const dark = theme === "dark";

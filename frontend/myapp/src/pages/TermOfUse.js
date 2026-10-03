@@ -6,7 +6,8 @@ import "./TermOfUse.css";
 const LAST_UPDATED  = "01 September 2026";
 const EFFECTIVE_DATE= "01 September 2026";
 const COMPANY       = "Advocate Hub Legal Technologies Pvt. Ltd.";
-const EMAIL         = "legal@advocatehub.in";
+const EMAIL         = "advocatehub.in@gmail.com";
+const INSTAGRAM     = "@advocate__hub";
 const ADDRESS       = "No. 42, 3rd Floor, Legal Hub Tower, MG Road, Bengaluru – 560001, Karnataka, India";
 
 const SECTIONS = [
@@ -266,7 +267,7 @@ export default function TermsOfUse() {
               <Li>You will provide accurate, complete, and current information during registration and keep it updated.</Li>
               <Li>You will maintain the confidentiality of your account credentials and not share them with any third party.</Li>
               <Li>You are responsible for all activities that occur under your account, whether authorised by you or not.</Li>
-              <Li>You will immediately notify Advocate Hub of any unauthorised use of your account at legal@advocatehub.in.</Li>
+              <Li>You will immediately notify Advocate Hub of any unauthorised use of your account at advocatehub.in@gmail.com.</Li>
               <Li>You will not create multiple accounts without express permission from Advocate Hub.</Li>
               <Li>You will not impersonate any person, advocate, or entity on the Platform.</Li>
               <Li>You consent to receive service communications, notifications, and (optionally) promotional messages.</Li>
@@ -320,7 +321,7 @@ export default function TermsOfUse() {
               <Li>Clients must not use the Platform to harass, threaten, or intimidate advocates.</Li>
               <Li>Clients must respect advocate availability and not contact advocates outside of the Platform for matters facilitated through Advocate Hub.</Li>
               <Li>Clients must not post false or malicious reviews of advocates.</Li>
-              <div className="tu-info-box">ℹ️ If you are dissatisfied with an advocate, contact Advocate Hub support at legal@advocatehub.in within 48 hours of the consultation for dispute resolution assistance.</div>
+              <div className="tu-info-box">ℹ️ If you are dissatisfied with an advocate, contact Advocate Hub support at advocatehub.in@gmail.com within 48 hours of the consultation for dispute resolution assistance.</div>
             </div>
           </div>
 
@@ -356,7 +357,7 @@ export default function TermsOfUse() {
               <Li>If an advocate fails to attend a scheduled consultation without notice, the client is entitled to a full refund.</Li>
               <Li>Refunds for completed consultations are at Advocate Hub's discretion and subject to review of the circumstances.</Li>
               <Li>No refunds are issued for no-shows by clients without prior cancellation of at least 2 hours.</Li>
-              <Li>Refund requests must be submitted within 48 hours of the scheduled consultation via legal@advocatehub.in.</Li>
+              <Li>Refund requests must be submitted within 48 hours of the scheduled consultation via advocatehub.in@gmail.com.</Li>
               <Li>Refunds are processed within 5–10 business days to the original payment method.</Li>
             </div>
           </div>
@@ -457,7 +458,7 @@ export default function TermsOfUse() {
             <div className="tu-card">
               <h2 className="tu-sec-title">🔚 14. Account Termination</h2>
               <B>14.1 Termination by User</B>
-              <S>You may terminate your account at any time by contacting legal@advocatehub.in or using the account deletion option in your settings. Upon account deletion, your profile will be removed from public view. Certain data will be retained as required by applicable law (see our Privacy Policy).</S>
+              <S>You may terminate your account at any time by contacting advocatehub.in@gmail.com or using the account deletion option in your settings. Upon account deletion, your profile will be removed from public view. Certain data will be retained as required by applicable law (see our Privacy Policy).</S>
               <B>14.2 Termination by Advocate Hub</B>
               <S>Advocate Hub reserves the right to suspend or permanently terminate your account, without notice or liability, if:</S>
               <Li>You breach any provision of these Terms.</Li>
@@ -478,7 +479,7 @@ export default function TermsOfUse() {
             <div className="tu-card">
               <h2 className="tu-sec-title">🏛️ 15. Dispute Resolution</h2>
               <B>15.1 Internal Resolution</B>
-              <S>Before commencing any formal dispute resolution process, you agree to first attempt to resolve any dispute with Advocate Hub through our internal grievance mechanism by contacting legal@advocatehub.in. Advocate Hub will attempt to resolve the dispute within 30 days.</S>
+              <S>Before commencing any formal dispute resolution process, you agree to first attempt to resolve any dispute with Advocate Hub through our internal grievance mechanism by contacting advocatehub.in@gmail.com. Advocate Hub will attempt to resolve the dispute within 30 days.</S>
               <B>15.2 Mediation</B>
               <S>If the dispute is not resolved through internal mechanisms within 30 days, the parties agree to attempt resolution through mediation before a mutually agreed mediator in Bengaluru, Karnataka.</S>
               <B>15.3 Arbitration</B>
@@ -512,7 +513,7 @@ export default function TermsOfUse() {
               <Li>Prominent notice on the Platform homepage or login page.</Li>
               <Li>In-app notification through the Advocate Hub mobile application.</Li>
               <S>Your continued use of the Platform after the effective date of revised Terms constitutes your acceptance of the changes. If you do not agree to the revised Terms, you must cease using the Platform and may request account deletion.</S>
-              <S>Previous versions of these Terms are maintained in our archive and may be requested by contacting legal@advocatehub.in.</S>
+              <S>Previous versions of these Terms are maintained in our archive and may be requested by contacting advocatehub.in@gmail.com.</S>
             </div>
           </div>
 
@@ -542,12 +543,13 @@ export default function TermsOfUse() {
               <S>For any questions, concerns, or notices regarding these Terms of Use, please contact us at:</S>
               <div style={{ background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:12, padding:"18px 20px" }}>
                 {[
-                  { icon:"🏢", label:"Company",  val: COMPANY },
-                  { icon:"✉️", label:"Email",    val: EMAIL },
-                  { icon:"📍", label:"Address",  val: ADDRESS },
-                  { icon:"⚖️", label:"Legal",    val: "legal@advocatehub.in" },
-                  { icon:"🔒", label:"Privacy",  val: "privacy@advocatehub.in" },
-                  { icon:"🌐", label:"Website",  val: "www.advocatehub.in/terms" },
+                  { icon:"🏢", label:"Company",   val: COMPANY },
+                  { icon:"✉️", label:"Email",     val: EMAIL },
+                  { icon:"📸", label:"Instagram", val: INSTAGRAM },
+                  { icon:"📍", label:"Address",   val: ADDRESS },
+                  { icon:"⚖️", label:"Legal",     val: EMAIL },
+                  { icon:"🔒", label:"Privacy",   val: EMAIL },
+                  { icon:"🌐", label:"Website",   val: "www.advocatehub.in/terms" },
                 ].map(row => (
                   <div key={row.label} className="tu-contact-row">
                     <span style={{ fontSize:16 }}>{row.icon}</span>

@@ -11,8 +11,8 @@
 //    • Mobile-optimized native app bottom-sheet UI with zero keyboard overflow
 // ============================================================
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAdvocates } from "../data/Advocatesstore";
 import defaultClarityData from "../data/clarityguide.json";
 import "./Chatbot.css";
@@ -365,9 +365,6 @@ function generateHumanAdvice(msgText, currentLang, allAdvocates, clarityList) {
 // ══════════════════════════════════════════════════════════════
 export default function Chatbot() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const isDashboardChat = location.pathname === '/client-dashboard' || location.pathname === '/advocate-dashboard';
 
   const [isOpen,          setIsOpen]          = useState(false);
   const [messages,        setMessages]        = useState([]);
@@ -377,32 +374,45 @@ export default function Chatbot() {
   const [unread,          setUnread]          = useState(0);
   const [lang,            setLang]            = useState("en"); // "en" | "kn"
   const [isListening,     setIsListening]     = useState(false);
-  const [interimVoice,    setInterimVoice]    = useState("");
   const [speechError,     setSpeechError]     = useState("");
   const [isDragging,      setIsDragging]      = useState(false);
 
   // Floating Action Button coordinates (Drag & Drop across all devices)
+  // On mobile screens (<= 768px) or first load, null lets CSS anchor bottom-right perfectly!
   const [fabPos, setFabPos] = useState(() => {
     try {
-      const saved = localStorage.getItem("law4u_cb_fab_pos");
-      if (saved) {
-        const p = JSON.parse(saved);
-        if (typeof p.x === "number" && typeof p.y === "number") {
-          return p;
+      if (typeof window !== "undefined") {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        // On mobile, never use stale desktop coordinates: anchor naturally at bottom-right
+        if (w <= 768) {
+          localStorage.removeItem("law4u_cb_fab_pos_mobile");
+          return null;
+        }
+        const saved = localStorage.getItem("law4u_cb_fab_pos");
+        if (saved) {
+          const p = JSON.parse(saved);
+          if (
+            typeof p.x === "number" &&
+            typeof p.y === "number" &&
+            p.x >= 10 &&
+            p.x <= w - 70 &&
+            p.y >= 10 &&
+            p.y <= h - 70
+          ) {
+            return p;
+          }
         }
       }
     } catch {}
-    const w = typeof window !== "undefined" ? window.innerWidth : 360;
-    const h = typeof window !== "undefined" ? window.innerHeight : 640;
-    return {
-      x: Math.max(12, w - 76),
-      y: Math.max(12, h - 86),
-    };
+    return null;
   });
 
   const bottomRef       = useRef(null);
+  const messagesBoxRef  = useRef(null);
   const inputRef        = useRef(null);
   const recognitionRef  = useRef(null);
+  const textBeforeVoiceRef = useRef("");
   const dragRef         = useRef({
     startX: 0,
     startY: 0,
@@ -413,35 +423,58 @@ export default function Chatbot() {
     pointerId: null,
   });
 
-  // Clamp FAB position safely within viewport
+  // Clamp FAB position safely within current viewport
   const clampPos = useCallback((x, y) => {
     const w = typeof window !== "undefined" ? window.innerWidth : 360;
     const h = typeof window !== "undefined" ? window.innerHeight : 640;
     const btnSize = 60;
-    const pad = 10;
+    const pad = 12;
     return {
       x: Math.min(Math.max(pad, x), Math.max(pad, w - btnSize - pad)),
       y: Math.min(Math.max(pad, y), Math.max(pad, h - btnSize - pad)),
     };
   }, []);
 
-  // Window resize listener to keep FAB in bounds
+  // Window resize & orientation listener to keep FAB in bounds
   useEffect(() => {
     const handleResize = () => {
-      setFabPos(prev => clampPos(prev.x, prev.y));
+      const w = window.innerWidth;
+      if (w <= 768) {
+        // Reset to responsive mobile bottom-right
+        setFabPos(null);
+      } else {
+        setFabPos(prev => (prev ? clampPos(prev.x, prev.y) : null));
+      }
     };
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
   }, [clampPos]);
 
   // Pointer Drag Handlers (Unified for Mouse & Touch)
+  // Pointer Drag & Tap Handlers (Unified for Mobile Touch & Desktop Mouse)
+  const lastToggleRef = useRef(0);
+
+  const toggleChatWindow = useCallback(() => {
+    const now = Date.now();
+    if (now - lastToggleRef.current < 300) return;
+    lastToggleRef.current = now;
+    setIsOpen((prev) => !prev);
+  }, []);
+
   const handlePointerDown = (e) => {
     if (e.button !== undefined && e.button !== 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const currentX = (fabPos && typeof fabPos.x === "number") ? fabPos.x : rect.left;
+    const currentY = (fabPos && typeof fabPos.y === "number") ? fabPos.y : rect.top;
     dragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
-      initX: fabPos.x,
-      initY: fabPos.y,
+      initX: currentX,
+      initY: currentY,
       moved: false,
       isDown: true,
       pointerId: e.pointerId,
@@ -455,7 +488,7 @@ export default function Chatbot() {
     if (!dragRef.current.isDown) return;
     const dx = e.clientX - dragRef.current.startX;
     const dy = e.clientY - dragRef.current.startY;
-    if (!dragRef.current.moved && Math.hypot(dx, dy) > 6) {
+    if (!dragRef.current.moved && Math.hypot(dx, dy) > 10) {
       dragRef.current.moved = true;
       setIsDragging(true);
     }
@@ -474,13 +507,23 @@ export default function Chatbot() {
     setIsDragging(false);
 
     if (wasMoved) {
-      try {
-        localStorage.setItem("law4u_cb_fab_pos", JSON.stringify(fabPos));
-      } catch {}
+      if (typeof window !== "undefined" && window.innerWidth > 768 && fabPos) {
+        try {
+          localStorage.setItem("law4u_cb_fab_pos", JSON.stringify(fabPos));
+        } catch {}
+      }
     } else {
-      // It was a tap/click, toggle chatbot window!
-      setIsOpen(prev => !prev);
+      // Direct tap/release without dragging toggles chat window immediately
+      toggleChatWindow();
     }
+  };
+
+  const handleFabClick = (e) => {
+    if (dragRef.current.moved) {
+      e.preventDefault();
+      return;
+    }
+    toggleChatWindow();
   };
 
   const handlePointerCancel = (e) => {
@@ -516,7 +559,9 @@ export default function Chatbot() {
       setHasOpened(true);
       setUnread(0);
       setMessages([getWelcomeMsg(lang)]);
-      setTimeout(() => inputRef.current?.focus(), 120);
+      if (typeof window !== "undefined" && window.innerWidth > 768) {
+        setTimeout(() => inputRef.current?.focus(), 120);
+      }
     }
     if (isOpen) setUnread(0);
   }, [isOpen, hasOpened, lang, getWelcomeMsg]);
@@ -534,9 +579,14 @@ export default function Chatbot() {
     }
   };
 
-  // ── Scroll to bottom ──────────────────────────────────────
+  // ── Scroll to bottom (Scrolls only inner messages container, never the page window!) ──
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesBoxRef.current) {
+      messagesBoxRef.current.scrollTo({
+        top: messagesBoxRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages, loading]);
 
   // ── Speech Recognition (Voice to Text in Kannada & English) ─
@@ -559,8 +609,16 @@ export default function Chatbot() {
 
     try {
       if (recognitionRef.current) {
-        try { recognitionRef.current.abort(); } catch {}
+        try {
+          recognitionRef.current.onresult = null;
+          recognitionRef.current.onend = null;
+          recognitionRef.current.onerror = null;
+          recognitionRef.current.abort();
+        } catch {}
       }
+
+      // Preserve any text already typed before speech begins
+      textBeforeVoiceRef.current = input.trim();
 
       const rec = new SpeechRecognition();
       rec.continuous = true;
@@ -570,7 +628,6 @@ export default function Chatbot() {
       rec.onstart = () => {
         setIsListening(true);
         setSpeechError("");
-        setInterimVoice("");
       };
 
       rec.onresult = (event) => {
@@ -586,8 +643,9 @@ export default function Chatbot() {
         }
         const accumulated = (finalStr + interimStr).trim();
         if (accumulated) {
-          setInput(accumulated);
-          setInterimVoice(accumulated);
+          const base = textBeforeVoiceRef.current;
+          const fullText = base ? `${base} ${accumulated}` : accumulated;
+          setInput(fullText);
         }
       };
 
@@ -667,12 +725,21 @@ export default function Chatbot() {
     const msg = (textToSend || input).trim();
     if (!msg || loading) return;
 
-    if (isListening) stopListening();
+    // Immediately cancel and detach speech recognition so trailing audio buffers cannot repopulate the input
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.abort();
+      } catch {}
+    }
+    setIsListening(false);
+    textBeforeVoiceRef.current = "";
 
     const userMsg = { id: Date.now(), role: "user", text: msg, type: "text" };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
-    setInterimVoice("");
     setLoading(true);
 
     try {
@@ -698,7 +765,13 @@ export default function Chatbot() {
             headers: { "Content-Type": "application/json" },
             body:    JSON.stringify({ message: msg, lang }),
           });
-          if (res.ok) {
+          if (res.status === 429) {
+            const errData = await res.json().catch(() => ({}));
+            data = {
+              text: `${errData.error || "Too Many Requests 🚨"}\n\n${errData.message || "Rate limit exceeded."}\n${errData.action || "Please slow down and try again later!"}`,
+              type: "text",
+            };
+          } else if (res.ok) {
             data = await res.json();
           }
         } catch {}
@@ -746,7 +819,9 @@ export default function Chatbot() {
       ]);
     } finally {
       setLoading(false);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      if (typeof window !== "undefined" && window.innerWidth > 768) {
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
     }
   };
 
@@ -796,6 +871,14 @@ export default function Chatbot() {
 
   // ── Key handler ───────────────────────────────────────────
   const handleKey = (e) => {
+    // Never auto-send while voice recognition is active or during IME composition
+    if (isListening || e.isComposing || e.nativeEvent?.isComposing) {
+      return;
+    }
+    // On mobile devices, require tapping the Send button directly
+    if (typeof window !== "undefined" && window.innerWidth <= 768) {
+      return;
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -809,7 +892,15 @@ export default function Chatbot() {
 
   const quickActions = lang === "kn" ? QUICK_ACTIONS_KN : QUICK_ACTIONS_EN;
 
-  if (isDashboardChat) return null;
+  const fabStyle =
+    fabPos && typeof fabPos.x === "number" && typeof fabPos.y === "number"
+      ? {
+          left: `${fabPos.x}px`,
+          top: `${fabPos.y}px`,
+          right: "auto",
+          bottom: "auto",
+        }
+      : undefined;
 
   return (
     <>
@@ -826,17 +917,13 @@ export default function Chatbot() {
       <button
         type="button"
         className={`cb-fab ${isOpen ? "cb-fab-open" : ""} ${isDragging ? "cb-fab-dragging" : ""}`}
-        style={{
-          left: `${fabPos.x}px`,
-          top:  `${fabPos.y}px`,
-          right: "auto",
-          bottom: "auto",
-        }}
+        style={fabStyle}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
-        title="Drag anywhere · Tap to chat with AI Legal Assistant"
+        onClick={handleFabClick}
+        title="Tap to chat with AI Legal Assistant · Drag to reposition"
         aria-label="Toggle Legal Chatbot"
       >
         <span className="cb-fab-icon">{isOpen ? "✕" : "⚖️"}</span>
@@ -932,7 +1019,7 @@ export default function Chatbot() {
           )}
 
           {/* Messages */}
-          <div className="cb-messages">
+          <div className="cb-messages" ref={messagesBoxRef}>
             {messages.map((msg) => (
               <MessageBubble
                 key={msg.id}
@@ -946,76 +1033,14 @@ export default function Chatbot() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Interactive Voice Equalizer Panel when Mic is listening */}
-          {isListening && (
-            <div className="cb-voice-panel">
-              <div className="cb-voice-header">
-                <div className="cb-voice-eq">
-                  <span className="cb-eq-bar b1" />
-                  <span className="cb-eq-bar b2" />
-                  <span className="cb-eq-bar b3" />
-                  <span className="cb-eq-bar b4" />
-                  <span className="cb-eq-bar b5" />
-                </div>
-                <div className="cb-voice-text-meta">
-                  <strong>
-                    {lang === "kn" ? "🎙️ ಧ್ವನಿ ಗುರುತಿಸುವಿಕೆ ಸಕ್ರಿಯ..." : "🎙️ Listening to your voice..."}
-                  </strong>
-                  <span>
-                    {lang === "kn" ? "ಕನ್ನಡದಲ್ಲಿ ಮಾತನಾಡಿ" : "Speak naturally in English or Kannada"}
-                  </span>
-                </div>
-              </div>
-
-              {interimVoice && (
-                <div className="cb-voice-preview">
-                  "{interimVoice}"
-                </div>
-              )}
-
-              <div className="cb-voice-actions">
-                <button
-                  type="button"
-                  className="cb-voice-done-btn"
-                  onClick={stopListening}
-                >
-                  ⏹ {lang === "kn" ? "ಮುಗಿಸಿ" : "Done"}
-                </button>
-                <button
-                  type="button"
-                  className="cb-voice-send-btn"
-                  onClick={() => {
-                    stopListening();
-                    if (input.trim()) sendMessage(input.trim());
-                  }}
-                  disabled={!input.trim()}
-                >
-                  ➤ {lang === "kn" ? "ಕಳುಹಿಸಿ" : "Send Now"}
-                </button>
-                <button
-                  type="button"
-                  className="cb-voice-cancel-btn"
-                  onClick={() => {
-                    stopListening();
-                    setInput("");
-                    setInterimVoice("");
-                  }}
-                  title="Cancel voice input"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Speech Error Banner */}
+          {/* Floating Speech Error Toast (doesn't push texting pad down) */}
           {speechError && (
-            <div className="cb-speech-error-banner">
+            <div className="cb-speech-error-toast" role="alert">
               <span>⚠️ {speechError}</span>
             </div>
           )}
 
-          {/* Input Area */}
+          {/* Input Area (Texting pad stays strictly in place) */}
           <div className="cb-input-area">
             {/* Voice to text Mic button */}
             <button
@@ -1024,10 +1049,8 @@ export default function Chatbot() {
               onClick={toggleListening}
               title={
                 isListening
-                  ? "Stop listening"
-                  : lang === "kn"
-                  ? "ಧ್ವನಿ ಮೂಲಕ ಸಂದೇಶ ನೀಡಿ (ಕನ್ನಡ)"
-                  : "Voice to text (English / Kannada)"
+                  ? (lang === "kn" ? "ಧ್ವನಿ ನಿಲ್ಲಿಸಿ (ಕ್ಲಿಕ್ ಮಾಡಿ)" : "Stop listening (Tap to stop)")
+                  : (lang === "kn" ? "ಧ್ವನಿ ಮೂಲಕ ಸಂದೇಶ ನೀಡಿ (ಕನ್ನಡ)" : "Voice to text (English / Kannada)")
               }
               disabled={loading}
               aria-label="Microphone Voice Input"
@@ -1037,12 +1060,12 @@ export default function Chatbot() {
 
             <textarea
               ref={inputRef}
-              className="cb-input"
+              className={`cb-input ${isListening ? "cb-input-listening" : ""}`}
               rows={1}
               placeholder={
-                lang === "kn"
-                  ? "ಕಾನೂನು ಪ್ರಶ್ನೆ, ಸಮಸ್ಯೆ, ಅಥವಾ ವಕೀಲರ ಹೆಸರು ಕೇಳಿ..."
-                  : "Ask a legal question, situation, or advocate name..."
+                isListening
+                  ? (lang === "kn" ? "🎙️ ಆಲಿಸಲಾಗುತ್ತಿದೆ... ಕನ್ನಡದಲ್ಲಿ ಮಾತನಾಡಿ..." : "🎙️ Listening... Speak naturally now...")
+                  : (lang === "kn" ? "ಕಾನೂನು ಪ್ರಶ್ನೆ, ಸಮಸ್ಯೆ, ಅಥವಾ ವಕೀಲರ ಹೆಸರು ಕೇಳಿ..." : "Ask a legal question, situation, or advocate name...")
               }
               value={input}
               onChange={(e) => setInput(e.target.value)}

@@ -2070,5 +2070,35 @@
     "avatar": "/uploads/shankar-90.jpg",
     "status": "approved",
     "passwordHash": "scrypt$815ff72cfcd828132d5c30a7b26182aa$ce33b1e22ffd7d822731b32beca82a43f1245731434c4533aa83002f178cd151b0b9a3de089443eedcb10c33f408f830ac923cc52fda8bd6fd65f6bbbd2c594f"
+  },
+  {
+    "id": 91,
+    "name": "Basavaraj Kotagi",
+    "city": "Gokak",
+    "practiceArea": "Criminal Law, Property Law, Family Law",
+    "speciality": "Criminal Law, Property Law, Family Law",
+    "practiceAreas": [
+      "Criminal Law",
+      "Property Law",
+      "Family Law"
+    ],
+    "courtLevel": "Taluk / JMFC / Civil Court",
+    "district": "Belagavi",
+    "taluk": "Gokak",
+    "court": "Gokak JMFC & Civil Court (Belagavi District)",
+    "barCouncil": "Bar Council of Karnataka",
+    "barId": "KU",
+    "experience": "1–3 years",
+    "rating": 0,
+    "cases": 0,
+    "fee": "",
+    "phone": "3456788765",
+    "email": "basu@gmail.com",
+    "languages": [],
+    "availability": "Available",
+    "bio": "Hi",
+    "avatar": "/uploads/basavaraj-kotagi-91.jpg",
+    "status": "approved",
+    "passwordHash": "scrypt$10a2bbfde6489845bf1f5b6c418be9bb$0b7ff111c59d99ee5ec8bbfcfb86174631a7725553925b70efb90a5ad712edd010df4cc7344b837a61666b11fd7eedec40a20d92fa0024264eb17d385ebd9e34"
   }
 ]

@@ -1,481 +1,962 @@
 /* ==========================================================================
-   AdvocatesHub - Comprehensive Contact Us Stylesheet (Contact.css)
-   Full Desktop, Tablet, and Mobile Responsive Framework (600+ Lines)
+   Contact.css — Advocates Hub "Contact Us" Portal
+   Full Dual-Theme Architecture (Light & Dark) • Responsive • Working Interactive Elements
    ========================================================================== */
 
-/* ── 1. Global Theme Variables & Design Tokens ── */
-:root {
-  --ct-primary: #1e3a8a;
-  --ct-primary-dark: #0f172a;
-  --ct-primary-hover: #1e40af;
-  --ct-accent: #2563eb;
-  --ct-accent-hover: #1d4ed8;
-  --ct-text-main: #1f2937;
-  --ct-text-muted: #4b5563;
-  --ct-bg-light: #f8fafc;
-  --ct-bg-white: #ffffff;
-  --ct-border-color: #e2e8f0;
-  --ct-error: #dc2626;
-  --ct-radius: 12px;
-  --ct-radius-lg: 16px;
-  --ct-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --ct-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --ct-transition: all 0.25s ease;
-}
-
-[data-theme="dark"],
-.theme-dark {
-  --ct-text-main: #f8fafc;
-  --ct-text-muted: #94a3b8;
-  --ct-primary-dark: #f8fafc;
-  --ct-bg-light: #0b1320;
-  --ct-bg-white: #111c2e;
-  --ct-border-color: #1e293b;
-}
-
-[data-theme="dark"] .ct-info-card,
-.theme-dark .ct-info-card,
-[data-theme="dark"] .ct-form-card,
-.theme-dark .ct-form-card,
-[data-theme="dark"] .ct-faq-card,
-.theme-dark .ct-faq-card {
-  background: #111c2e !important;
-  border-color: #1e293b !important;
-  color: #f8fafc !important;
-}
-
-[data-theme="dark"] .ct-info-value,
-.theme-dark .ct-info-value,
-[data-theme="dark"] .ct-form-title,
-.theme-dark .ct-form-title,
-[data-theme="dark"] .ct-sent h3,
-.theme-dark .ct-sent h3 {
-  color: #f8fafc !important;
-}
-
-[data-theme="dark"] .ct-faq-q,
-.theme-dark .ct-faq-q {
-  background-color: #111c2e !important;
-  color: #f8fafc !important;
-}
-
-[data-theme="dark"] .ct-info-icon,
-.theme-dark .ct-info-icon {
-  background: #1e293b !important;
-  color: #38bdf8 !important;
-}
-
-[data-theme="dark"] .ct-field input,
-.theme-dark .ct-field input,
-[data-theme="dark"] .ct-field textarea,
-.theme-dark .ct-field textarea {
-  background-color: #0b1320 !important;
-  color: #f8fafc !important;
-  border-color: #334155 !important;
-}
-
-/* ── 2. Box-Sizing and Base Page Setup ── */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
+/* ── 1. Base Page & Theme Framework ── */
 .ct-page {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: var(--ct-text-main);
-  background-color: var(--ct-bg-light);
-  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
-  padding-bottom: 5rem;
-  width: 100%;
-  overflow-x: hidden;
+  line-height: 1.6;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: 70px;
 }
 
-/* ==========================================================================
-   3. Hero Section Framework (Professional & Unique Architectural Pattern)
-   ========================================================================== */
+/* Light Theme */
+.ct-page.ct-light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Dark Theme */
+.ct-page.ct-dark,
+[data-theme="dark"] .ct-page,
+.theme-dark .ct-page {
+  background-color: #060b14 !important;
+  color: #f8fafc !important;
+}
+
+/* ── 2. Prestigious Hero Header ── */
 .ct-hero {
-  background-color: #0b1329;
-  background-image: 
-    radial-gradient(circle at 50% 30%, rgba(37, 99, 235, 0.25) 0%, transparent 60%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(135deg, #070d1d 0%, #0f172a 50%, #1e293b 100%);
-  background-size: 100% 100%, 40px 40px, 40px 40px, 100% 100%;
-  background-position: 0 0, 0 0, 0 0, 0 0;
+  background: linear-gradient(135deg, #070e1f 0%, #111e3b 50%, #1b3574 100%);
   color: #ffffff;
-  padding: 5.5rem 1.5rem;
+  padding: 60px 20px 80px;
   text-align: center;
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(10, 18, 38, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ct-dark .ct-hero {
+  background: linear-gradient(135deg, #050a14 0%, #0a1324 50%, #0f1f3a 100%) !important;
+  border-bottom-color: #1a2d4b !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65) !important;
+}
+
+.ct-hero-glow {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 650px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.ct-hero-container {
+  max-width: 860px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .ct-hero-badge {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 1.5rem;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  color: #e0e7ff;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  margin-bottom: 18px;
+}
+
+.ct-hero-beacon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  animation: ctBeaconPulse 1.6s infinite;
+}
+
+@keyframes ctBeaconPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
 }
 
 .ct-hero-title {
-  font-size: 2.75rem;
-  font-weight: 800;
+  font-size: 38px;
+  font-weight: 900;
   color: #ffffff;
-  letter-spacing: -0.025em;
-  margin-bottom: 1rem;
-  line-height: 1.2;
+  margin: 0 0 14px;
+  line-height: 1.25;
+  letter-spacing: -0.6px;
+}
+
+.ct-text-gradient {
+  background: linear-gradient(135deg, #bae6fd 0%, #60a5fa 50%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .ct-hero-sub {
-  font-size: 1.125rem;
-  color: #ffffff;
-  max-width: 600px;
+  font-size: 15.5px;
+  color: #cbd5e1;
+  line-height: 1.65;
   margin: 0 auto;
+  max-width: 720px;
 }
 
-/* ==========================================================================
-   4. Container & Layout Architecture
-   ========================================================================== */
+/* ── 3. Main Content Container ── */
 .ct-container {
-  max-width: 1200px;
-  margin: -3rem auto 0;
-  padding: 0 1.5rem;
+  max-width: 1220px;
+  margin: -42px auto 0;
+  padding: 0 20px;
   position: relative;
   z-index: 10;
 }
 
-/* ==========================================================================
-   5. Info Cards Grid Framework
-   ========================================================================== */
+/* ── 4. 4 Direct Working Action Cards ── */
 .ct-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 34px;
+}
+
+@media (max-width: 1200px) {
+  .ct-info-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .ct-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .ct-info-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ct-info-card {
-  background: var(--ct-bg-white);
-  padding: 1.75rem;
-  border-radius: var(--ct-radius);
-  box-shadow: var(--ct-shadow);
-  border: 1px solid var(--ct-border-color);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px 18px;
   display: flex;
-  align-items: flex-start;
-  gap: 1.25rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-direction: column;
+  box-shadow: 0 4px 14px rgba(10, 18, 38, 0.05);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ct-dark .ct-info-card {
+  background: #0f1a2e !important;
+  border-color: #1e3250 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35) !important;
 }
 
 .ct-info-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--ct-shadow-hover);
+  transform: translateY(-4px);
+  border-color: #93c5fd;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.12);
+}
+
+.ct-dark .ct-info-card:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.55) !important;
+}
+
+.ct-info-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .ct-info-icon {
-  font-size: 2rem;
-  background: #eff6ff;
-  padding: 0.75rem;
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.ct-info-content {
-  display: flex;
-  flex-direction: column;
+.card-phone .ct-info-icon {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.ct-dark .card-phone .ct-info-icon {
+  background: rgba(37, 99, 235, 0.2) !important;
+  color: #60a5fa !important;
+}
+
+.card-whatsapp .ct-info-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.ct-dark .card-whatsapp .ct-info-icon {
+  background: rgba(34, 197, 94, 0.2) !important;
+  color: #4ade80 !important;
+}
+
+.card-email .ct-info-icon {
+  background: #f1f5f9;
+  color: #334155;
+}
+.ct-dark .card-email .ct-info-icon {
+  background: #1a2942 !important;
+  color: #38bdf8 !important;
+}
+
+.card-instagram .ct-info-icon {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12), rgba(168, 85, 247, 0.12));
+  color: #e11d48;
+}
+.ct-dark .card-instagram .ct-info-icon {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(168, 85, 247, 0.25)) !important;
+  color: #f43f5e !important;
+}
+.card-instagram:hover {
+  border-color: #f43f5e;
+}
+.ct-dark .card-instagram:hover {
+  border-color: #f43f5e !important;
+}
+
+.card-office .ct-info-icon {
+  background: #fef3c7;
+  color: #d97706;
+}
+.ct-dark .card-office .ct-info-icon {
+  background: rgba(217, 119, 6, 0.2) !important;
+  color: #fbbf24 !important;
 }
 
 .ct-info-label {
-  font-size: 0.8rem;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ct-text-muted);
-  font-weight: 600;
-  margin-bottom: 0.2rem;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.ct-dark .ct-info-label {
+  color: #94a3b8 !important;
 }
 
 .ct-info-value {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--ct-primary-dark);
-  margin-bottom: 0.2rem;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ct-dark .ct-info-value {
+  color: #ffffff !important;
 }
 
 .ct-info-hint {
-  font-size: 0.85rem;
-  color: var(--ct-text-muted);
+  font-size: 11.5px;
+  color: #64748b;
+  margin-bottom: 16px;
+  line-height: 1.45;
+  min-height: 34px;
 }
 
-/* ==========================================================================
-   6. Main Content Body Grid Framework
-   ========================================================================== */
+.ct-dark .ct-info-hint {
+  color: #94a3b8 !important;
+}
+
+.ct-info-action-wrap {
+  margin-top: auto;
+}
+
+.ct-info-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-decoration: none;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #2563eb;
+  transition: all 0.2s ease;
+}
+
+.ct-dark .ct-info-action-btn {
+  background: #142236 !important;
+  border-color: #1e3558 !important;
+  color: #60a5fa !important;
+}
+
+.ct-info-action-btn:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+.ct-dark .ct-info-action-btn:hover {
+  background: #38bdf8 !important;
+  border-color: #38bdf8 !important;
+  color: #060b14 !important;
+}
+
+.card-whatsapp .ct-info-action-btn:hover {
+  background: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
+/* ── 5. Main Body Grid: Form + FAQs ── */
 .ct-body-grid {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
   align-items: start;
 }
 
 .ct-form-card,
 .ct-faq-card {
-  background: var(--ct-bg-white);
-  padding: 2.5rem;
-  border-radius: var(--ct-radius);
-  box-shadow: var(--ct-shadow);
-  border: 1px solid var(--ct-border-color);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 32px 30px;
+  box-shadow: 0 4px 18px rgba(10, 18, 38, 0.05);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.ct-dark .ct-form-card,
+.ct-dark .ct-faq-card {
+  background: #0f1a2e !important;
+  border-color: #1e3250 !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── 6. Contact Form Styling ── */
+.ct-form-header {
+  margin-bottom: 22px;
 }
 
 .ct-form-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--ct-primary-dark);
-  margin-bottom: 1.75rem;
-  letter-spacing: -0.01em;
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 6px;
+  letter-spacing: -0.3px;
 }
 
-/* ==========================================================================
-   7. Form Fields & Grid Systems
-   ========================================================================== */
+.ct-dark .ct-form-title {
+  color: #ffffff !important;
+}
+
+.ct-form-sub {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.ct-dark .ct-form-sub {
+  color: #94a3b8 !important;
+}
+
 .ct-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  gap: 16px;
 }
 
 .ct-field {
-  margin-bottom: 1.25rem;
+  margin-bottom: 18px;
 }
 
 .ct-field label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--ct-text-main);
-  margin-bottom: 0.5rem;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.ct-dark .ct-field label {
+  color: #cbd5e1 !important;
 }
 
 .ct-field input,
 .ct-field textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--ct-border-color);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: var(--ct-text-main);
-  background-color: var(--ct-bg-white);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  padding: 10px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: #0f172a;
+  background-color: #ffffff;
   outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.ct-dark .ct-field input,
+.ct-dark .ct-field textarea {
+  background-color: #091322 !important;
+  border-color: #1e3558 !important;
+  color: #f8fafc !important;
+}
+
+.ct-field input::placeholder,
+.ct-field textarea::placeholder {
+  color: #94a3b8;
+}
+
+.ct-dark .ct-field input::placeholder,
+.ct-dark .ct-field textarea::placeholder {
+  color: #64748b !important;
 }
 
 .ct-field input:focus,
 .ct-field textarea:focus {
-  border-color: var(--ct-accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.ct-dark .ct-field input:focus,
+.ct-dark .ct-field textarea:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+}
+
+.ct-field input.has-err,
+.ct-field textarea.has-err {
+  border-color: #dc2626 !important;
+  background-color: #fffaf0;
+}
+
+.ct-dark .ct-field input.has-err,
+.ct-dark .ct-field textarea.has-err {
+  border-color: #ef4444 !important;
+  background-color: #1c1015 !important;
 }
 
 .ct-field input:disabled,
 .ct-field textarea:disabled {
-  background-color: var(--ct-bg-light);
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .ct-err {
-  font-size: 0.8125rem;
-  color: var(--ct-error);
-  margin-top: 0.35rem;
-  font-weight: 500;
+  font-size: 11.5px;
+  color: #dc2626;
+  margin: 5px 0 0;
+  font-weight: 600;
 }
 
-/* ==========================================================================
-   8. Actions & Interactive Buttons
-   ========================================================================== */
+.ct-dark .ct-err {
+  color: #f87171 !important;
+}
+
 .ct-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--ct-accent);
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
   color: #ffffff;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  font-weight: 800;
+  font-size: 13.5px;
+  padding: 12px 24px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
-  transition: var(--ct-transition);
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.3);
   text-decoration: none;
 }
 
-.ct-btn-primary:hover {
-  background-color: var(--ct-primary-hover);
+.ct-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
 }
 
-.ct-btn-primary:active {
-  transform: scale(0.98);
+.ct-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ct-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .ct-btn-lg {
   width: 100%;
-  padding: 0.875rem;
-  font-size: 1rem;
-  margin-top: 0.5rem;
+  padding: 13px;
+  margin-top: 4px;
 }
 
-.ct-btn-primary:disabled {
-  background-color: #93c5fd;
-  cursor: not-allowed;
-}
-
-/* ==========================================================================
-   9. Sent State Notification
-   ========================================================================== */
+/* Sent State Notification */
 .ct-sent {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 30px 10px;
 }
 
 .ct-sent-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 44px;
+  margin-bottom: 12px;
 }
 
-.ct-sent h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--ct-primary-dark);
-  margin-bottom: 0.5rem;
+.ct-sent-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 8px;
 }
 
-.ct-sent p {
-  color: var(--ct-text-muted);
-  margin-bottom: 1.5rem;
+.ct-dark .ct-sent-title {
+  color: #ffffff !important;
 }
 
-/* ==========================================================================
-   10. FAQ Accordion Framework
-   ========================================================================== */
+.ct-sent-desc {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+  max-width: 440px;
+  margin: 0 auto 24px;
+}
+
+.ct-dark .ct-sent-desc {
+  color: #cbd5e1 !important;
+}
+
+.ct-btn-sent-reset {
+  padding: 10px 22px;
+  font-size: 13px;
+}
+
+/* ── 7. FAQ Accordion Section ── */
+.ct-faq-card-header {
+  margin-bottom: 20px;
+}
+
+.ct-faq-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.ct-dark .ct-faq-badge {
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.12) !important;
+}
+
 .ct-faq-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
 .ct-faq-item {
-  border: 1px solid var(--ct-border-color);
-  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   overflow: hidden;
-  transition: border-color 0.2s ease;
-  cursor: pointer;
+  background: #f8fafc;
+  transition: all 0.2s ease;
 }
 
-.ct-faq-item:hover {
-  border-color: #cbd5e1;
+.ct-dark .ct-faq-item {
+  background: #091322 !important;
+  border-color: #1e3558 !important;
 }
 
 .ct-faq-item.open {
-  border-color: var(--ct-accent);
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
+}
+
+.ct-dark .ct-faq-item.open {
+  border-color: #38bdf8 !important;
+  background: #0c182c !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
 }
 
 .ct-faq-q {
-  padding: 1rem 1.25rem;
-  font-weight: 600;
-  color: var(--ct-primary-dark);
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--ct-bg-white);
+  background: transparent;
+  border: none;
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.ct-faq-q-text {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.45;
+}
+
+.ct-dark .ct-faq-q-text {
+  color: #ffffff !important;
 }
 
 .ct-faq-arrow {
-  font-size: 1.25rem;
-  font-weight: 400;
-  color: var(--ct-accent);
+  font-size: 16px;
+  font-weight: 900;
+  color: #2563eb;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ct-dark .ct-faq-arrow {
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.15) !important;
 }
 
 .ct-faq-a {
-  padding: 0 1.25rem 1rem 1.25rem;
-  color: var(--ct-text-muted);
-  font-size: 0.925rem;
-  line-height: 1.6;
-  background-color: var(--ct-bg-white);
-  border-top: 1px solid transparent;
+  padding: 0 16px 14px;
+  border-top: 1px solid #f1f5f9;
 }
 
+.ct-dark .ct-faq-a {
+  border-top-color: #1a2a44 !important;
+}
 
-/* ==========================================================================
-   11. Comprehensive Responsive Media Query Architecture
-   ========================================================================== */
+.ct-faq-a p {
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
 
-/* ── Landscape Tablets & Laptops (968px and below) ── */
-@media screen and (max-width: 968px) {
+.ct-dark .ct-faq-a p {
+  color: #cbd5e1 !important;
+}
+
+/* ── 8. Statutory Trust Box ── */
+.ct-trust-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.ct-dark .ct-trust-box {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-color: rgba(34, 197, 94, 0.25) !important;
+}
+
+.ct-trust-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ct-trust-text strong {
+  display: block;
+  font-size: 12px;
+  color: #166534;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.ct-dark .ct-trust-text strong {
+  color: #86efac !important;
+}
+
+.ct-trust-text p {
+  font-size: 11.5px;
+  color: #166534;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.ct-dark .ct-trust-text p {
+  color: #bbf7d0 !important;
+}
+
+/* ── 9. Responsive Mobile & Tablet Layout ── */
+@media (max-width: 1024px) {
+  .ct-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .ct-body-grid {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 24px;
   }
 }
 
-/* ── Standard Tablets & Portrait iPads (768px and below) ── */
-@media screen and (max-width: 768px) {
+@media (max-width: 768px) {
+  .ct-page {
+    padding-bottom: 50px;
+  }
+
   .ct-hero {
-    padding: 4rem 1rem;
+    padding: 38px 14px 50px;
   }
 
   .ct-hero-title {
-    font-size: 2.125rem;
+    font-size: 24px;
+    line-height: 1.28;
   }
 
   .ct-hero-sub {
-    font-size: 1rem;
+    font-size: 13.5px;
+    line-height: 1.55;
   }
 
   .ct-container {
-    margin-top: -2rem;
-    padding: 0 1rem;
+    margin-top: -24px;
+    padding: 0 14px;
   }
 
   .ct-info-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .ct-info-card {
+    padding: 16px 14px;
+  }
+
+  .ct-info-value {
+    font-size: 12.5px;
+  }
+
+  .ct-info-hint {
+    font-size: 10.5px;
+    min-height: 28px;
+    margin-bottom: 12px;
   }
 
   .ct-form-card,
   .ct-faq-card {
-    padding: 1.75rem 1.25rem;
-  }
-}
-
-/* ── Small Form Split Breakpoint (540px and below) ── */
-@media screen and (max-width: 540px) {
-  .ct-grid-2 {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Compact Mobile Phones (480px and below) ── */
-@media screen and (max-width: 480px) {
-  .ct-hero-title {
-    font-size: 1.75rem;
-  }
-
-  .ct-hero-badge {
-    font-size: 0.78rem;
-    padding: 0.4rem 0.8rem;
+    padding: 22px 18px;
+    border-radius: 16px;
   }
 
   .ct-form-title {
-    font-size: 1.35rem;
+    font-size: 20px;
   }
 
-  .ct-info-card {
-    padding: 1.25rem;
+  .ct-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+/* ── Official Company Channels Strip ── */
+.ct-company-strip {
+  margin-top: 36px;
+  margin-bottom: 40px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+.ct-dark .ct-company-strip {
+  background: #0f1a2e !important;
+  border-color: #1e3250 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
+}
+
+.ct-company-strip-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ct-company-strip-seal {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.ct-company-strip-title {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #2563eb;
+  margin: 0 0 4px;
+}
+
+.ct-dark .ct-company-strip-title {
+  color: #38bdf8 !important;
+}
+
+.ct-company-strip-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.ct-dark .ct-company-strip-desc {
+  color: #94a3b8 !important;
+}
+
+.ct-company-strip-links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ct-company-badge-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ct-dark .ct-company-badge-link {
+  background: #14233c !important;
+  border-color: #223a5e !important;
+}
+
+.ct-company-badge-link:hover {
+  transform: translateY(-2px);
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.12);
+}
+
+.ct-dark .ct-company-badge-link:hover {
+  border-color: #38bdf8 !important;
+  background: #1a2f50 !important;
+  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.2) !important;
+}
+
+.ct-company-badge-link.ct-cbl-insta:hover {
+  border-color: #e11d48;
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.18);
+}
+
+.ct-cbl-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.ct-cbl-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.ct-cbl-sub {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.ct-dark .ct-cbl-sub {
+  color: #94a3b8 !important;
+}
+
+.ct-cbl-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.ct-dark .ct-cbl-val {
+  color: #f8fafc !important;
+}
+
+@media (max-width: 900px) {
+  .ct-company-strip {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ct-company-strip-links {
+    width: 100%;
+  }
+  .ct-company-badge-link {
+    flex: 1;
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ct-info-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
-  .ct-info-icon {
-    font-size: 1.6rem;
-    padding: 0.5rem;
+  .ct-hero-title {
+    font-size: 21px;
+  }
+
+  .ct-form-card,
+  .ct-faq-card {
+    padding: 18px 14px;
+  }
+
+  .ct-btn-primary {
+    font-size: 13px;
+    padding: 11px 20px;
   }
 }

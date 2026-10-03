@@ -34,18 +34,6 @@ const PRACTICE_THEMES = {
   Consumer: { bg: "#fdf2f8", color: "#db2777", border: "#fbcfe8" },
 };
 
-const PRACTICE_FILTERS = [
-  { id: "all", labelEn: "All Practices", labelKn: "ಎಲ್ಲಾ ಕ್ಷೇತ್ರಗಳು" },
-  { id: "criminal", labelEn: "Criminal Law", labelKn: "ಕ್ರಿಮಿನಲ್ ಕಾನೂನು" },
-  { id: "civil", labelEn: "Civil Matters", labelKn: "ಸಿವಿಲ್ ವ್ಯಾಜ್ಯಗಳು" },
-  { id: "family", labelEn: "Family & Divorce", labelKn: "ಕುಟುಂಬ & ವಿಚ್ಛೇದನ" },
-  { id: "property", labelEn: "Property & Real Estate", labelKn: "ಆಸ್ತಿ & ರಿಯಲ್ ಎಸ್ಟೇಟ್" },
-  { id: "corporate", labelEn: "Corporate & Commercial", labelKn: "ಕಾರ್ಪೊರೇಟ್ & ವಾಣಿಜ್ಯ" },
-  { id: "cyber", labelEn: "Cyber & Tech Law", labelKn: "ಸೈಬರ್ & ಐಟಿ ಕಾನೂನು" },
-  { id: "tax", labelEn: "Taxation & GST", labelKn: "ತೆರಿಗೆ & ಜಿಎಸ್‌ಟಿ" },
-  { id: "banking", labelEn: "Banking & Finance", labelKn: "ಬ್ಯಾಂಕಿಂಗ್ & ಹಣಕಾಸು" },
-];
-
 const I18N = {
   en: {
     heroBadge: "✨ VERIFIED LEGAL COUNSEL & DIRECT CONSULTATION",

@@ -12,7 +12,6 @@ import "./Login.css";
 const SESSION_KEY = "law4u_client_id";
 const CLIENT_OBJ_KEY = "law4u_client";
 const CLIENT_TOKEN_KEY = "law4u_client_token";
-const THEME_KEY = "law4u_client_theme";
 
 function ThemeToggle({ theme, onToggle }) {
   const dark = theme === "dark";

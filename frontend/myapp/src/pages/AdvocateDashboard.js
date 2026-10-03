@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./AdvocateDashboard.css";
 import { getAdvocateById, logoutAdvocate, updateAdvocate } from "../data/Advocatesstore";
 import BrandLogo from "../components/BrandLogo";

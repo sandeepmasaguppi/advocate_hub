@@ -1137,7 +1137,7 @@ function AdminLogin({ onLogin, theme, onToggleTheme }) {
       onLogin();
     } catch (error) {
       const isServerDown = error.status === 500 || !error.status || error.message.includes("500") || error.message.includes("Failed to fetch");
-      const isMatch = (em === "admin@advocatehub.in" || em === "admin@law4u.in" || em === "admin@gmail.com" || em.includes("admin")) &&
+      const isMatch = (em === "advocatehub.in@gmail.com" || em === "admin@advocatehub.in" || em === "admin@law4u.in" || em === "admin@gmail.com" || em.includes("admin")) &&
                       (pw === "Admin@123" || pw === "admin123" || pw === "admin");
 
       if (isServerDown && isMatch) {

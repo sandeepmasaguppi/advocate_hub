@@ -28,15 +28,15 @@
 .cb-backdrop {
   display: none;
 }
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .cb-backdrop {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    z-index: 9997;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 999997 !important;
     animation: cb-fade-in 0.2s ease;
   }
 }
@@ -48,7 +48,9 @@
 /* ── Draggable Floating Action Button (All Devices) ────────── */
 .cb-fab {
   position:        fixed;
-  z-index:         9999;
+  bottom:          24px;
+  right:           20px;
+  z-index:         999999;
   width:           60px;
   height:          60px;
   border-radius:   50%;
@@ -80,6 +82,8 @@
   transform:  scale(1.1) !important;
   box-shadow: 0 16px 36px rgba(8, 127, 115, 0.55) !important;
   transition: none !important;
+  bottom:     auto !important;
+  right:      auto !important;
 }
 
 .cb-fab.cb-fab-open {
@@ -138,14 +142,14 @@
 .cb-mobile-handle {
   display: none;
 }
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .cb-mobile-handle {
     display:       block;
-    width:         40px;
-    height:        4px;
+    width:         44px;
+    height:        5px;
     border-radius: 4px;
-    background:    rgba(255, 255, 255, 0.4);
-    margin:        8px auto 2px auto;
+    background:    rgba(255, 255, 255, 0.45);
+    margin:        10px auto 4px auto;
     flex-shrink:   0;
   }
 }
@@ -155,7 +159,7 @@
   position:       fixed;
   bottom:         84px;
   right:          24px;
-  z-index:        9998;
+  z-index:        999998;
   width:          390px;
   max-width:      calc(100vw - 32px);
   height:         610px;
@@ -176,7 +180,21 @@
 }
 
 /* ── Mobile Viewport Adaptations ───────────────────────────── */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .cb-fab {
+    bottom:        calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    right:         18px !important;
+    width:         60px !important;
+    height:        60px !important;
+    font-size:     26px !important;
+    z-index:       999999 !important;
+    box-shadow:    0 8px 28px rgba(8, 127, 115, 0.5), 0 0 0 3px rgba(8, 127, 115, 0.18) !important;
+  }
+
+  .cb-fab.cb-fab-open {
+    display:       none !important;
+  }
+
   .cb-window {
     right:         0 !important;
     left:          0 !important;
@@ -184,18 +202,39 @@
     top:           auto !important;
     width:         100vw !important;
     max-width:     100vw !important;
-    height:        93dvh !important;
-    max-height:    93dvh !important;
-    border-radius: 22px 22px 0 0 !important;
-    border-left:   none;
-    border-right:  none;
-    border-bottom: none;
-    box-shadow:    0 -10px 40px rgba(0, 0, 0, 0.28) !important;
+    height:        92dvh !important;
+    max-height:    92dvh !important;
+    border-radius: 24px 24px 0 0 !important;
+    border-left:   none !important;
+    border-right:  none !important;
+    border-bottom: none !important;
+    box-shadow:    0 -12px 40px rgba(0, 0, 0, 0.35) !important;
     animation:     cb-sheet-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
     overscroll-behavior: contain;
+    z-index:       999998 !important;
   }
 
   .cb-fab-label {
+    display: none !important;
+  }
+
+  /* Lock input area firmly in place at the bottom on mobile */
+  .cb-input-area {
+    position: sticky !important;
+    bottom: 0 !important;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)) !important;
+    background: #ffffff !important;
+    z-index: 30 !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 16px font-size prevents mobile browser auto-zoom jumping */
+  .cb-input {
+    font-size: 16px !important;
+  }
+
+  /* Hide footer on mobile so input area stays cleanly pinned to bottom */
+  .cb-footer {
     display: none !important;
   }
 }
@@ -374,14 +413,16 @@
 
 /* ── Messages Container ────────────────────────────────────── */
 .cb-messages {
-  flex:            1;
+  flex:            1 1 0%;
+  min-height:      0;
   overflow-y:      auto;
   padding:         14px 12px;
   display:         flex;
   flex-direction:  column;
   gap:             12px;
-  scroll-behavior: smooth;
   background:      #fdfefe;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .cb-messages::-webkit-scrollbar       { width: 4px; }
@@ -640,138 +681,39 @@
   background: var(--cb-primary-dark);
 }
 
-/* ── Interactive Voice Equalizer Panel ─────────────────────── */
-.cb-voice-panel {
-  background:    #fef2f2;
-  border-top:    1px solid #fee2e2;
-  border-bottom: 1px solid #fee2e2;
-  padding:       10px 14px;
-  display:       flex;
-  flex-direction: column;
-  gap:           8px;
-  animation:     cb-panel-slide 0.2s ease;
-  flex-shrink:   0;
+/* ── In-place Voice Listening State (Texting pad stays strictly in place) ── */
+.cb-input.cb-input-listening {
+  border-color: #ef4444 !important;
+  background: #fff8f8 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
-@keyframes cb-panel-slide {
+
+.cb-input.cb-input-listening::placeholder {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+/* ── Floating Speech Error Toast (Never pushes the texting pad down) ── */
+.cb-speech-error-toast {
+  position: absolute;
+  bottom: 66px;
+  left: 12px;
+  right: 12px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #e11d48;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  animation: cb-toast-in 0.2s ease;
+  pointer-events: none;
+}
+@keyframes cb-toast-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-.cb-voice-header {
-  display:     flex;
-  align-items: center;
-  gap:         10px;
-}
-
-.cb-voice-eq {
-  display:     flex;
-  align-items: flex-end;
-  gap:         3px;
-  height:      20px;
-  padding:     2px 0;
-}
-
-.cb-eq-bar {
-  width:         3.5px;
-  border-radius: 2px;
-  background:    #ef4444;
-  animation:     cb-eq-bounce 0.7s infinite alternate ease-in-out;
-}
-.cb-eq-bar.b1 { height: 40%; animation-delay: 0.1s; }
-.cb-eq-bar.b2 { height: 85%; animation-delay: 0.35s; }
-.cb-eq-bar.b3 { height: 100%; animation-delay: 0s; }
-.cb-eq-bar.b4 { height: 60%; animation-delay: 0.2s; }
-.cb-eq-bar.b5 { height: 35%; animation-delay: 0.45s; }
-
-@keyframes cb-eq-bounce {
-  0%   { height: 20%; opacity: 0.4; }
-  100% { height: 100%; opacity: 1; }
-}
-
-.cb-voice-text-meta {
-  display:        flex;
-  flex-direction: column;
-}
-.cb-voice-text-meta strong {
-  font-size: 12.5px;
-  color:     #991b1b;
-}
-.cb-voice-text-meta span {
-  font-size: 11px;
-  color:     #b91c1c;
-}
-
-.cb-voice-preview {
-  background:    #ffffff;
-  border:        1px solid #fecaca;
-  border-radius: 8px;
-  padding:       6px 10px;
-  font-size:     12.5px;
-  font-style:    italic;
-  color:         #7f1d1d;
-  max-height:    46px;
-  overflow-y:    auto;
-}
-
-.cb-voice-actions {
-  display:         flex;
-  align-items:     center;
-  justify-content: flex-end;
-  gap:             8px;
-}
-
-.cb-voice-done-btn {
-  background:    #f87171;
-  color:         #ffffff;
-  border:        none;
-  border-radius: 6px;
-  padding:       5px 11px;
-  font-size:     11.5px;
-  font-weight:   700;
-  cursor:        pointer;
-  transition:    background 0.15s ease;
-}
-.cb-voice-done-btn:hover {
-  background: #ef4444;
-}
-
-.cb-voice-send-btn {
-  background:    #059669;
-  color:         #ffffff;
-  border:        none;
-  border-radius: 6px;
-  padding:       5px 12px;
-  font-size:     11.5px;
-  font-weight:   700;
-  cursor:        pointer;
-  transition:    background 0.15s ease;
-}
-.cb-voice-send-btn:hover:not(:disabled) {
-  background: #047857;
-}
-.cb-voice-send-btn:disabled {
-  opacity: 0.5;
-  cursor:  not-allowed;
-}
-
-.cb-voice-cancel-btn {
-  background:    transparent;
-  color:         #991b1b;
-  border:        none;
-  font-size:     14px;
-  cursor:        pointer;
-  padding:       4px 8px;
-}
-
-/* ── Speech Error Banner ───────────────────────────────────── */
-.cb-speech-error-banner {
-  background:  #fff1f2;
-  border-top:  1px solid #fecdd3;
-  padding:     7px 12px;
-  font-size:   12px;
-  color:       #e11d48;
-  font-weight: 500;
-  flex-shrink: 0;
 }
 
 /* ── Input Area ────────────────────────────────────────────── */
@@ -783,6 +725,8 @@
   border-top:     1px solid var(--cb-border);
   flex-shrink:    0;
   background:     #ffffff;
+  position:       relative;
+  z-index:        20;
 }
 
 @supports (padding-bottom: env(safe-area-inset-bottom)) {

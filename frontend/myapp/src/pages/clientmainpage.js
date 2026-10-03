@@ -19,7 +19,6 @@ const SESSION_KEY = "law4u_client_id";
 const CLIENT_OBJ_KEY = "law4u_client";
 const CLIENT_TOKEN_KEY = "law4u_client_token";
 const LANG_KEY = "law4u_language";
-const THEME_KEY = "law4u_client_theme";
 const ITEMS_PER_PAGE = 20;
 
 const AVATAR_PRESETS = [

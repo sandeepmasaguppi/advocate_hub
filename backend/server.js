@@ -18,6 +18,12 @@ const crypto = require("crypto");
 // ── Config ────────────────────────────────────────────────────
 loadDotEnv(path.join(__dirname, ".env"));
 
+const {
+  notifyAdminNewClient,
+  notifyAdminNewAdvocate,
+  getStoredNotifications,
+} = require("./emailService");
+
 const PORT = Number(process.env.PORT) || 5000;
 const DATA_DIR = path.join(__dirname, "data");
 const UPLOAD_DIR = path.join(__dirname, "uploads");
@@ -459,6 +465,12 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
 
   list.push(record);
   saveAdvocates(list);
+
+  // Automated notification dispatched to admin team at advocatehub.in@gmail.com
+  notifyAdminNewAdvocate(record).catch((err) => {
+    console.warn("[AdminAlert] Advocate notification dispatch error:", err?.message || err);
+  });
+
   return toPublic(record);
 }
 
@@ -484,6 +496,12 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   };
   list.push(record);
   saveClients(list);
+
+  // Automated notification dispatched to admin team at advocatehub.in@gmail.com
+  notifyAdminNewClient(record).catch((err) => {
+    console.warn("[AdminAlert] Client notification dispatch error:", err?.message || err);
+  });
+
   const { passwordHash, ...safe } = record;
   return safe;
 }
@@ -526,7 +544,12 @@ function adminLogin(payload) {
   if (!payload) throw new HttpError(400, "Missing credentials");
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || "");
-  const isEmailMatch = email === ADMIN_EMAIL || email === "admin@law4u.in" || email === "admin@gmail.com";
+  const isEmailMatch =
+    email === ADMIN_EMAIL ||
+    email === "advocatehub.in@gmail.com" ||
+    email === "admin@advocatehub.in" ||
+    email === "admin@law4u.in" ||
+    email === "admin@gmail.com";
   const isPasswordMatch =
     verifyPassword(password, ADMIN_PASSWORD_HASH) ||
     password === "Admin@123" ||
@@ -1121,6 +1144,12 @@ async function route(request, response) {
   // Registration (public)
   if (method === "POST" && p === "/api/advocates/register") return send(request, response, 201, await registerAdvocate(request, await readBody(request)));
   if (method === "POST" && p === "/api/clients/register") return send(request, response, 201, await registerClient(await readBody(request)));
+
+  // Admin: get stored registration email notifications
+  if (method === "GET" && p === "/api/notifications") {
+    requireAdmin(request);
+    return send(request, response, 200, getStoredNotifications());
+  }
 
   // Admin: create client directly into clients.json
   if (method === "POST" && p === "/api/clients") {

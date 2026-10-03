@@ -269,16 +269,18 @@ const FOOTER_LINKS = {
   "Terms of Use": "/terms",
   "Contact Us": "/Contact",
   "About Us": "/aboutus",
+  "Partners": "/partners",
   "Lawyer Signup": "/signup",
   "ಗೌಪ್ಯತೆ ನೀತಿ": "/privacy",
   "ಬಳಕೆಯ ನಿಯಮಗಳು": "/terms",
   "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ": "/Contact",
   "ನಮ್ಮ ಬಗ್ಗೆ": "/aboutus",
+  "ಪಾಲುದಾರರು": "/partners",
   "ವಕೀಲರ ನೋಂದಣಿ": "/signup",
 };
 
-const FOOTER_ITEMS_EN = ["Privacy Policy", "Terms of Use", "Contact Us", "About Us", "Lawyer Signup"];
-const FOOTER_ITEMS_KN = ["ಗೌಪ್ಯತೆ ನೀತಿ", "ಬಳಕೆಯ ನಿಯಮಗಳು", "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ", "ನಮ್ಮ ಬಗ್ಗೆ", "ವಕೀಲರ ನೋಂದಣಿ"];
+const FOOTER_ITEMS_EN = ["Privacy Policy", "Terms of Use", "Contact Us", "About Us", "Partners", "Lawyer Signup"];
+const FOOTER_ITEMS_KN = ["ಗೌಪ್ಯತೆ ನೀತಿ", "ಬಳಕೆಯ ನಿಯಮಗಳು", "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ", "ನಮ್ಮ ಬಗ್ಗೆ", "ಪಾಲುದಾರರು", "ವಕೀಲರ ನೋಂದಣಿ"];
 
 // Read through advocatesStore (not raw advocates.json) so ids stay
 // consistent with Login.js / AdvocateDashboard.js / Profile.js.
@@ -750,6 +752,37 @@ export default function Home() {
           <p className="lw-footer-tagline">
             {isKn ? "ಭಾರತದ ಅತ್ಯಂತ ವಿಶ್ವಾಸಾರ್ಹ ಕಾನೂನು ವೇದಿಕೆ" : "India's Most Trusted Legal Platform"}
           </p>
+
+          {/* Official Company Connect Channels */}
+          <div className="lw-footer-connect">
+            <a
+              href="mailto:advocatehub.in@gmail.com"
+              className="lw-footer-connect-link"
+              title="Official Company Email"
+            >
+              <span className="lw-fcl-icon">✉️</span>
+              <span className="lw-fcl-text">advocatehub.in@gmail.com</span>
+            </a>
+            <a
+              href="https://www.instagram.com/advocate__hub/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lw-footer-connect-link lw-fcl-insta"
+              title="Official Instagram @advocate__hub"
+            >
+              <span className="lw-fcl-icon">📸</span>
+              <span className="lw-fcl-text">@advocate__hub</span>
+            </a>
+            <a
+              href="tel:+919108717353"
+              className="lw-footer-connect-link"
+              title="Official Phone Line"
+            >
+              <span className="lw-fcl-icon">📞</span>
+              <span className="lw-fcl-text">+91 91087 17353</span>
+            </a>
+          </div>
+
           <div className="lw-footer-links">
             {footerItems.map((l) => (
               <button

@@ -260,9 +260,6 @@ function LawyerMegaMenu({ onClose, isKn }) {
 }
 
 export default function Navbar() {
-  // Safety guard against stale HMR chunks or legacy references
-  const showScrollTop = false;
-
   const [openMenu, setOpenMenu] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

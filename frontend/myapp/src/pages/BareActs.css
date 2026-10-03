@@ -122,7 +122,7 @@
    2. CONVERTER TOGGLE BAR & CONVERTER CARD
    ───────────────────────────────────────────────────────────── */
 .ba-converter-toggle-bar {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .ba-btn-toggle-conv {
@@ -130,33 +130,136 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%);
+  background: linear-gradient(90deg, #0f1c32 0%, #1e3a8a 35%, #2563eb 100%);
   color: #ffffff;
-  border: none;
-  padding: 13px 20px;
-  border-radius: 12px;
-  font-size: 14.5px;
-  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 10px 16px;
+  border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.28);
+  transition: all 0.25s ease;
+  overflow: hidden;
+  position: relative;
+  height: 52px;
+}
+
+.ba-dark .ba-btn-toggle-conv {
+  background: linear-gradient(90deg, #080f1d 0%, #10213d 35%, #1d3b75 100%) !important;
+  border-color: #274068 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
 }
 
 .ba-btn-toggle-conv:hover {
-  background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+  border-color: #93c5fd;
+}
+
+.ba-conv-toggle-fixed-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  z-index: 2;
+  background: inherit;
+  padding-right: 12px;
+}
+
+.ba-conv-toggle-icon {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.2);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ba-conv-toggle-pill {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(4px);
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #ffffff;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ── Continuous Scrolling Marquee (Right to Left) ── */
+.ba-conv-marquee-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  margin: 0 10px;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+}
+
+.ba-conv-marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: baMarqueeRightToLeft 24s linear infinite;
+  will-change: transform;
+}
+
+.ba-btn-toggle-conv:hover .ba-conv-marquee-track {
+  animation-play-state: paused;
+}
+
+.ba-conv-marquee-text {
+  display: inline-block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #e0e7ff;
+  letter-spacing: 0.3px;
+  padding-right: 48px;
+}
+
+@keyframes baMarqueeRightToLeft {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.ba-conv-toggle-fixed-right {
+  flex-shrink: 0;
+  z-index: 2;
+  background: inherit;
+  padding-left: 12px;
 }
 
 .ba-badge-active {
-  background: #10b981;
-  color: #ffffff;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   text-transform: uppercase;
-  padding: 3px 9px;
+  padding: 5px 12px;
   border-radius: 999px;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ba-badge-active.closed {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.ba-badge-active.open {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* ── Converter Box ── */
@@ -1962,6 +2065,17 @@
 }
 
 @media (max-width: 768px) {
+  .ba-btn-toggle-conv {
+    height: 48px;
+    padding: 8px 12px;
+  }
+  .ba-conv-toggle-pill {
+    display: none;
+  }
+  .ba-badge-active {
+    padding: 4px 8px;
+    font-size: 10.5px;
+  }
   .ba-page {
     padding: 12px 14px 40px;
   }

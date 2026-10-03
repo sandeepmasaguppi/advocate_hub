@@ -6,7 +6,8 @@ import "./PrivacyPolicy.css";
 const LAST_UPDATED = "01 September 2026";
 const EFFECTIVE_DATE = "01 September 2026";
 const COMPANY = "Advocate Hub Legal Technologies Pvt. Ltd.";
-const EMAIL = "privacy@advocatehub.in";
+const EMAIL = "advocatehub.in@gmail.com";
+const INSTAGRAM = "@advocate__hub";
 const ADDRESS = "No. 42, 3rd Floor, Legal Hub Tower, MG Road, Bengaluru – 560001, Karnataka, India";
 const PHONE = "+91 80 4567 8900";
 
@@ -194,7 +195,7 @@ const CONTENT = {
       { icon: "⏸️",  title: "Right to Restriction",    desc: "Request restriction of processing while a dispute or correction request is pending." },
       { icon: "🔕",  title: "Right to Withdraw Consent",desc: "Withdraw consent for processing based on consent at any time. Withdrawal does not affect processing done before withdrawal." },
     ],
-    footer: "To exercise any of these rights, please email privacy@advocatehub.in with your registered email address and a description of your request. We may require identity verification before processing certain requests.",
+    footer: "To exercise any of these rights, please email advocatehub.in@gmail.com with your registered email address and a description of your request. We may require identity verification before processing certain requests.",
   },
   "third-party": {
     paragraphs: [
@@ -207,7 +208,7 @@ const CONTENT = {
   children: {
     paragraphs: [
       `Advocate Hub's services are intended for users who are 18 years of age or older. We do not knowingly collect personal information from children under the age of 18.`,
-      `If you are a parent or guardian and believe that your child has provided personal information to us, please contact us immediately at privacy@advocatehub.in. We will take steps to delete such information from our systems.`,
+      `If you are a parent or guardian and believe that your child has provided personal information to us, please contact us immediately at advocatehub.in@gmail.com. We will take steps to delete such information from our systems.`,
       `If we discover that we have collected personal information from a child under 18, we will promptly delete such information and terminate the associated account.`,
     ],
   },
@@ -230,7 +231,7 @@ const CONTENT = {
     paragraphs: [
       `Advocate Hub reserves the right to update or modify this Privacy Policy at any time. We will notify you of material changes by email, in-app notification, or by posting a prominent notice on our website at least 7 days before the changes take effect.`,
       `Your continued use of Advocate Hub's services after the effective date of the revised Privacy Policy constitutes your acceptance of the updated policy.`,
-      `We maintain an archive of previous versions of this Privacy Policy. You may request access to previous versions by contacting us at privacy@advocatehub.in.`,
+      `We maintain an archive of previous versions of this Privacy Policy. You may request access to previous versions by contacting us at advocatehub.in@gmail.com.`,
       `We encourage you to review this Privacy Policy periodically to stay informed about how we protect your information.`,
     ],
   },
@@ -239,11 +240,12 @@ const CONTENT = {
       `If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:`,
     ],
     details: {
-      company: COMPANY,
-      email:   EMAIL,
-      phone:   PHONE,
-      address: ADDRESS,
-      website: "www.advocatehub.in/privacy",
+      company:   COMPANY,
+      email:     EMAIL,
+      instagram: INSTAGRAM,
+      phone:     PHONE,
+      address:   ADDRESS,
+      website:   "www.advocatehub.in/privacy",
     },
   },
 };
@@ -593,11 +595,12 @@ export default function PrivacyPolicy() {
               {CONTENT.contact.paragraphs.map((p, i) => <p key={i} className="pp-para">{p}</p>)}
               <div className="pp-contact-card">
                 {[
-                  { label:"Company", val: CONTENT.contact.details.company },
-                  { label:"Email",   val: CONTENT.contact.details.email   },
-                  { label:"Phone",   val: CONTENT.contact.details.phone   },
-                  { label:"Address", val: CONTENT.contact.details.address },
-                  { label:"Website", val: CONTENT.contact.details.website },
+                  { label:"Company",   val: CONTENT.contact.details.company },
+                  { label:"Email",     val: CONTENT.contact.details.email   },
+                  { label:"Instagram", val: CONTENT.contact.details.instagram },
+                  { label:"Phone",     val: CONTENT.contact.details.phone   },
+                  { label:"Address",   val: CONTENT.contact.details.address },
+                  { label:"Website",   val: CONTENT.contact.details.website },
                 ].map(row => (
                   <div key={row.label} className="pp-detail-row">
                     <span className="pp-detail-label">{row.label}</span>

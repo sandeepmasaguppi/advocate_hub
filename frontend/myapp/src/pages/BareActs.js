@@ -183,8 +183,8 @@ function LawConverter({ isKn }) {
   const [filterQuery, setFilterQuery] = useState("");
   const [copiedId, setCopiedId] = useState(null);
 
-  const mappingsList = Array.isArray(OLD_TO_NEW_CRIMINAL_MAPPING) ? OLD_TO_NEW_CRIMINAL_MAPPING : [];
   const matchedMappings = useMemo(() => {
+    const mappingsList = Array.isArray(OLD_TO_NEW_CRIMINAL_MAPPING) ? OLD_TO_NEW_CRIMINAL_MAPPING : [];
     if (!filterQuery.trim()) return mappingsList.slice(0, 8);
     const q = filterQuery.toLowerCase().trim();
     return mappingsList.filter(
@@ -196,7 +196,7 @@ function LawConverter({ isKn }) {
         m.newAct.toLowerCase().includes(q) ||
         m.changeSummary.toLowerCase().includes(q)
     );
-  }, [filterQuery, mappingsList]);
+  }, [filterQuery]);
 
   const handleCopyCitation = (item, idx) => {
     const citation = `${item.offence}: Old ${item.oldAct} Sec ${item.oldSection} ➔ New ${item.newAct} Sec ${item.newSection}. Punishment: ${item.punishment}. (${item.cognizable}, ${item.bailable})`;
@@ -407,7 +407,7 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
   const [secFilter, setSecFilter] = useState("");
   const [copiedSec, setCopiedSec] = useState(false);
 
-  const availableSections = act.sections || [];
+  const availableSections = useMemo(() => act.sections || [], [act.sections]);
 
   const filteredSections = useMemo(() => {
     if (!secFilter.trim()) return availableSections;
@@ -829,9 +829,13 @@ export default function BareActs() {
   const [showPop, setShowPop] = useState(false);
   const [sortBy, setSortBy] = useState("popular");
   const [readModal, setReadModal] = useState(null);
-  const [showConverter, setShowConverter] = useState(true);
+  const [showConverter, setShowConverter] = useState(false);
 
-  const allActs = Array.isArray(BARE_ACTS_DATA) ? BARE_ACTS_DATA : [];
+  const marqueeContent = isKn
+    ? "⚡ ಹಳೆಯ ⇄ ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳ ಪರಿವರ್ತಕ (IPC / CrPC / IEA ➔ BNS / BNSS / BSA) • IPC 302 ➔ BNS 103(1) (ಕೊಲೆ) • IPC 420 ➔ BNS 318(4) (ವಂಚನೆ) • IPC 498A ➔ BNS 85 (ದೌರ್ಜನ್ಯ) • CrPC 154 ➔ BNSS 173 (ಜೀರೋ ಎಫ್‌ಐಆರ್) • CrPC 438 ➔ BNSS 482 (ಮುಂಗಡ ಜಾಮೀನು) • IEA 65B ➔ BSA 63 (ಡಿಜಿಟಲ್ ಸಾಕ್ಷ್ಯ) • ತೆರೆಯಲು ಇಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ ➔         "
+    : "⚡ Old ⇄ New Criminal Law Converter (IPC / CrPC / IEA ➔ BNS / BNSS / BSA) • IPC 302 ➔ BNS 103(1) (Murder) • IPC 420 ➔ BNS 318(4) (Cheating) • IPC 498A ➔ BNS 85 (Cruelty) • CrPC 154 ➔ BNSS 173 (Zero FIR) • CrPC 438 ➔ BNSS 482 (Anticipatory Bail) • IEA 65B ➔ BSA 63 (Electronic Evidence) • Click Here to Open Interactive Converter ➔         ";
+
+  const allActs = useMemo(() => (Array.isArray(BARE_ACTS_DATA) ? BARE_ACTS_DATA : []), []);
 
   const filtered = useMemo(() => {
     let list = [...allActs];
@@ -900,20 +904,34 @@ export default function BareActs() {
         </div>
       </div>
 
-      {/* Interactive Old ⇄ New Law Converter */}
+      {/* Interactive Old ⇄ New Law Converter with Right-to-Left Scrolling Marquee */}
       <div className="ba-converter-toggle-bar">
         <button
           type="button"
-          className="ba-btn-toggle-conv"
+          className={`ba-btn-toggle-conv ${showConverter ? "is-open" : "is-closed"}`}
           onClick={() => setShowConverter(!showConverter)}
+          title={showConverter ? "Click to collapse converter" : "Click to expand converter"}
+          aria-expanded={showConverter}
         >
-          <span>{showConverter ? "▼" : "▶"}</span>
-          <span>
-            {isKn
-              ? "⚡ ಹಳೆಯ ⇄ ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳ ಪರಿವರ್ತಕ (BNS / BNSS / BSA Converter)"
-              : "⚡ Old ⇄ New Criminal Law Converter (IPC / CrPC / IEA ➔ BNS / BNSS / BSA)"}
-          </span>
-          <span className="ba-badge-active">{showConverter ? "Active" : "Open"}</span>
+          <div className="ba-conv-toggle-fixed-left">
+            <span className="ba-conv-toggle-icon">{showConverter ? "▼" : "▶"}</span>
+            <span className="ba-conv-toggle-pill">
+              {isKn ? "⚡ ೨೦೨೩ ಸಂಹಿತೆಗಳು" : "⚡ 2024 Law Converter"}
+            </span>
+          </div>
+
+          <div className="ba-conv-marquee-wrap">
+            <div className="ba-conv-marquee-track">
+              <span className="ba-conv-marquee-text">{marqueeContent}</span>
+              <span className="ba-conv-marquee-text" aria-hidden="true">{marqueeContent}</span>
+            </div>
+          </div>
+
+          <div className="ba-conv-toggle-fixed-right">
+            <span className={`ba-badge-active ${showConverter ? "open" : "closed"}`}>
+              {showConverter ? (isKn ? "▲ ಮುಚ್ಚಿ" : "▲ Close") : (isKn ? "👆 ತೆರೆಯಲು ಕ್ಲಿಕ್ ಮಾಡಿ" : "👆 Click to Open")}
+            </span>
+          </div>
         </button>
       </div>
 

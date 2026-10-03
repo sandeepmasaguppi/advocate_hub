@@ -86,8 +86,10 @@ function App() {
         <Route path="/legal-advice/news" element={<LegalNews />} />
         <Route path="/aboutus" element={<AboutUs />} />
         <Route path="/Aboutus" element={<Navigate to="/aboutus" replace />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/Contact" element={<Contact />} />
         <Route path="/Partners" element={<Partners />} />
+        <Route path="/partners" element={<Partners />} />
         <Route path="/admin" element={<Adminpage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
