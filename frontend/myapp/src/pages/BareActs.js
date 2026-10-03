@@ -183,10 +183,11 @@ function LawConverter({ isKn }) {
   const [filterQuery, setFilterQuery] = useState("");
   const [copiedId, setCopiedId] = useState(null);
 
+  const mappingsList = Array.isArray(OLD_TO_NEW_CRIMINAL_MAPPING) ? OLD_TO_NEW_CRIMINAL_MAPPING : [];
   const matchedMappings = useMemo(() => {
-    if (!filterQuery.trim()) return OLD_TO_NEW_CRIMINAL_MAPPING.slice(0, 8);
+    if (!filterQuery.trim()) return mappingsList.slice(0, 8);
     const q = filterQuery.toLowerCase().trim();
-    return OLD_TO_NEW_CRIMINAL_MAPPING.filter(
+    return mappingsList.filter(
       (m) =>
         m.offence.toLowerCase().includes(q) ||
         m.oldSection.toLowerCase().includes(q) ||
@@ -195,7 +196,7 @@ function LawConverter({ isKn }) {
         m.newAct.toLowerCase().includes(q) ||
         m.changeSummary.toLowerCase().includes(q)
     );
-  }, [filterQuery]);
+  }, [filterQuery, mappingsList]);
 
   const handleCopyCitation = (item, idx) => {
     const citation = `${item.offence}: Old ${item.oldAct} Sec ${item.oldSection} ➔ New ${item.newAct} Sec ${item.newSection}. Punishment: ${item.punishment}. (${item.cognizable}, ${item.bailable})`;
@@ -727,9 +728,9 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {OLD_TO_NEW_CRIMINAL_MAPPING.filter(
-                      (m) => m.newAct === act.shortName
-                    ).map((m, i) => (
+                    {(Array.isArray(OLD_TO_NEW_CRIMINAL_MAPPING) ? OLD_TO_NEW_CRIMINAL_MAPPING : [])
+                      .filter((m) => m.newAct === act.shortName)
+                      .map((m, i) => (
                       <tr key={i}>
                         <td>
                           <strong>{m.offence}</strong>
@@ -830,8 +831,10 @@ export default function BareActs() {
   const [readModal, setReadModal] = useState(null);
   const [showConverter, setShowConverter] = useState(true);
 
+  const allActs = Array.isArray(BARE_ACTS_DATA) ? BARE_ACTS_DATA : [];
+
   const filtered = useMemo(() => {
-    let list = [...BARE_ACTS_DATA];
+    let list = [...allActs];
 
     if (activeCat !== "All") {
       if (activeCat === "New Acts (2023)") list = list.filter((a) => a.isNew);
@@ -868,7 +871,7 @@ export default function BareActs() {
     if (sortBy === "sections") list.sort((a, b) => (b.sectionsCount || 0) - (a.sectionsCount || 0));
 
     return list;
-  }, [activeCat, search, showNew, showPop, sortBy]);
+  }, [allActs, activeCat, search, showNew, showPop, sortBy]);
 
   return (
     <div className={`ba-page ${theme === "dark" ? "ba-dark" : "ba-light"}`}>
@@ -887,9 +890,9 @@ export default function BareActs() {
               : "Access official enacted Indian legislation including complete text for the 2023 Criminal Sanhitas (BNS, BNSS, BSA), Constitution of India, CPC, HMA, RERA, NI Act, and Corporate codes."}
           </p>
           <div className="ba-header-stats">
-            <span>📚 {BARE_ACTS_DATA.length}+ {isKn ? "ಕಾಯಿದೆಗಳು" : "Enacted Acts"}</span>
-            <span>🆕 {BARE_ACTS_DATA.filter((a) => a.isNew).length} {isKn ? "ಹೊಸ ಕಾಯಿದೆಗಳು (೨೦೨೩)" : "New Criminal Laws (2023)"}</span>
-            <span>🔥 {BARE_ACTS_DATA.filter((a) => a.popular).length} {isKn ? "ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "Most Cited Codes"}</span>
+            <span>📚 {allActs.length}+ {isKn ? "ಕಾಯಿದೆಗಳು" : "Enacted Acts"}</span>
+            <span>🆕 {allActs.filter((a) => a.isNew).length} {isKn ? "ಹೊಸ ಕಾಯಿದೆಗಳು (೨೦೨೩)" : "New Criminal Laws (2023)"}</span>
+            <span>🔥 {allActs.filter((a) => a.popular).length} {isKn ? "ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "Most Cited Codes"}</span>
             <span style={{ background: "rgba(16, 185, 129, 0.25)", color: "#a7f3d0" }}>
               ⬇ 100% Free Word (.doc) & Text (.txt) Downloads
             </span>
