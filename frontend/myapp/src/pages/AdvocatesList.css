@@ -839,10 +839,10 @@
   color: #94a3b8;
 }
 
-/* 4-Tile Performance Matrix */
+/* 3-Tile Performance Matrix */
 .fl-card-matrix {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -1134,7 +1134,7 @@
     padding: 18px;
   }
   .fl-card-matrix {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
   .fl-card-actions {

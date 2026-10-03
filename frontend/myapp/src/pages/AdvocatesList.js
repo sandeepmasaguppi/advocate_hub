@@ -747,7 +747,7 @@ export default function AdvocatesList({ lang: propLang } = {}) {
                     </div>
                   </div>
 
-                  {/* 4-Tile Performance Matrix */}
+                  {/* 3-Tile Performance Matrix */}
                   <div className="fl-card-matrix">
                     <div className="fl-matrix-tile">
                       <span className="fl-matrix-label">{isKn ? "ರೇಟಿಂಗ್" : "Rating"}</span>
@@ -760,12 +760,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
                     <div className="fl-matrix-tile">
                       <span className="fl-matrix-label">{isKn ? "ಅನುಭವ" : "Experience"}</span>
                       <strong className="fl-matrix-val">{adv.experience || "6+ Yrs"}</strong>
-                    </div>
-                    <div className="fl-matrix-tile">
-                      <span className="fl-matrix-label">{isKn ? "ಸ್ಥಿತಿ" : "Status"}</span>
-                      <strong className="fl-matrix-val fl-status-active">
-                        {isKn ? "⚡ ಸಕ್ರಿಯ" : "⚡ Available"}
-                      </strong>
                     </div>
                   </div>
 

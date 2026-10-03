@@ -25,6 +25,8 @@ const ADVOCATES_FILE = path.join(DATA_DIR, "advocates.json");
 const CLIENTS_FILE = path.join(DATA_DIR, "clients.json");
 const PAYMENTS_FILE = path.join(DATA_DIR, "payments.json");
 const CLARITY_FILE = path.join(DATA_DIR, "clarityguide.json");
+const DOCUMENTS_PURCHASE_FILE_COMMA = path.join(DATA_DIR, "documentspurchase,json");
+const DOCUMENTS_PURCHASE_FILE_DOT = path.join(DATA_DIR, "documentspurchase.json");
 const MAX_BODY = 5 * 1024 * 1024; // 5 MB (base64 avatars)
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:3000,http://localhost:3001")
@@ -133,6 +135,17 @@ function loadAdvocates() { return readJson(ADVOCATES_FILE, []); }
 function saveAdvocates(list) { writeJson(ADVOCATES_FILE, list); }
 function loadClients() { return readJson(CLIENTS_FILE, []); }
 function saveClients(list) { writeJson(CLIENTS_FILE, list); }
+function loadDocumentPurchases() {
+  let list = readJson(DOCUMENTS_PURCHASE_FILE_COMMA, null);
+  if (!Array.isArray(list)) {
+    list = readJson(DOCUMENTS_PURCHASE_FILE_DOT, []);
+  }
+  return Array.isArray(list) ? list : [];
+}
+function saveDocumentPurchases(list) {
+  writeJson(DOCUMENTS_PURCHASE_FILE_COMMA, list);
+  writeJson(DOCUMENTS_PURCHASE_FILE_DOT, list);
+}
 function loadPayments() {
   const list = readJson(PAYMENTS_FILE, null);
   if (Array.isArray(list)) return list;
@@ -1145,6 +1158,37 @@ async function route(request, response) {
       }
     }
     return send(request, response, 201, safe);
+  }
+
+  // Legal Document Purchases (₹10 UPI Downloads)
+  if (method === "GET" && (p === "/api/documents/purchases" || p === "/api/documents/purchase")) {
+    return send(request, response, 200, loadDocumentPurchases());
+  }
+
+  if (method === "POST" && (p === "/api/documents/purchases" || p === "/api/documents/purchase")) {
+    const body = await readBody(request);
+    const purchases = loadDocumentPurchases();
+    const newPurchase = {
+      id: "DOCPAY_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+      clientName: body.clientName || body.name || "Client",
+      clientEmail: body.clientEmail || body.email || "",
+      clientPhone: body.clientPhone || body.phone || "",
+      documentId: body.documentId || body.docId || null,
+      documentTitle: body.documentTitle || body.title || "Legal Document Draft",
+      category: body.category || "General",
+      pages: body.pages || 1,
+      amount: Number(body.amount) || 10,
+      currency: "INR",
+      upiNumber: "9108717353",
+      paymentMethod: body.paymentMethod || "UPI QR Scanner (PhonePe / GPay / Paytm / BHIM)",
+      status: body.status || "Paid",
+      transactionId: body.transactionId || body.txnId || ("TXN-ADV-UPI-" + Date.now().toString().slice(-8)),
+      purchasedAt: body.purchasedAt || new Date().toISOString(),
+      downloadFormat: body.downloadFormat || "Word Document (.doc) + Clean Text (.txt)"
+    };
+    purchases.unshift(newPurchase);
+    saveDocumentPurchases(purchases);
+    return send(request, response, 201, newPurchase);
   }
 
   // Admin & Directory: list clients

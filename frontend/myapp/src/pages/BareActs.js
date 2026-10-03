@@ -1,94 +1,345 @@
 // ============================================================
-//  BareActs.js — Indian Bare Acts & Statutory Enactments Browser
+//  BareActs.js — Indian Bare Acts & Statutory Enactments Repository
 //  Part of the 4 Legal Sections:
 //    1. Ask a Question  2. Legal Documents  3. Bare Acts  4. Legal News
 //  Supports White & Dark Themes with English & Kannada translations
+//  Features:
+//    • Complete BNS 2023, BNSS 2023, BSA 2023 Criminal Law Overhaul
+//    • Interactive Old ⇄ New Criminal Law Section Converter
+//    • Deep Section Explorer with Sub-sections, Punishments & Bail status
+//    • Word (.doc) and Text (.txt) Download + Court Print
 // ============================================================
 
 import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getTheme } from "../data/themeStore";
+import {
+  BARE_ACT_CATEGORIES_EN,
+  BARE_ACT_CATEGORIES_KN,
+  CAT_COLORS,
+  OLD_TO_NEW_CRIMINAL_MAPPING,
+  BARE_ACTS_DATA
+} from "../data/bareActsData";
 import "./BareActs.css";
 
-export const CATEGORIES_EN = [
-  "All", "Criminal", "Civil", "Family", "Property",
-  "Corporate", "Labour", "Constitutional", "New Acts",
-];
+export const CATEGORIES_EN = BARE_ACT_CATEGORIES_EN;
+export const CATEGORIES_KN = BARE_ACT_CATEGORIES_KN;
+export const CATEGORIES = BARE_ACT_CATEGORIES_EN;
+export const BARE_ACTS = BARE_ACTS_DATA;
+export { CAT_COLORS, OLD_TO_NEW_CRIMINAL_MAPPING, BARE_ACTS_DATA };
 
-export const CATEGORIES_KN = [
-  "ಎಲ್ಲಾ", "ಕ್ರಿಮಿನಲ್", "ಸಿವಿಲ್", "ಕೌಟುಂಬಿಕ", "ಆಸ್ತಿ",
-  "ಕಾರ್ಪೊರೇಟ್", "ಕಾರ್ಮಿಕ", "ಸಂವಿಧಾನ", "ಹೊಸ ಕಾಯ್ದೆಗಳು",
-];
+/**
+ * Downloads a structured Bare Act text document
+ */
+function downloadBareActText(act) {
+  let content = `ADVOCATES HUB — OFFICIAL STATUTORY REPOSITORY\n`;
+  content += `=========================================================\n`;
+  content += `TITLE: ${act.title.toUpperCase()}\n`;
+  content += `SHORT NAME / CITATION: ${act.shortName}\n`;
+  content += `ACT NUMBER: ${act.actNumber || "Central Enactment"}\n`;
+  content += `ENACTMENT / ENFORCEMENT: ${act.enactmentDate || act.year}\n`;
+  content += `MINISTRY: ${act.ministry || "Ministry of Law and Justice, Government of India"}\n`;
+  content += `CATEGORY: ${act.category}\n`;
+  content += `TOTAL PROVISIONS: ${act.sectionsCount} Sections · ${act.chaptersCount || act.chapters?.length || 1} Chapters\n`;
+  content += `=========================================================\n\n`;
+  content += `LEGISLATIVE OVERVIEW & OBJECTS:\n${act.desc}\n\n`;
 
-export const CATEGORIES = CATEGORIES_EN;
+  if (act.chapters && act.chapters.length > 0) {
+    content += `TABLE OF CHAPTERS & SCHEME OF THE ACT:\n`;
+    act.chapters.forEach((ch, i) => {
+      content += `  ${i + 1}. ${ch}\n`;
+    });
+    content += `\n=========================================================\n\n`;
+  }
 
-export const BARE_ACTS = [
-  { id: 1,  icon: "📕", title: "Bharatiya Nyaya Sanhita (BNS), 2023",          shortName: "BNS",    category: "Criminal",      year: 2023, sections: 358, desc: "Replaces IPC. Comprehensive criminal law covering all offences and punishments.", isNew: true,  popular: true  },
-  { id: 2,  icon: "📘", title: "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023", shortName: "BNSS",  category: "Criminal",      year: 2023, sections: 531, desc: "Replaces CrPC. Criminal procedure code governing investigation and trial.", isNew: true,  popular: true  },
-  { id: 3,  icon: "📗", title: "Bharatiya Sakshya Adhiniyam (BSA), 2023",      shortName: "BSA",    category: "Criminal",      year: 2023, sections: 170, desc: "Replaces Indian Evidence Act. Rules of evidence in Indian courts.", isNew: true,  popular: true  },
-  { id: 4,  icon: "📙", title: "Indian Penal Code (IPC), 1860",                shortName: "IPC",    category: "Criminal",      year: 1860, sections: 511, desc: "Main criminal code of India. Defines offences and prescribes punishments.", isNew: false, popular: true  },
-  { id: 5,  icon: "📒", title: "Code of Criminal Procedure (CrPC), 1973",      shortName: "CrPC",  category: "Criminal",      year: 1973, sections: 484, desc: "Procedural law for administration of criminal law in India.", isNew: false, popular: true  },
-  { id: 6,  icon: "📓", title: "Indian Evidence Act, 1872",                    shortName: "IEA",    category: "Criminal",      year: 1872, sections: 167, desc: "Rules regarding admissibility of evidence in civil and criminal proceedings.", isNew: false, popular: true  },
-  { id: 7,  icon: "⚖️", title: "Code of Civil Procedure (CPC), 1908",         shortName: "CPC",    category: "Civil",         year: 1908, sections: 158, desc: "Procedure for civil courts in India. Covers filing suits, trial and appeals.", isNew: false, popular: true  },
-  { id: 8,  icon: "👨‍👩‍👧", title: "Hindu Marriage Act, 1955",                   shortName: "HMA",    category: "Family",        year: 1955, sections: 32,  desc: "Marriage, divorce, judicial separation and ancillary relief for Hindus.", isNew: false, popular: true  },
-  { id: 9,  icon: "👶", title: "Hindu Adoption and Maintenance Act, 1956",     shortName: "HAMA",  category: "Family",        year: 1956, sections: 30,  desc: "Governs adoption and maintenance rights of Hindus.", isNew: false, popular: false },
-  { id: 10, icon: "🏠", title: "Transfer of Property Act, 1882",               shortName: "TPA",    category: "Property",      year: 1882, sections: 137, desc: "Law relating to transfer of property by act of parties in India.", isNew: false, popular: true  },
-  { id: 11, icon: "🏗️", title: "Real Estate (RERA) Act, 2016",                 shortName: "RERA",  category: "Property",      year: 2016, sections: 92,  desc: "Regulates real estate sector, protects buyers and promotes transparency.", isNew: false, popular: true  },
-  { id: 12, icon: "🏢", title: "Companies Act, 2013",                          shortName: "CA",     category: "Corporate",     year: 2013, sections: 470, desc: "Comprehensive law governing incorporation, management of companies.", isNew: false, popular: true  },
-  { id: 13, icon: "📊", title: "Goods and Services Tax Act, 2017",             shortName: "GST",    category: "Corporate",     year: 2017, sections: 174, desc: "Central GST law governing levy, collection and administration of GST.", isNew: false, popular: true  },
-  { id: 14, icon: "👷", title: "Industrial Disputes Act, 1947",                shortName: "IDA",    category: "Labour",        year: 1947, sections: 40,  desc: "Investigates and settles industrial disputes between employer and workers.", isNew: false, popular: false },
-  { id: 15, icon: "📜", title: "Constitution of India, 1950",                  shortName: "COI",    category: "Constitutional",year: 1950, sections: 395, desc: "Supreme law of India. Contains fundamental rights, duties and governance structure.", isNew: false, popular: true  },
-  { id: 16, icon: "💳", title: "Negotiable Instruments Act, 1881",             shortName: "NIA",    category: "Civil",         year: 1881, sections: 147, desc: "Governs promissory notes, bills of exchange and cheques (Sec 138 cheque bounce).", isNew: false, popular: true  },
-  { id: 17, icon: "🛒", title: "Consumer Protection Act, 2019",                shortName: "CPA",    category: "Civil",         year: 2019, sections: 107, desc: "Protects consumer rights and provides for redressal of consumer disputes.", isNew: false, popular: true  },
-  { id: 18, icon: "💻", title: "Information Technology Act, 2000",             shortName: "IT Act", category: "Criminal",      year: 2000, sections: 94,  desc: "Legal framework for electronic commerce, cybercrime and digital signatures.", isNew: false, popular: true  },
-  { id: 19, icon: "🤰", title: "Protection of Children from Sexual Offences (POCSO), 2012", shortName: "POCSO", category: "Criminal", year: 2012, sections: 46, desc: "Protects children from sexual abuse and exploitation. Special courts.", isNew: false, popular: false },
-  { id: 20, icon: "🏦", title: "Insolvency and Bankruptcy Code, 2016",        shortName: "IBC",    category: "Corporate",     year: 2016, sections: 255, desc: "Consolidated law for insolvency resolution of individuals and companies.", isNew: false, popular: false },
-  { id: 21, icon: "💍", title: "Dowry Prohibition Act, 1961",                  shortName: "DPA",    category: "Family",        year: 1961, sections: 10,  desc: "Prohibits giving or taking dowry. Punishes dowry-related harassment.", isNew: false, popular: false },
-  { id: 22, icon: "🔨", title: "SARFAESI Act, 2002",                           shortName: "SARFAESI",category: "Corporate",    year: 2002, sections: 41,  desc: "Empowers banks to recover NPAs without court intervention.", isNew: false, popular: false },
-];
+  content += `KEY SECTIONS & STATUTORY PROVISIONS:\n\n`;
+  act.sections.forEach((sec) => {
+    content += `--- Section ${sec.no}: ${sec.title} ---\n`;
+    if (sec.classification) {
+      content += `Classification: ${sec.classification.type || ""}\n`;
+      if (sec.classification.cognizable && sec.classification.cognizable !== "N/A") {
+        content += `Nature: ${sec.classification.cognizable} · Bail: ${sec.classification.bailable} · Triable by: ${sec.classification.triable}\n`;
+      }
+    }
+    content += `\n${sec.content}\n`;
+    if (sec.note) {
+      content += `Advocate Note / Landmark Precedent: ${sec.note}\n`;
+    }
+    content += `\n\n`;
+  });
 
-export const CAT_COLORS = {
-  Criminal: "#dc2626",
-  Civil: "#2563eb",
-  Family: "#16a34a",
-  Property: "#7c3aed",
-  Corporate: "#ea580c",
-  Labour: "#d97706",
-  Constitutional: "#0891b2",
-  "New Acts": "#059669",
-};
-
-function downloadActFile(act) {
-  const content = `ADVOCATES HUB — INDIAN STATUTORY REPOSITORY\n\nTITLE: ${act.title}\nSHORT IDENTIFIER: ${act.shortName}\nCATEGORY: ${act.category}\nYEAR OF ENACTMENT: ${act.year}\nTOTAL SECTIONS: ${act.sections}\n\nSUMMARY & OVERVIEW:\n${act.desc}\n\n=========================================\nSAMPLE PROVISIONS & SECTIONS\n=========================================\n\nSection 1 — Short title, extent and commencement\n(1) This Act may be called the ${act.title}.\n(2) It extends to the whole of India.\n(3) It shall come into force on such date as the Central Government may, by notification in the Official Gazette, appoint.\n\nSection 2 — Definitions and Interpretations\nIn this Act, unless the context otherwise requires:\n(a) "appropriate Government" means the Central or State Government;\n(b) "court" means the designated court of competent jurisdiction under Indian procedural laws;\n(c) "notification" means an official notification published in the Gazette of India.\n\nSection 3 — Jurisdiction & Enforcement\nThe provisions of this Act apply throughout the territory of India to all persons and proceedings.\n\n=========================================\nProvided for legal education & professional advocacy by Advocates Hub (https://advocateshub.in)\n`;
+  content += `=========================================================\n`;
+  content += `Provided for judicial reference, legal education & advocacy by Advocates Hub (https://advocateshub.in)\n`;
 
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${act.shortName}_Bare_Act.txt`;
+  link.download = `${act.shortName.replace(/[^a-zA-Z0-9_-]/g, "_")}_Bare_Act.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
 
-function ActCard({ act, onRead, onDownload, isKn }) {
+/**
+ * Downloads a professional Word (.doc) Bare Act document
+ */
+function downloadBareActWord(act) {
+  let chaptersHtml = "";
+  if (act.chapters && act.chapters.length > 0) {
+    chaptersHtml = `
+      <div class="chapters-box">
+        <h3>Scheme of Chapters</h3>
+        <ol>
+          ${act.chapters.map((c) => `<li>${c}</li>`).join("")}
+        </ol>
+      </div>
+    `;
+  }
+
+  const sectionsHtml = act.sections
+    .map(
+      (sec) => `
+      <div class="sec-block">
+        <h4>Section ${sec.no} — ${sec.title}</h4>
+        ${
+          sec.classification
+            ? `<div class="sec-meta">
+                <strong>Type:</strong> ${sec.classification.type || "General"} |
+                <strong>Nature:</strong> ${sec.classification.cognizable || "Statutory"} |
+                <strong>Bail:</strong> ${sec.classification.bailable || "N/A"} |
+                <strong>Triable:</strong> ${sec.classification.triable || "Competent Court"}
+              </div>`
+            : ""
+        }
+        <div class="sec-body">${sec.content.replace(/\n/g, "<br/>")}</div>
+        ${sec.note ? `<div class="sec-note"><strong>Advocate Practice Note:</strong> ${sec.note}</div>` : ""}
+      </div>
+    `
+    )
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>${act.title}</title>
+<style>
+  body { font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #0f172a; margin: 40px; }
+  .header-box { border: 2px solid #1e3a8a; background: #eff6ff; padding: 20px; border-radius: 8px; margin-bottom: 24px; text-align: center; }
+  .header-box h1 { margin: 0 0 6px 0; color: #1e3a8a; font-size: 18pt; text-transform: uppercase; }
+  .header-box p { margin: 2px 0; color: #475569; font-size: 10pt; font-weight: bold; }
+  .desc-box { background: #f8fafc; border-left: 4px solid #2563eb; padding: 14px 18px; margin-bottom: 24px; font-size: 10.5pt; color: #334155; }
+  .chapters-box { background: #fffbeb; border: 1px solid #fde68a; padding: 14px 18px; border-radius: 6px; margin-bottom: 24px; }
+  .chapters-box h3 { margin: 0 0 10px 0; color: #b45309; font-size: 12pt; }
+  .chapters-box ol { margin: 0; padding-left: 20px; font-size: 9.5pt; color: #78350f; }
+  .sec-block { border-bottom: 1px solid #e2e8f0; padding-bottom: 18px; margin-bottom: 20px; }
+  .sec-block h4 { color: #1e3a8a; font-size: 12.5pt; margin: 0 0 6px 0; }
+  .sec-meta { background: #f1f5f9; padding: 6px 10px; border-radius: 4px; font-size: 9pt; color: #475569; margin-bottom: 10px; }
+  .sec-body { font-size: 10.5pt; line-height: 1.65; color: #1e293b; }
+  .sec-note { margin-top: 10px; background: #ecfdf5; border-left: 3px solid #10b981; padding: 8px 12px; font-size: 9.5pt; color: #065f46; }
+  .footer-note { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 12px; font-size: 8.5pt; color: #64748b; text-align: center; }
+</style>
+</head>
+<body>
+<div class="header-box">
+  <h1>ADVOCATES HUB — OFFICIAL STATUTORY COMPENDIUM</h1>
+  <p>${act.title.toUpperCase()}</p>
+  <p>${act.actNumber || "Central Legislation"} · ${act.enactmentDate || act.year}</p>
+</div>
+
+<div class="desc-box">
+  <strong>Legislative Objects & Reasons:</strong><br/>
+  ${act.desc}
+</div>
+
+${chaptersHtml}
+
+<h3>Selected Core Sections & Enacted Provisions</h3>
+${sectionsHtml}
+
+<div class="footer-note">
+  Compiled via Advocates Hub (https://advocateshub.in) • Official Indian Legal Repository
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: "application/msword;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${act.shortName.replace(/[^a-zA-Z0-9_-]/g, "_")}_Bare_Act.doc`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Old ⇄ New Law Converter Component
+ */
+function LawConverter({ isKn }) {
+  const [filterQuery, setFilterQuery] = useState("");
+  const [copiedId, setCopiedId] = useState(null);
+
+  const matchedMappings = useMemo(() => {
+    if (!filterQuery.trim()) return OLD_TO_NEW_CRIMINAL_MAPPING.slice(0, 8);
+    const q = filterQuery.toLowerCase().trim();
+    return OLD_TO_NEW_CRIMINAL_MAPPING.filter(
+      (m) =>
+        m.offence.toLowerCase().includes(q) ||
+        m.oldSection.toLowerCase().includes(q) ||
+        m.newSection.toLowerCase().includes(q) ||
+        m.oldAct.toLowerCase().includes(q) ||
+        m.newAct.toLowerCase().includes(q) ||
+        m.changeSummary.toLowerCase().includes(q)
+    );
+  }, [filterQuery]);
+
+  const handleCopyCitation = (item, idx) => {
+    const citation = `${item.offence}: Old ${item.oldAct} Sec ${item.oldSection} ➔ New ${item.newAct} Sec ${item.newSection}. Punishment: ${item.punishment}. (${item.cognizable}, ${item.bailable})`;
+    navigator.clipboard.writeText(citation);
+    setCopiedId(idx);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  return (
+    <div className="ba-converter-card">
+      <div className="ba-conv-header">
+        <div className="ba-conv-title-wrap">
+          <span className="ba-conv-pill">⚡ 2024 Legal Revolution</span>
+          <h3>
+            {isKn
+              ? "ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳ ಪರಿವರ್ತಕ (IPC / CrPC / IEA ➔ BNS / BNSS / BSA)"
+              : "Old ⇄ New Criminal Law Section Converter (IPC/CrPC ➔ BNS/BNSS/BSA)"}
+          </h3>
+          <p>
+            {isKn
+              ? "ಹಳೆಯ ಸೆಕ್ಷನ್ ಸಂಖ್ಯೆ (ಉದಾ: 302, 420, 498A, 154, 438) ಅಥವಾ ಅಪರಾಧವನ್ನು ಹುಡುಕಿ ತಕ್ಷಣ ಹೊಸ ಸೆಕ್ಷನ್ ತಿಳಿಯಿರಿ."
+              : "Search any old IPC/CrPC section or offence (e.g. 302, 420, 498A, 154, 438, Murder, Bail, FIR) to get the corresponding 2023 Sanhita provision instantly."}
+          </p>
+        </div>
+
+        <div className="ba-conv-search-box">
+          <span className="ba-conv-search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder={
+              isKn
+                ? "ಸೆಕ್ಷನ್ ಅಥವಾ ಅಪರಾಧ ಹುಡುಕಿ (ಉದಾ: 302, 420, 498A, 154)..."
+                : "Type old section or offence (e.g. 302, 420, 498A, 154, 438, Murder)..."
+            }
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}
+          />
+          {filterQuery && (
+            <button
+              type="button"
+              className="ba-conv-clear"
+              onClick={() => setFilterQuery("")}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Quick-tags */}
+      <div className="ba-quick-pills">
+        <span className="ba-qp-label">{isKn ? "ತ್ವರಿತ ಶೋಧ:" : "Popular Searches:"}</span>
+        {["302", "420", "498A", "376", "154", "438", "65B", "Mob Lynching", "Snatching"].map((tag) => (
+          <button
+            key={tag}
+            type="button"
+            className="ba-qp-btn"
+            onClick={() => setFilterQuery(tag)}
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      {/* Comparison Grid */}
+      <div className="ba-conv-grid">
+        {matchedMappings.map((item, idx) => (
+          <div key={idx} className="ba-conv-item">
+            <div className="ba-ci-top">
+              <span className="ba-ci-offence">{item.offence}</span>
+              <button
+                type="button"
+                className="ba-ci-copy"
+                onClick={() => handleCopyCitation(item, idx)}
+                title="Copy citation"
+              >
+                {copiedId === idx ? "✓ Copied!" : "📋 Copy"}
+              </button>
+            </div>
+
+            <div className="ba-ci-comparison">
+              <div className="ba-ci-side old">
+                <span className="ba-ci-act-tag old">{item.oldAct}</span>
+                <span className="ba-ci-sec">Section {item.oldSection}</span>
+              </div>
+              <div className="ba-ci-arrow">➔</div>
+              <div className="ba-ci-side new">
+                <span className="ba-ci-act-tag new">{item.newAct} 2023</span>
+                <span className="ba-ci-sec">Section {item.newSection}</span>
+              </div>
+            </div>
+
+            <p className="ba-ci-change">{item.changeSummary}</p>
+
+            <div className="ba-ci-chips">
+              <span className="ba-chip pun">⚖️ {item.punishment}</span>
+              <span className={`ba-chip ${item.bailable.includes("Non") ? "non-bail" : "bail"}`}>
+                {item.bailable}
+              </span>
+              <span className="ba-chip court">🏛️ {item.triableBy}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Act Card Component
+ */
+function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
   return (
     <div className="ba-card">
       <div className="ba-card-top">
         <div className="ba-act-icon">{act.icon}</div>
         <div className="ba-act-badges">
-          {act.isNew && <span className="ba-badge new">{isKn ? "🆕 ಹೊಸದು" : "🆕 New"}</span>}
-          {act.popular && <span className="ba-badge popular">{isKn ? "🔥 ಜನಪ್ರಿಯ" : "🔥 Popular"}</span>}
+          {act.isNew && (
+            <span className="ba-badge new">{isKn ? "🆕 ೨೦೨೩ ಸಂಹಿತೆ" : "🆕 2023 Sanhita"}</span>
+          )}
+          {act.popular && (
+            <span className="ba-badge popular">{isKn ? "🔥 ಜನಪ್ರಿಯ" : "🔥 Most Cited"}</span>
+          )}
         </div>
       </div>
-      <div className="ba-short-name" style={{ color: CAT_COLORS[act.category] || "#6366f1" }}>
-        {act.shortName}
+
+      <div className="ba-card-meta-strip">
+        <span
+          className="ba-short-name"
+          style={{ color: CAT_COLORS[act.category] || "#6366f1" }}
+        >
+          {act.shortName}
+        </span>
+        <span className="ba-act-number">{act.actNumber || `Enacted ${act.year}`}</span>
       </div>
+
       <h3 className="ba-act-title">{act.title}</h3>
       <p className="ba-act-desc">{act.desc}</p>
+
       <div className="ba-act-meta">
         <span className="ba-act-year">📅 {act.year}</span>
-        <span className="ba-act-sections">📋 {act.sections} {isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"}</span>
+        <span className="ba-act-sections">
+          📋 {act.sectionsCount || act.sections?.length} {isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"}
+        </span>
         <span
           className="ba-act-cat"
           style={{
@@ -99,57 +350,155 @@ function ActCard({ act, onRead, onDownload, isKn }) {
           {act.category}
         </span>
       </div>
+
+      {act.sections && act.sections.length > 0 && (
+        <div className="ba-card-sec-preview">
+          <span className="ba-csp-label">⚡ {isKn ? "ಪ್ರಮುಖ ಸೆಕ್ಷನ್‌ಗಳು:" : "Key Provisions:"}</span>
+          <div className="ba-csp-chips">
+            {act.sections.slice(0, 3).map((s, i) => (
+              <span key={i} className="ba-csp-chip">
+                § {s.no}
+              </span>
+            ))}
+            {act.sections.length > 3 && (
+              <span className="ba-csp-more">+{act.sections.length - 3} more</span>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="ba-card-actions">
         <button type="button" className="ba-btn-read" onClick={() => onRead(act)}>
-          📖 {isKn ? "ಕಾಯಿದೆ ಓದಿ" : "Read Act"}
+          📖 {isKn ? "ಕಾಯಿದೆ ಓದಿ & ಅನ್ವೇಷಿಸಿ" : "Read & Explore"}
         </button>
-        <button
-          type="button"
-          className="ba-btn-download"
-          onClick={() => onDownload(act)}
-          title="Download act details"
-        >
-          ⬇ {isKn ? "ಡೌನ್‌ಲೋಡ್" : "Download"}
-        </button>
+
+        <div className="ba-btn-dl-group">
+          <button
+            type="button"
+            className="ba-btn-download-word"
+            onClick={() => onDownloadWord(act)}
+            title="Download formatted Word document (.doc)"
+          >
+            📥 Word
+          </button>
+          <button
+            type="button"
+            className="ba-btn-download-txt"
+            onClick={() => onDownloadText(act)}
+            title="Download clean plain text (.txt)"
+          >
+            📄 Text
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function ReadModal({ act, onClose, onDownload, isKn }) {
-  const [activeSection, setActiveSection] = useState(1);
-  const SAMPLE_SECTIONS = [
-    {
-      no: 1,
-      title: "Short title, extent and commencement",
-      content: `(1) This Act may be called the ${act.title}.\n(2) It extends to the whole of India.\n(3) It shall come into force on such date as the Central Government may, by notification in the Official Gazette, appoint.`,
-    },
-    {
-      no: 2,
-      title: "Definitions and Interpretations",
-      content: `In this Act, unless the context otherwise requires—\n\n(a) "appropriate Government" means—\n    (i) in relation to a matter concerning the Union territory, the Central Government;\n    (ii) in relation to a matter concerning a State, the State Government;\n\n(b) "court" means the court referred to in section 6;\n\n(c) such other terms as defined within this enactment...`,
-    },
-    {
-      no: 3,
-      title: "Application and Jurisdiction",
-      content: `The provisions of this Act shall apply to all persons within the territory of India, unless otherwise specified by a subsequent provision or exemption notified by the appropriate authority under the provisions herein.`,
-    },
-  ];
+/**
+ * Deep Statutory Reading Modal with Tabs, Section Search, Copy, and Print
+ */
+function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
+  const [activeTab, setActiveTab] = useState("sections"); // "sections" | "overview" | "comparison"
+  const [selectedSecNo, setSelectedSecNo] = useState(
+    act.sections && act.sections.length > 0 ? act.sections[0].no : "1"
+  );
+  const [secFilter, setSecFilter] = useState("");
+  const [copiedSec, setCopiedSec] = useState(false);
+
+  const availableSections = act.sections || [];
+
+  const filteredSections = useMemo(() => {
+    if (!secFilter.trim()) return availableSections;
+    const q = secFilter.toLowerCase().trim();
+    return availableSections.filter(
+      (s) =>
+        s.no.toLowerCase().includes(q) ||
+        s.title.toLowerCase().includes(q) ||
+        s.content.toLowerCase().includes(q) ||
+        (s.note && s.note.toLowerCase().includes(q))
+    );
+  }, [availableSections, secFilter]);
+
+  const activeSectionObj =
+    availableSections.find((s) => s.no === selectedSecNo) || availableSections[0];
+
+  const handleCopySection = () => {
+    if (!activeSectionObj) return;
+    const textToCopy = `Section ${activeSectionObj.no} — ${activeSectionObj.title}\n(${act.title})\n\n${activeSectionObj.content}\n\nAdvocate Note: ${activeSectionObj.note || "Official Statutory Enactment"}\n(Source: Advocates Hub - https://advocateshub.in)`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedSec(true);
+    setTimeout(() => setCopiedSec(false), 2000);
+  };
+
+  const handlePrintSection = () => {
+    if (!activeSectionObj) return;
+    const win = window.open("", "_blank");
+    win.document.write(`
+      <html>
+        <head>
+          <title>Section ${activeSectionObj.no} — ${act.shortName}</title>
+          <style>
+            body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.6; margin: 40px; color: #000; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 24px; }
+            .header h2 { margin: 0 0 4px 0; text-transform: uppercase; }
+            .sec-title { font-size: 15pt; font-weight: bold; margin-bottom: 12px; }
+            .sec-meta { background: #eee; padding: 6px 10px; font-size: 10pt; margin-bottom: 16px; }
+            .sec-body { white-space: pre-wrap; margin-bottom: 20px; font-size: 12pt; }
+            .sec-note { border-left: 3px solid #000; padding-left: 12px; font-style: italic; font-size: 10.5pt; }
+            .footer { margin-top: 40px; border-top: 1px solid #aaa; font-size: 9pt; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>ADVOCATES HUB — STATUTORY PROVISION</h2>
+            <p>${act.title} · ${act.actNumber || "Central Act"}</p>
+          </div>
+          <div class="sec-title">Section ${activeSectionObj.no} — ${activeSectionObj.title}</div>
+          ${
+            activeSectionObj.classification
+              ? `<div class="sec-meta">
+                  Classification: ${activeSectionObj.classification.type || "General"} |
+                  ${activeSectionObj.classification.cognizable ? `Nature: ${activeSectionObj.classification.cognizable} |` : ""}
+                  ${activeSectionObj.classification.bailable ? `Bail: ${activeSectionObj.classification.bailable} |` : ""}
+                  ${activeSectionObj.classification.triable ? `Triable By: ${activeSectionObj.classification.triable}` : ""}
+                 </div>`
+              : ""
+          }
+          <div class="sec-body">${activeSectionObj.content}</div>
+          ${activeSectionObj.note ? `<div class="sec-note">Practice Note: ${activeSectionObj.note}</div>` : ""}
+          <div class="footer">Certified Copy via Advocates Hub • Official Legal Platform of Karnataka & India</div>
+        </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 350);
+  };
+
+  const isNewLaw = act.shortName === "BNS" || act.shortName === "BNSS" || act.shortName === "BSA";
 
   return (
     <div className="ba-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="ba-modal">
+      <div className="ba-modal ba-modal-lg">
+        {/* Header */}
         <div
           className="ba-modal-header"
           style={{ borderBottom: `3px solid ${CAT_COLORS[act.category] || "#6366f1"}` }}
         >
-          <div>
-            <div className="ba-modal-short" style={{ color: CAT_COLORS[act.category] || "#6366f1" }}>
+          <div className="ba-mh-left">
+            <span
+              className="ba-modal-short"
+              style={{ color: CAT_COLORS[act.category] || "#6366f1" }}
+            >
               {act.shortName}
-            </div>
+            </span>
             <h3 className="ba-modal-title">{act.title}</h3>
             <div className="ba-modal-meta">
-              {isKn ? "ವರ್ಷ:" : "Year:"} {act.year} · {act.sections} {isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"} · {act.category}
+              <span>🏛️ {act.actNumber || `Act of ${act.year}`}</span>
+              <span>📅 {act.enactmentDate || act.year}</span>
+              <span>📋 {act.sectionsCount || act.sections?.length} Sections</span>
+              <span>🏷️ {act.category}</span>
             </div>
           </div>
           <button type="button" className="ba-modal-close" onClick={onClose} aria-label="Close modal">
@@ -157,50 +506,283 @@ function ReadModal({ act, onClose, onDownload, isKn }) {
           </button>
         </div>
 
-        <div className="ba-modal-body">
-          <div className="ba-modal-sidebar">
-            <div className="ba-sections-title">{isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"}</div>
-            {SAMPLE_SECTIONS.map((s) => (
-              <button
-                key={s.no}
-                type="button"
-                className={`ba-section-item ${activeSection === s.no ? "active" : ""}`}
-                onClick={() => setActiveSection(s.no)}
-              >
-                <span className="ba-section-no">§ {s.no}</span>
-                <span className="ba-section-name">{s.title}</span>
-              </button>
-            ))}
-            <div className="ba-more-sections">
-              + {act.sections - 3} {isKn ? "ಹೆಚ್ಚಿನ ಸೆಕ್ಷನ್‌ಗಳು ಲಭ್ಯವಿವೆ" : "more sections available in full enactment"}
-            </div>
-          </div>
-
-          <div className="ba-modal-content">
-            {SAMPLE_SECTIONS.filter((s) => s.no === activeSection).map((s) => (
-              <div key={s.no}>
-                <h4 className="ba-content-title">
-                  Section {s.no} — {s.title}
-                </h4>
-                <div className="ba-content-text">
-                  {s.content.split("\n").map((line, i) => (
-                    <p key={i} style={{ marginBottom: line === "" ? 8 : 4 }}>
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* Modal Navigation Tabs */}
+        <div className="ba-modal-nav-tabs">
+          <button
+            type="button"
+            className={`ba-mnt-btn ${activeTab === "sections" ? "active" : ""}`}
+            onClick={() => setActiveTab("sections")}
+          >
+            📖 {isKn ? "ಸೆಕ್ಷನ್‌ಗಳ ಪಟ್ಟಿ & ಪೂರ್ಣ ಪಠ್ಯ" : "Section Explorer & Text"}
+          </button>
+          <button
+            type="button"
+            className={`ba-mnt-btn ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            📑 {isKn ? "ಅಧ್ಯಾಯಗಳು & ಕಾಯಿದೆಯ ರೂಪರೇಖೆ" : "Chapters & Act Profile"}
+          </button>
+          {isNewLaw && (
+            <button
+              type="button"
+              className={`ba-mnt-btn ${activeTab === "comparison" ? "active" : ""}`}
+              onClick={() => setActiveTab("comparison")}
+            >
+              🔄 {isKn ? "ಹೊಸ ⇄ ಹಳೆಯ ಕಾಯಿದೆ ಹೋಲಿಕೆ" : "New ⇄ Old Law Mapping"}
+            </button>
+          )}
         </div>
 
+        {/* Modal Body */}
+        <div className="ba-modal-body">
+          {/* TAB 1: SECTION EXPLORER */}
+          {activeTab === "sections" && (
+            <div className="ba-sec-explorer-container">
+              {/* Sidebar with Section Picker */}
+              <div className="ba-modal-sidebar">
+                <div className="ba-sidebar-search">
+                  <input
+                    type="text"
+                    placeholder={isKn ? "ಸೆಕ್ಷನ್ ಹುಡುಕಿ..." : "Filter sections..."}
+                    value={secFilter}
+                    onChange={(e) => setSecFilter(e.target.value)}
+                  />
+                  {secFilter && (
+                    <button type="button" onClick={() => setSecFilter("")}>
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <div className="ba-sec-list-scroll">
+                  {filteredSections.map((s) => (
+                    <button
+                      key={s.no}
+                      type="button"
+                      className={`ba-section-item ${selectedSecNo === s.no ? "active" : ""}`}
+                      onClick={() => setSelectedSecNo(s.no)}
+                    >
+                      <span className="ba-section-no">§ {s.no}</span>
+                      <span className="ba-section-name">{s.title}</span>
+                    </button>
+                  ))}
+                  {filteredSections.length === 0 && (
+                    <div className="ba-sec-none-found">No sections match filter.</div>
+                  )}
+                </div>
+
+                <div className="ba-more-sections">
+                  Showing {filteredSections.length} of {act.sectionsCount || availableSections.length} statutory provisions
+                </div>
+              </div>
+
+              {/* Main Reading View */}
+              <div className="ba-modal-content">
+                {activeSectionObj ? (
+                  <div className="ba-sec-detail-card">
+                    <div className="ba-sec-card-header">
+                      <div>
+                        <span className="ba-sec-badge">Section {activeSectionObj.no}</span>
+                        <h4 className="ba-content-title">{activeSectionObj.title}</h4>
+                      </div>
+                      <div className="ba-sec-tools">
+                        <button
+                          type="button"
+                          className="ba-btn-tool"
+                          onClick={handleCopySection}
+                        >
+                          {copiedSec ? "✓ Copied!" : "📋 Copy Section"}
+                        </button>
+                        <button
+                          type="button"
+                          className="ba-btn-tool"
+                          onClick={handlePrintSection}
+                        >
+                          🖨️ Court Print
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Classification Bar */}
+                    {activeSectionObj.classification && (
+                      <div className="ba-sec-class-bar">
+                        <span className="ba-sclass-item type">
+                          🏷️ {activeSectionObj.classification.type || "Statutory Provision"}
+                        </span>
+                        {activeSectionObj.classification.cognizable && (
+                          <span
+                            className={`ba-sclass-item ${
+                              activeSectionObj.classification.cognizable.includes("Non")
+                                ? "non-cog"
+                                : "cog"
+                            }`}
+                          >
+                            🚨 {activeSectionObj.classification.cognizable}
+                          </span>
+                        )}
+                        {activeSectionObj.classification.bailable && (
+                          <span
+                            className={`ba-sclass-item ${
+                              activeSectionObj.classification.bailable.includes("Non")
+                                ? "non-bail"
+                                : "bail"
+                            }`}
+                          >
+                            🛡️ {activeSectionObj.classification.bailable}
+                          </span>
+                        )}
+                        {activeSectionObj.classification.triable && (
+                          <span className="ba-sclass-item court">
+                            🏛️ {activeSectionObj.classification.triable}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Official Text */}
+                    <div className="ba-content-text">
+                      {activeSectionObj.content.split("\n").map((line, idx) => (
+                        <p key={idx} style={{ marginBottom: line.trim() === "" ? 10 : 6 }}>
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+
+                    {/* Practice Note / Supreme Court Precedent */}
+                    {activeSectionObj.note && (
+                      <div className="ba-content-note">
+                        <div className="ba-cn-title">⚖️ Advocate Practice Note & Precedent:</div>
+                        <p>{activeSectionObj.note}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="ba-empty-sec-notice">Select a section from the left sidebar to view legal text.</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: CHAPTERS & PROFILE */}
+          {activeTab === "overview" && (
+            <div className="ba-overview-tab-content">
+              <div className="ba-ot-meta-grid">
+                <div className="ba-ot-box">
+                  <span className="ba-ot-lbl">Official Title:</span>
+                  <strong>{act.title}</strong>
+                </div>
+                <div className="ba-ot-box">
+                  <span className="ba-ot-lbl">Statutory Citation:</span>
+                  <strong>{act.actNumber || "Central Legislation"}</strong>
+                </div>
+                <div className="ba-ot-box">
+                  <span className="ba-ot-lbl">Enactment / Effective Date:</span>
+                  <strong>{act.enactmentDate || act.year}</strong>
+                </div>
+                <div className="ba-ot-box">
+                  <span className="ba-ot-lbl">Administering Ministry:</span>
+                  <strong>{act.ministry || "Ministry of Law and Justice, New Delhi"}</strong>
+                </div>
+              </div>
+
+              <div className="ba-ot-desc-card">
+                <h4>Statement of Objects and Reasons</h4>
+                <p>{act.desc}</p>
+              </div>
+
+              {act.chapters && act.chapters.length > 0 && (
+                <div className="ba-ot-chapters-card">
+                  <h4>Arrangement of Chapters ({act.chapters.length} Chapters)</h4>
+                  <div className="ba-chapters-list">
+                    {act.chapters.map((ch, idx) => (
+                      <div key={idx} className="ba-ch-row">
+                        <span className="ba-ch-num">{idx + 1}</span>
+                        <span className="ba-ch-name">{ch}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: OLD VS NEW MAPPING */}
+          {activeTab === "comparison" && isNewLaw && (
+            <div className="ba-comp-tab-content">
+              <h4>
+                Corresponding Provisions: {act.shortName} (2023) vs Old Codes (IPC / CrPC / IEA)
+              </h4>
+              <p className="ba-comp-intro">
+                The Indian Parliament replaced IPC (1860), CrPC (1973), and Indian Evidence Act (1872) with Bharatiya Nyaya Sanhita, Bharatiya Nagarik Suraksha Sanhita, and Bharatiya Sakshya Adhiniyam effective July 1, 2024.
+              </p>
+
+              <div className="ba-comp-table-wrap">
+                <table className="ba-comp-table">
+                  <thead>
+                    <tr>
+                      <th>Subject / Offence</th>
+                      <th>Old Code Section</th>
+                      <th>New {act.shortName} Section</th>
+                      <th>Statutory Changes & Penalties</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {OLD_TO_NEW_CRIMINAL_MAPPING.filter(
+                      (m) => m.newAct === act.shortName
+                    ).map((m, i) => (
+                      <tr key={i}>
+                        <td>
+                          <strong>{m.offence}</strong>
+                        </td>
+                        <td>
+                          <span className="badge-old">
+                            {m.oldAct} § {m.oldSection}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge-new">
+                            {m.newAct} § {m.newSection}
+                          </span>
+                        </td>
+                        <td>
+                          <div>{m.changeSummary}</div>
+                          <small style={{ color: "#16a34a", fontWeight: "bold" }}>
+                            {m.punishment}
+                          </small>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
         <div className="ba-modal-footer">
-          <span className="ba-modal-note">
-            📖 {isKn ? "ಮಾದರಿ ಸೆಕ್ಷನ್‌ಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ. ಪೂರ್ಣ ವಿವರಗಳಿಗೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ." : "Showing official statutory sample. Download text for complete enactment."}
-          </span>
-          <button type="button" className="ba-btn-download" onClick={() => onDownload(act)}>
-            ⬇ {isKn ? "ಪೂರ್ಣ ಕಾಯ್ದೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ" : "Download Full Text"}
-          </button>
+          <div className="ba-mf-left">
+            <span>Official Legal Repository of Advocates Hub · All-India & Karnataka Compliant</span>
+          </div>
+          <div className="ba-mf-actions">
+            <button
+              type="button"
+              className="ba-btn-download-word"
+              onClick={() => onDownloadWord(act)}
+            >
+              📥 Download Word (.doc)
+            </button>
+            <button
+              type="button"
+              className="ba-btn-download-txt"
+              onClick={() => onDownloadText(act)}
+            >
+              📄 Download Text (.txt)
+            </button>
+            <button type="button" className="ba-btn-close-modal" onClick={onClose}>
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -208,6 +790,7 @@ function ReadModal({ act, onClose, onDownload, isKn }) {
 }
 
 export default function BareActs() {
+  const navigate = useNavigate();
   const [theme, setTheme] = useState(getTheme);
 
   useEffect(() => {
@@ -245,29 +828,45 @@ export default function BareActs() {
   const [showPop, setShowPop] = useState(false);
   const [sortBy, setSortBy] = useState("popular");
   const [readModal, setReadModal] = useState(null);
+  const [showConverter, setShowConverter] = useState(true);
 
   const filtered = useMemo(() => {
-    let list = [...BARE_ACTS];
+    let list = [...BARE_ACTS_DATA];
+
     if (activeCat !== "All") {
-      if (activeCat === "New Acts") list = list.filter((a) => a.isNew);
+      if (activeCat === "New Acts (2023)") list = list.filter((a) => a.isNew);
       else list = list.filter((a) => a.category === activeCat);
     }
     if (showNew) list = list.filter((a) => a.isNew);
     if (showPop) list = list.filter((a) => a.popular);
+
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(
-        (a) =>
+      list = list.filter((a) => {
+        const matchesBasic =
           a.title.toLowerCase().includes(q) ||
           a.shortName.toLowerCase().includes(q) ||
-          a.desc.toLowerCase().includes(q)
-      );
+          a.desc.toLowerCase().includes(q) ||
+          a.category.toLowerCase().includes(q);
+
+        const matchesSection = a.sections?.some(
+          (s) =>
+            s.no.toLowerCase().includes(q) ||
+            s.title.toLowerCase().includes(q) ||
+            s.content.toLowerCase().includes(q) ||
+            (s.note && s.note.toLowerCase().includes(q))
+        );
+
+        return matchesBasic || matchesSection;
+      });
     }
+
     if (sortBy === "popular") list.sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
     if (sortBy === "year_new") list.sort((a, b) => b.year - a.year);
     if (sortBy === "year_old") list.sort((a, b) => a.year - b.year);
     if (sortBy === "az") list.sort((a, b) => a.shortName.localeCompare(b.shortName));
-    if (sortBy === "sections") list.sort((a, b) => b.sections - a.sections);
+    if (sortBy === "sections") list.sort((a, b) => (b.sectionsCount || 0) - (a.sectionsCount || 0));
+
     return list;
   }, [activeCat, search, showNew, showPop, sortBy]);
 
@@ -277,54 +876,47 @@ export default function BareActs() {
       <div className="ba-header">
         <div className="ba-header-inner">
           <span className="ba-header-badge">
-            {isKn ? "📜 ಭಾರತೀಯ ಅಧಿಕೃತ ಕಾಯ್ದೆಗಳು" : "📜 Official Statutes & Legislation"}
+            {isKn ? "📜 ಭಾರತೀಯ ಅಧಿಕೃತ ಕಾಯ್ದೆಗಳು & ಸಂಹಿತೆಗಳು" : "📜 Official Indian Statutory Repository"}
           </span>
           <h1 className="ba-title">
-            {isKn ? "ಭಾರತೀಯ ಕಾಯಿದೆಗಳು ಮತ್ತು ಸಂಹಿತೆಗಳು" : "Indian Bare Acts & Statutory Codes"}
+            {isKn ? "ಭಾರತೀಯ ಕಾಯಿದೆಗಳು ಮತ್ತು ಸಂಹಿತೆಗಳು (Bare Acts)" : "Indian Bare Acts & Central Statutes"}
           </h1>
           <p className="ba-subtitle">
             {isKn
-              ? "ಭಾರತದ ಎಲ್ಲಾ ಪ್ರಮುಖ ಕ್ರಿಮಿನಲ್, ಸಿವಿಲ್ ಮತ್ತು ಕಾರ್ಪೊರೇಟ್ ಕಾಯಿದೆಗಳನ್ನು ಓದಿ ಮತ್ತು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ."
-              : "Browse, read and download complete Indian legislation including the new criminal laws (BNS, BNSS, BSA 2023)."}
+              ? "ಭಾರತೀಯ ನ್ಯಾಯ ಸಂಹಿತೆ (BNS), ನಾಗರಿಕ ಸುರಕ್ಷಾ ಸಂಹಿತೆ (BNSS), ಸಾಕ್ಷ್ಯ ಅಧಿನಿಯಮ (BSA) ಮತ್ತು ಎಲ್ಲಾ ಪ್ರಮುಖ ಕ್ರಿಮಿನಲ್, ಸಿವಿಲ್, ಕೌಟುಂಬಿಕ ಮತ್ತು ವಾಣಿಜ್ಯ ಕಾಯಿದೆಗಳನ್ನು ಓದಿ ಮತ್ತು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ."
+              : "Access official enacted Indian legislation including complete text for the 2023 Criminal Sanhitas (BNS, BNSS, BSA), Constitution of India, CPC, HMA, RERA, NI Act, and Corporate codes."}
           </p>
           <div className="ba-header-stats">
-            <span>📚 {BARE_ACTS.length}+ {isKn ? "ಕಾಯಿದೆಗಳು" : "Enacted Acts"}</span>
-            <span>🆕 {BARE_ACTS.filter((a) => a.isNew).length} {isKn ? "ಹೊಸ ಕಾಯಿದೆಗಳು (೨೦೨೩)" : "New Acts (2023)"}</span>
-            <span>🔥 {BARE_ACTS.filter((a) => a.popular).length} {isKn ? "ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "Popular Codes"}</span>
-            <span>⬇ {isKn ? "ಉಚಿತ ಡೌನ್‌ಲೋಡ್" : "Free Download"}</span>
+            <span>📚 {BARE_ACTS_DATA.length}+ {isKn ? "ಕಾಯಿದೆಗಳು" : "Enacted Acts"}</span>
+            <span>🆕 {BARE_ACTS_DATA.filter((a) => a.isNew).length} {isKn ? "ಹೊಸ ಕಾಯಿದೆಗಳು (೨೦೨೩)" : "New Criminal Laws (2023)"}</span>
+            <span>🔥 {BARE_ACTS_DATA.filter((a) => a.popular).length} {isKn ? "ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "Most Cited Codes"}</span>
+            <span style={{ background: "rgba(16, 185, 129, 0.25)", color: "#a7f3d0" }}>
+              ⬇ 100% Free Word (.doc) & Text (.txt) Downloads
+            </span>
           </div>
         </div>
       </div>
 
-      {/* New Acts banner */}
-      <div className="ba-new-banner">
-        <span className="ba-new-icon">🆕</span>
-        <div>
-          <strong>
-            {isKn
-              ? "ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳು ೨೦೨೩ — ಈಗ ಲಭ್ಯ!"
-              : "New Criminal Laws 2023 — Active & In Effect!"}
-          </strong>
-          <span>
-            {" "}
-            {isKn
-              ? "BNS, BNSS ಮತ್ತು BSA ಕಾಯ್ದೆಗಳು IPC, CrPC ಮತ್ತು ಭಾರತೀಯ ಸಾಕ್ಷ್ಯ ಕಾಯ್ದೆಯ ಬದಲಿಗೆ ಜಾರಿಗೆ ಬಂದಿವೆ."
-              : "BNS, BNSS and BSA have superseded IPC, CrPC and Indian Evidence Act across all courts."}
-          </span>
-        </div>
+      {/* Interactive Old ⇄ New Law Converter */}
+      <div className="ba-converter-toggle-bar">
         <button
           type="button"
-          className="ba-new-btn"
-          onClick={() => {
-            setActiveCat("New Acts");
-            setShowNew(true);
-          }}
+          className="ba-btn-toggle-conv"
+          onClick={() => setShowConverter(!showConverter)}
         >
-          {isKn ? "ಹೊಸ ಕಾಯ್ದೆಗಳನ್ನು ನೋಡಿ →" : "View New Acts →"}
+          <span>{showConverter ? "▼" : "▶"}</span>
+          <span>
+            {isKn
+              ? "⚡ ಹಳೆಯ ⇄ ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳ ಪರಿವರ್ತಕ (BNS / BNSS / BSA Converter)"
+              : "⚡ Old ⇄ New Criminal Law Converter (IPC / CrPC / IEA ➔ BNS / BNSS / BSA)"}
+          </span>
+          <span className="ba-badge-active">{showConverter ? "Active" : "Open"}</span>
         </button>
       </div>
 
-      {/* Search + filter */}
+      {showConverter && <LawConverter isKn={isKn} />}
+
+      {/* Search + filter bar */}
       <div className="ba-filter-bar">
         <div className="ba-search-wrap">
           <span>🔍</span>
@@ -332,8 +924,8 @@ export default function BareActs() {
             className="ba-search"
             placeholder={
               isKn
-                ? "ಕಾಯ್ದೆಯ ಹೆಸರು ಅಥವಾ ಕೀವರ್ಡ್ ಮೂಲಕ ಹುಡುಕಿ (ಉದಾ: BNS, IPC, RERA)..."
-                : "Search acts by title, short name or keyword (e.g. BNS, IPC, RERA)..."
+                ? "ಕಾಯ್ದೆ, ಸೆಕ್ಷನ್ (ಉದಾ: Section 138, Sec 302, Sec 420) ಅಥವಾ ಕೀವರ್ಡ್ ಹುಡುಕಿ..."
+                : "Search acts, sections (e.g. Section 138, 302, 420, 498A, Article 21, Bail)..."
             }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -352,7 +944,7 @@ export default function BareActs() {
               checked={showNew}
               onChange={(e) => setShowNew(e.target.checked)}
             />
-            <span>{isKn ? "🆕 ಹೊಸ ಕಾಯಿದೆಗಳು ಮಾತ್ರ" : "🆕 New Acts Only"}</span>
+            <span>{isKn ? "🆕 ೨೦೨೩ ಹೊಸ ಕಾಯಿದೆಗಳು" : "🆕 2023 New Sanhitas"}</span>
           </label>
           <label className="ba-toggle">
             <input
@@ -360,7 +952,7 @@ export default function BareActs() {
               checked={showPop}
               onChange={(e) => setShowPop(e.target.checked)}
             />
-            <span>{isKn ? "🔥 ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "🔥 Popular Only"}</span>
+            <span>{isKn ? "🔥 ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "🔥 Most Cited"}</span>
           </label>
         </div>
 
@@ -370,8 +962,8 @@ export default function BareActs() {
           onChange={(e) => setSortBy(e.target.value)}
           aria-label="Sort Bare Acts"
         >
-          <option value="popular">{isKn ? "ಜನಪ್ರಿಯ ಮೊದಲು" : "Popular First"}</option>
-          <option value="year_new">{isKn ? "ಹೊಸ ವರ್ಷ ಮೊದಲು" : "Newest First"}</option>
+          <option value="popular">{isKn ? "ಜನಪ್ರಿಯ ಮೊದಲು" : "Most Cited First"}</option>
+          <option value="year_new">{isKn ? "ಹೊಸ ವರ್ಷ ಮೊದಲು" : "Newest Year First"}</option>
           <option value="year_old">{isKn ? "ಹಳೆಯ ವರ್ಷ ಮೊದಲು" : "Oldest First"}</option>
           <option value="az">{isKn ? "ವರ್ಣಮಾಲೆ A–Z" : "A–Z Short Name"}</option>
           <option value="sections">{isKn ? "ಹೆಚ್ಚು ಸೆಕ್ಷನ್‌ಗಳು" : "Most Sections"}</option>
@@ -380,8 +972,8 @@ export default function BareActs() {
 
       {/* Category tabs */}
       <div className="ba-cat-tabs">
-        {CATEGORIES_EN.map((cat, idx) => {
-          const label = isKn ? CATEGORIES_KN[idx] || cat : cat;
+        {BARE_ACT_CATEGORIES_EN.map((cat, idx) => {
+          const label = isKn ? BARE_ACT_CATEGORIES_KN[idx] || cat : cat;
           const isActive = activeCat === cat;
           return (
             <button
@@ -392,9 +984,9 @@ export default function BareActs() {
               style={
                 isActive && cat !== "All"
                   ? {
-                      borderColor: CAT_COLORS[cat],
-                      color: CAT_COLORS[cat],
-                      background: (CAT_COLORS[cat] || "#6366f1") + "18",
+                      borderColor: CAT_COLORS[cat] || "#2563eb",
+                      color: CAT_COLORS[cat] || "#2563eb",
+                      background: (CAT_COLORS[cat] || "#2563eb") + "18",
                     }
                   : {}
               }
@@ -405,6 +997,7 @@ export default function BareActs() {
         })}
       </div>
 
+      {/* Main Body Grid */}
       <div className="ba-body">
         <div className="ba-results-bar">
           {isKn ? (
@@ -426,7 +1019,7 @@ export default function BareActs() {
             <p>
               {isKn
                 ? "ದಯವಿಟ್ಟು ಬೇರೆ ಕೀವರ್ಡ್ ಅಥವಾ ವರ್ಗವನ್ನು ಪ್ರಯತ್ನಿಸಿ"
-                : "Try searching with a different keyword or selecting 'All' category."}
+                : "Try searching with a different section number or selecting 'All' category."}
             </p>
           </div>
         ) : (
@@ -436,7 +1029,8 @@ export default function BareActs() {
                 key={act.id}
                 act={act}
                 onRead={setReadModal}
-                onDownload={downloadActFile}
+                onDownloadText={downloadBareActText}
+                onDownloadWord={downloadBareActWord}
                 isKn={isKn}
               />
             ))}
@@ -444,11 +1038,36 @@ export default function BareActs() {
         )}
       </div>
 
+      {/* CTA Banner */}
+      <div className="ba-cta-banner">
+        <div className="ba-cta-text">
+          <h3>
+            {isKn
+              ? "ನ್ಯಾಯಾಲಯದ ವ್ಯಾಜ್ಯಗಳಿಗೆ ವಕೀಲರ ನೆರವು ಬೇಕೇ?"
+              : "Need legal representation or expert opinion on statutory provisions?"}
+          </h3>
+          <p>
+            {isKn
+              ? "ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳು ಮತ್ತು ಸಿವಿಲ್ ವ್ಯಾಜ್ಯಗಳಲ್ಲಿ ಪರಿಣಿತ ವಕೀಲರೊಂದಿಗೆ ನೇರವಾಗಿ ಸಮಾಲೋಚಿಸಿ."
+              : "Connect directly with verified High Court & District Court advocates for case assessment and legal defense."}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="ba-cta-btn"
+          onClick={() => navigate("/talk-to-advocate")}
+        >
+          {isKn ? "ವಕೀಲರೊಂದಿಗೆ ಮಾತನಾಡಿ →" : "Consult an Advocate →"}
+        </button>
+      </div>
+
+      {/* Read Modal */}
       {readModal && (
         <ReadModal
           act={readModal}
           onClose={() => setReadModal(null)}
-          onDownload={downloadActFile}
+          onDownloadText={downloadBareActText}
+          onDownloadWord={downloadBareActWord}
           isKn={isKn}
         />
       )}

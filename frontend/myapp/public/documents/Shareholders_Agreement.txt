@@ -1,0 +1,40 @@
+===========================================================
+ADVOCATES HUB — VERIFIED INDIAN LEGAL DRAFT TEMPLATE
+DOCUMENT: SHAREHOLDERS AGREEMENT
+CATEGORY: Corporate (12 Pages)
+===========================================================
+
+STATUTORY REQUIREMENTS & CHECKLIST:
+- Governing Act: Companies Act 2013, Indian Contract Act 1872
+- Stamp Duty: ₹500 to ₹1,000 Non-Judicial e-Stamp Paper in Karnataka
+- Registration: Provisions must be incorporated into Articles of Association (AOA) via ROC filing
+- Notarization: Executed under company common seal with authorized signatures
+- Competent Jurisdiction: National Company Law Tribunal (NCLT) & High Court of Karnataka
+- Limitation Period: 3 years for corporate breach of contract claims
+- Enclosures Required:
+  * Certificate of Incorporation, MOA & AOA
+  * Cap Table and Share Subscription receipts
+  * Board Resolution and EGM Special Resolution
+
+===========================================================
+DRAFT TEXT:
+===========================================================
+
+SHAREHOLDERS AGREEMENT (SHA)
+
+AMONG:
+1. M/s ____________________________________ PVT. LTD. (The Company)
+2. FOUNDERS / PROMOTERS: __________________________________________________
+3. INVESTORS / SHAREHOLDERS: ____________________________________________
+
+1. CAPITAL STRUCTURE: Authorised capital Rs. ____________/-; Issued and Paid-up shareholding as per Schedule 1.
+2. BOARD OF DIRECTORS: Board composition, appointment rights, and quorum requirements.
+3. RESERVED MATTERS: Supermajority consent required for debt issuance, mergers, and change in share capital.
+4. TRANSFER RESTRICTIONS: Right of First Refusal (ROFR), Tag-Along Rights, and Drag-Along Rights.
+5. LIQUIDATION PREFERENCE: Seniority of payouts upon exit or winding up.
+6. GOVERNING LAW: Laws of India; Arbitration in Bengaluru under ACA 1996.
+
+FOR COMPANY: ________________________  FOUNDERS: ________________________  INVESTORS: ________________________
+
+===========================================================
+Verified by Advocates Hub Legal Drafting Suite

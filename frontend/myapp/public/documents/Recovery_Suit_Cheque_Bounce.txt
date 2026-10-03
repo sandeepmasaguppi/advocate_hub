@@ -1,0 +1,52 @@
+===========================================================
+ADVOCATES HUB — VERIFIED INDIAN LEGAL DRAFT TEMPLATE
+DOCUMENT: RECOVERY SUIT
+CATEGORY: Civil (3 Pages)
+===========================================================
+
+STATUTORY REQUIREMENTS & CHECKLIST:
+- Governing Act: Sections 138, 141, 142 Negotiable Instruments Act 1881, Section 223 BNSS 2023
+- Stamp Duty: Court Fee on Complaint as per Karnataka Court Fees Act (usually based on cheque amount scale)
+- Registration: Filed before the Judicial Magistrate First Class (JMFC) / Metropolitan Magistrate Court
+- Notarization: Verification and Pre-Summoning Evidence Affidavit to be sworn before Notary Public
+- Competent Jurisdiction: Court within whose local jurisdiction the bank branch where payee maintains account is situated (Bridgestone ruling)
+- Limitation Period: Complaint must be filed within 30 days from the expiry of 15 days notice period
+- Enclosures Required:
+  * Original Cheque and Bank Return Memo showing 'Funds Insufficient' / 'Account Closed'
+  * Office copy of Statutory Legal Notice sent to drawer
+  * Postal Receipts and Online Postal Tracking Delivery Report / RPAD Acknowledgment
+  * Bank Account Statement showing presentation and return of cheque
+
+===========================================================
+DRAFT TEXT:
+===========================================================
+
+BEFORE THE HON'BLE COURT OF THE JUDICIAL MAGISTRATE FIRST CLASS (JMFC) / METROPOLITAN MAGISTRATE AT ________________________
+C.C. NO. ___________ OF 2026
+
+COMPLAINT UNDER SECTION 138 AND 142 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881
+
+COMPLAINANT:
+__________________________________________________, S/o __________________________________,
+Aged _____ years, Residing at ____________________________________________________________.
+
+                                    VERSUS
+
+ACCUSED:
+__________________________________________________, S/o __________________________________,
+Aged _____ years, Residing at ____________________________________________________________.
+
+MOST RESPECTFULLY SHOWETH:
+1. Complainant lent friendly loan / supplied goods worth Rs. ____________/- to the Accused.
+2. In discharge of said legally enforceable debt, Accused issued Cheque No. ____________ dated ___/___/2026 for Rs. ____________/- drawn on ____________________ Bank.
+3. Upon presentation, cheque returned unpaid with memo "Funds Insufficient" on ___/___/2026.
+4. Statutory Legal Notice was served on Accused on ___/___/2026 calling for payment within 15 days.
+5. Accused received notice on ___/___/2026 but failed to make payment within statutory 15 days.
+
+PRAYER:
+Wherefore, Complainant prays that this Hon'ble Court be pleased to take cognizance, summon the Accused, punish under Section 138 of NI Act, and award compensation equal to double the cheque amount under Section 357 CrPC / BNSS.
+
+COMPLAINANT: __________________________________   ADVOCATE: __________________________________
+
+===========================================================
+Verified by Advocates Hub Legal Drafting Suite

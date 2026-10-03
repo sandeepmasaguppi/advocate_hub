@@ -1,0 +1,55 @@
+===========================================================
+ADVOCATES HUB — VERIFIED INDIAN LEGAL DRAFT TEMPLATE
+DOCUMENT: NON-DISCLOSURE AGREEMENT (NDA)
+CATEGORY: Corporate (3 Pages)
+===========================================================
+
+STATUTORY REQUIREMENTS & CHECKLIST:
+- Governing Act: Indian Contract Act 1872, Specific Relief Act 1963
+- Stamp Duty: ₹100 to ₹200 Non-Judicial e-Stamp Paper in Karnataka
+- Registration: Not compulsory; Binding inter-parties contract
+- Notarization: Optional; Notarization strengthens evidentiary value in civil court
+- Competent Jurisdiction: Civil Courts of jurisdiction agreed between the parties (e.g. Bengaluru)
+- Limitation Period: 3 years from the date of discovered breach of confidentiality
+- Enclosures Required:
+  * Company Incorporation / CIN details of corporate parties
+  * Board Resolution authorizing signatories
+  * PAN Card and ID proofs of individual signatories
+
+===========================================================
+DRAFT TEXT:
+===========================================================
+
+MUTUAL NON-DISCLOSURE AND CONFIDENTIALITY AGREEMENT
+
+This MUTUAL NON-DISCLOSURE AGREEMENT (the "Agreement") is made on this _____ day of _______________, 2026, by and between:
+
+PARTY A: __________________________________________________, having address at ______________________________________________________________________;
+AND
+PARTY B: __________________________________________________, having address at ______________________________________________________________________.
+
+1. PURPOSE:
+The parties wish to explore a potential business relationship / collaboration regarding ____________________________________________________ (the "Purpose").
+
+2. CONFIDENTIAL INFORMATION:
+"Confidential Information" refers to all proprietary data, financial figures, customer information, trade secrets, software algorithms, source code, designs, and business plans disclosed by either party.
+
+3. OBLIGATIONS:
+The Receiving Party agrees to maintain strict confidentiality, limit access to employees on need-to-know basis, and not disclose Confidential Information to any third party without prior written consent.
+
+4. EXCLUSIONS:
+Confidential Information does not include information that is publicly known through no breach, already known prior to disclosure, or required to be disclosed by court order.
+
+5. TERM:
+This Agreement and the confidentiality obligations shall remain in effect for 3 (three) years from the date of execution.
+
+6. INJUNCTION:
+Both parties acknowledge that damages alone would be inadequate compensation for a breach, and the Disclosing Party shall be entitled to seek injunctive relief.
+
+7. GOVERNING LAW:
+Governed by Indian Law; Courts in ________________________, Karnataka shall have exclusive jurisdiction.
+
+PARTY A: ___________________________           PARTY B: ___________________________
+
+===========================================================
+Verified by Advocates Hub Legal Drafting Suite

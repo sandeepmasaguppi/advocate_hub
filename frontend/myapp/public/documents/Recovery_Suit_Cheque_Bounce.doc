@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>Recovery Suit — Advocates Hub Legal Draft</title>
+<style>
+  body { font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #1e293b; margin: 30px; }
+  .header-box { border: 2px solid #1e3a8a; background: #eff6ff; padding: 16px 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+  .header-box h1 { margin: 0 0 6px 0; color: #1e3a8a; font-size: 18pt; text-transform: uppercase; }
+  .header-box p { margin: 0; color: #475569; font-size: 10pt; font-weight: bold; }
+  .checklist-box { border: 1px solid #d97706; background: #fffbeb; padding: 14px 18px; border-radius: 6px; margin-bottom: 24px; }
+  .checklist-box h3 { margin: 0 0 10px 0; color: #b45309; font-size: 12pt; }
+  .chk-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .chk-table th, .chk-table td { border: 1px solid #fde68a; padding: 7px 10px; font-size: 9.5pt; text-align: left; }
+  .chk-table th { background: #fef3c7; color: #92400e; width: 26%; }
+  .draft-title { text-align: center; font-size: 14pt; font-weight: bold; text-transform: uppercase; margin: 24px 0 16px 0; color: #0f172a; text-decoration: underline; }
+  .draft-body { white-space: pre-wrap; font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.65; color: #0f172a; }
+  .footer-note { margin-top: 36px; border-top: 1px solid #94a3b8; padding-top: 10px; font-size: 8.5pt; color: #64748b; text-align: center; }
+</style>
+</head>
+<body>
+<div class="header-box">
+  <h1>ADVOCATES HUB — VERIFIED LEGAL DRAFT</h1>
+  <p>Standard Indian Legal & Judicial Format • Verified by Legal Practitioners</p>
+</div>
+
+<div class="checklist-box">
+  <h3>⚡ Statutory Execution Checklist & Mandatory Requirements</h3>
+  <table class="chk-table">
+    <tr><th>Applicable Statute</th><td>Sections 138, 141, 142 Negotiable Instruments Act 1881, Section 223 BNSS 2023</td></tr>
+    <tr><th>Stamp Duty</th><td><strong>Court Fee on Complaint as per Karnataka Court Fees Act (usually based on cheque amount scale)</strong></td></tr>
+    <tr><th>Registration</th><td>Filed before the Judicial Magistrate First Class (JMFC) / Metropolitan Magistrate Court</td></tr>
+    <tr><th>Notarization</th><td>Verification and Pre-Summoning Evidence Affidavit to be sworn before Notary Public</td></tr>
+    <tr><th>Jurisdiction</th><td>Court within whose local jurisdiction the bank branch where payee maintains account is situated (Bridgestone ruling)</td></tr>
+    <tr><th>Limitation</th><td>Complaint must be filed within 30 days from the expiry of 15 days notice period</td></tr>
+    <tr><th>Required Enclosures</th><td>Original Cheque and Bank Return Memo showing 'Funds Insufficient' / 'Account Closed'; Office copy of Statutory Legal Notice sent to drawer; Postal Receipts and Online Postal Tracking Delivery Report / RPAD Acknowledgment; Bank Account Statement showing presentation and return of cheque</td></tr>
+  </table>
+</div>
+
+<div class="draft-title">RECOVERY SUIT</div>
+<div class="draft-body">BEFORE THE HON'BLE COURT OF THE JUDICIAL MAGISTRATE FIRST CLASS (JMFC) / METROPOLITAN MAGISTRATE AT ________________________
+C.C. NO. ___________ OF 2026
+
+COMPLAINT UNDER SECTION 138 AND 142 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881
+
+COMPLAINANT:
+__________________________________________________, S/o __________________________________,
+Aged _____ years, Residing at ____________________________________________________________.
+
+                                    VERSUS
+
+ACCUSED:
+__________________________________________________, S/o __________________________________,
+Aged _____ years, Residing at ____________________________________________________________.
+
+MOST RESPECTFULLY SHOWETH:
+1. Complainant lent friendly loan / supplied goods worth Rs. ____________/- to the Accused.
+2. In discharge of said legally enforceable debt, Accused issued Cheque No. ____________ dated ___/___/2026 for Rs. ____________/- drawn on ____________________ Bank.
+3. Upon presentation, cheque returned unpaid with memo "Funds Insufficient" on ___/___/2026.
+4. Statutory Legal Notice was served on Accused on ___/___/2026 calling for payment within 15 days.
+5. Accused received notice on ___/___/2026 but failed to make payment within statutory 15 days.
+
+PRAYER:
+Wherefore, Complainant prays that this Hon'ble Court be pleased to take cognizance, summon the Accused, punish under Section 138 of NI Act, and award compensation equal to double the cheque amount under Section 357 CrPC / BNSS.
+
+COMPLAINANT: __________________________________   ADVOCATE: __________________________________</div>
+
+<div class="footer-note">
+  Downloaded from Advocates Hub (https://advocateshub.in) • Valid across Karnataka & India
+</div>
+</body>
+</html>
