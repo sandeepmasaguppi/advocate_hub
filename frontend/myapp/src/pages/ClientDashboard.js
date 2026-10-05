@@ -501,17 +501,16 @@ export default function ClientDashboard() {
     (async () => {
       try {
         const token = localStorage.getItem(CLIENT_TOKEN_KEY) || sessionStorage.getItem(CLIENT_TOKEN_KEY);
-        if (!token) return; // no token to validate
+        if (!token) {
+          if (clientId) handleLogout();
+          return;
+        }
         const res = await fetch(`/api/auth/me`, {
           method: 'GET',
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          // Only force logout when server explicitly reports session expiration
-          if (res.status === 401 && (err.error === "Session expired" || /expired/i.test(String(err.error || err.message || "")))) {
-            handleLogout();
-          }
+          if (res.status === 401 || res.status === 403) handleLogout();
         } else {
           const data = await res.json().catch(() => null);
           // If backend returns a different client id, also logout

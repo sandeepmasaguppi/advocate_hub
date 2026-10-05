@@ -1,7 +1,7 @@
 // ============================================================
 //  Signup.js  —  Advocate Hub Signup Page
 //  Two tabs: Client | Advocate
-//  Client accounts are saved immediately (clientsStore).
+//  Client and advocate accounts require admin approval before login.
 //  Advocate accounts are saved with status "pending" and must
 //  be approved on the Admin page before they can log in.
 //  After signup → success screen → redirect to login
@@ -494,49 +494,40 @@ function Select({ icon, error, children, ...props }) {
 }
 
 // ── Success Screen ────────────────────────────────────────────
-function SuccessScreen({ type, name, targetAdvocate, onLogin }) {
-  const [count, setCount] = useState(type === "client" && targetAdvocate ? 3 : 5);
+function SuccessScreen({ type, name, onLogin }) {
+  const [count, setCount] = useState(type === "advocate" ? 5 : null);
   useEffect(() => {
+    if (type !== "advocate") return undefined;
     const t = setInterval(() => setCount(c => {
       if (c <= 1) { clearInterval(t); onLogin(); return 0; }
       return c - 1;
     }), 1000);
     return () => clearInterval(t);
-  }, [onLogin]);
+  }, [onLogin, type]);
 
   return (
     <div className="su-success">
-      <div className="su-success-icon">{type === "client" && targetAdvocate ? "💬" : "🎉"}</div>
+      <div className="su-success-icon">{type === "client" ? "⏳" : "🎉"}</div>
       <h2 className="su-success-title">
-        {type === "client" && targetAdvocate ? "Account Created! Starting Chat..." : "Registration Successful!"}
+        {type === "client" ? "Registration Submitted" : "Registration Successful!"}
       </h2>
       <p className="su-success-msg">
         Welcome to Advocate Hub, <strong>{name}</strong>!<br />
         {type === "advocate"
           ? "Your advocate profile has been submitted. An admin will review and approve your account before you can log in."
-          : targetAdvocate
-          ? `Your client account is active. We are connecting you directly to chat with Adv. ${targetAdvocate.name}.`
-          : "Your client account has been created. You can now find and connect with advocates."}
+          : "Your client account is pending admin approval. You can sign in and access your account after it has been approved."}
       </p>
       <div className="su-success-steps">
         <div className="su-ss done">✅ Account created</div>
-        {type === "advocate" && <div className="su-ss pending">⏳ Awaiting admin approval</div>}
-        {type === "client" && targetAdvocate && (
-          <div className="su-ss done">💬 Chat consultation with {targetAdvocate.name} activated</div>
-        )}
-        <div className="su-ss done">🔓 Instant Access Active</div>
+        <div className="su-ss pending">⏳ Awaiting admin approval</div>
       </div>
-      <div className="su-success-countdown">
-        {type === "client" && targetAdvocate
-          ? <>Starting consultation chat in <strong>{count}</strong> seconds…</>
-          : <>Redirecting in <strong>{count}</strong> seconds…</>}
-      </div>
+      {type === "advocate" && (
+        <div className="su-success-countdown">
+          Redirecting in <strong>{count}</strong> seconds…
+        </div>
+      )}
       <button className="su-btn-primary su-btn-lg" onClick={onLogin}>
-        {type === "client" && targetAdvocate
-          ? `💬 Start Chat with Adv. ${targetAdvocate.name} Now →`
-          : type === "client"
-          ? "Go to Client Dashboard →"
-          : "Go to Login Now →"}
+        {type === "client" ? "Go to Client Login →" : "Go to Login Now →"}
       </button>
     </div>
   );
@@ -952,63 +943,16 @@ export default function Signup() {
         if (tab === "client") {
           const emailLower = client.email.trim().toLowerCase();
 
-          const regRes = await registerClient({
+          await registerClient({
             name:       client.fullName.trim(),
             email:      emailLower,
             password:   client.password,
             phone:      client.phone.trim(),
             city:       client.city,
             legalIssue: client.legalIssue,
-            status:     "approved",
           });
-
-          // Auto-authenticate / establish client session immediately
-          const newClientId = regRes?.id || Date.now();
-          const clientObj = {
-            id: newClientId,
-            name: client.fullName.trim(),
-            email: emailLower,
-            phone: client.phone.trim(),
-            city: client.city,
-            status: "approved",
-          };
-
-          try {
-            localStorage.setItem("law4u_client_id", String(newClientId));
-            localStorage.setItem("law4u_client", JSON.stringify(clientObj));
-            sessionStorage.setItem("law4u_client_id", String(newClientId));
-            sessionStorage.setItem("law4u_client", JSON.stringify(clientObj));
-            if (targetAdvocate?.id || advocateIdParam) {
-              const aid = String(targetAdvocate?.id || advocateIdParam);
-              sessionStorage.setItem(`law4u_active_chat_${newClientId}`, aid);
-              localStorage.setItem(`law4u_active_chat_${newClientId}`, aid);
-            }
-          } catch (e) {
-            console.warn("Session storage error:", e);
-          }
-
-          // Optional quick background login to obtain JWT token
-          try {
-            const loginRes = await fetch("/api/auth/client/login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: emailLower, password: client.password }),
-            });
-            if (loginRes.ok) {
-              const loginData = await loginRes.json();
-              if (loginData.token) {
-                localStorage.setItem("law4u_client_token", loginData.token);
-                sessionStorage.setItem("law4u_client_token", loginData.token);
-              }
-              if (loginData.client?.id) {
-                localStorage.setItem("law4u_client_id", String(loginData.client.id));
-                localStorage.setItem("law4u_client", JSON.stringify(loginData.client));
-              }
-            }
-          } catch {}
-
           setSuccessName(client.fullName);
-          showToast("Account created successfully! 🎉", "success");
+          showToast("Registration submitted. Await admin approval.", "success");
           setView("success");
 
         } else {
@@ -1054,13 +998,7 @@ export default function Signup() {
 
   const goToLogin = () => {
     if (tab === "client") {
-      if (redirectParam) {
-        navigate(redirectParam);
-      } else if (targetAdvocate?.id || advocateIdParam) {
-        navigate(`/client-dashboard?advocateId=${targetAdvocate?.id || advocateIdParam}`);
-      } else {
-        navigate("/client-dashboard");
-      }
+      navigate("/client-login");
     } else {
       navigate("/login");
     }
@@ -1075,7 +1013,6 @@ export default function Signup() {
           <SuccessScreen
             type={tab}
             name={successName}
-            targetAdvocate={targetAdvocate}
             onLogin={goToLogin}
           />
         </div>

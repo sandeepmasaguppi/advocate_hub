@@ -127,32 +127,20 @@ function Select({ icon, error, children, ...props }) {
 
 // ── Success Screen ────────────────────────────────────────────
 function SuccessScreen({ name, onLogin }) {
-  const [count, setCount] = useState(5);
-  useEffect(() => {
-    const t = setInterval(() => setCount((c) => {
-      if (c <= 1) { clearInterval(t); onLogin(); return 0; }
-      return c - 1;
-    }), 1000);
-    return () => clearInterval(t);
-  }, [onLogin]);
-
   return (
     <div className="rg-success">
-      <div className="rg-success-icon">🎉</div>
-      <h2 className="rg-success-title">Registration Successful!</h2>
+      <div className="rg-success-icon">⏳</div>
+      <h2 className="rg-success-title">Registration Submitted</h2>
       <p className="rg-success-msg">
         Welcome to Advocate Hub, <strong>{name}</strong>!<br />
-        Your client account has been created. You can now find and connect with advocates.
+        Your client account is pending admin approval. You can sign in after it has been approved.
       </p>
       <div className="rg-success-steps">
         <div className="rg-ss done">✅ Account created</div>
-        <div className="rg-ss">🔓 Login to get started</div>
-      </div>
-      <div className="rg-success-countdown">
-        Redirecting to login in <strong>{count}</strong> seconds…
+        <div className="rg-ss">⏳ Awaiting admin approval</div>
       </div>
       <button className="rg-btn-primary rg-btn-lg" onClick={onLogin}>
-        Go to Login Now →
+        Go to Client Login →
       </button>
     </div>
   );

@@ -562,7 +562,7 @@ async function registerClient(payload, { byAdmin = false } = {}) {
     city: payload.city || "",
     passwordHash: hashPassword(password),
     sessionVersion: 0,
-    status: payload.status || "approved",
+    status: byAdmin ? (payload.status || "approved") : "pending",
     createdAt: new Date().toISOString(),
   };
   list.push(record);
@@ -1216,6 +1216,13 @@ async function route(request, response) {
     if (auth.role === "client") {
       const client = loadClients().find((c) => Number(c.id) === Number(auth.sub));
       if (!client) throw new HttpError(401, "Account no longer exists");
+      if (client.status !== "approved") {
+        const err = new HttpError(403, client.status === "rejected"
+          ? "Your client account was not approved. Contact support for details."
+          : "Your account is awaiting admin approval. Please check back later.");
+        err.extra = { status: client.status };
+        throw err;
+      }
       // token contains a `ver` we issue; ensure it matches server-side sessionVersion
       const tokenVer = Number(auth.ver || 0);
       const serverVer = Number(client.sessionVersion || 0);
@@ -1401,6 +1408,9 @@ async function route(request, response) {
       const idx = clients.findIndex(c => Number(c.id) === Number(id));
       if (idx === -1) throw new HttpError(404, "Client not found");
       if (!["approved","pending","rejected"].includes(body.status)) throw new HttpError(400, "Invalid status");
+      if (clients[idx].status !== body.status) {
+        clients[idx].sessionVersion = (Number(clients[idx].sessionVersion) || 0) + 1;
+      }
       clients[idx].status = body.status;
       saveClients(clients);
       const { passwordHash, ...safe } = clients[idx];
