@@ -538,10 +538,11 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
   list.push(record);
   saveAdvocates(list);
 
-  // Automated notification dispatched to admin team at advocatehub.in@gmail.com
-  notifyAdminNewAdvocate(record).catch((err) => {
-    console.warn("[AdminAlert] Advocate notification dispatch error:", err?.message || err);
-  });
+  if (!byAdmin && record.status === "pending") {
+    notifyAdminNewAdvocate(record).catch((err) => {
+      console.warn("[AdminAlert] Advocate notification dispatch error:", err?.message || err);
+    });
+  }
 
   return toPublic(record);
 }

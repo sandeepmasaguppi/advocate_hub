@@ -67,10 +67,16 @@ In the `advocate_hub` **production → Variables**, set or confirm:
   `Advocates Hub <notifications@your-verified-domain.example>`.
 - `ADMIN_NOTIFICATION_EMAIL`: where client and advocate registration alerts
   should be delivered.
+- `ADVOCATE_REGISTRATION_EMAIL`: recipient for pending advocate registration
+  alerts (set to `advocatehub.in@gmail.com`).
+- `ADVOCATE_REGISTRATION_FROM`: sender for advocate registration alerts (set
+  to `sandeepmasaguppi@gmail.com` when using that account's SMTP credentials).
 
 Railway Hobby/Free plans block SMTP delivery. On Railway Pro, SMTP is also
 supported with `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, and
-`SMTP_PASS`.
+`SMTP_PASS`. Gmail SMTP requires an app password for the same account used as
+the sender. An HTTPS email provider can send only from an address verified
+with that provider; it may not use the requested Gmail sender address.
 
 Attach a volume to the Node API at `/data` so uploaded avatars persist.
 Do not commit `.env` files or paste passwords, hashes, MongoDB URLs, or

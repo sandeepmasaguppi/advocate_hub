@@ -470,8 +470,10 @@ export default function AdvocateDashboard() {
       if (updated) {
         setProfileForm(prev => ({ ...prev, languages: Array.isArray(updated.languages) ? updated.languages.join(", ") : (updated.languages||"") }));
       }
+      return true;
     } catch (err) {
       setProfileMsg(err.message || "Save failed");
+      return false;
     } finally {
       setProfileSaving(false);
       setTimeout(() => setProfileMsg(""), 3000);
@@ -1251,8 +1253,8 @@ export default function AdvocateDashboard() {
                           className="ad-btn-primary"
                           onClick={async () => {
                             if (!isProfileEditing) { setIsProfileEditing(true); return; }
-                            await handleSaveProfile();
-                            setIsProfileEditing(false);
+                            const saved = await handleSaveProfile();
+                            if (saved) setIsProfileEditing(false);
                           }}
                           disabled={profileSaving}
                         >

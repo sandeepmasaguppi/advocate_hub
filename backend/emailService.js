@@ -30,8 +30,17 @@ function getAdminEmail() {
   return process.env.ADMIN_NOTIFICATION_EMAIL || "sandeepmasaguppi@gmail.com";
 }
 
+function getAdvocateRegistrationEmail() {
+  return process.env.ADVOCATE_REGISTRATION_EMAIL || "advocatehub.in@gmail.com";
+}
+
+function getAdvocateRegistrationFrom() {
+  return process.env.ADVOCATE_REGISTRATION_FROM
+    || '"Sandeep Masaguppi" <sandeepmasaguppi@gmail.com>';
+}
+
 function getAdminPortalUrl() {
-  return `${(process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/+$/, "")}/admin`;
+  return `${(process.env.FRONTEND_URL || "https://advocate-hub.up.railway.app").replace(/\/+$/, "")}/admin`;
 }
 
 const NOTIFICATIONS_FILE = path.join(
@@ -133,7 +142,7 @@ async function deliverEmail(message) {
 
   if (provider === "smtp") {
     const info = await getTransporter().sendMail({
-      from: process.env.SMTP_FROM || `"Advocates Hub" <advocatehub.in@gmail.com>`,
+      from: message.from || process.env.SMTP_FROM || `"Advocates Hub" <advocatehub.in@gmail.com>`,
       replyTo: process.env.SMTP_REPLY_TO || "advocatehub.in@gmail.com",
       to: message.to,
       subject: message.subject,
@@ -153,10 +162,13 @@ async function deliverEmail(message) {
  * 1. Resend HTTPS API or SMTP when configured.
  * 2. Persistent storage in admin_notifications.json + Console alert.
  */
-async function sendAdminEmail({ subject, text, html, meta = {} }) {
+async function sendAdminEmail({ subject, text, html, meta = {}, to = getAdminEmail(), from }) {
   const timestamp = new Date().toISOString();
-  const recipient = getAdminEmail();
-  const fromAddr = process.env.RESEND_FROM || process.env.SMTP_FROM || `"Advocates Hub" <advocatehub.in@gmail.com>`;
+  const recipient = to;
+  const fromAddr = process.env.RESEND_FROM
+    || from
+    || process.env.SMTP_FROM
+    || `"Advocates Hub" <advocatehub.in@gmail.com>`;
 
   const notificationRecord = {
     id: `NOTIF_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
@@ -171,7 +183,7 @@ async function sendAdminEmail({ subject, text, html, meta = {} }) {
   };
 
   try {
-    const result = await deliverEmail({ to: recipient, subject, text, html });
+    const result = await deliverEmail({ to: recipient, subject, text, html, from });
     console.log(`[EmailService] Email delivered via ${result.provider}. MessageId: ${result.messageId || "not provided"}`);
     notificationRecord.delivered = true;
     notificationRecord.messageId = result.messageId;
@@ -290,7 +302,7 @@ async function notifyAdminNewAdvocate(advocate) {
   const city = advocate.city || advocate.taluk || advocate.district || "Karnataka";
   const experience = advocate.experience ? `${advocate.experience} Years` : "Not specified";
   const fee = advocate.fee ? `₹${advocate.fee}` : "Standard";
-  const status = advocate.status || "approved";
+  const status = advocate.status || "pending";
   const istTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
   const subject = `⚖️ New Advocate Registration - Adv. ${name} (${city})`;
@@ -366,7 +378,7 @@ Review & Manage: ${getAdminPortalUrl()}
       </div>
     </div>
     <div class="footer">
-      Advocates Hub Automated Notification Desk · Sent to ${getAdminEmail()}
+      Advocates Hub Automated Notification Desk · Sent to ${getAdvocateRegistrationEmail()}
     </div>
   </div>
 </body>
@@ -377,6 +389,8 @@ Review & Manage: ${getAdminPortalUrl()}
     subject,
     text,
     html,
+    to: getAdvocateRegistrationEmail(),
+    from: getAdvocateRegistrationFrom(),
     meta: { type: "advocate_registration", advocateId: advocate.id, email: advocate.email },
   });
 }
@@ -426,6 +440,7 @@ async function deliverUndeliveredNotifications() {
           subject: item.subject,
           text: item.text,
           html: item.html || `<div style="font-family: Arial, sans-serif; white-space: pre-wrap; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">${item.text}</div>`,
+          from: item.from,
         });
         item.delivered = true;
         item.messageId = result.messageId;
