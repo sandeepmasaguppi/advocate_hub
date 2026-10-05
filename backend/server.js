@@ -23,6 +23,7 @@ const {
   notifyAdminNewClient,
   notifyAdminNewAdvocate,
   getStoredNotifications,
+  deliverUndeliveredNotifications,
 } = require("./emailService");
 
 const PORT = Number(process.env.PORT) || 5000;
