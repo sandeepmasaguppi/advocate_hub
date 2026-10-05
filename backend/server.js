@@ -1561,6 +1561,13 @@ async function startServer() {
   await dataStore.flush();
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`AdvocateHub API running on port ${PORT}`);
+    deliverUndeliveredNotifications()
+      .then(({ sent }) => {
+        if (sent > 0) console.log(`[EmailService] Delivered ${sent} queued registration notification(s)`);
+      })
+      .catch((error) => {
+        console.error("[EmailService] Failed to retry queued registration notifications:", error.message);
+      });
   });
 }
 

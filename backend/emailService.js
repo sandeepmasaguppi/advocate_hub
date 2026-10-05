@@ -98,16 +98,65 @@ function getTransporter() {
   });
 }
 
+function getDeliveryProvider() {
+  if (process.env.EMAIL_PROVIDER === "resend" || process.env.RESEND_API_KEY) {
+    return process.env.RESEND_API_KEY && process.env.RESEND_FROM ? "resend" : null;
+  }
+  return getTransporter() ? "smtp" : null;
+}
+
+async function deliverEmail(message) {
+  const provider = getDeliveryProvider();
+  if (provider === "resend") {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM,
+        to: [message.to],
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
+        reply_to: process.env.SMTP_REPLY_TO || undefined,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(`Resend API returned ${response.status}: ${result.message || "email delivery failed"}`);
+    }
+    return { provider, messageId: result.id };
+  }
+
+  if (provider === "smtp") {
+    const info = await getTransporter().sendMail({
+      from: process.env.SMTP_FROM || `"Advocates Hub" <advocatehub.in@gmail.com>`,
+      replyTo: process.env.SMTP_REPLY_TO || "advocatehub.in@gmail.com",
+      to: message.to,
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+    });
+    return { provider, messageId: info.messageId };
+  }
+
+  throw new Error(process.env.EMAIL_PROVIDER === "resend"
+    ? "Resend requires RESEND_API_KEY and RESEND_FROM"
+    : "No email provider is configured");
+}
+
 /**
  * Generic dispatch helper with dual-layer delivery:
- * 1. Live SMTP via Nodemailer if SMTP_PASS configured.
+ * 1. Resend HTTPS API or SMTP when configured.
  * 2. Persistent storage in admin_notifications.json + Console alert.
  */
 async function sendAdminEmail({ subject, text, html, meta = {} }) {
   const timestamp = new Date().toISOString();
   const recipient = getAdminEmail();
-  const fromAddr = process.env.SMTP_FROM || `"Advocates Hub" <advocatehub.in@gmail.com>`;
-  const replyTo = process.env.SMTP_REPLY_TO || "advocatehub.in@gmail.com";
+  const fromAddr = process.env.RESEND_FROM || process.env.SMTP_FROM || `"Advocates Hub" <advocatehub.in@gmail.com>`;
 
   const notificationRecord = {
     id: `NOTIF_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
@@ -121,29 +170,16 @@ async function sendAdminEmail({ subject, text, html, meta = {} }) {
     delivered: false,
   };
 
-  const transporter = getTransporter();
-
-  if (transporter) {
-    try {
-      const info = await transporter.sendMail({
-        from: fromAddr,
-        replyTo,
-        to: recipient,
-        subject,
-        text,
-        html,
-      });
-      console.log(`[EmailService] ✅ Email dispatched to ${recipient}. MessageId: ${info.messageId}`);
-      notificationRecord.delivered = true;
-      notificationRecord.messageId = info.messageId;
-      notificationRecord.deliveredAt = new Date().toISOString();
-    } catch (err) {
-      console.warn(`[EmailService] ⚠️ SMTP delivery to ${recipient} failed: ${err.message}`);
-      notificationRecord.error = err.message;
-    }
-  } else {
-    console.log(`[EmailService] 📩 Registration Alert recorded for ${recipient}: "${subject}"`);
-    console.log(`[EmailService] ℹ️ To enable live Gmail delivery, add SMTP_PASS=<your_gmail_app_password> to backend/.env`);
+  try {
+    const result = await deliverEmail({ to: recipient, subject, text, html });
+    console.log(`[EmailService] Email delivered via ${result.provider}. MessageId: ${result.messageId || "not provided"}`);
+    notificationRecord.delivered = true;
+    notificationRecord.messageId = result.messageId;
+    notificationRecord.provider = result.provider;
+    notificationRecord.deliveredAt = new Date().toISOString();
+  } catch (err) {
+    console.warn("[EmailService] Registration email delivery failed:", err.message);
+    notificationRecord.error = err.message;
   }
 
   recordNotification(notificationRecord);
@@ -361,9 +397,9 @@ function getStoredNotifications() {
  * that have delivered: false, and delivers them via SMTP.
  */
 async function deliverUndeliveredNotifications() {
-  const transporter = getTransporter();
-  if (!transporter) {
-    throw new Error("SMTP credentials not configured (SMTP_PASS is required)");
+  if (!getDeliveryProvider()) {
+    console.warn("[EmailService] Queued registration emails were not sent: configure RESEND_API_KEY and RESEND_FROM, or SMTP credentials on a Railway plan that allows SMTP.");
+    return { sent: 0, results: [], skipped: true };
   }
 
   let list = dataStore.getCollection("admin_notifications");
@@ -378,8 +414,6 @@ async function deliverUndeliveredNotifications() {
   }
 
   const recipient = getAdminEmail();
-  const fromAddr = process.env.SMTP_FROM || `"Advocates Hub" <advocatehub.in@gmail.com>`;
-  const replyTo = process.env.SMTP_REPLY_TO || "advocatehub.in@gmail.com";
   let sentCount = 0;
   const results = [];
 
@@ -387,23 +421,22 @@ async function deliverUndeliveredNotifications() {
     if (!item.delivered) {
       try {
         const targetTo = item.to || recipient;
-        const info = await transporter.sendMail({
-          from: fromAddr,
-          replyTo,
+        const result = await deliverEmail({
           to: targetTo,
           subject: item.subject,
           text: item.text,
           html: item.html || `<div style="font-family: Arial, sans-serif; white-space: pre-wrap; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">${item.text}</div>`,
         });
         item.delivered = true;
-        item.messageId = info.messageId;
+        item.messageId = result.messageId;
+        item.provider = result.provider;
         item.deliveredAt = new Date().toISOString();
         delete item.error;
         sentCount++;
-        results.push({ id: item.id, status: "delivered", messageId: info.messageId });
-        console.log(`[EmailService] ✅ Successfully delivered queued notification ${item.id} to ${targetTo}`);
+        results.push({ id: item.id, status: "delivered", messageId: result.messageId });
+        console.log(`[EmailService] Delivered queued registration notification ${item.id} via ${result.provider}`);
       } catch (err) {
-        console.warn(`[EmailService] ❌ Failed to deliver notification ${item.id}:`, err.message);
+        console.warn(`[EmailService] Failed to deliver queued notification ${item.id}:`, err.message);
         item.error = err.message;
         results.push({ id: item.id, status: "failed", error: err.message });
       }

@@ -15,6 +15,12 @@ backend; the backend forwards `/api/chat` to FastAPI. MongoDB is the source of
 truth for backend records. A Railway volume is used only for uploaded avatar
 files, and MongoDB has its own persistent volume.
 
+Registration email alerts use Resend's HTTPS API on Railway Hobby/Free plans,
+where outbound SMTP is disabled. Set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`,
+and a domain-verified `RESEND_FROM` on the Node API service. Undelivered
+registration alerts are retried automatically after the API starts with a
+working email provider.
+
 ## 1. Prepare the Railway project
 
 1. Open the existing Railway project that contains the `MongoDB` service.
@@ -55,6 +61,16 @@ In the `advocate_hub` **production → Variables**, set or confirm:
   (add it after generating that domain).
 - `APP_UPLOAD_DIR`: `/data/uploads`.
 - `NODE_ENV`: `production`.
+- `EMAIL_PROVIDER`: `resend` on Railway Hobby/Free plans.
+- `RESEND_API_KEY`: a Resend API key, stored as a Railway secret.
+- `RESEND_FROM`: an address on a domain verified with Resend, for example
+  `Advocates Hub <notifications@your-verified-domain.example>`.
+- `ADMIN_NOTIFICATION_EMAIL`: where client and advocate registration alerts
+  should be delivered.
+
+Railway Hobby/Free plans block SMTP delivery. On Railway Pro, SMTP is also
+supported with `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, and
+`SMTP_PASS`.
 
 Attach a volume to the Node API at `/data` so uploaded avatars persist.
 Do not commit `.env` files or paste passwords, hashes, MongoDB URLs, or
