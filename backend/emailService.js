@@ -31,7 +31,7 @@ function getAdminEmail() {
 }
 
 function getAdvocateRegistrationEmail() {
-  return process.env.ADVOCATE_REGISTRATION_EMAIL || "advocatehub.in@gmail.com";
+  return process.env.ADVOCATE_REGISTRATION_EMAIL || "sandeepmasaguppi@gmail.com";
 }
 
 function getAdvocateRegistrationFrom() {

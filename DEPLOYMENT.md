@@ -74,7 +74,7 @@ In the `advocate_hub` **production → Variables**, set or confirm:
 - `ADMIN_NOTIFICATION_EMAIL`: where client and advocate registration alerts
   should be delivered.
 - `ADVOCATE_REGISTRATION_EMAIL`: recipient for pending advocate registration
-  alerts (set to `advocatehub.in@gmail.com`).
+  alerts (set to `sandeepmasaguppi@gmail.com`).
 - `ADVOCATE_REGISTRATION_FROM`: sender for advocate registration alerts (set
   to `sandeepmasaguppi@gmail.com` when using that account's SMTP credentials).
 
