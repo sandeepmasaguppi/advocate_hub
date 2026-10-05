@@ -286,6 +286,19 @@ function toPublic(advocate) {
   return out;
 }
 
+function toPublicDirectoryRecord(advocate) {
+  if (advocate.status !== "pending") return toPublic(advocate);
+  return {
+    id: advocate.id,
+    name: advocate.name,
+    city: advocate.city || advocate.taluk || advocate.district || "",
+    practiceAreas: Array.isArray(advocate.practiceAreas)
+      ? advocate.practiceAreas
+      : [advocate.speciality || advocate.practiceArea].filter(Boolean),
+    status: "pending",
+  };
+}
+
 function nextId(list) {
   return list.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
 }
@@ -756,7 +769,13 @@ async function route(request, response) {
       requireAdmin(request);
       return send(request, response, 200, list.map(toPublic));
     }
-    return send(request, response, 200, list.filter((a) => a.status === "approved").map(toPublic));
+    return send(
+      request,
+      response,
+      200,
+      list.filter((advocate) => advocate.status === "approved" || advocate.status === "pending")
+        .map(toPublicDirectoryRecord)
+    );
   }
 
   // Clarity Guide (read)

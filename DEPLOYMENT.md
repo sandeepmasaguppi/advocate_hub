@@ -15,6 +15,12 @@ backend; the backend forwards `/api/chat` to FastAPI. MongoDB is the source of
 truth for backend records. A Railway volume is used only for uploaded avatar
 files, and MongoDB has its own persistent volume.
 
+`GET /api/advocates` includes approved advocates and pending applications.
+Pending entries expose only `id`, `name`, `city`, `practiceAreas`, and
+`status`; their contact and verification details remain private. The website's
+public advocate listings continue to show approved advocates only. Admins can
+use `GET /api/advocates?all=1` to view full records for every status.
+
 Registration email alerts use Resend's HTTPS API on Railway Hobby/Free plans,
 where outbound SMTP is disabled. Set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`,
 and a domain-verified `RESEND_FROM` on the Node API service. Undelivered
