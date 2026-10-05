@@ -2144,6 +2144,7 @@ export default function AdminPage() {
   const [theme, toggleTheme] = useAdminTheme();
   const [railOpen, toggleRail] = useStoredFlag(RAIL_KEY, false);
   const [advocates, setAdvocates] = useState([]);
+  const [pendingRegistrationAlert, setPendingRegistrationAlert] = useState([]);
   const [clients, setClients] = useState(() => getLocalClients());
   const [messages, setMessages] = useState([]);
   const [questions, setQuestions] = useState([]);
@@ -2204,6 +2205,29 @@ export default function AdminPage() {
       .then(setAdvocates)
       .catch(() => setAdvocates(getAdvocates()));
   }, []);
+
+  useEffect(() => {
+    if (!authed) return undefined;
+
+    let active = true;
+    const refreshPendingRegistrationAlert = async () => {
+      try {
+        const list = await loadAdvocates({ all: true });
+        if (active) {
+          setPendingRegistrationAlert(list.filter((advocate) => advocate.status === "pending"));
+        }
+      } catch (error) {
+        console.error("Failed to refresh pending advocate registrations:", error);
+      }
+    };
+
+    refreshPendingRegistrationAlert();
+    const interval = window.setInterval(refreshPendingRegistrationAlert, 30000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [authed]);
   const refreshClients = useCallback(() => {
     getClients()
       .then((list) => {
@@ -2611,6 +2635,46 @@ export default function AdminPage() {
       </div>
 
       <div className="am-container">
+
+        {pendingRegistrationAlert.length > 0 && (
+          <section
+            role="status"
+            aria-live="polite"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+              marginBottom: 18,
+              padding: "14px 18px",
+              border: "1px solid #fcd34d",
+              borderRadius: 12,
+              background: "#fffbeb",
+              color: "#78350f",
+            }}
+          >
+            <div>
+              <strong>
+                {pendingRegistrationAlert.length} advocate
+                {pendingRegistrationAlert.length === 1 ? "" : "s"} awaiting approval
+              </strong>
+              <div style={{ marginTop: 4, fontSize: 13 }}>
+                {pendingRegistrationAlert.slice(0, 3).map((advocate) => advocate.name).join(", ")}
+                {pendingRegistrationAlert.length > 3
+                  ? `, and ${pendingRegistrationAlert.length - 3} more`
+                  : ""}
+              </div>
+            </div>
+            <button
+              type="button"
+              className="am-btn am-btn-primary"
+              onClick={() => setTab("pending")}
+            >
+              Review pending applications
+            </button>
+          </section>
+        )}
 
         {/* ── Stats ── */}
         <div className="am-stats-row">
