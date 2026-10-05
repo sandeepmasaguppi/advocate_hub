@@ -19,7 +19,7 @@ files, and MongoDB has its own persistent volume.
 
 1. Open the existing Railway project that contains the `MongoDB` service.
 2. Confirm MongoDB is running and its volume is mounted at `/data/db`.
-3. Use the existing GitHub repository `sandeepmasaguppi/che`, branch `code`.
+3. Use the GitHub repository `sandeepmasaguppi/advocate_hub`, branch `code`.
 4. Reuse the existing `advocate_hub` service for the Node API. If it does not
    exist, create a GitHub service from that repository and branch.
 5. Add two more GitHub services from the same repository and branch, named
@@ -28,6 +28,12 @@ files, and MongoDB has its own persistent volume.
    - Node API: `backend`
    - Chatbot: `chatbot`
    - React website: `frontend/myapp`
+
+7. In each service's **Settings → Config-as-code**, add its absolute config
+   file path:
+   - Node API: `/backend/railway.json`
+   - Chatbot: `/chatbot/railway.json`
+   - React website: `/frontend/myapp/railway.json`
 
    Each folder contains its own `Dockerfile` and `railway.json`. Let its
    Dockerfile provide the build and start commands.
@@ -60,6 +66,8 @@ In the `chatbot` **production → Variables**, set:
 
 - `BACKEND_API_URL`:
   `http://${{advocate_hub.RAILWAY_PRIVATE_DOMAIN}}:${{advocate_hub.PORT}}`.
+- `PORT`: `8080` (the chatbot container listens on this port; this also makes
+  the port available to Railway's service-reference expressions).
 
 The chatbot reads current approved advocates and the clarity guide from the
 Node API, which reads those records from MongoDB. It does not need its own
@@ -95,17 +103,16 @@ empty. The private `backend/data/clients.json` is intentionally excluded from
 Git and Docker so client records are never uploaded as part of a build.
 
 If you need to migrate that local file or other local-only records, run the
-guarded importer from the repository root using the Node API service's Railway
-environment:
+guarded importer from a trusted environment that can reach MongoDB. Railway's
+private MongoDB hostname is not normally reachable from a command running on
+your local machine, even when `railway run` supplies service variables. For a
+local migration, temporarily enable MongoDB's public TCP proxy and provide its
+URI to the importer through a secure environment-variable mechanism (not a
+command-line argument); disable the proxy when finished.
 
-```powershell
-railway run --project <project-id> --environment production --service advocate_hub -- node backend/import-json-to-mongo.js
-```
-
-It imports each local JSON array only into an empty MongoDB collection and
-reports collection names and counts, not record contents. Confirm you have a
-backup before migration. Do not set `MONGODB_URI` manually on the command line;
-Railway supplies it to the command through the service environment.
+The importer imports each local JSON array only into an empty MongoDB
+collection and reports collection names and counts, not record contents.
+Confirm you have a backup before migration.
 
 ## MongoDB collections
 
