@@ -14,6 +14,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const dataStore = require("./dataStore");
 
 // ── Config ────────────────────────────────────────────────────
 loadDotEnv(path.join(__dirname, ".env"));
@@ -25,9 +26,7 @@ const {
 } = require("./emailService");
 
 const PORT = Number(process.env.PORT) || 5000;
-const DATA_DIR = process.env.APP_DATA_DIR
-  ? path.resolve(process.env.APP_DATA_DIR)
-  : path.join(__dirname, "data");
+const DATA_DIR = path.join(__dirname, "data");
 const UPLOAD_DIR = process.env.APP_UPLOAD_DIR
   ? path.resolve(process.env.APP_UPLOAD_DIR)
   : process.env.APP_DATA_DIR
@@ -50,7 +49,11 @@ const ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 
 if (!AUTH_SECRET || !ADMIN_EMAIL || !ADMIN_PASSWORD_HASH) {
-  console.error("Missing AUTH_SECRET / ADMIN_EMAIL / ADMIN_PASSWORD_HASH in backend/.env (see .env.example)");
+  console.error("Missing required AUTH_SECRET, ADMIN_EMAIL, or ADMIN_PASSWORD_HASH environment variable");
+  process.exit(1);
+}
+if (process.env.NODE_ENV === "production" && !process.env.MONGODB_URI) {
+  console.error("Missing required MONGODB_URI environment variable");
   process.exit(1);
 }
 
@@ -141,11 +144,19 @@ function requireAdminOrSelf(request, advocateId) {
 }
 
 // ── Data access ───────────────────────────────────────────────
-function loadAdvocates() { return readJson(ADVOCATES_FILE, []); }
-function saveAdvocates(list) { writeJson(ADVOCATES_FILE, list); }
-function loadClients() { return readJson(CLIENTS_FILE, []); }
-function saveClients(list) { writeJson(CLIENTS_FILE, list); }
+function loadCollection(name, file, fallback = []) {
+  return dataStore.getCollection(name) || readJson(file, fallback);
+}
+function saveCollection(name, file, list) {
+  if (!dataStore.setCollection(name, list)) writeJson(file, list);
+}
+function loadAdvocates() { return loadCollection("advocates", ADVOCATES_FILE); }
+function saveAdvocates(list) { saveCollection("advocates", ADVOCATES_FILE, list); }
+function loadClients() { return loadCollection("clients", CLIENTS_FILE); }
+function saveClients(list) { saveCollection("clients", CLIENTS_FILE, list); }
 function loadDocumentPurchases() {
+  const stored = dataStore.getCollection("document_purchases");
+  if (stored) return stored;
   let list = readJson(DOCUMENTS_PURCHASE_FILE_COMMA, null);
   if (!Array.isArray(list)) {
     list = readJson(DOCUMENTS_PURCHASE_FILE_DOT, []);
@@ -153,10 +164,14 @@ function loadDocumentPurchases() {
   return Array.isArray(list) ? list : [];
 }
 function saveDocumentPurchases(list) {
-  writeJson(DOCUMENTS_PURCHASE_FILE_COMMA, list);
-  writeJson(DOCUMENTS_PURCHASE_FILE_DOT, list);
+  if (!dataStore.setCollection("document_purchases", list)) {
+    writeJson(DOCUMENTS_PURCHASE_FILE_COMMA, list);
+    writeJson(DOCUMENTS_PURCHASE_FILE_DOT, list);
+  }
 }
 function loadPayments() {
+  const stored = dataStore.getCollection("payments");
+  if (stored) return stored;
   const list = readJson(PAYMENTS_FILE, null);
   if (Array.isArray(list)) return list;
   const defaultPayments = [
@@ -259,7 +274,10 @@ function loadPayments() {
   writeJson(PAYMENTS_FILE, defaultPayments);
   return defaultPayments;
 }
-function savePayments(list) { writeJson(PAYMENTS_FILE, list); }
+function savePayments(list) { saveCollection("payments", PAYMENTS_FILE, list); }
+function loadClarityGuide() {
+  return loadCollection("clarity_guide", CLARITY_FILE);
+}
 
 function toPublic(advocate) {
   const out = {};
@@ -376,31 +394,8 @@ function serveUpload(request, response, urlPath) {
   fs.createReadStream(file).pipe(response);
 }
 
-function initializePersistentStorage() {
-  if (!process.env.APP_DATA_DIR) return;
-
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+function initializeUploadStorage() {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-  for (const filename of ["advocates.json", "clarityguide.json"]) {
-    const destination = path.join(DATA_DIR, filename);
-    const source = path.join(__dirname, "data", filename);
-    if (!fs.existsSync(destination) && fs.existsSync(source)) {
-      fs.copyFileSync(source, destination);
-    }
-  }
-
-  for (const filename of [
-    "clients.json",
-    "payments.json",
-    "admin_notifications.json",
-    "documentspurchase,json",
-    "documentspurchase.json",
-  ]) {
-    const destination = path.join(DATA_DIR, filename);
-    if (!fs.existsSync(destination)) fs.writeFileSync(destination, "[]\n", "utf8");
-  }
-
   const bundledUploads = path.join(__dirname, "uploads");
   if (fs.existsSync(bundledUploads)) {
     for (const entry of fs.readdirSync(bundledUploads, { withFileTypes: true })) {
@@ -453,7 +448,13 @@ function corsHeaders(request) {
   };
 }
 
-function send(request, response, status, body) {
+function send(request, response, status, body, { skipFlush = false } = {}) {
+  if (!skipFlush && dataStore.isMongoEnabled()) {
+    return dataStore.flush().then(() => {
+      response.writeHead(status, { "Content-Type": "application/json", ...corsHeaders(request) });
+      response.end(JSON.stringify(body));
+    });
+  }
   response.writeHead(status, { "Content-Type": "application/json", ...corsHeaders(request) });
   response.end(JSON.stringify(body));
 }
@@ -720,6 +721,32 @@ async function route(request, response) {
 
   if (method === "GET" && p === "/api/health") return send(request, response, 200, { ok: true });
 
+  if (method === "POST" && p === "/api/chat" && process.env.CHATBOT_URL) {
+    const body = await readBody(request);
+    let chatbotResponse;
+    try {
+      chatbotResponse = await fetch(`${process.env.CHATBOT_URL.replace(/\/+$/, "")}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      console.error("Chatbot service request failed:", error.message);
+      return send(request, response, 503, {
+        error: "Chatbot service is unavailable",
+        text: "The chatbot is temporarily unavailable. Please try again shortly.",
+        type: "text",
+      });
+    }
+    const responseText = await chatbotResponse.text();
+    response.writeHead(chatbotResponse.status, {
+      "Content-Type": chatbotResponse.headers.get("content-type") || "application/json",
+      ...corsHeaders(request),
+    });
+    response.end(responseText);
+    return;
+  }
+
   // Advocates (read)
   if (method === "GET" && p === "/api/advocates") {
     const list = loadAdvocates();
@@ -732,7 +759,7 @@ async function route(request, response) {
 
   // Clarity Guide (read)
   if (method === "GET" && p === "/api/clarity-guide") {
-    const list = readJson(CLARITY_FILE, []);
+    const list = loadClarityGuide();
     return send(request, response, 200, list);
   }
 
@@ -745,7 +772,7 @@ async function route(request, response) {
     const isKn = /[\u0C80-\u0CFF]/.test(msg) || body.lang === "kn";
     const cleanQ = msg.toLowerCase().replace(/[^\w\s\u0C80-\u0CFF]/g, " ").replace(/\s+/g, " ").trim();
     const advocates = loadAdvocates().filter(a => a.status === "approved" || !a.status);
-    const clarity = readJson(CLARITY_FILE, []);
+    const clarity = loadClarityGuide();
 
     const formatCard = (adv) => ({
       id: adv.id,
@@ -1495,16 +1522,39 @@ async function route(request, response) {
 }
 
 const server = http.createServer((request, response) => {
-  route(request, response).catch((error) => {
+  route(request, response).catch(async (error) => {
     const status = error instanceof HttpError ? error.status : 500;
     if (status === 500) console.error(error);
-    send(request, response, status, { error: status === 500 ? "Internal server error" : error.message, ...(error.extra || {}) });
+    try {
+      await send(
+        request,
+        response,
+        status,
+        { error: status === 500 ? "Internal server error" : error.message, ...(error.extra || {}) },
+        { skipFlush: true }
+      );
+    } catch (sendError) {
+      console.error("Failed to send API error response:", sendError);
+    }
     if (status === 413) response.once("finish", () => request.destroy());
   });
 });
 
-initializePersistentStorage();
-migratePasswords();
-server.listen(PORT, () => {
-  console.log(`AdvocateHub running on port ${PORT}`);
+async function startServer() {
+  initializeUploadStorage();
+  await dataStore.initialize({
+    uri: process.env.MONGODB_URI,
+    databaseName: process.env.MONGODB_DB_NAME || "advocates_hub",
+    dataDirectory: DATA_DIR,
+  });
+  migratePasswords();
+  await dataStore.flush();
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`AdvocateHub API running on port ${PORT}`);
+  });
+}
+
+startServer().catch((error) => {
+  console.error("Failed to start AdvocateHub API:", error);
+  process.exitCode = 1;
 });

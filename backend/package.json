@@ -4,9 +4,11 @@
   "scripts": {
     "start": "node server.js",
     "hash-password": "node hash-password.js",
-    "setup-env": "node setup-env.js"
+    "setup-env": "node setup-env.js",
+    "import-json": "node import-json-to-mongo.js"
   },
   "dependencies": {
+    "mongodb": "^7.7.0",
     "nodemailer": "^10.0.14"
   }
 }

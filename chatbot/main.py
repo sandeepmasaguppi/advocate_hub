@@ -7,6 +7,7 @@
 # ============================================================
 
 import sys
+import os
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -49,11 +50,16 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
 
-# CORS middleware for React app (http://localhost:3000, 3001)
+# Requests from the frontend normally reach this service through the Node API.
+allowed_origins = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "*"],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -75,6 +81,10 @@ async def home(request: Request):
         "framework": "FastAPI + SlowAPI Rate Limiting ⚡",
         "advocatesCount": len(get_advocates()),
     }
+
+@app.get("/health")
+async def health():
+    return {"ok": True}
 
 
 # ── 4. Rate Limited Demo Endpoint (5 requests per minute, matching reel) ──
@@ -169,4 +179,4 @@ async def advocates(
 if __name__ == "__main__":
     import uvicorn
     print("\n🚀 AdvocateHub FastAPI running with SlowAPI Rate Limiting -> http://localhost:5001\n")
-    uvicorn.run("main:app", host="0.0.0.0", port=5001, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", "5001")))

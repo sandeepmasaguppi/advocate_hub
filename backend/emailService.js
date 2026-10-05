@@ -6,6 +6,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const dataStore = require("./dataStore");
 
 function loadDotEnv(file) {
   if (!fs.existsSync(file)) return;
@@ -29,6 +30,10 @@ function getAdminEmail() {
   return process.env.ADMIN_NOTIFICATION_EMAIL || "sandeepmasaguppi@gmail.com";
 }
 
+function getAdminPortalUrl() {
+  return `${(process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/+$/, "")}/admin`;
+}
+
 const NOTIFICATIONS_FILE = path.join(
   process.env.APP_DATA_DIR || path.join(__dirname, "data"),
   "admin_notifications.json"
@@ -39,6 +44,13 @@ const NOTIFICATIONS_FILE = path.join(
  */
 function recordNotification(entry) {
   try {
+    if (dataStore.isMongoEnabled()) {
+      const list = dataStore.getCollection("admin_notifications");
+      list.unshift(entry);
+      dataStore.setCollection("admin_notifications", list.slice(0, 200));
+      return;
+    }
+
     let list = [];
     if (fs.existsSync(NOTIFICATIONS_FILE)) {
       try {
@@ -163,7 +175,7 @@ Legal Issue:   ${issue}
 Status:        ${status}
 Registered At: ${istTime} (IST)
 
-Admin Portal:  http://localhost:3000/admin
+Admin Portal:  ${getAdminPortalUrl()}
 `.trim();
 
   const html = `
@@ -208,7 +220,7 @@ Admin Portal:  http://localhost:3000/admin
         <tr><th>Registered At</th><td>${istTime} IST</td></tr>
       </table>
       <div style="text-align: center; margin-top: 24px;">
-        <a href="http://localhost:3000/admin" class="btn">Open Admin Console →</a>
+        <a href="${getAdminPortalUrl()}" class="btn">Open Admin Console →</a>
       </div>
     </div>
     <div class="footer">
@@ -264,7 +276,7 @@ Fee:           ${fee}
 Status:        ${status}
 Registered At: ${istTime} (IST)
 
-Review & Manage: http://localhost:3000/admin
+Review & Manage: ${getAdminPortalUrl()}
 `.trim();
 
   const html = `
@@ -314,7 +326,7 @@ Review & Manage: http://localhost:3000/admin
         <tr><th>Registered At</th><td>${istTime} IST</td></tr>
       </table>
       <div style="text-align: center; margin-top: 24px;">
-        <a href="http://localhost:3000/admin" class="btn">Review in Admin Console →</a>
+        <a href="${getAdminPortalUrl()}" class="btn">Review in Admin Console →</a>
       </div>
     </div>
     <div class="footer">
@@ -334,6 +346,8 @@ Review & Manage: http://localhost:3000/admin
 }
 
 function getStoredNotifications() {
+  const stored = dataStore.getCollection("admin_notifications");
+  if (stored) return stored;
   try {
     if (fs.existsSync(NOTIFICATIONS_FILE)) {
       return JSON.parse(fs.readFileSync(NOTIFICATIONS_FILE, "utf8"));
@@ -352,14 +366,15 @@ async function deliverUndeliveredNotifications() {
     throw new Error("SMTP credentials not configured (SMTP_PASS is required)");
   }
 
-  if (!fs.existsSync(NOTIFICATIONS_FILE)) return { sent: 0, results: [] };
-
-  let list = [];
-  try {
-    list = JSON.parse(fs.readFileSync(NOTIFICATIONS_FILE, "utf8"));
-    if (!Array.isArray(list)) list = [];
-  } catch {
-    return { sent: 0, results: [] };
+  let list = dataStore.getCollection("admin_notifications");
+  if (!list) {
+    if (!fs.existsSync(NOTIFICATIONS_FILE)) return { sent: 0, results: [] };
+    try {
+      list = JSON.parse(fs.readFileSync(NOTIFICATIONS_FILE, "utf8"));
+      if (!Array.isArray(list)) list = [];
+    } catch {
+      return { sent: 0, results: [] };
+    }
   }
 
   const recipient = getAdminEmail();
@@ -396,7 +411,9 @@ async function deliverUndeliveredNotifications() {
   }
 
   if (sentCount > 0 || results.some(r => r.status === "failed")) {
-    fs.writeFileSync(NOTIFICATIONS_FILE, JSON.stringify(list, null, 2), "utf8");
+    if (!dataStore.setCollection("admin_notifications", list)) {
+      fs.writeFileSync(NOTIFICATIONS_FILE, JSON.stringify(list, null, 2), "utf8");
+    }
   }
 
   return { sent: sentCount, results };

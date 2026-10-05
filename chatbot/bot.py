@@ -12,56 +12,97 @@ import json
 import os
 import re
 import logging
+import time
+from urllib.error import URLError
+from urllib.request import urlopen
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("AdvocateHubBot")
 
-BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH    = os.path.abspath(os.path.join(BASE_DIR, "..", "backend", "data", "advocates.json"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "backend", "data", "advocates.json"))
 CLARITY_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "backend", "data", "clarityguide.json"))
+BACKEND_API_URL = os.environ.get("BACKEND_API_URL", "").rstrip("/")
+CACHE_SECONDS = 5
 
-# ── Live Data Loaders (auto-reloads whenever JSON files change on disk) ──
-_advocates_mtime = 0
+# ── Live data loaders ─────────────────────────────────────────
+_advocates_loaded_at = 0
 _cached_advocates = []
 
+def _load_backend_collection(endpoint, label, cached, loaded_at):
+    if not BACKEND_API_URL:
+        return None, loaded_at
+
+    if cached and time.monotonic() - loaded_at < CACHE_SECONDS:
+        return cached, loaded_at
+
+    try:
+        with urlopen(f"{BACKEND_API_URL}{endpoint}", timeout=5) as response:
+            data = json.load(response)
+        if not isinstance(data, list):
+            raise ValueError(f"The backend returned an invalid {label} response")
+        return data, time.monotonic()
+    except (OSError, URLError, TimeoutError, ValueError) as error:
+        logger.error("Failed to load %s from the Node API: %s", label, error)
+        if cached:
+            logger.warning("Serving the cached %s because the Node API is temporarily unavailable", label)
+            return cached, loaded_at
+        raise RuntimeError(f"Unable to load {label} from the Node API") from error
+
 def get_advocates():
-    global _advocates_mtime, _cached_advocates
+    global _advocates_loaded_at, _cached_advocates
+    if BACKEND_API_URL:
+        data, _advocates_loaded_at = _load_backend_collection(
+            "/api/advocates", "advocates", _cached_advocates, _advocates_loaded_at
+        )
+        if data is not None:
+            _cached_advocates = data
+            return _cached_advocates
+
     try:
         if os.path.exists(DATA_PATH):
             mtime = os.path.getmtime(DATA_PATH)
-            if mtime != _advocates_mtime or not _cached_advocates:
+            if mtime != _advocates_loaded_at or not _cached_advocates:
                 with open(DATA_PATH, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 if isinstance(data, dict):
                     data = data.get("advocates", [])
                 _cached_advocates = data if isinstance(data, list) else []
-                _advocates_mtime = mtime
+                _advocates_loaded_at = mtime
                 logger.info(f"Loaded {len(_cached_advocates)} advocates live from {DATA_PATH}")
     except Exception as e:
         logger.error(f"Error loading live advocates JSON: {e}")
     return _cached_advocates
 
-_clarity_mtime = 0
+_clarity_loaded_at = 0
 _cached_clarity = []
 
 def get_clarity_guide():
-    global _clarity_mtime, _cached_clarity
+    global _clarity_loaded_at, _cached_clarity
+    if BACKEND_API_URL:
+        data, _clarity_loaded_at = _load_backend_collection(
+            "/api/clarity-guide", "clarity guide", _cached_clarity, _clarity_loaded_at
+        )
+        if data is not None:
+            _cached_clarity = data
+            return _cached_clarity
+
     try:
         if os.path.exists(CLARITY_PATH):
             mtime = os.path.getmtime(CLARITY_PATH)
-            if mtime != _clarity_mtime or not _cached_clarity:
+            if mtime != _clarity_loaded_at or not _cached_clarity:
                 with open(CLARITY_PATH, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 _cached_clarity = data if isinstance(data, list) else []
-                _clarity_mtime = mtime
+                _clarity_loaded_at = mtime
                 logger.info(f"Loaded {len(_cached_clarity)} clarity guide records live from {CLARITY_PATH}")
     except Exception as e:
         logger.error(f"Error loading clarity guide JSON: {e}")
     return _cached_clarity
 
-# Pre-warm on startup
-get_advocates()
-get_clarity_guide()
+if not BACKEND_API_URL:
+    get_advocates()
+    get_clarity_guide()
 
 # ── Navigation map ────────────────────────────────────────────
 NAV_MAP = {

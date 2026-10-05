@@ -15,7 +15,7 @@ ENV APP_DATA_DIR=/data
 
 COPY backend/package.json backend/package-lock.json ./backend/
 RUN npm ci --omit=dev --prefix backend
-COPY backend/server.js backend/emailService.js ./backend/
+COPY backend/server.js backend/dataStore.js backend/emailService.js ./backend/
 COPY backend/data/advocates.json backend/data/clarityguide.json ./backend/data/
 COPY backend/uploads/ ./backend/uploads/
 COPY --from=frontend-build /app/frontend/myapp/build ./frontend/myapp/build
