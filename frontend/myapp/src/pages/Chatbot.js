@@ -17,7 +17,7 @@ import { getAdvocates } from "../data/Advocatesstore";
 import defaultClarityData from "../data/clarityguide.json";
 import "./Chatbot.css";
 
-const PRIMARY_CHAT_API = "http://localhost:5001/chat";
+const PRIMARY_CHAT_API = "/api/chat";
 const FALLBACK_CHAT_API = "/api/chat";
 
 const QUICK_ACTIONS_EN = [

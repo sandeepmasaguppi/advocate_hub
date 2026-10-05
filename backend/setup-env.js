@@ -7,7 +7,7 @@ const crypto = require("crypto");
 
 const [email, password] = process.argv.slice(2);
 if (!email || !password) {
-  console.error('Usage: node setup-env.js <admin-email> <admin-password>\n  e.g. node setup-env.js admin@law4u.in "Admin@123"');
+  console.error('Usage: node setup-env.js <admin-email> <admin-password>\n  e.g. node setup-env.js admin@law4u.in "your-unique-password"');
   process.exit(1);
 }
 

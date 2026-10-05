@@ -5,10 +5,8 @@
 //   - Add / edit / delete any advocate account
 //   - View Contact & Partners form submissions as messages
 //
-//  ⚠️ Demo-only auth: the admin credentials below are hardcoded
-//  and checked entirely client-side. For a real deployment, move
-//  admin auth to a backend with hashed passwords and a real
-//  session/token — never ship credentials in client code.
+//  Admin authentication is handled by the backend using a hashed password
+//  and a signed session token.
 // ============================================================
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -1136,23 +1134,10 @@ function AdminLogin({ onLogin, theme, onToggleTheme }) {
       setErr("");
       onLogin();
     } catch (error) {
-      const isServerDown = error.status === 500 || !error.status || error.message.includes("500") || error.message.includes("Failed to fetch");
-      const isMatch = (em === "advocatehub.in@gmail.com" || em === "admin@advocatehub.in" || em === "admin@law4u.in" || em === "admin@gmail.com" || em.includes("admin")) &&
-                      (pw === "Admin@123" || pw === "admin123" || pw === "admin");
-
-      if (isServerDown && isMatch) {
-        setAdminToken("offline-admin-token");
-        setErr("");
-        onLogin();
-        return;
-      }
-
       if (error.status === 401) {
         setErr("Invalid admin email or password.");
-      } else if (isServerDown) {
-        setErr("Backend server is offline (port 5000). Start it with: node backend/server.js (or login with admin@advocatehub.in / Admin@123)");
       } else {
-        setErr(error.message || "Request failed");
+        setErr(error.status ? error.message : "Cannot reach the admin service. Please try again.");
       }
     }
   };
@@ -2205,18 +2190,11 @@ export default function AdminPage() {
   useEffect(() => {
     const token = getAdminToken();
     if (!token) return;
-    if (token.startsWith("offline-") || token === "admin-session") {
-      setAuthed(true);
-      return;
-    }
     api("/api/auth/me", { token })
       .then((me) => setAuthed(me.role === "admin"))
-      .catch((err) => {
-        if (err.status === 500 || !err.status) {
-          setAuthed(true);
-        } else {
-          setAdminToken(null);
-        }
+      .catch(() => {
+        setAdminToken(null);
+        setAuthed(false);
       });
   }, []);
 

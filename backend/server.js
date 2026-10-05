@@ -25,8 +25,15 @@ const {
 } = require("./emailService");
 
 const PORT = Number(process.env.PORT) || 5000;
-const DATA_DIR = path.join(__dirname, "data");
-const UPLOAD_DIR = path.join(__dirname, "uploads");
+const DATA_DIR = process.env.APP_DATA_DIR
+  ? path.resolve(process.env.APP_DATA_DIR)
+  : path.join(__dirname, "data");
+const UPLOAD_DIR = process.env.APP_UPLOAD_DIR
+  ? path.resolve(process.env.APP_UPLOAD_DIR)
+  : process.env.APP_DATA_DIR
+    ? path.join(DATA_DIR, "uploads")
+    : path.join(__dirname, "uploads");
+const FRONTEND_BUILD_DIR = path.resolve(__dirname, "..", "frontend", "myapp", "build");
 const ADVOCATES_FILE = path.join(DATA_DIR, "advocates.json");
 const CLIENTS_FILE = path.join(DATA_DIR, "clients.json");
 const PAYMENTS_FILE = path.join(DATA_DIR, "payments.json");
@@ -116,9 +123,6 @@ function verifyToken(token) {
 function authFromRequest(request) {
   const header = request.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (token === "offline-admin-token" || token === "admin-session" || token === "default-admin-token") {
-    return { sub: "admin", role: "admin", email: ADMIN_EMAIL };
-  }
   return verifyToken(token);
 }
 
@@ -372,6 +376,72 @@ function serveUpload(request, response, urlPath) {
   fs.createReadStream(file).pipe(response);
 }
 
+function initializePersistentStorage() {
+  if (!process.env.APP_DATA_DIR) return;
+
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+  for (const filename of ["advocates.json", "clarityguide.json"]) {
+    const destination = path.join(DATA_DIR, filename);
+    const source = path.join(__dirname, "data", filename);
+    if (!fs.existsSync(destination) && fs.existsSync(source)) {
+      fs.copyFileSync(source, destination);
+    }
+  }
+
+  for (const filename of [
+    "clients.json",
+    "payments.json",
+    "admin_notifications.json",
+    "documentspurchase,json",
+    "documentspurchase.json",
+  ]) {
+    const destination = path.join(DATA_DIR, filename);
+    if (!fs.existsSync(destination)) fs.writeFileSync(destination, "[]\n", "utf8");
+  }
+
+  const bundledUploads = path.join(__dirname, "uploads");
+  if (fs.existsSync(bundledUploads)) {
+    for (const entry of fs.readdirSync(bundledUploads, { withFileTypes: true })) {
+      if (!entry.isFile()) continue;
+      const destination = path.join(UPLOAD_DIR, entry.name);
+      if (!fs.existsSync(destination)) {
+        fs.copyFileSync(path.join(bundledUploads, entry.name), destination);
+      }
+    }
+  }
+}
+
+function serveFrontendFile(response, filePath) {
+  const extension = path.extname(filePath).toLowerCase();
+  const contentTypes = {
+    ".css": "text/css; charset=utf-8",
+    ".doc": "application/msword",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".html": "text/html; charset=utf-8",
+    ".ico": "image/x-icon",
+    ".jpeg": "image/jpeg",
+    ".jpg": "image/jpeg",
+    ".js": "application/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".pdf": "application/pdf",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+    ".txt": "text/plain; charset=utf-8",
+    ".webp": "image/webp",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+  };
+  response.writeHead(200, {
+    "Content-Type": contentTypes[extension] || "application/octet-stream",
+    "Cache-Control": path.basename(filePath) === "index.html"
+      ? "no-cache"
+      : "public, max-age=31536000, immutable",
+  });
+  fs.createReadStream(filePath).pipe(response);
+}
+
 // ── HTTP plumbing ─────────────────────────────────────────────
 function corsHeaders(request) {
   const origin = request.headers.origin;
@@ -544,19 +614,7 @@ function adminLogin(payload) {
   if (!payload) throw new HttpError(400, "Missing credentials");
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || "");
-  const isEmailMatch =
-    email === ADMIN_EMAIL ||
-    email === "advocatehub.in@gmail.com" ||
-    email === "admin@advocatehub.in" ||
-    email === "admin@law4u.in" ||
-    email === "admin@gmail.com";
-  const isPasswordMatch =
-    verifyPassword(password, ADMIN_PASSWORD_HASH) ||
-    password === "Admin@123" ||
-    password === "admin123" ||
-    password === "admin";
-
-  if (!isEmailMatch || !isPasswordMatch) {
+  if (email !== ADMIN_EMAIL || !verifyPassword(password, ADMIN_PASSWORD_HASH)) {
     throw new HttpError(401, "Invalid admin email or password");
   }
   return { token: signToken({ sub: "admin", role: "admin" }), email: ADMIN_EMAIL || email };
@@ -1409,6 +1467,30 @@ async function route(request, response) {
     }
   }
 
+  if (method === "GET" && p.startsWith("/api/")) {
+    throw new HttpError(404, "Not found");
+  }
+
+  if (method === "GET") {
+    const decodedPath = decodeURIComponent(p).replace(/^\/+/, "");
+    const requestedFile = path.resolve(FRONTEND_BUILD_DIR, decodedPath || "index.html");
+    if (
+      requestedFile !== FRONTEND_BUILD_DIR &&
+      !requestedFile.startsWith(`${FRONTEND_BUILD_DIR}${path.sep}`)
+    ) {
+      throw new HttpError(404, "Not found");
+    }
+    if (fs.existsSync(requestedFile) && fs.statSync(requestedFile).isFile()) {
+      return serveFrontendFile(response, requestedFile);
+    }
+    if (/\.[a-z0-9]+$/i.test(path.basename(decodedPath))) {
+      throw new HttpError(404, "Not found");
+    }
+
+    const indexFile = path.join(FRONTEND_BUILD_DIR, "index.html");
+    if (fs.existsSync(indexFile)) return serveFrontendFile(response, indexFile);
+  }
+
   throw new HttpError(404, "Not found");
 }
 
@@ -1421,7 +1503,8 @@ const server = http.createServer((request, response) => {
   });
 });
 
+initializePersistentStorage();
 migratePasswords();
 server.listen(PORT, () => {
-  console.log(`AdvocateHub API running at http://localhost:${PORT}`);
+  console.log(`AdvocateHub running on port ${PORT}`);
 });

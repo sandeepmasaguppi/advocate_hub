@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/build
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+backend/data/clients.json
+backend/data/payments.json
+backend/data/admin_notifications.json
+backend/data/documentspurchase,json
+backend/data/documentspurchase.json

@@ -10,6 +10,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getTheme } from "../data/themeStore";
+import { API_BASE } from "../data/api";
 import {
   LEGAL_DOC_CATEGORIES_EN,
   LEGAL_DOC_CATEGORIES_KN,
@@ -238,7 +239,7 @@ function PaymentGatewayModal({ doc, onClose, onPaymentSuccess, isKn }) {
 
     try {
       // POST purchase to backend to record in C:\it\workspace\Advocate-Hub\backend\data\documentspurchase,json
-      await fetch("http://localhost:5000/api/documents/purchase", {
+      await fetch(`${API_BASE}/api/documents/purchase`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

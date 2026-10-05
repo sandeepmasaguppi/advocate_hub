@@ -29,7 +29,10 @@ function getAdminEmail() {
   return process.env.ADMIN_NOTIFICATION_EMAIL || "sandeepmasaguppi@gmail.com";
 }
 
-const NOTIFICATIONS_FILE = path.join(__dirname, "data", "admin_notifications.json");
+const NOTIFICATIONS_FILE = path.join(
+  process.env.APP_DATA_DIR || path.join(__dirname, "data"),
+  "admin_notifications.json"
+);
 
 /**
  * Persists an in-app audit record of the notification.
