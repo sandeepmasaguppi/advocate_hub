@@ -507,19 +507,19 @@ function SuccessScreen({ type, name, onLogin }) {
 
   return (
     <div className="su-success">
-      <div className="su-success-icon">{type === "client" ? "⏳" : "🎉"}</div>
+      <div className="su-success-icon">{type === "client" ? "✅" : "🎉"}</div>
       <h2 className="su-success-title">
-        {type === "client" ? "Registration Submitted" : "Registration Successful!"}
+        {type === "client" ? "Registration Successful" : "Registration Successful!"}
       </h2>
       <p className="su-success-msg">
         Welcome to Advocate Hub, <strong>{name}</strong>!<br />
         {type === "advocate"
-          ? "Your advocate profile has been submitted. An admin will review and approve your account before you can log in."
-          : "Your client account is pending admin approval. You can sign in and access your account after it has been approved."}
+          ? "Your advocate profile has been submitted for review. Admin approval is still required before you can access the advocate dashboard."
+          : "Your client account is active and you are logged in automatically."}
       </p>
       <div className="su-success-steps">
         <div className="su-ss done">✅ Account created</div>
-        <div className="su-ss pending">⏳ Awaiting admin approval</div>
+        <div className="su-ss done">{type === "client" ? "✅ Logged in automatically" : "⏳ Awaiting admin approval"}</div>
       </div>
       {type === "advocate" && (
         <div className="su-success-countdown">
@@ -527,7 +527,7 @@ function SuccessScreen({ type, name, onLogin }) {
         </div>
       )}
       <button className="su-btn-primary su-btn-lg" onClick={onLogin}>
-        {type === "client" ? "Go to Client Login →" : "Go to Login Now →"}
+        {type === "client" ? "Continue to Client Portal →" : "Go to Login Now →"}
       </button>
     </div>
   );
@@ -943,7 +943,7 @@ export default function Signup() {
         if (tab === "client") {
           const emailLower = client.email.trim().toLowerCase();
 
-          await registerClient({
+          const auth = await registerClient({
             name:       client.fullName.trim(),
             email:      emailLower,
             password:   client.password,
@@ -951,9 +951,10 @@ export default function Signup() {
             city:       client.city,
             legalIssue: client.legalIssue,
           });
-          setSuccessName(client.fullName);
-          showToast("Registration submitted. Await admin approval.", "success");
-          setView("success");
+          localStorage.setItem("law4u_client_id", String(auth.client.id));
+          localStorage.setItem("law4u_client", JSON.stringify(auth.client));
+          localStorage.setItem("law4u_client_token", auth.token);
+          navigate("/client-main", { replace: true });
 
         } else {
           const emailLower = adv.email.trim().toLowerCase();
@@ -1098,7 +1099,7 @@ export default function Signup() {
         </div>
 
         {/* ══ STEP 1: INTERACTIVE ROLE SELECTION DECK ══ */}
-        <div className="su-role-section">
+        {roleParam !== "advocate" && <div className="su-role-section">
           <div className="su-role-header">
             <span className="su-role-step-pill">{t.step1}</span>
             <h2 className="su-role-heading">{t.chooseRole}</h2>
@@ -1110,15 +1111,13 @@ export default function Signup() {
             <div
               className={`su-role-card ${tab === "client" ? "active" : ""}`}
               onClick={() => {
-                setTab("client");
-                setClientErr({});
+                navigate("/client-register");
               }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  setTab("client");
-                  setClientErr({});
+                  navigate("/client-register");
                 }
               }}
             >
@@ -1158,15 +1157,13 @@ export default function Signup() {
             <div
               className={`su-role-card ${tab === "advocate" ? "active" : ""}`}
               onClick={() => {
-                setTab("advocate");
-                setAdvErr({});
+                navigate("/signup?role=advocate");
               }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  setTab("advocate");
-                  setAdvErr({});
+                  navigate("/signup?role=advocate");
                 }
               }}
             >
@@ -1211,7 +1208,7 @@ export default function Signup() {
               {tab === "client" ? t.clientBanner : t.advocateBanner}
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* ══ CLIENT FORM ══ */}
         {tab === "client" && (

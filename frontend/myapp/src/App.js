@@ -6,6 +6,7 @@ import './App.css';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Signup from './pages/Signup';
+import ClientRegister from './pages/register';
 import Login from './pages/Login';
 import ClientLogin from './pages/clientlogin';
 import ClientMainPage from './pages/clientmainpage';
@@ -91,7 +92,8 @@ function App() {
         <Route path="/Partners" element={<Partners />} />
         <Route path="/partners" element={<Partners />} />
         <Route path="/admin" element={<Adminpage />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/signup" element={location.search.includes("role=client") ? <ClientRegister /> : <Signup key={location.search} />} />
+        <Route path="/client-register" element={<ClientRegister />} />
         <Route path="/login" element={<Login />} />
         <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/client-main" element={<ClientMainPage />} />

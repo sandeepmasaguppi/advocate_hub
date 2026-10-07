@@ -21,7 +21,7 @@ export function getLocalClients() {
 }
 
 export function registerClient(client) {
-  return api("/api/clients/register", { method: "POST", body: client });
+  return api("/api/auth/client/register", { method: "POST", body: client });
 }
 
 export async function createClient(client) {

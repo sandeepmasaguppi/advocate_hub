@@ -575,9 +575,10 @@ async function registerClient(payload, { byAdmin = false } = {}) {
     email,
     phone: payload.phone || "",
     city: payload.city || "",
+    legalIssue: payload.legalIssue || "",
     passwordHash: hashPassword(password),
     sessionVersion: 0,
-    status: byAdmin ? (payload.status || "approved") : "pending",
+    status: "approved",
     createdAt: new Date().toISOString(),
   };
   list.push(record);
@@ -614,15 +615,16 @@ function clientLogin(payload) {
   if (!client || !verifyPassword(payload.password, client.passwordHash)) {
     throw new HttpError(401, "Incorrect email or password");
   }
-  if (client.status !== "approved") {
-    const err = new HttpError(403, client.status === "rejected"
-      ? "Your client account was not approved. Contact support for details."
-      : "Your account is awaiting admin approval. Please check back later.");
-    err.extra = { status: client.status };
-    throw err;
-  }
   const { passwordHash, sessionVersion, ...safe } = client;
   const token = signToken({ sub: client.id, role: "client", ver: sessionVersion || 0 });
+  return { client: safe, token };
+}
+
+async function registerClientAndLogin(payload) {
+  const client = await registerClient(payload);
+  const stored = loadClients().find((c) => c.id === client.id);
+  const { passwordHash, sessionVersion, ...safe } = stored;
+  const token = signToken({ sub: safe.id, role: "client", ver: sessionVersion || 0 });
   return { client: safe, token };
 }
 
@@ -1225,6 +1227,7 @@ async function route(request, response) {
   if (method === "POST" && p === "/api/auth/advocate/login") return send(request, response, 200, advocateLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/admin/login") return send(request, response, 200, adminLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/client/login") return send(request, response, 200, clientLogin(await readBody(request)));
+  if (method === "POST" && p === "/api/auth/client/register") return send(request, response, 201, await registerClientAndLogin(await readBody(request)));
   if (method === "GET" && p === "/api/auth/me") {
     const auth = authFromRequest(request);
     if (!auth) throw new HttpError(401, "Not logged in");
@@ -1237,13 +1240,6 @@ async function route(request, response) {
     if (auth.role === "client") {
       const client = loadClients().find((c) => Number(c.id) === Number(auth.sub));
       if (!client) throw new HttpError(401, "Account no longer exists");
-      if (client.status !== "approved") {
-        const err = new HttpError(403, client.status === "rejected"
-          ? "Your client account was not approved. Contact support for details."
-          : "Your account is awaiting admin approval. Please check back later.");
-        err.extra = { status: client.status };
-        throw err;
-      }
       // token contains a `ver` we issue; ensure it matches server-side sessionVersion
       const tokenVer = Number(auth.ver || 0);
       const serverVer = Number(client.sessionVersion || 0);

@@ -15,6 +15,9 @@ import "./Register.css";
 // ── If your backend runs on a different origin/port, set it here ──
 // e.g. const API_BASE = "http://localhost:5000";
 const API_BASE = "";
+const CLIENT_SESSION_KEY = "law4u_client_id";
+const CLIENT_OBJECT_KEY = "law4u_client";
+const CLIENT_TOKEN_KEY = "law4u_client_token";
 
 // ── Data ─────────────────────────────────────────────────────
 const CITIES = [
@@ -129,18 +132,18 @@ function Select({ icon, error, children, ...props }) {
 function SuccessScreen({ name, onLogin }) {
   return (
     <div className="rg-success">
-      <div className="rg-success-icon">⏳</div>
-      <h2 className="rg-success-title">Registration Submitted</h2>
+      <div className="rg-success-icon">✅</div>
+      <h2 className="rg-success-title">Registration Successful</h2>
       <p className="rg-success-msg">
         Welcome to Advocate Hub, <strong>{name}</strong>!<br />
-        Your client account is pending admin approval. You can sign in after it has been approved.
+        Your client account is active and you are signed in automatically.
       </p>
       <div className="rg-success-steps">
         <div className="rg-ss done">✅ Account created</div>
-        <div className="rg-ss">⏳ Awaiting admin approval</div>
+        <div className="rg-ss done">✅ Logged in automatically</div>
       </div>
       <button className="rg-btn-primary rg-btn-lg" onClick={onLogin}>
-        Go to Client Login →
+        Continue to Client Portal →
       </button>
     </div>
   );
@@ -241,10 +244,17 @@ export default function Register() {
           setLoading(false);
           return;
         }
-
-        setSuccessName(client.fullName);
-        showToast("Account created successfully! 🎉", "success");
-        setView("success");
+        const remember = data.client && data.token;
+        if (remember) {
+          localStorage.setItem(CLIENT_SESSION_KEY, String(data.client.id));
+          localStorage.setItem(CLIENT_OBJECT_KEY, JSON.stringify(data.client));
+          localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
+        }
+        const requestedRedirect = new URLSearchParams(window.location.search).get("redirect");
+        const redirectPath = requestedRedirect && requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+          ? requestedRedirect
+          : "/client-main";
+        navigate(redirectPath, { replace: true });
       } catch (err) {
         console.error(err);
         showToast("Could not reach the server. Please try again.", "error");
@@ -254,7 +264,7 @@ export default function Register() {
     })();
   };
 
-  const goToLogin = () => navigate("/login");
+  const goToLogin = () => navigate("/client-login");
 
   if (view === "success") {
     return (
@@ -361,7 +371,7 @@ export default function Register() {
           </button>
 
           <p className="rg-login-link">
-            Already have an account? <Link to="/login">Sign in here</Link>
+            Already have an account? <Link to="/client-login">Sign in here</Link>
           </p>
         </form>
       </div>
