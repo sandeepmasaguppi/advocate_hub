@@ -58,6 +58,7 @@ function App() {
   const isAdvocatePortal = location.pathname === '/advocate-dashboard';
   const isAdvocateLogin = location.pathname === '/login';
   const isClientLogin = location.pathname === '/client-login';
+  const isSignupPage = location.pathname === '/signup' || location.pathname === '/client-register';
   const isClientPortal =
     location.pathname === '/client-dashboard' ||
     location.pathname === '/client-main' ||
@@ -66,7 +67,7 @@ function App() {
 
   return (
     <div className={`App ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
-      {!isAdminPortal && !isAdvocatePortal && !isAdvocateLogin && !isClientLogin && !isClientPortal && (
+      {!isAdminPortal && !isAdvocatePortal && !isAdvocateLogin && !isClientLogin && !isClientPortal && !isSignupPage && (
         <ErrorBoundary resetKey={location.pathname}>
           <Navbar />
         </ErrorBoundary>
@@ -93,7 +94,10 @@ function App() {
         <Route path="/partners" element={<Partners />} />
         <Route path="/admin" element={<Adminpage />} />
         <Route path="/signup" element={location.search.includes("role=client") ? <ClientRegister /> : <Signup key={location.search} />} />
+        <Route path="/signup/client" element={<ClientRegister />} />
+        <Route path="/signup/advocate" element={<Signup defaultTab="advocate" key="advocate" />} />
         <Route path="/client-register" element={<ClientRegister />} />
+        <Route path="/advocate-register" element={<Signup defaultTab="advocate" key="advocate" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/client-main" element={<ClientMainPage />} />

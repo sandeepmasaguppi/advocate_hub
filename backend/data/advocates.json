@@ -2100,5 +2100,33 @@
     "avatar": "/uploads/basavaraj-kotagi-91.jpg",
     "status": "approved",
     "passwordHash": "scrypt$10a2bbfde6489845bf1f5b6c418be9bb$0b7ff111c59d99ee5ec8bbfcfb86174631a7725553925b70efb90a5ad712edd010df4cc7344b837a61666b11fd7eedec40a20d92fa0024264eb17d385ebd9e34"
+  },
+  {
+    "id": 92,
+    "name": "Adv Sanotsh Tokallya",
+    "city": "Haveri",
+    "practiceArea": "Property Law",
+    "speciality": "Property Law",
+    "practiceAreas": [
+      "Property Law"
+    ],
+    "courtLevel": "District & Sessions Court",
+    "district": "Haveri",
+    "taluk": "Haveri",
+    "court": "Haveri District & Sessions Court",
+    "barCouncil": "Bar Council of Karnataka",
+    "barId": "BIT",
+    "experience": "3–5 years",
+    "rating": 0,
+    "cases": 0,
+    "fee": "",
+    "phone": "9876543234",
+    "email": "santoshchachadi47@gmail.com",
+    "languages": [],
+    "availability": "Available",
+    "bio": "HI",
+    "avatar": "/uploads/adv-sanotsh-tokallya-92.jpg",
+    "status": "approved",
+    "passwordHash": "scrypt$aa8332c434108d4257a7e503f70b0590$1f9dc724fe157111c20001e02315369f977dca13b22bb233010c622f1a8ba38c9c0cd48c7804db8fd0bac5f006c104df098dc973920720de9c829d53f2abd4bd"
   }
 ]

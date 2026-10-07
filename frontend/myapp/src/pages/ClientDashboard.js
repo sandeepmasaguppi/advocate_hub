@@ -371,8 +371,47 @@ export default function ClientDashboard() {
     return () => window.removeEventListener('storage', handler);
   }, [clientId, selected]);
 
+  // Emoji & File attachment states for Client chat
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const EMOJI_LIST = [
+    "😊", "😂", "🙏", "⚖️", "📜", "👍",
+    "🤝", "📁", "📑", "✅", "📍", "💼",
+    "📞", "✉️", "🎯", "⭐", "🔒", "💡"
+  ];
+
+  const handleInsertEmoji = (emojiStr) => {
+    setMessage((prev) => prev + emojiStr);
+    setShowEmojiPicker(false);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const isImg = file.type.startsWith("image/");
+    const sizeFormatted = file.size > 1024 * 1024
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+      : `${Math.round(file.size / 1024)} KB`;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPendingAttachment({
+        fileName: file.name,
+        fileSize: sizeFormatted,
+        fileType: file.type,
+        dataUrl: event.target.result,
+        isImage: isImg,
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   const sendMessage = () => {
-    if (!message.trim() || !selected) return;
+    if ((!message.trim() && !pendingAttachment) || !selected) return;
     const textToSend = message.trim();
 
     // Check if client has already paid the one-time ₹10 fee for this specific advocate
@@ -387,10 +426,21 @@ export default function ClientDashboard() {
 
   const executeSendMessage = (textToSend) => {
     const key = `chat_${clientId}_${selected.id}`;
-    const next = [...messages, { from: "client", text: textToSend, t: new Date().toISOString(), clientName: clientObj?.name || undefined }];
+    const newMsgObj = {
+      from: "client",
+      text: textToSend,
+      t: new Date().toISOString(),
+      clientName: clientObj?.name || undefined
+    };
+    if (pendingAttachment) {
+      newMsgObj.attachment = pendingAttachment;
+    }
+    const next = [...messages, newMsgObj];
     localStorage.setItem(key, JSON.stringify(next));
     setMessages(next);
     setMessage("");
+    setPendingAttachment(null);
+    setShowEmojiPicker(false);
 
     // Remember this advocate as active chat
     if (clientId && selected) {
@@ -600,41 +650,12 @@ export default function ClientDashboard() {
                     onChange={handleAvatarUpload}
                   />
                 </label>
-
-                {/* Preset Avatars Selector */}
-                <div className="wa-pfd-presets-bar">
-                  {AVATAR_PRESETS.map((preset, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      className={`wa-pfd-preset-circle ${clientAvatar === preset ? "selected" : ""}`}
-                      onClick={() => handleSelectClientAvatar(preset)}
-                      title={`Avatar ${idx + 1}`}
-                    >
-                      <img src={assetUrl(preset)} alt={`Preset ${idx + 1}`} />
-                    </button>
-                  ))}
-                  <label className="wa-pfd-upload-btn" title={lang === "kn" ? "ಕಸ್ಟಮ್ ಫೋಟೋ ಅಪ್‌ಲೋಡ್" : "Upload custom photo"}>
-                    📷
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      onChange={handleAvatarUpload}
-                    />
-                  </label>
-                </div>
               </div>
 
               {/* Card 1: Your Name */}
               <div className="wa-pfd-card">
                 <div className="wa-pfd-label">{lang === "kn" ? "ನಿಮ್ಮ ಹೆಸರು" : "Your name"}</div>
                 <div className="wa-pfd-value">{clientObj?.name || "Client"}</div>
-                <div className="wa-pfd-caption">
-                  {lang === "kn"
-                    ? "ಇದು ನಿಮ್ಮ ಬಳಕೆದಾರ ಹೆಸರು ಅಥವಾ ಪಿನ್ ಅಲ್ಲ. ಈ ಹೆಸರು ನಿಮ್ಮ ವಕೀಲರಿಗೆ ಗೋಚರಿಸುತ್ತದೆ."
-                    : "This is not your username or PIN. This name will be visible to your advocates."}
-                </div>
               </div>
 
               {/* Card 2: About & Account */}
@@ -642,14 +663,6 @@ export default function ClientDashboard() {
                 <div className="wa-pfd-label">{lang === "kn" ? "ವಿವರಣೆ (About)" : "About"}</div>
                 <div className="wa-pfd-value">
                   {lang === "kn" ? "⚖️ ಸಮಾಲೋಚನೆಗಾಗಿ ಸಿದ್ಧರಾಗಿರುವ ಕ್ಲೈಂಟ್ ಖಾತೆ" : "⚖️ Ready for Legal Consultations & Advice"}
-                </div>
-                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "13px", color: "var(--wa-text-secondary)" }}>
-                    ✉️ {clientObj?.email || "client@advocatehub.in"}
-                  </span>
-                  <span className="wa-cd-badge">
-                    {lang === "kn" ? "ಕ್ಲೈಂಟ್ ಖಾತೆ" : "Client Account"}
-                  </span>
                 </div>
               </div>
 
@@ -699,13 +712,7 @@ export default function ClientDashboard() {
               <div className="wa-pfd-card">
                 <div className="wa-pfd-label">{lang === "kn" ? "ತ್ವರಿತ ಕ್ರಿಯೆಗಳು" : "Navigation & Actions"}</div>
                 <div className="wa-pfd-actions">
-                  <button
-                    type="button"
-                    className="wa-pfd-btn"
-                    onClick={() => setClientMenuOpen(false)}
-                  >
-                    💬 {lang === "kn" ? "ವಕೀಲರ ಚಾಟ್‌ಗೆ ಹಿಂತಿರುಗಿ" : "Back to Advocates Chat"}
-                  </button>
+                  
                   <button
                     type="button"
                     className="wa-pfd-btn"
@@ -714,18 +721,9 @@ export default function ClientDashboard() {
                       navigate("/client-main");
                     }}
                   >
-                    🏢 {lang === "kn" ? "ಕ್ಲೈಂಟ್ ಸೇವಾ ಕೇಂದ್ರ & ಸ್ಪಷ್ಟತೆ" : "Client Main Portal & Clarity Hub"}
+                     {lang === "kn" ? "ಕ್ಲೈಂಟ್ ಸೇವಾ ಕೇಂದ್ರ & ಸ್ಪಷ್ಟತೆ" : "Client Main Portal & Clarity Hub"}
                   </button>
-                  <button
-                    type="button"
-                    className="wa-pfd-btn"
-                    onClick={() => {
-                      setClientMenuOpen(false);
-                      navigate("/");
-                    }}
-                  >
-                    🏠 {lang === "kn" ? "ಮುಖಪುಟ (Home)" : "Platform Home"}
-                  </button>
+                 
                   <button
                     type="button"
                     className="wa-pfd-btn wa-pfd-btn-logout"
@@ -1171,7 +1169,37 @@ export default function ClientDashboard() {
             messages.map((m, i) => (
               <div key={i} className={`wa-message-wrapper ${m.from === "client" ? "outgoing" : "incoming"}`}>
                 <div className="wa-bubble-container">
-                  <div className="wa-bubble-text">{m.text}</div>
+                  {m.attachment && (
+                    <div className="wa-msg-attachment-box" style={{ marginBottom: m.text ? "8px" : "4px" }}>
+                      {m.attachment.isImage ? (
+                        <div style={{ borderRadius: "8px", overflow: "hidden", marginBottom: "4px" }}>
+                          <img
+                            src={m.attachment.dataUrl}
+                            alt={m.attachment.fileName}
+                            style={{ maxWidth: "100%", maxHeight: "240px", objectFit: "cover", display: "block" }}
+                          />
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(0,0,0,0.06)", padding: "8px 12px", borderRadius: "8px" }}>
+                          <span style={{ fontSize: "24px" }}>📄</span>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontWeight: "700", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {m.attachment.fileName}
+                            </div>
+                            <div style={{ fontSize: "11px", opacity: 0.75 }}>{m.attachment.fileSize}</div>
+                          </div>
+                        </div>
+                      )}
+                      <a
+                        href={m.attachment.dataUrl}
+                        download={m.attachment.fileName}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", color: m.from === "client" ? "#008069" : "#2563eb", fontWeight: "700", marginTop: "4px", textDecoration: "none" }}
+                      >
+                        ⬇ Download {m.attachment.fileName}
+                      </a>
+                    </div>
+                  )}
+                  {m.text && <div className="wa-bubble-text">{m.text}</div>}
                   <div className="wa-bubble-meta"><div className="wa-bubble-time">{new Date(m.t).toLocaleString()}</div></div>
                 </div>
               </div>
@@ -1179,8 +1207,107 @@ export default function ClientDashboard() {
           )}
         </div>
 
-        <div className="wa-input-footer">
-          <div className="wa-composer-form">
+        {/* Pending Attachment Preview Banner */}
+        {pendingAttachment && (
+          <div className="wa-client-attachment-preview" style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "8px 16px",
+            background: "#f1f5f9",
+            borderTop: "1px solid #cbd5e1",
+            fontSize: "13px"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+              <span>{pendingAttachment.isImage ? "🖼️ Image Attachment:" : "📄 Document Attachment:"}</span>
+              <strong style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "260px", color: "#0f172a" }}>
+                {pendingAttachment.fileName}
+              </strong>
+              <span style={{ color: "#64748b", fontSize: "11px" }}>({pendingAttachment.fileSize})</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPendingAttachment(null)}
+              style={{ background: "transparent", border: "none", cursor: "pointer", color: "#dc2626", fontWeight: "bold", fontSize: "16px" }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Emoji Picker Popover Overlay */}
+        {showEmojiPicker && (
+          <div className="wa-client-emoji-popover" style={{
+            position: "absolute",
+            bottom: "65px",
+            left: "14px",
+            background: "#ffffff",
+            border: "1px solid #cbd5e1",
+            borderRadius: "14px",
+            padding: "10px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.18)",
+            display: "grid",
+            gridTemplateColumns: "repeat(6, 1fr)",
+            gap: "6px",
+            zIndex: 100,
+            width: "240px"
+          }}>
+            {EMOJI_LIST.map((emo, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleInsertEmoji(emo)}
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  padding: "6px",
+                  fontSize: "18px",
+                  cursor: "pointer",
+                  lineHeight: "1"
+                }}
+              >
+                {emo}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="wa-input-footer" style={{ position: "relative" }}>
+          {/* Hidden Native File Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleFileSelect}
+            accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx"
+          />
+
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {/* Emoji Trigger Button */}
+            <button
+              type="button"
+              className="wa-action-btn wa-emoji-btn"
+              onClick={() => setShowEmojiPicker((prev) => !prev)}
+              title="Add Emoji"
+              style={{ background: "transparent", border: "none", fontSize: "20px", cursor: "pointer", padding: "6px", borderRadius: "50%" }}
+            >
+              😊
+            </button>
+
+            {/* File Attachment Trigger Button */}
+            <button
+              type="button"
+              className="wa-action-btn wa-attach-btn"
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              title="Attach Document / File"
+              style={{ background: "transparent", border: "none", fontSize: "20px", cursor: "pointer", padding: "6px", borderRadius: "50%" }}
+            >
+              📎
+            </button>
+          </div>
+
+          <div className="wa-composer-form" style={{ flex: 1 }}>
             <input
               className="wa-chat-input"
               value={message}
@@ -1202,7 +1329,7 @@ export default function ClientDashboard() {
               }
             />
           </div>
-          <button className={`wa-send-action-btn ${message.trim() ? 'can-send' : ''}`} onClick={sendMessage} disabled={!selected}>Send</button>
+          <button className={`wa-send-action-btn ${(message.trim() || pendingAttachment) ? 'can-send' : ''}`} onClick={sendMessage} disabled={!selected}>Send</button>
         </div>
       </main>
       </div>

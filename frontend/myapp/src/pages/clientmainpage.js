@@ -172,13 +172,13 @@ const I18N = {
     profileSettings: "Profile & Settings",
     hubBadge: "🌟 Client Services Hub",
     welcome: "Welcome",
-    hubSubtitle: "Select an option below to proceed. Connect directly with legal experts or explore our comprehensive case clarity guide to understand which advocate fits your legal matter.",
+    hubSubtitle: "Choose an below option to proceed.",
     card1Tag: "Direct Communication",
     card1Title: "Chat with Advocates",
     card1Desc: "Browse approved legal practitioners, ask real-time questions, discuss your case details, and get professional advice directly through our secure chat.",
     card1Btn: "Open Advocate Chat →",
     card2Tag: "Case Clarity Purpose",
-    card2Title: "Advocate & Case Clarity",
+    card2Title: "Case Clarity & Advocate Matching",
     card2Desc: "Confused about laws, accused parties, or who to hire? Review our legal clarity guide with practical examples to pinpoint the exact law and advocate specialization you need.",
     card2Btn: "View Clarity Guide →",
     backBtn: "← Back to Main Menu",
@@ -736,8 +736,9 @@ export default function ClientMainPage() {
   }, [baCategory, baSearch]);
 
   const handleDownloadActPdf = (act) => {
+    const totalSecs = act.sectionsCount || (Array.isArray(act.sections) ? act.sections.length : (act.sections || 0));
     const blob = new Blob([
-      `ADVOCATES HUB — INDIAN BARE ACTS\n\nTitle: ${act.title}\nShort Name: ${act.shortName}\nCategory: ${act.category}\nYear: ${act.year}\nSections: ${act.sections}\n\nSummary:\n${act.desc}\n\n---\nFull statutory enactment reference text. Provided by Advocates Hub Legal Library.`
+      `ADVOCATES HUB — INDIAN BARE ACTS\n\nTitle: ${act.title}\nShort Name: ${act.shortName}\nCategory: ${act.category}\nYear: ${act.year}\nSections: ${totalSecs}\n\nSummary:\n${act.desc}\n\n---\nFull statutory enactment reference text. Provided by Advocates Hub Legal Library.`
     ], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -750,6 +751,9 @@ export default function ClientMainPage() {
 
   const sampleSections = useMemo(() => {
     if (!baSelectedAct) return [];
+    if (Array.isArray(baSelectedAct.sections) && baSelectedAct.sections.length > 0) {
+      return baSelectedAct.sections;
+    }
     return [
       { no: 1, title: "Short title, extent and commencement", content: `(1) This Act may be called the ${baSelectedAct.title}.\n(2) It extends to the whole of India.\n(3) It shall come into force on such date as the Central Government may, by notification in the Official Gazette, appoint.` },
       { no: 2, title: "Definitions and Interpretations", content: `In this Act, unless the context otherwise requires—\n\n(a) "appropriate Government" means—\n    (i) in relation to a matter concerning the Union territory, the Central Government;\n    (ii) in relation to a matter concerning a State, the State Government;\n\n(b) "court" means the court referred to in the Code of Criminal/Civil Procedure;\n\n(c) "legal entity" includes individuals, registered societies, and incorporated companies.` },
@@ -996,301 +1000,7 @@ export default function ClientMainPage() {
       <header className="cmp-navbar">
         <div className="cmp-brand" onClick={backToHub} title="Go to Client Hub">
           <BrandLogo size={34} />
-          <div className="cmp-brand-title">
-            Advocates <span>Hub</span>
-          </div>
           <span className="cmp-brand-portal-badge">{t.portalTitle}</span>
-        </div>
-
-        {/* Center Navigation Links (Desktop) */}
-        <nav className="cmp-nav-links" aria-label="Portal Navigation">
-          <button
-            type="button"
-            className={`cmp-nav-link ${activeView === "hub" ? "active" : ""}`}
-            onClick={backToHub}
-          >
-            <span>🏠 {t.navHub}</span>
-          </button>
-          <button
-            type="button"
-            className="cmp-nav-link"
-            onClick={navigateToChat}
-          >
-            <span>💬 {t.navChat}</span>
-          </button>
-          <button
-            type="button"
-            className={`cmp-nav-link ${activeView === "clarity" ? "active" : ""}`}
-            onClick={openClarity}
-          >
-            <span>⚖️ {t.navClarity}</span>
-          </button>
-          <button
-            type="button"
-            className={`cmp-nav-link ${activeView === "find-lawyers" ? "active" : ""}`}
-            onClick={() => openSubView("find-lawyers")}
-          >
-            <span>🔍 {t.navFind}</span>
-          </button>
-        </nav>
-
-        <div className="cmp-nav-actions">
-          {/* Direct 1-Click Language Toggle */}
-          <button
-            type="button"
-            className="cmp-quick-lang-btn"
-            onClick={() => {
-              const nextLang = lang === "en" ? "kn" : "en";
-              setLang(nextLang);
-              localStorage.setItem(LANG_KEY, nextLang);
-            }}
-            title="Switch Language (English / ಕನ್ನಡ)"
-          >
-            <span>🌐 {lang === "en" ? "ಕನ್ನಡ" : "English"}</span>
-          </button>
-
-          {/* Direct 1-Click Theme Toggle */}
-          <button
-            type="button"
-            className="cmp-quick-theme-btn"
-            onClick={() => handleThemeChange(theme === "dark" ? "light" : "dark")}
-            title="Toggle Light / Dark Theme"
-            aria-label="Toggle Theme"
-          >
-            {theme === "dark" ? "☀️" : "🌙"}
-          </button>
-
-          {/* Right-end Profile Avatar Button & Dropdown Menu Tab */}
-          <div className="cmp-avatar-wrap" ref={avatarMenuRef}>
-            <button
-              type="button"
-              className={`cmp-avatar-btn ${avatarTabOpen ? "open" : ""}`}
-              onClick={() => setAvatarTabOpen((prev) => !prev)}
-              aria-expanded={avatarTabOpen}
-              title={t.profileSettings}
-            >
-              <div className="cmp-avatar-circle">
-                {avatarUrl ? (
-                  <img
-                    src={assetUrl(avatarUrl)}
-                    alt={clientObj?.name || "Client"}
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                      if (e.currentTarget.parentElement) {
-                        e.currentTarget.parentElement.innerText = (clientObj?.name || "C").charAt(0).toUpperCase();
-                      }
-                    }}
-                  />
-                ) : (
-                  (clientObj?.name || "C").charAt(0).toUpperCase()
-                )}
-              </div>
-              <span className="cmp-avatar-name">{clientObj?.name || "Client"}</span>
-              <span className="cmp-avatar-caret">▼</span>
-            </button>
-
-            {avatarTabOpen && (
-              <div className="cmp-avatar-tab">
-                {/* Header with Photo & Details */}
-                <div className="cmp-tab-header">
-                  <div className="cmp-tab-avatar-wrap">
-                    <div className="cmp-tab-avatar">
-                      {avatarUrl ? (
-                        <img
-                          src={assetUrl(avatarUrl)}
-                          alt={clientObj?.name || "Client"}
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                            if (e.currentTarget.parentElement) {
-                              e.currentTarget.parentElement.innerText = (clientObj?.name || "C").charAt(0).toUpperCase();
-                            }
-                          }}
-                        />
-                      ) : (
-                        (clientObj?.name || "C").charAt(0).toUpperCase()
-                      )}
-                    </div>
-                  </div>
-                  <div className="cmp-tab-info">
-                    <div className="cmp-tab-name">{clientObj?.name || "Client"}</div>
-                    <div className="cmp-tab-email">{clientObj?.email || "client@advocatehub.in"}</div>
-                    <span className="cmp-tab-badge">{t.clientRole}</span>
-                  </div>
-                </div>
-
-                {/* Theme Selector: Dark and White/Light Theme */}
-                <div className="cmp-tab-section">
-                  <div className="cmp-tab-label">{t.theme}</div>
-                  <div className="cmp-segmented-control">
-                    <button
-                      type="button"
-                      className={`cmp-seg-btn ${theme === "light" ? "active" : ""}`}
-                      onClick={() => handleThemeChange("light")}
-                    >
-                      {t.lightTheme}
-                    </button>
-                    <button
-                      type="button"
-                      className={`cmp-seg-btn ${theme === "dark" ? "active" : ""}`}
-                      onClick={() => handleThemeChange("dark")}
-                    >
-                      {t.darkTheme}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Language Selector: English and Kannada */}
-                <div className="cmp-tab-section">
-                  <div className="cmp-tab-label">{t.language}</div>
-                  <div className="cmp-segmented-control">
-                    <button
-                      type="button"
-                      className={`cmp-seg-btn ${lang === "en" ? "active" : ""}`}
-                      onClick={() => {
-                        setLang("en");
-                        localStorage.setItem(LANG_KEY, "en");
-                      }}
-                    >
-                      English
-                    </button>
-                    <button
-                      type="button"
-                      className={`cmp-seg-btn ${lang === "kn" ? "active" : ""}`}
-                      onClick={() => {
-                        setLang("kn");
-                        localStorage.setItem(LANG_KEY, "kn");
-                      }}
-                    >
-                      ಕನ್ನಡ
-                    </button>
-                  </div>
-                </div>
-
-                {/* Avatar Selection: Presets + Upload */}
-                <div className="cmp-tab-section">
-                  <div className="cmp-tab-label">{t.chooseAvatar}</div>
-                  <div className="cmp-avatar-presets">
-                    {AVATAR_PRESETS.map((preset, idx) => (
-                      <button
-                        type="button"
-                        key={idx}
-                        className={`cmp-preset-circle ${avatarUrl === preset ? "selected" : ""}`}
-                        onClick={() => handleSelectAvatar(preset)}
-                        title={`Select Avatar ${idx + 1}`}
-                      >
-                        <img src={assetUrl(preset)} alt={`Preset ${idx + 1}`} />
-                      </button>
-                    ))}
-                    <label className="cmp-upload-label" title={t.uploadPhoto}>
-                      📷
-                      <input
-                        type="file"
-                        accept="image/*"
-                        style={{ display: "none" }}
-                        onChange={handleAvatarUpload}
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Navigation Links */}
-                <div className="cmp-tab-links">
-                  <button
-                    type="button"
-                    className="cmp-tab-link-btn"
-                    onClick={() => {
-                      setAvatarTabOpen(false);
-                      backToHub();
-                    }}
-                  >
-                    🏠 {lang === "kn" ? "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ (Dashboard)" : "Client Dashboard"}
-                  </button>
-                  <button
-                    type="button"
-                    className="cmp-tab-link-btn"
-                    onClick={() => {
-                      setAvatarTabOpen(false);
-                      navigateToChat();
-                    }}
-                  >
-                    {t.chatNav}
-                  </button>
-                  <button
-                    type="button"
-                    className="cmp-tab-link-btn"
-                    onClick={() => {
-                      setAvatarTabOpen(false);
-                      openClarity();
-                    }}
-                  >
-                    {t.clarityNav}
-                  </button>
-                  <button
-                    type="button"
-                    className="cmp-tab-link-btn"
-                    onClick={() => {
-                      setAvatarTabOpen(false);
-                      openSubView("find-lawyers");
-                    }}
-                  >
-                    🔍 {t.qs1Title}
-                  </button>
-                  <button
-                    type="button"
-                    className="cmp-tab-link-btn"
-                    onClick={() => {
-                      setAvatarTabOpen(false);
-                      openSubView("ai-assistant");
-                    }}
-                  >
-                    🤖 {t.qs2Title}
-                  </button>
-                  <button
-                    type="button"
-                    className="cmp-tab-link-btn"
-                    onClick={() => {
-                      setAvatarTabOpen(false);
-                      openSubView("bare-acts");
-                    }}
-                  >
-                    📜 {t.qs3Title}
-                  </button>
-                  <button
-                    type="button"
-                    className="cmp-tab-link-btn"
-                    onClick={() => {
-                      setAvatarTabOpen(false);
-                      openSubView("documents");
-                    }}
-                  >
-                    📝 {t.qs4Title}
-                  </button>
-                  <button
-                    type="button"
-                    className="cmp-tab-link-btn"
-                    onClick={() => {
-                      setAvatarTabOpen(false);
-                      navigate("/");
-                    }}
-                  >
-                    🏛️ {lang === "kn" ? "ಮುಖಪುಟ (Home)" : "Platform Home"}
-                  </button>
-                </div>
-
-                {/* Logout Button */}
-                <button
-                  type="button"
-                  className="cmp-tab-logout-btn"
-                  onClick={() => {
-                    setAvatarTabOpen(false);
-                    handleLogout();
-                  }}
-                >
-                  🚪 {t.logout}
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </header>
 
@@ -1314,23 +1024,6 @@ export default function ClientMainPage() {
                 👋
               </h1>
               <p className="cmp-subtitle">{t.hubSubtitle}</p>
-
-              <div className="cmp-hero-trust-bar">
-                <div className="cmp-trust-item">
-                  <span className="cmp-trust-icon">🔒</span>
-                  <span>{t.heroTrust1}</span>
-                </div>
-                <div className="cmp-trust-sep" />
-                <div className="cmp-trust-item">
-                  <span className="cmp-trust-icon">⚡</span>
-                  <span>{t.heroTrust2}</span>
-                </div>
-                <div className="cmp-trust-sep" />
-                <div className="cmp-trust-item">
-                  <span className="cmp-trust-icon">📚</span>
-                  <span>{t.heroTrust3}</span>
-                </div>
-              </div>
             </section>
 
             <div className="cmp-cards-grid">
@@ -2166,7 +1859,7 @@ export default function ClientMainPage() {
 
                   <div className="cmp-ba-meta">
                     <span>📅 {act.year}</span>
-                    <span>📋 {act.sections} Sections</span>
+                    <span>📋 {act.sectionsCount || (Array.isArray(act.sections) ? act.sections.length : (act.sections || 0))} Sections</span>
                     <span
                       className="cmp-ba-cat"
                       style={{
@@ -2317,7 +2010,7 @@ export default function ClientMainPage() {
                 </span>
                 <h3>{baSelectedAct.title}</h3>
                 <div className="cmp-modal-meta">
-                  Year: {baSelectedAct.year} · {baSelectedAct.sections} Sections · {baSelectedAct.category}
+                  Year: {baSelectedAct.year} · {baSelectedAct.sectionsCount || (Array.isArray(baSelectedAct.sections) ? baSelectedAct.sections.length : (baSelectedAct.sections || 0))} Sections · {baSelectedAct.category}
                 </div>
               </div>
               <button
@@ -2343,7 +2036,7 @@ export default function ClientMainPage() {
                   </button>
                 ))}
                 <div className="cmp-sidebar-more">
-                  + {baSelectedAct.sections - 4} more statutory sections available
+                  + {Math.max(0, (baSelectedAct.sectionsCount || (Array.isArray(baSelectedAct.sections) ? baSelectedAct.sections.length : (baSelectedAct.sections || 0))) - sampleSections.length)} more statutory sections available
                 </div>
               </div>
 
@@ -2447,6 +2140,216 @@ export default function ClientMainPage() {
           </div>
         </div>
       )}
+
+      {/* ========================================================
+         WHATSAPP-STYLE BOTTOM NAVIGATION BAR
+         Native App Bottom Navigation Bar
+         ======================================================== */}
+      <nav className="cmp-wa-bottom-navbar" aria-label="WhatsApp-Style Bottom Navigation">
+        <div className="cmp-wa-nav-container">
+          {/* 1. Hub / Dashboard */}
+          <button
+            type="button"
+            className={`cmp-wa-nav-tab ${activeView === "hub" ? "active" : ""}`}
+            onClick={backToHub}
+          >
+            <div className="cmp-wa-tab-pill">
+              <span className="cmp-wa-tab-icon">🏠</span>
+            </div>
+            <span className="cmp-wa-tab-label">{t.navHub}</span>
+          </button>
+
+
+          {/* 3. Clarity Guide */}
+          <button
+            type="button"
+            className={`cmp-wa-nav-tab ${activeView === "clarity" ? "active" : ""}`}
+            onClick={openClarity}
+          >
+            <div className="cmp-wa-tab-pill">
+              <span className="cmp-wa-tab-icon">⚖️</span>
+            </div>
+            <span className="cmp-wa-tab-label">{t.navClarity}</span>
+          </button>
+
+          {/* 5. Language Switcher */}
+          <button
+            type="button"
+            className="cmp-wa-nav-tab"
+            onClick={() => {
+              const nextLang = lang === "en" ? "kn" : "en";
+              setLang(nextLang);
+              localStorage.setItem(LANG_KEY, nextLang);
+            }}
+            title="Switch Language (English / ಕನ್ನಡ)"
+          >
+            <div className="cmp-wa-tab-pill">
+              <span className="cmp-wa-tab-icon">🌐</span>
+            </div>
+            <span className="cmp-wa-tab-label">{lang === "en" ? "ಕನ್ನಡ" : "English"}</span>
+          </button>
+
+          {/* 6. Theme Switcher */}
+          <button
+            type="button"
+            className="cmp-wa-nav-tab"
+            onClick={() => handleThemeChange(theme === "dark" ? "light" : "dark")}
+            title="Toggle Light / Dark Theme"
+          >
+            <div className="cmp-wa-tab-pill">
+              <span className="cmp-wa-tab-icon">{theme === "dark" ? "☀️" : "🌙"}</span>
+            </div>
+            <span className="cmp-wa-tab-label">{theme === "dark" ? "Light" : "Dark"}</span>
+          </button>
+
+          {/* 7. Profile Avatar Button & Menu */}
+          <div className="cmp-avatar-wrap cmp-wa-avatar-wrap" ref={avatarMenuRef}>
+            <button
+              type="button"
+              className={`cmp-avatar-btn cmp-wa-avatar-btn ${avatarTabOpen ? "open" : ""}`}
+              onClick={() => setAvatarTabOpen((prev) => !prev)}
+              aria-expanded={avatarTabOpen}
+              title={t.profileSettings}
+            >
+              <div className="cmp-avatar-circle">
+                {avatarUrl ? (
+                  <img
+                    src={assetUrl(avatarUrl)}
+                    alt={clientObj?.name || "Client"}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      if (e.currentTarget.parentElement) {
+                        e.currentTarget.parentElement.innerText = (clientObj?.name || "C").charAt(0).toUpperCase();
+                      }
+                    }}
+                  />
+                ) : (
+                  (clientObj?.name || "C").charAt(0).toUpperCase()
+                )}
+              </div>
+              <span className="cmp-avatar-name">{}</span>
+              <span className="cmp-avatar-caret">▲</span>
+            </button>
+
+            {avatarTabOpen && (
+              <div className="cmp-avatar-tab cmp-avatar-tab-up">
+                {/* Header with Photo & Details */}
+                <div className="cmp-tab-header">
+                  <div className="cmp-tab-avatar-wrap">
+                    <div className="cmp-tab-avatar">
+                      {avatarUrl ? (
+                        <img
+                          src={assetUrl(avatarUrl)}
+                          alt={clientObj?.name || "Client"}
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            if (e.currentTarget.parentElement) {
+                              e.currentTarget.parentElement.innerText = (clientObj?.name || "C").charAt(0).toUpperCase();
+                            }
+                          }}
+                        />
+                      ) : (
+                        (clientObj?.name || "C").charAt(0).toUpperCase()
+                      )}
+                    </div>
+                  </div>
+                  <div className="cmp-tab-info">
+                    <div className="cmp-tab-name">{clientObj?.name || "Client"}</div>
+                    <div className="cmp-tab-email">{clientObj?.email || "client@advocatehub.in"}</div>
+                    <span className="cmp-tab-badge">{t.clientRole}</span>
+                  </div>
+                </div>
+
+                {/* Theme Selector: Dark and White/Light Theme */}
+                <div className="cmp-tab-section">
+                  <div className="cmp-tab-label">{t.theme}</div>
+                  <div className="cmp-segmented-control">
+                    <button
+                      type="button"
+                      className={`cmp-seg-btn ${theme === "light" ? "active" : ""}`}
+                      onClick={() => handleThemeChange("light")}
+                    >
+                      {t.lightTheme}
+                    </button>
+                    <button
+                      type="button"
+                      className={`cmp-seg-btn ${theme === "dark" ? "active" : ""}`}
+                      onClick={() => handleThemeChange("dark")}
+                    >
+                      {t.darkTheme}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Language Selector: English and Kannada */}
+                <div className="cmp-tab-section">
+                  <div className="cmp-tab-label">{t.language}</div>
+                  <div className="cmp-segmented-control">
+                    <button
+                      type="button"
+                      className={`cmp-seg-btn ${lang === "en" ? "active" : ""}`}
+                      onClick={() => {
+                        setLang("en");
+                        localStorage.setItem(LANG_KEY, "en");
+                      }}
+                    >
+                      English
+                    </button>
+                    <button
+                      type="button"
+                      className={`cmp-seg-btn ${lang === "kn" ? "active" : ""}`}
+                      onClick={() => {
+                        setLang("kn");
+                        localStorage.setItem(LANG_KEY, "kn");
+                      }}
+                    >
+                      ಕನ್ನಡ
+                    </button>
+                  </div>
+                </div>
+
+                {/* Avatar Selection: Presets + Upload */}
+                <div className="cmp-tab-section">
+                  <div className="cmp-tab-label">{t.chooseAvatar}</div>
+                  <div className="cmp-avatar-presets">
+                    {AVATAR_PRESETS.map((preset, idx) => (
+                      <button
+                        type="button"
+                        key={idx}
+                        className={`cmp-preset-circle ${avatarUrl === preset ? "selected" : ""}`}
+                        onClick={() => handleSelectAvatar(preset)}
+                        title={`Select Avatar ${idx + 1}`}
+                      >
+                        <img src={assetUrl(preset)} alt={`Preset ${idx + 1}`} />
+                      </button>
+                    ))}
+                    <label className="cmp-upload-label" title={t.uploadPhoto}>
+                      📷
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={handleAvatarUpload}
+                      />
+                    </label>
+                  </div>
+                </div>
+                {/* Logout Button */}
+                <button
+                  type="button"
+                  className="cmp-tab-logout-btn"
+                  onClick={() => {
+                    setAvatarTabOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  🚪 {t.logout}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
     </div>
   );
 }

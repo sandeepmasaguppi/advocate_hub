@@ -6,9 +6,12 @@ module.exports = function (app) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "X-Requested-With, content-type, Authorization");
-    // Remove headers that prevent embedding in mobile simulator extensions
+    // Explicitly set permissive Content-Security-Policy so scripts & simulators are never blocked
+    res.setHeader(
+      "Content-Security-Policy",
+      "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *; font-src * data:; media-src *; frame-src *;"
+    );
     res.removeHeader("X-Frame-Options");
-    res.removeHeader("Content-Security-Policy");
     next();
   });
 };

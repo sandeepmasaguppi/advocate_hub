@@ -36,7 +36,6 @@ const PRACTICE_THEMES = {
 
 const I18N = {
   en: {
-    heroBadge: "✨ VERIFIED LEGAL COUNSEL & DIRECT CONSULTATION",
     title: "Talk to a",
     titleHighlight: "Verified Advocate",
     subtitle: "Connect directly with verified Advocates from Karnataka High Court and District Courts. Confidential consultation, transparent fees, and fast legal advisory.",
@@ -56,7 +55,6 @@ const I18N = {
     cardsPerPage: "Per page:",
     showingCount: (start, end, total) => `Showing ${start}–${end} of ${total} verified advocates`,
     zeroFound: "0 advocates matching",
-    verifiedBar: "Verified Bar Member",
     ratingLabel: "Rating",
     casesLabel: "Cases",
     expLabel: "Experience",
@@ -77,7 +75,6 @@ const I18N = {
     themeDark: "Dark",
   },
   kn: {
-    heroBadge: "✨ ಪರಿಶೀಲಿತ ಕಾನೂನು ತಜ್ಞರು & ನೇರ ಸಮಾಲೋಚನೆ",
     title: "ಪರಿಶೀಲಿತ",
     titleHighlight: "ವಕೀಲರೊಂದಿಗೆ ಮಾತನಾಡಿ",
     subtitle: "ಕರ್ನಾಟಕ ಹೈಕೋರ್ಟ್ ಮತ್ತು ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳ ಪರಿಶೀಲಿತ ವಕೀಲರೊಂದಿಗೆ ನೇರವಾಗಿ ಸಂಪರ್ಕಿಸಿ. ಗೌಪ್ಯ ಸಮಾಲೋಚನೆ, ಪಾರದರ್ಶಕ ಶುಲ್ಕ ಮತ್ತು ಶೀಘ್ರ ಕಾನೂನು ಸಲಹೆ.",
@@ -97,7 +94,6 @@ const I18N = {
     cardsPerPage: "ಪ್ರತಿ ಪುಟಕ್ಕೆ:",
     showingCount: (start, end, total) => `${total} ವಕೀಲರಲ್ಲಿ ${start}–${end} ತೋರಿಸಲಾಗುತ್ತಿದೆ`,
     zeroFound: "ಯಾವುದೇ ವಕೀಲರು ಕಂಡುಬಂದಿಲ್ಲ",
-    verifiedBar: "ಬಾರ್ ಪರಿಶೀಲಿತ",
     ratingLabel: "ರೇಟಿಂಗ್",
     casesLabel: "ಪ್ರಕರಣಗಳು",
     expLabel: "ಅನುಭವ",
@@ -168,9 +164,7 @@ function AdvocateCard({ advocate, isKn, t, onChatNow }) {
     <article className="tta-card">
       {/* Card Topbar */}
       <div className="tta-card-topbar">
-        <span className="tta-verified-chip">
-          <span className="tta-check-icon">✓</span> {t.verifiedBar}
-        </span>
+        
         {court && (
           <span className="tta-court-chip" title={court}>
             🏛️ {court.length > 25 ? court.slice(0, 23) + "…" : court}
@@ -192,7 +186,6 @@ function AdvocateCard({ advocate, isKn, t, onChatNow }) {
               getInitials(name)
             )}
           </div>
-          <span className="tta-online-indicator" title="Online for consultation" />
         </div>
 
         <div className="tta-header-info">
@@ -230,12 +223,6 @@ function AdvocateCard({ advocate, isKn, t, onChatNow }) {
           <span className="tta-stat-label">{t.expLabel}</span>
           <strong className="tta-stat-value">{experience}</strong>
         </div>
-        <div className="tta-stat-tile">
-          <span className="tta-stat-label">{t.statusLabel}</span>
-          <strong className="tta-stat-value tta-stat-highlight">
-            {t.statusActive}
-          </strong>
-        </div>
       </div>
 
       {/* Bio excerpt */}
@@ -254,14 +241,6 @@ function AdvocateCard({ advocate, isKn, t, onChatNow }) {
       {/* Card Footer: Dual Actions */}
       <div className="tta-card-footer">
         <div className="tta-actions">
-          <button
-            type="button"
-            className="tta-btn-chat"
-            onClick={() => onChatNow(advocate)}
-          >
-            <span>💬</span>
-            <span>{t.chatNow}</span>
-          </button>
           <Link to={`/profile/${advocate.id}`} className="tta-btn-profile">
             <span>{t.viewProfile}</span>
           </Link>
@@ -503,10 +482,6 @@ export default function TalkToAdvocate() {
             </button>
           </div>
 
-          <div className="tta-hero-badge">
-            <span className="tta-sparkle">✨</span> {t.heroBadge}
-          </div>
-
           <h1>
             {t.title} <span className="tta-title-highlight">{t.titleHighlight}</span>
           </h1>
@@ -514,16 +489,6 @@ export default function TalkToAdvocate() {
           <p className="tta-hero-subtitle">
             {t.subtitle}
           </p>
-
-          <div className="tta-hero-trust-bar">
-            <span className="tta-trust-item">{t.trustBar.bar}</span>
-            <span className="tta-trust-dot">•</span>
-            <span className="tta-trust-item">{t.trustBar.direct}</span>
-            <span className="tta-trust-dot">•</span>
-            <span className="tta-trust-item">{t.trustBar.confidential}</span>
-            <span className="tta-trust-dot">•</span>
-            <span className="tta-trust-item">{t.trustBar.rating}</span>
-          </div>
         </div>
       </header>
 

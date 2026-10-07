@@ -137,7 +137,6 @@ function AdvocateAvatar({ advocate }) {
       ) : (
         getInitials(advocate.name)
       )}
-      <span className="fl-online-pulse" title="Available for consultation" />
     </div>
   );
 }
@@ -512,11 +511,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
       {/* ── HERO BANNER ── */}
       <section className="fl-hero-section">
         <div className="fl-hero-inner">
-          <div className="fl-hero-badge">
-            {isKn
-              ? "⚖️ ಕರ್ನಾಟಕ ಬಾರ್ ಕೌನ್ಸಿಲ್ ಪರಿಶೀಲಿತ · ಅಧಿಕೃತ ವಕೀಲರ ಡೈರೆಕ್ಟರಿ"
-              : "⚖️ Karnataka Bar Council Certified · Direct Legal Consultation"}
-          </div>
           <h1 className="fl-hero-title">
             {isKn
               ? "ಪರಿಶೀಲಿತ ಹಿರಿಯ ಮತ್ತು ತಜ್ಞ ವಕೀಲರನ್ನು ಹುಡುಕಿ"
@@ -527,25 +521,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
               ? "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳು, ಕರ್ನಾಟಕ ಹೈಕೋರ್ಟ್ ಮತ್ತು ರಾಷ್ಟ್ರೀಯ ನ್ಯಾಯಮಂಡಳಿಗಳ ಪರಿಣಿತ ವಕೀಲರೊಂದಿಗೆ ನೇರ ಸಮಾಲೋಚನೆ ಅಥವಾ ಚಾಟ್ ಆರಂಭಿಸಿ."
               : "Connect directly with top practitioners across District Courts, High Court of Karnataka, and National Tribunals for immediate legal counsel and representation."}
           </p>
-
-          <div className="fl-trust-row">
-            <div className="fl-trust-item">
-              <span className="fl-trust-icon">🏛️</span>
-              <span>{isKn ? "೫೦೦+ ಪರಿಶೀಲಿತ ವಕೀಲರು" : "500+ Bar Certified Advocates"}</span>
-            </div>
-            <div className="fl-trust-item">
-              <span className="fl-trust-icon">📍</span>
-              <span>{isKn ? "೧೦೦+ ಕರ್ನಾಟಕ ನಗರಗಳು" : "100+ Karnataka Cities & Taluks"}</span>
-            </div>
-            <div className="fl-trust-item">
-              <span className="fl-trust-icon">⚡</span>
-              <span>{isKn ? "ತಕ್ಷಣದ ನೇರ ಚಾಟ್ ಸಂಪರ್ಕ" : "Instant Direct Chat & Advisory"}</span>
-            </div>
-            <div className="fl-trust-item">
-              <span className="fl-trust-icon">🔒</span>
-              <span>{isKn ? "೧೦೦% ಗೌಪ್ಯ ವಕೀಲ ಸಮಾಲೋಚನೆ" : "100% Confidential Legal Privilege"}</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -709,10 +684,7 @@ export default function AdvocatesList({ lang: propLang } = {}) {
                 <article key={adv.id} className="fl-card">
                   {/* Top Bar Badges */}
                   <div className="fl-card-topbar">
-                    <span className="fl-verified-badge">
-                      <span className="fl-badge-check">✓</span>
-                      <span>{isKn ? "ಬಾರ್ ಪರಿಶೀಲಿತ" : "Verified Bar Member"}</span>
-                    </span>
+                    
                     {adv.court && (
                       <span className="fl-court-badge" title={adv.court}>
                         🏛️ {adv.court.length > 22 ? adv.court.slice(0, 20) + "…" : adv.court}
@@ -787,14 +759,7 @@ export default function AdvocatesList({ lang: propLang } = {}) {
 
                   {/* Action Buttons */}
                   <div className="fl-card-actions">
-                    <button
-                      type="button"
-                      className="fl-btn-chat"
-                      onClick={() => handleChatNow(adv)}
-                    >
-                      <span>💬</span>
-                      <span>{isKn ? "ಈಗಲೇ ಚಾಟ್ ಮಾಡಿ" : "Chat Now"}</span>
-                    </button>
+                    
                     <button
                       type="button"
                       className="fl-btn-profile"

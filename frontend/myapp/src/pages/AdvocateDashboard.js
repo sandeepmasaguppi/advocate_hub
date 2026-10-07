@@ -2,7 +2,7 @@
 //   AdvocateDashboard.js  —  Advocate Hub Advocate Account Page
 // ============================================================
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdvocateDashboard.css";
 import { getAdvocateById, logoutAdvocate, updateAdvocate } from "../data/Advocatesstore";
@@ -59,8 +59,8 @@ const PROFILE_FIELDS = [
 const NAV_ITEMS = [
   { key: "dashboard", icon: "🏠", label: "Dashboard",       group: "Work" },
   { key: "requests",  icon: "📥", label: "Client Requests", group: "Work" },
-  { key: "chat",      icon: "💬", label: "Chat",           group: "Work" },
-  { key: "sessions",  icon: "📅", label: "My Sessions",     group: "Work" },
+  { key: "chat",      icon: "💬", label: "Clients & WhatsApp Chat", group: "Work" },
+  { key: "sessions",  icon: "📅", label: "Booked Consultations", group: "Work" },
   { key: "cases",     icon: "⚖️", label: "My Cases",        group: "Work" },
   { key: "earnings",  icon: "💰", label: "Earnings",        group: "Work" },
   { key: "profile",   icon: "👤", label: "My Profile",      group: "Account" },
@@ -78,7 +78,7 @@ function StatusBadge({ status }) {
   return <span className="ad-status-badge" style={{ background: s.bg, color: s.c }}>{s.label}</span>;
 }
 
-function RequestCard({ req, onAccept, onDecline, onSaveStage }) {
+function RequestCard({ req, onAccept, onDecline, onSaveStage, onOpenChat }) {
   const [caseStage, setCaseStage] = useState(req.caseStage || "Start Case");
   const [isEditing, setIsEditing] = useState(false);
   const [showSavedAlert, setShowSavedAlert] = useState(false);
@@ -97,29 +97,46 @@ function RequestCard({ req, onAccept, onDecline, onSaveStage }) {
         <div className="ad-request-info">
           <div className="ad-request-name">{req.clientName}</div>
           <div className="ad-request-meta">
-            {req.clientCity ? `${req.clientCity} · ` : ""}{formatDate(req.requestedAt)}
+            {req.clientCity ? `📍 ${req.clientCity} · ` : ""}{formatDate(req.requestedAt)}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          {req.fee && <span style={{ background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "700" }}>Fee: {req.fee}</span>}
           <StatusBadge status={req.status} />
         </div>
       </div>
 
       {(req.clientPhone || req.clientEmail) && (
-        <div className="ad-request-contact">
+        <div className="ad-request-contact" style={{ margin: "8px 0", display: "flex", gap: "12px", flexWrap: "wrap", fontSize: "13px" }}>
           {req.clientPhone && <span className="ad-request-contact-item">📱 {req.clientPhone}</span>}
           {req.clientEmail && <span className="ad-request-contact-item">✉️ {req.clientEmail}</span>}
         </div>
       )}
 
-      <p className="ad-request-msg">{req.message}</p>
-
-      {req.status === "pending" && (
-        <div className="ad-request-actions">
-          <button className="ad-btn-accept" onClick={() => onAccept(req.id)}>✓ Accept</button>
-          <button className="ad-btn-decline" onClick={() => onDecline(req.id)}>✕ Decline</button>
-        </div>
+      {req.message && (
+        <p className="ad-request-msg" style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #e2e8f0", marginTop: "6px" }}>
+          <strong>Case Notes:</strong> {req.message}
+        </p>
       )}
+
+      <div className="ad-request-actions" style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+        {req.status === "pending" && (
+          <>
+            <button className="ad-btn-accept" onClick={() => onAccept(req.id)}>✓ Accept</button>
+            <button className="ad-btn-decline" onClick={() => onDecline(req.id)}>✕ Decline</button>
+          </>
+        )}
+        {onOpenChat && (
+          <button
+            type="button"
+            className="ad-btn-accept"
+            style={{ background: "#25d366", color: "#ffffff", border: "none" }}
+            onClick={() => onOpenChat(req)}
+          >
+            💬 WhatsApp Chat
+          </button>
+        )}
+      </div>
 
       {req.status === "accepted" && (
         <div className="ad-case-stage" style={{ marginTop: "12px" }}>
@@ -203,8 +220,55 @@ export default function AdvocateDashboard() {
   const [earningsOverrides, setEarningsOverrides] = useState({});
   const [conversations, setConversations] = useState([]);
   const [activeConv, setActiveConv] = useState(null);
+  const [mobileChatActive, setMobileChatActive] = useState(false);
   const [convMessages, setConvMessages] = useState([]);
   const [convInput, setConvInput] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const EMOJI_LIST = ["😊", "👍", "⚖️", "📋", "📅", "📱", "✉️", "🙏", "💼", "📁", "📄", "✅", "🏛️", "🇮🇳", "🤝", "💡", "📞", "🔒", "⏱️", "⭐", "🎉", "🔥", "💯", "❌"];
+
+  const handleInsertEmoji = (emoStr) => {
+    setConvInput(prev => prev + emoStr);
+    setShowEmojiPicker(false);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const isImg = file.type.startsWith("image/");
+    const formattedSize = file.size > 1024 * 1024 
+      ? (file.size / (1024 * 1024)).toFixed(1) + " MB" 
+      : Math.round(file.size / 1024) + " KB";
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      setPendingAttachment({
+        fileName: file.name,
+        fileSize: formattedSize,
+        fileType: file.type,
+        dataUrl: evt.target.result,
+        isImage: isImg
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+  const [chatSearchTerm, setChatSearchTerm] = useState("");
+  const [chatFilter, setChatFilter] = useState("all");
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [addClientForm, setAddClientForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    city: "",
+    fee: "₹2,000",
+    caseStage: "Start Case",
+    notes: ""
+  });
+  const [addClientSuccessMsg, setAddClientSuccessMsg] = useState("");
   const [activeNav, setActiveNav] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState(null);
@@ -399,6 +463,225 @@ export default function AdvocateDashboard() {
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
   }, [advocateId, activeConv]);
+
+  // Merge requests (client connection requests & paid bookings) with chat conversations
+  const mergedConversations = useMemo(() => {
+    const map = new Map();
+
+    // 1. Process requests (requests created via booking/paying or sending connection requests)
+    requests.forEach(req => {
+      const cid = req.clientId || req.id;
+      const key = `chat_${cid}_${advocateId}`;
+      let msgs = [];
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) msgs = JSON.parse(raw);
+      } catch (e) { msgs = []; }
+
+      const lastMsg = msgs.length ? msgs[msgs.length - 1] : (req.message ? { from: "client", text: req.message, t: req.requestedAt } : null);
+      const isPaidBooked = req.paymentStatus === "Paid" || req.paymentStatus === "Paid / Completed" || req.isBooked || req.status === "accepted";
+
+      map.set(key, {
+        clientId: cid,
+        key,
+        clientName: req.clientName || `Client ${cid}`,
+        clientPhone: req.clientPhone || "",
+        clientEmail: req.clientEmail || "",
+        clientCity: req.clientCity || "",
+        lastMsg,
+        reqStatus: req.status,
+        caseStage: req.caseStage || "Start Case",
+        isPaidBooked,
+        fee: req.fee || advocate?.fee || "₹2,000",
+        requestedAt: req.requestedAt || (lastMsg ? lastMsg.t : new Date().toISOString())
+      });
+    });
+
+    // 2. Include any other chat_ entries from localStorage
+    conversations.forEach(conv => {
+      if (!map.has(conv.key)) {
+        let msgs = [];
+        try {
+          const raw = localStorage.getItem(conv.key);
+          if (raw) msgs = JSON.parse(raw);
+        } catch (e) { msgs = []; }
+        const lastMsg = msgs.length ? msgs[msgs.length - 1] : conv.lastMsg;
+        map.set(conv.key, {
+          clientId: conv.clientId,
+          key: conv.key,
+          clientName: conv.clientName || `Client ${conv.clientId}`,
+          clientPhone: "",
+          clientEmail: "",
+          clientCity: "",
+          lastMsg,
+          reqStatus: "accepted",
+          caseStage: "Start Case",
+          isPaidBooked: true,
+          fee: advocate?.fee || "₹2,000",
+          requestedAt: lastMsg ? lastMsg.t : new Date().toISOString()
+        });
+      }
+    });
+
+    const arr = Array.from(map.values());
+    arr.sort((a, b) => {
+      const ta = a.lastMsg ? new Date(a.lastMsg.t).getTime() : new Date(a.requestedAt).getTime();
+      const tb = b.lastMsg ? new Date(b.lastMsg.t).getTime() : new Date(b.requestedAt).getTime();
+      return tb - ta;
+    });
+
+    return arr;
+  }, [requests, conversations, advocateId, advocate?.fee]);
+
+  // Open chat tab for a specific client record
+  const openChatForClient = (req) => {
+    const cid = req.clientId || req.id;
+    const key = `chat_${cid}_${advocateId}`;
+    const raw = localStorage.getItem(key);
+    let msgs = raw ? JSON.parse(raw) : [];
+    if (!raw && req.message) {
+      msgs = [{ from: "client", text: req.message, t: req.requestedAt || new Date().toISOString(), clientName: req.clientName }];
+      localStorage.setItem(key, JSON.stringify(msgs));
+    }
+    const convObj = {
+      clientId: cid,
+      key,
+      clientName: req.clientName,
+      clientPhone: req.clientPhone || "",
+      clientEmail: req.clientEmail || "",
+      clientCity: req.clientCity || "",
+      reqStatus: req.status,
+      caseStage: req.caseStage || "Start Case",
+      isPaidBooked: req.paymentStatus === "Paid" || req.paymentStatus === "Paid / Completed" || req.isBooked || req.status === "accepted",
+      fee: req.fee || advocate?.fee || "₹2,000",
+      requestedAt: req.requestedAt
+    };
+    setActiveConv(convObj);
+    setConvMessages(msgs);
+    setActiveNav("chat");
+  };
+
+  // Send message and sync with client requests store
+  const handleSendChatMessage = (msgText) => {
+    const textToSend = (msgText || convInput).trim();
+    if (!textToSend && !pendingAttachment) return;
+    if (!activeConv) return;
+    const k = activeConv.key;
+    const raw = localStorage.getItem(k);
+    const msgs = raw ? JSON.parse(raw) : [];
+
+    const newMsgObj = {
+      from: "advocate",
+      text: textToSend || (pendingAttachment ? `[Attachment: ${pendingAttachment.fileName}]` : ""),
+      t: new Date().toISOString(),
+      clientName: activeConv.clientName,
+      attachment: pendingAttachment ? { ...pendingAttachment } : null
+    };
+    const next = [...msgs, newMsgObj];
+    
+    // Save chat conversation
+    localStorage.setItem(k, JSON.stringify(next));
+    setConvMessages(next);
+    setConvInput("");
+    setPendingAttachment(null);
+    setShowEmojiPicker(false);
+
+    // Automatically update or store client request record
+    const allReqs = loadAllRequests();
+    const advReqs = allReqs[advocateId] || [];
+    const matchIdx = advReqs.findIndex(r => (r.clientId && r.clientId === activeConv.clientId) || r.id === activeConv.clientId || r.clientName === activeConv.clientName);
+    
+    if (matchIdx >= 0) {
+      advReqs[matchIdx] = {
+        ...advReqs[matchIdx],
+        lastMessage: newMsgObj.text,
+        requestedAt: newMsgObj.t,
+        status: advReqs[matchIdx].status === "pending" ? "accepted" : advReqs[matchIdx].status,
+      };
+    } else {
+      const newReq = {
+        id: activeConv.clientId || Date.now(),
+        clientId: activeConv.clientId || Date.now(),
+        clientName: activeConv.clientName,
+        clientPhone: activeConv.clientPhone || "",
+        clientEmail: activeConv.clientEmail || "",
+        clientCity: activeConv.clientCity || "Online",
+        requestedAt: newMsgObj.t,
+        message: newMsgObj.text,
+        status: "accepted",
+        paymentStatus: activeConv.isPaidBooked ? "Paid / Completed" : "Pending",
+        caseStage: "Start Case",
+        fee: advocate?.fee || "₹2,000"
+      };
+      advReqs.unshift(newReq);
+    }
+
+    allReqs[advocateId] = advReqs;
+    saveAllRequests(allReqs);
+    setRequests(advReqs);
+
+    // Notify other components & tabs
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
+  };
+
+  // Add Client manually directly into Accepted section & initialize WhatsApp chat
+  const handleAddClientSubmit = (e) => {
+    e.preventDefault();
+    if (!addClientForm.name.trim()) return;
+
+    const newClientId = Date.now();
+    const newReqObj = {
+      id: newClientId,
+      clientId: newClientId,
+      clientName: addClientForm.name.trim(),
+      clientPhone: addClientForm.phone.trim(),
+      clientEmail: addClientForm.email.trim(),
+      clientCity: addClientForm.city.trim() || "Local Client",
+      requestedAt: new Date().toISOString(),
+      message: addClientForm.notes.trim() || "Manually added client profile.",
+      status: "accepted", // Automatically added as Accepted!
+      paymentStatus: "Paid / Completed",
+      caseStage: addClientForm.caseStage || "Start Case",
+      fee: addClientForm.fee || advocate?.fee || "₹2,000",
+      isSaved: true
+    };
+
+    const allReqs = loadAllRequests();
+    const advReqs = allReqs[advocateId] || [];
+    const updatedList = [newReqObj, ...advReqs];
+    allReqs[advocateId] = updatedList;
+    saveAllRequests(allReqs);
+    setRequests(updatedList);
+
+    // Initialize chat conversation in localStorage
+    const chatKey = `chat_${newClientId}_${advocateId}`;
+    const initialMsgs = [{
+      from: "client",
+      text: addClientForm.notes.trim() || "Client profile setup directly by advocate.",
+      t: newReqObj.requestedAt,
+      clientName: newReqObj.clientName
+    }];
+    localStorage.setItem(chatKey, JSON.stringify(initialMsgs));
+
+    setShowAddClientModal(false);
+    setFilter("accepted"); // Open Accepted tab to show new client immediately!
+    setAddClientForm({
+      name: "",
+      phone: "",
+      email: "",
+      city: "",
+      fee: advocate?.fee || "₹2,000",
+      caseStage: "Start Case",
+      notes: ""
+    });
+
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
+
+    setAddClientSuccessMsg(`Successfully added ${newReqObj.clientName} directly to Accepted Clients!`);
+    setTimeout(() => setAddClientSuccessMsg(""), 4000);
+  };
 
   const updateRequestStatus = (reqId, status, extra = {}) => {
     const all = loadAllRequests();
@@ -787,14 +1070,38 @@ export default function AdvocateDashboard() {
                     {filterOptions.map(f => (
                       <button
                         key={f.key}
+                        type="button"
                         onClick={() => setFilter(f.key)}
                         className={`ad-pill-btn ${filter === f.key ? "active" : ""}`}
                       >
                         {f.icon} {f.label}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      className="ad-pill-btn"
+                      style={{
+                        background: "linear-gradient(135deg, #16a34a, #15803d)",
+                        color: "#ffffff",
+                        fontWeight: "700",
+                        border: "none",
+                        boxShadow: "0 4px 10px rgba(22, 163, 74, 0.25)",
+                        cursor: "pointer",
+                        marginLeft: "6px"
+                      }}
+                      onClick={() => setShowAddClientModal(true)}
+                    >
+                      ➕ Add Client
+                    </button>
                   </div>
                 </div>
+
+                {addClientSuccessMsg && (
+                  <div className="ad-alert-banner" style={{ background: "#dcfce7", color: "#14532d", border: "1px solid #86efac", marginBottom: "16px" }}>
+                    <span>✓ {addClientSuccessMsg}</span>
+                    <button onClick={() => setAddClientSuccessMsg("")} className="ad-alert-close">×</button>
+                  </div>
+                )}
 
                 <div style={{ marginBottom: "16px" }}>
                   <input
@@ -821,6 +1128,7 @@ export default function AdvocateDashboard() {
                         onAccept={(id) => updateRequestStatus(id, "accepted")}
                         onDecline={(id) => updateRequestStatus(id, "declined")}
                         onSaveStage={saveCaseStage}
+                        onOpenChat={openChatForClient}
                       />
                     ))}
                   </div>
@@ -848,19 +1156,19 @@ export default function AdvocateDashboard() {
                       const displayDate = override.requestedAt || req.requestedAt;
 
                       return (
-                        <div key={req.id} style={{ padding: "16px", border: "1px solid #e2e8f0", borderRadius: "8px", background: "#f8fafc" }}>
+                        <div key={req.id} className="ad-item-card" style={{ padding: "16px", borderRadius: "8px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
                             <div>
-                              <h3 style={{ fontSize: "16px", color: "#0f172a" }}>{displayName}</h3>
-                              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
+                              <h3 style={{ fontSize: "16px" }}>{displayName}</h3>
+                              <p style={{ fontSize: "13px", marginTop: "2px" }} className="ad-item-sub">
                                 {req.clientPhone ? `📱 ${req.clientPhone} ` : ""} {req.clientEmail ? `| ✉️ ${req.clientEmail}` : ""}
                               </p>
                             </div>
-                            <span style={{ background: "#eff6ff", color: "#1d4ed8", padding: "4px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "600" }}>
+                            <span style={{ background: "#eff6ff", color: "#1d4ed8", padding: "4px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "600" }} className="ad-date-pill">
                               Requested Date: {formatDate(displayDate)}
                             </span>
                           </div>
-                          <p style={{ fontSize: "14px", color: "#334155", marginTop: "10px", background: "#ffffff", padding: "8px 12px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                          <p className="ad-item-note" style={{ fontSize: "14px", marginTop: "10px", padding: "8px 12px", borderRadius: "6px" }}>
                             <strong>Note:</strong> {req.message}
                           </p>
                         </div>
@@ -872,96 +1180,378 @@ export default function AdvocateDashboard() {
             </div>
           )}
 
-          {/* VIEW: CHAT */}
+          {/* VIEW: CHAT (WhatsApp Style Client Messaging & Booked Consultations) */}
           {activeNav === "chat" && (
-            <div className="ad-fade-in ad-chat-shell">
-              <aside className="ad-chat-contacts">
-                <div className="ad-chat-contacts-header">
-                  <h2>Chats</h2>
-                </div>
-                <div className="ad-chat-list">
-                  {conversations.length === 0 && <div className="ad-empty">No chats yet — clients will appear here when they message.</div>}
-                  {conversations.map(conv => (
+            <div className={`ad-fade-in ad-chat-shell ad-wa-chat-shell ${mobileChatActive && activeConv ? "mobile-show-chat" : "mobile-show-list"}`}>
+              {/* Left Contacts Sidebar */}
+              <aside className="ad-chat-contacts ad-wa-contacts-panel">
+                <div className="ad-chat-contacts-header ad-wa-header">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                    <h2 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", color: "#0f172a" }}>
+                      <span style={{ color: "#25d366", fontSize: "22px" }}>💬</span> WhatsApp Client Chat
+                    </h2>
+                    <span className="ad-wa-badge-count">{mergedConversations.length}</span>
+                  </div>
+
+                  {/* Contact Search Input */}
+                  <div className="ad-wa-search-wrap">
+                    <input
+                      type="text"
+                      className="ad-wa-search-input"
+                      placeholder="🔍 Search clients by name, phone or city..."
+                      value={chatSearchTerm}
+                      onChange={(e) => setChatSearchTerm(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="ad-wa-filter-row">
                     <button
-                      key={conv.key}
-                      className={`ad-chat-item ${activeConv && activeConv.key === conv.key ? "active" : ""}`}
-                      onClick={() => {
-                        setActiveConv(conv);
-                        const raw = localStorage.getItem(conv.key);
-                        setConvMessages(raw ? JSON.parse(raw) : []);
-                      }}
+                      type="button"
+                      className={`ad-wa-filter-btn ${chatFilter === "all" ? "active" : ""}`}
+                      onClick={() => setChatFilter("all")}
                     >
-                      <div className="ad-chat-item-avatar">
-                        {(conv.clientName || "").split(" ").map(s => s[0]).slice(0, 2).join("")}
-                      </div>
-                      <div className="ad-chat-item-meta">
-                        <div className="ad-chat-item-row">
-                          <span className="ad-chat-name">{conv.clientName}</span>
-                          <span className="ad-chat-time">
-                            {conv.lastMsg ? new Date(conv.lastMsg.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
-                          </span>
-                        </div>
-                        <div className="ad-chat-snippet">
-                          {conv.lastMsg ? conv.lastMsg.text.slice(0, 60) : "Start conversation"}
-                        </div>
-                      </div>
+                      All ({mergedConversations.length})
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      className={`ad-wa-filter-btn ${chatFilter === "paid" ? "active" : ""}`}
+                      onClick={() => setChatFilter("paid")}
+                    >
+                      💳 Paid ({mergedConversations.filter(c => c.isPaidBooked).length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`ad-wa-filter-btn ${chatFilter === "pending" ? "active" : ""}`}
+                      onClick={() => setChatFilter("pending")}
+                    >
+                      ⏳ Pending ({mergedConversations.filter(c => c.reqStatus === "pending").length})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Contacts List */}
+                <div className="ad-chat-list ad-wa-list">
+                  {mergedConversations
+                    .filter(conv => {
+                      const q = chatSearchTerm.toLowerCase();
+                      const matchesSearch = (conv.clientName || "").toLowerCase().includes(q) ||
+                                            (conv.clientCity || "").toLowerCase().includes(q) ||
+                                            (conv.clientPhone || "").includes(q);
+                      let matchesFilter = true;
+                      if (chatFilter === "paid") matchesFilter = conv.isPaidBooked;
+                      if (chatFilter === "pending") matchesFilter = conv.reqStatus === "pending";
+                      return matchesSearch && matchesFilter;
+                    })
+                    .length === 0 ? (
+                      <div className="ad-empty" style={{ padding: "30px 15px", textAlign: "center", color: "#64748b" }}>
+                        No matching clients or messages found.
+                      </div>
+                    ) : (
+                      mergedConversations
+                        .filter(conv => {
+                          const q = chatSearchTerm.toLowerCase();
+                          const matchesSearch = (conv.clientName || "").toLowerCase().includes(q) ||
+                                                (conv.clientCity || "").toLowerCase().includes(q) ||
+                                                (conv.clientPhone || "").includes(q);
+                          let matchesFilter = true;
+                          if (chatFilter === "paid") matchesFilter = conv.isPaidBooked;
+                          if (chatFilter === "pending") matchesFilter = conv.reqStatus === "pending";
+                          return matchesSearch && matchesFilter;
+                        })
+                        .map(conv => {
+                          const isSelected = activeConv && activeConv.key === conv.key;
+                          return (
+                            <button
+                              key={conv.key}
+                              type="button"
+                              className={`ad-chat-item ad-wa-contact-item ${isSelected ? "active" : ""}`}
+                              onClick={() => {
+                                setActiveConv(conv);
+                                setMobileChatActive(true);
+                                const raw = localStorage.getItem(conv.key);
+                                setConvMessages(raw ? JSON.parse(raw) : (conv.lastMsg ? [conv.lastMsg] : []));
+                              }}
+                            >
+                              <div className="ad-chat-item-avatar ad-wa-avatar" style={{ background: conv.isPaidBooked ? "linear-gradient(135deg, #128c7e, #075e54)" : undefined, color: "#ffffff" }}>
+                                {(conv.clientName || "C").split(" ").map(s => s[0]).slice(0, 2).join("")}
+                              </div>
+                              <div className="ad-chat-item-meta" style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <div className="ad-chat-item-row">
+                                  <span className="ad-chat-name">{conv.clientName}</span>
+                                  <span className="ad-chat-time">
+                                    {conv.lastMsg ? new Date(conv.lastMsg.t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                                  </span>
+                                </div>
+                                <div className="ad-chat-snippet" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {conv.lastMsg ? conv.lastMsg.text : "Start conversation"}
+                                </div>
+                                <div style={{ display: "flex", gap: "6px", marginTop: "2px" }}>
+                                  {conv.isPaidBooked && <span className="ad-wa-paid-tag">💳 Paid Appointment</span>}
+                                  {conv.reqStatus === "pending" && <span className="ad-wa-pending-tag">⏳ Pending</span>}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })
+                    )}
                 </div>
               </aside>
 
-              <section className="ad-conversation-panel">
+              {/* Right WhatsApp Chat Canvas */}
+              <section className="ad-conversation-panel ad-wa-conversation-panel">
                 {!activeConv ? (
-                  <div className="ad-empty ad-empty-chat">Select a conversation to view messages.</div>
+                  <div className="ad-empty ad-empty-chat ad-wa-placeholder">
+                    <div style={{ fontSize: "56px", marginBottom: "12px" }}>💬</div>
+                    <h3 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a" }}>WhatsApp Advocate Client Portal</h3>
+                    <p style={{ color: "#64748b", maxWidth: "340px", marginTop: "6px", fontSize: "14px" }}>
+                      Select a client from the left menu to view messages, manage booked appointments, and send real-time consultation responses.
+                    </p>
+                  </div>
                 ) : (
                   <>
-                    <div className="ad-conversation-header">
-                      <div className="ad-chat-item-avatar ad-chat-header-avatar">
-                        {(activeConv.clientName || "").split(" ").map(s => s[0]).slice(0, 2).join("")}
+                    {/* WhatsApp Header Bar */}
+                    <div className="ad-conversation-header ad-wa-chat-topbar">
+                      <button
+                        type="button"
+                        className="ad-wa-mobile-back-btn"
+                        onClick={() => setMobileChatActive(false)}
+                        title="Back to client list"
+                        aria-label="Back to client list"
+                      >
+                        ‹
+                      </button>
+                      <div className="ad-chat-item-avatar ad-chat-header-avatar ad-wa-avatar" style={{ background: activeConv.isPaidBooked ? "linear-gradient(135deg, #25d366, #128c7e)" : undefined, color: activeConv.isPaidBooked ? "#ffffff" : undefined }}>
+                        {(activeConv.clientName || "C").split(" ").map(s => s[0]).slice(0, 2).join("")}
                       </div>
                       <div className="ad-conversation-header-text">
-                        <div className="ad-conversation-title">{activeConv.clientName}</div>
-                        <div className="ad-conversation-subtitle">Client ID: {activeConv.clientId}</div>
+                        <div className="ad-conversation-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          {activeConv.clientName}
+                          {activeConv.isPaidBooked && <span className="ad-wa-paid-pill">💳 Paid Consultation</span>}
+                        </div>
+                        <div className="ad-conversation-subtitle">
+                          {activeConv.clientCity ? `${activeConv.clientCity} · ` : ""}{activeConv.clientPhone ? `📱 ${activeConv.clientPhone} · ` : ""}Client ID: {activeConv.clientId}
+                        </div>
+                      </div>
+                      <div style={{ marginLeft: "auto", display: "flex", gap: "8px", alignItems: "center" }}>
+                        {activeConv.reqStatus === "pending" && (
+                          <button
+                            type="button"
+                            className="ad-btn-accept"
+                            onClick={() => {
+                              updateRequestStatus(activeConv.clientId, "accepted");
+                              setActiveConv(prev => prev ? { ...prev, reqStatus: "accepted", isPaidBooked: true } : null);
+                            }}
+                          >
+                            ✓ Accept Request
+                          </button>
+                        )}
+                        <span className="ad-stage-pill" style={{ background: "#e0f2fe", color: "#0369a1" }}>
+                          Status: {activeConv.caseStage || "Start Case"}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="ad-conversation-body">
-                      {convMessages.length === 0 ? (
-                        <div className="ad-empty ad-empty-chat">No messages yet. Reply to start.</div>
-                      ) : (
-                        convMessages.map((m, i) => (
-                          <div key={i} className={`ad-message-row ${m.from === "advocate" ? "outgoing" : "incoming"}`}>
-                            <div className={`ad-message-bubble ${m.from === "advocate" ? "outgoing" : "incoming"}`}>
-                              {m.text}
-                              <div className="ad-message-time">{new Date(m.t).toLocaleString()}</div>
-                            </div>
+                    {/* WhatsApp Message Body Container */}
+                    <div className="ad-conversation-body ad-wa-chat-body">
+                      {/* Client Details Summary Banner */}
+                      <div className="ad-wa-client-details-card" style={{
+                        background: "rgba(255, 255, 255, 0.95)",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "12px",
+                        padding: "12px 16px",
+                        marginBottom: "12px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", borderBottom: "1px solid #e2e8f0", paddingBottom: "6px" }}>
+                          <span style={{ fontWeight: "800", fontSize: "13.5px", color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
+                            📋 Client Profile & Case Details
+                          </span>
+                          <span style={{ fontSize: "12px", background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "6px", fontWeight: "700" }}>
+                            Fee: {activeConv.fee || advocate.fee || "₹2,000"}
+                          </span>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "8px", fontSize: "13px" }}>
+                          <div><strong>👤 Name:</strong> {activeConv.clientName}</div>
+                          {activeConv.clientPhone && <div><strong>📱 Phone:</strong> {activeConv.clientPhone}</div>}
+                          {activeConv.clientEmail && <div><strong>✉️ Email:</strong> {activeConv.clientEmail}</div>}
+                          {activeConv.clientCity && <div><strong>📍 City:</strong> {activeConv.clientCity}</div>}
+                          <div><strong>⚖️ Status:</strong> {activeConv.caseStage || "Start Case"}</div>
+                        </div>
+
+                        {activeConv.notes && (
+                          <div style={{ marginTop: "8px", fontSize: "12.5px", background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #e2e8f0", color: "#334155" }}>
+                            <strong>📝 Case Notes:</strong> {activeConv.notes}
                           </div>
-                        ))
+                        )}
+                      </div>
+
+                      {convMessages.length === 0 ? (
+                        <div className="ad-empty ad-empty-chat" style={{ color: "#64748b", background: "rgba(255,255,255,0.8)", padding: "12px 20px", borderRadius: "20px" }}>
+                          No messages yet with {activeConv.clientName}. Send a reply below.
+                        </div>
+                      ) : (
+                        convMessages.map((m, i) => {
+                          const isAdv = m.from === "advocate";
+                          return (
+                            <div key={i} className={`ad-message-row ${isAdv ? "outgoing" : "incoming"}`}>
+                              <div className={`ad-message-bubble ${isAdv ? "outgoing ad-wa-bubble-outgoing" : "incoming ad-wa-bubble-incoming"}`}>
+                                {m.attachment && (
+                                  <div className="ad-wa-msg-attachment" style={{ marginBottom: m.text ? "8px" : "4px" }}>
+                                    {m.attachment.isImage ? (
+                                      <div style={{ borderRadius: "8px", overflow: "hidden", marginBottom: "4px" }}>
+                                        <img
+                                          src={m.attachment.dataUrl}
+                                          alt={m.attachment.fileName}
+                                          style={{ maxWidth: "100%", maxHeight: "240px", objectFit: "cover", display: "block" }}
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(0,0,0,0.06)", padding: "8px 12px", borderRadius: "8px" }}>
+                                        <span style={{ fontSize: "24px" }}>📄</span>
+                                        <div style={{ minWidth: 0, flex: 1 }}>
+                                          <div style={{ fontWeight: "700", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            {m.attachment.fileName}
+                                          </div>
+                                          <div style={{ fontSize: "11px", opacity: 0.75 }}>{m.attachment.fileSize}</div>
+                                        </div>
+                                      </div>
+                                    )}
+                                    <a
+                                      href={m.attachment.dataUrl}
+                                      download={m.attachment.fileName}
+                                      style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", color: isAdv ? "#ffffff" : "#2563eb", fontWeight: "700", marginTop: "4px", textDecoration: "none" }}
+                                    >
+                                      ⬇ Download {m.attachment.fileName}
+                                    </a>
+                                  </div>
+                                )}
+                                {m.text && <div>{m.text}</div>}
+                                <div className="ad-message-time" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px" }}>
+                                  <span>{new Date(m.t || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                                  {isAdv && <span style={{ color: "#34b7f1", fontWeight: "bold" }}>✓✓</span>}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
                       )}
                     </div>
 
-                    <div className="ad-message-composer">
+                    {/* Pending Attachment Preview Banner */}
+                    {pendingAttachment && (
+                      <div className="ad-wa-attachment-preview" style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 16px",
+                        background: "#f1f5f9",
+                        borderTop: "1px solid #cbd5e1",
+                        fontSize: "13px"
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+                          <span>{pendingAttachment.isImage ? "🖼️ Image Attachment:" : "📄 Document Attachment:"}</span>
+                          <strong style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "260px", color: "#0f172a" }}>
+                            {pendingAttachment.fileName}
+                          </strong>
+                          <span style={{ color: "#64748b", fontSize: "11px" }}>({pendingAttachment.fileSize})</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPendingAttachment(null)}
+                          style={{ background: "transparent", border: "none", cursor: "pointer", color: "#dc2626", fontWeight: "bold", fontSize: "16px" }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Emoji Picker Popover */}
+                    {showEmojiPicker && (
+                      <div className="ad-wa-emoji-popover" style={{
+                        position: "absolute",
+                        bottom: "65px",
+                        left: "14px",
+                        background: "#ffffff",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "14px",
+                        padding: "10px",
+                        boxShadow: "0 10px 25px rgba(0,0,0,0.18)",
+                        display: "grid",
+                        gridTemplateColumns: "repeat(6, 1fr)",
+                        gap: "6px",
+                        zIndex: 100,
+                        width: "240px"
+                      }}>
+                        {EMOJI_LIST.map((emo, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleInsertEmoji(emo)}
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              fontSize: "20px",
+                              cursor: "pointer",
+                              padding: "6px",
+                              borderRadius: "6px",
+                              transition: "background 0.15s"
+                            }}
+                            onMouseOver={(e) => (e.currentTarget.style.background = "#f1f5f9")}
+                            onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
+                          >
+                            {emo}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Hidden File Input */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      style={{ display: "none" }}
+                      onChange={handleFileSelect}
+                      accept="image/*,application/pdf,.doc,.docx,.txt"
+                    />
+
+                    {/* WhatsApp Message Composer Input */}
+                    <div className="ad-message-composer ad-wa-composer">
+                      <button
+                        type="button"
+                        className="ad-wa-icon-btn"
+                        title="Add Emoji"
+                        onClick={() => setShowEmojiPicker(prev => !prev)}
+                      >
+                        😊
+                      </button>
+                      <button
+                        type="button"
+                        className="ad-wa-icon-btn"
+                        title="Attach Document / File"
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                      >
+                        📎
+                      </button>
                       <input
                         value={convInput}
                         onChange={(e) => setConvInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendChatMessage();
+                          }
+                        }}
                         placeholder={`Message ${activeConv.clientName}…`}
-                        className="ad-chat-input"
+                        className="ad-chat-input ad-wa-input"
                       />
                       <button
-                        className="ad-chat-send-btn"
-                        onClick={() => {
-                          if (!convInput.trim()) return;
-                          const k = activeConv.key;
-                          const raw = localStorage.getItem(k);
-                          const msgs = raw ? JSON.parse(raw) : [];
-                          const next = [...msgs, { from: "advocate", text: convInput.trim(), t: new Date().toISOString() }];
-                          localStorage.setItem(k, JSON.stringify(next));
-                          setConvMessages(next);
-                          setConvInput("");
-                          setConversations(prev => prev.map(p => p.key === k ? { ...p, lastMsg: next[next.length - 1] } : p));
-                        }}
+                        type="button"
+                        className="ad-chat-send-btn ad-wa-send-btn"
+                        onClick={() => handleSendChatMessage()}
                       >
-                        Send
+                        Send ➤
                       </button>
                     </div>
                   </>
@@ -989,10 +1579,10 @@ export default function AdvocateDashboard() {
                       const displayDate = override.requestedAt || req.requestedAt;
 
                       return (
-                        <div key={req.id} style={{ padding: "16px", border: "1px solid #e2e8f0", borderRadius: "8px", background: "#f8fafc", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                        <div key={req.id} className="ad-item-card" style={{ padding: "16px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
                           <div>
-                            <h3 style={{ fontSize: "16px", color: "#0f172a" }}>{displayName}</h3>
-                            <p style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
+                            <h3 style={{ fontSize: "16px" }}>{displayName}</h3>
+                            <p style={{ fontSize: "13px", marginTop: "2px" }} className="ad-item-sub">
                               Location: {req.clientCity || "Not Specified"} · Booking Date: {formatDate(displayDate)}
                             </p>
                           </div>
@@ -1023,9 +1613,9 @@ export default function AdvocateDashboard() {
                   <div className="ad-empty">No earnings data available yet.</div>
                 ) : (
                   <div style={{ overflowX: "auto", overflowY: "visible" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14px" }}>
+                    <table className="ad-table" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "14px" }}>
                       <thead>
-                        <tr style={{ background: "#f1f5f9", color: "#475569", borderBottom: "1px solid #cbd5e1" }}>
+                        <tr className="ad-table-head-row" style={{ borderBottom: "1px solid #cbd5e1" }}>
                           <th style={{ padding: "12px" }}>Client Name</th>
                           <th style={{ padding: "12px" }}>Date Accepted</th>
                           <th style={{ padding: "12px" }}>Consultation Fee</th>
@@ -1308,6 +1898,146 @@ export default function AdvocateDashboard() {
                 <button className="ad-btn-primary" style={{ marginTop: "20px" }} onClick={() => setActiveNav("dashboard")}>
                   Return to Dashboard
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Add Client Modal ── */}
+          {showAddClientModal && (
+            <div className="ad-logout-overlay" onClick={() => setShowAddClientModal(false)}>
+              <div
+                className="ad-logout-card"
+                style={{ width: "min(100%, 540px)", textAlign: "left", borderRadius: "20px", padding: "24px" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px" }}>
+                  <h3 style={{ margin: 0, fontSize: "20px", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ color: "#16a34a" }}>➕</span> Add New Client Directly
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddClientModal(false)}
+                    style={{ background: "transparent", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748b" }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={handleAddClientSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      Client Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Ramesh Kumar"
+                      value={addClientForm.name}
+                      onChange={(e) => setAddClientForm({ ...addClientForm, name: e.target.value })}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", boxSizing: "border-box" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                        Phone Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. +91 9876543210"
+                        value={addClientForm.phone}
+                        onChange={(e) => setAddClientForm({ ...addClientForm, phone: e.target.value })}
+                        style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", boxSizing: "border-box" }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="e.g. client@gmail.com"
+                        value={addClientForm.email}
+                        onChange={(e) => setAddClientForm({ ...addClientForm, email: e.target.value })}
+                        style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", boxSizing: "border-box" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                        City / Location
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Bengaluru"
+                        value={addClientForm.city}
+                        onChange={(e) => setAddClientForm({ ...addClientForm, city: e.target.value })}
+                        style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", boxSizing: "border-box" }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                        Consultation Fee
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. ₹2,500"
+                        value={addClientForm.fee}
+                        onChange={(e) => setAddClientForm({ ...addClientForm, fee: e.target.value })}
+                        style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", boxSizing: "border-box" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      Case Stage / Status
+                    </label>
+                    <select
+                      value={addClientForm.caseStage}
+                      onChange={(e) => setAddClientForm({ ...addClientForm, caseStage: e.target.value })}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", boxSizing: "border-box" }}
+                    >
+                      <option value="Start Case">Start Case</option>
+                      <option value="Evidence Gathering">Evidence Gathering</option>
+                      <option value="Court Hearing">Court Hearing</option>
+                      <option value="Verdict / Completed">Verdict / Completed</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      Client Notes / Case Summary
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Enter initial consultation note or case summary..."
+                      value={addClientForm.notes}
+                      onChange={(e) => setAddClientForm({ ...addClientForm, notes: e.target.value })}
+                      style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", resize: "vertical", boxSizing: "border-box" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px" }}>
+                    <button
+                      type="button"
+                      className="ad-logout-btn-cancel"
+                      onClick={() => setShowAddClientModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="ad-btn-primary"
+                      style={{ background: "linear-gradient(135deg, #16a34a, #15803d)", border: "none", padding: "10px 20px" }}
+                    >
+                      ✓ Save & Add to Accepted
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}

@@ -10,6 +10,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
+import { getTheme, toggleTheme as toggleGlobalTheme } from "../data/themeStore";
+import { CITIES, PRACTICE_AREAS } from "./Signup";
 import "./Register.css";
 
 // ── If your backend runs on a different origin/port, set it here ──
@@ -20,48 +22,6 @@ const CLIENT_OBJECT_KEY = "law4u_client";
 const CLIENT_TOKEN_KEY = "law4u_client_token";
 
 // ── Data ─────────────────────────────────────────────────────
-const CITIES = [
-  "Afzalpur","Alur","Aland","Ankola","Arakalgud","Arasikere","Athani","Aurad","Anekal",
-  "Bagepalli","Bagalkot","Bailhongal","Baindur","Banahatti","Bangarapet","Bantwal",
-  "Basavana Bagewadi","Basavakalyan","Belagavi","Belthangady","Belur","Bhadravati",
-  "Bhalki","Bhatkal","Bilagi","Byadgi","Bengaluru","Bengaluru Rural",
-  "Challakere","Chamarajanagar","Channagiri","Channapatna","Channarayapatna",
-  "Chikkaballapur","Chikkamagaluru","Chikkodi","Chiknayakanhalli","Chincholi",
-  "Chintamani","Chitapur","Chitradurga",
-  "Dandeli","Davangere","Devanahalli","Devadurga","Dharwad","Doddaballapur",
-  "Gadag","Gangavathi","Gauribidanur","Gokak","Gudibande","Gubbi","Gundlupet",
-  "H.D. Kote","Hagaribommanahalli","Haliyal","Hanagal","Harihar","Hassan","Haveri",
-  "Holenarasipura","Holalkere","Honnavar","Hosanagara","Hospete","Hosadurga",
-  "Hoskote","Humnabad","Hukeri","Hunsur","Hungund","Hirekerur",
-  "Ilkal","Indi",
-  "Jamkhandi","Jevargi","Jagalur",
-  "Kadur","Kagwad","Kalaburagi","Kalghatgi","Kanakapura","Karwar","Karkala",
-  "Khanapur","Kittur","Kolar","Kollegal","Koppa","Koratagere","Krishnarajanagara",
-  "Krishnarajapete","Kundapura","Kundgol","Kumta","Kushalnagar","Kushtagi",
-  "Kudachi","Kudligi","KGF",
-  "Lakshmeshwar","Lingasugur",
-  "Maddur","Madikeri","Magadi","Malavalli","Malur","Manvi","Mangaluru","Mandya",
-  "Muddebihal","Mudhol","Mudigere","Mudalagi","Mundagod","Mundargi","Mulbagal","Mysuru",
-  "Nagamangala","Nanjangud","Narasimharajapura","Navalgund","Nelamangala","Nippani","Nargund",
-  "Pandavapura","Pavagada","Periyapatna","Ponnampet","Puttur",
-  "Raibag","Raichur","Ramanagara","Ramdurg","Ranebennur","Ron",
-  "Sagara","Sakleshpur","Sandalaga","Sandur","Sankeshwar","Savanur","Sedam",
-  "Shahabad","Shahapur","Shiggaon","Shikaripura","Shivamogga","Shorapur","Shirsi",
-  "Siddapur","Sindagi","Sindhanur","Sira","Siruguppa","Sirsi","Somwarpet",
-  "Srinivaspur","Sringeri","Srirangapatna","Sullia",
-  "Tarikere","Thirthahalli","Tiptur","Tirumakudalu Narasipura","Tumakuru","Turuvekere",
-  "Udupi",
-  "Vijayapura","Virajpet",
-  "Yadgir","Yaragatti","Yellapur","Yelburga",
-];
-
-const PRACTICE_AREAS = [
-  "Criminal Law","Family Law","Property Law","Civil Law",
-  "Corporate Law","Tax Law","Labour Law","Consumer Law",
-  "Cyber Law","Immigration","Banking Law","Intellectual Property",
-  "Divorce","Cheque Bounce","NRI Matters","Supreme Court",
-];
-
 // ── Helpers ───────────────────────────────────────────────────
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidPhone(p) { return /^\d{10}$/.test(p.replace(/\s|-/g, "")); }
@@ -170,6 +130,11 @@ function Toast({ toast }) {
 // ══════════════════════════════════════════════════════════════
 export default function Register() {
   const navigate = useNavigate();
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("law4u_theme") || localStorage.getItem("law4u_client_theme") || "dark";
+    } catch { return "dark"; }
+  });
   const [view, setView]       = useState("form"); // "form" | "success"
   const [toast, setToast]     = useState(null);
   const [loading, setLoading] = useState(false);
@@ -189,12 +154,31 @@ export default function Register() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  useEffect(() => {
+    const handleTheme = (event) => setTheme(event.detail || getTheme());
+    window.addEventListener("law4u_theme_change", handleTheme);
+    return () => window.removeEventListener("law4u_theme_change", handleTheme);
+  }, []);
+
+  const handleThemeToggle = () => setTheme(toggleGlobalTheme());
+
   const showToast = (msg, type = "info") => setToast({ msg, type });
 
   const setC = (k, v) => {
     setClient((p) => ({ ...p, [k]: v }));
     setErr((p) => ({ ...p, [k]: "" }));
   };
+
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpErr, setOtpErr] = useState("");
+  const [resendTimer, setResendTimer] = useState(60);
+
+  useEffect(() => {
+    if (!otpStep || resendTimer <= 0) return;
+    const interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
+    return () => clearInterval(interval);
+  }, [otpStep, resendTimer]);
 
   // ── Validate ──────────────────────────────────────────────
   const validate = () => {
@@ -212,7 +196,7 @@ export default function Register() {
     return !Object.keys(e).length;
   };
 
-  // ── Submit — POST /api/auth/client/register ────────────────
+  // ── Initiate Signup / Send OTP ─────────────────────────────
   const handleSubmit = (e) => {
     e?.preventDefault();
     if (!validate()) return;
@@ -221,16 +205,14 @@ export default function Register() {
 
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/auth/client/register`, {
+        const emailLower = client.email.trim().toLowerCase();
+        const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: client.fullName.trim(),
-            email: client.email.trim().toLowerCase(),
-            password: client.password,
-            phone: client.phone.trim(),
-            city: client.city,
-            legalIssue: client.legalIssue,
+            email: emailLower,
+            role: "client",
           }),
         });
 
@@ -240,21 +222,14 @@ export default function Register() {
           if (res.status === 409) {
             setErr((p) => ({ ...p, email: data.message || "Email already registered" }));
           }
-          showToast(data.message || "Something went wrong. Try again.", "error");
+          showToast(data.message || "Failed to send verification code. Try again.", "error");
           setLoading(false);
           return;
         }
-        const remember = data.client && data.token;
-        if (remember) {
-          localStorage.setItem(CLIENT_SESSION_KEY, String(data.client.id));
-          localStorage.setItem(CLIENT_OBJECT_KEY, JSON.stringify(data.client));
-          localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
-        }
-        const requestedRedirect = new URLSearchParams(window.location.search).get("redirect");
-        const redirectPath = requestedRedirect && requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
-          ? requestedRedirect
-          : "/client-main";
-        navigate(redirectPath, { replace: true });
+
+        showToast(`Verification code sent to ${emailLower} ✉️`, "success");
+        setOtpStep(true);
+        setResendTimer(60);
       } catch (err) {
         console.error(err);
         showToast("Could not reach the server. Please try again.", "error");
@@ -264,11 +239,107 @@ export default function Register() {
     })();
   };
 
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+    try {
+      const emailLower = client.email.trim().toLowerCase();
+      const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: client.fullName.trim(),
+          email: emailLower,
+          role: "client",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        showToast("A new verification code has been sent!", "success");
+        setResendTimer(60);
+      } else {
+        showToast(data.message || "Failed to resend code.", "error");
+      }
+    } catch {
+      showToast("Network error during resend.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndRegister = async (e) => {
+    e?.preventDefault();
+    if (!otpCode || otpCode.trim().length !== 6) {
+      setOtpErr("Please enter the 6-digit verification code");
+      return;
+    }
+
+    setLoading(true);
+    setOtpErr("");
+
+    try {
+      const emailLower = client.email.trim().toLowerCase();
+      const res = await fetch(`${API_BASE}/api/clients/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: client.fullName.trim(),
+          email: emailLower,
+          password: client.password,
+          phone: client.phone.trim(),
+          city: client.city,
+          legalIssue: client.legalIssue,
+          otp: otpCode.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setOtpErr(data.message || "Invalid verification code.");
+        showToast(data.message || "Verification failed.", "error");
+        setLoading(false);
+        return;
+      }
+
+      // Auto-authenticate / login client immediately
+      const clientObj = data.client || data;
+      const token = data.token || "client-session-token";
+      const clientId = clientObj.id || Date.now();
+
+      localStorage.setItem(CLIENT_SESSION_KEY, String(clientId));
+      localStorage.setItem(CLIENT_OBJECT_KEY, JSON.stringify(clientObj));
+      localStorage.setItem(CLIENT_TOKEN_KEY, token);
+      sessionStorage.setItem(CLIENT_SESSION_KEY, String(clientId));
+      sessionStorage.setItem(CLIENT_OBJECT_KEY, JSON.stringify(clientObj));
+      sessionStorage.setItem(CLIENT_TOKEN_KEY, token);
+
+      showToast("Email verified & Client Account Approved! 🎉", "success");
+
+      const requestedRedirect = new URLSearchParams(window.location.search).get("redirect");
+      const redirectPath = requestedRedirect && requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+        ? requestedRedirect
+        : "/client-main";
+
+      setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 600);
+    } catch (err) {
+      console.error(err);
+      setOtpErr("Could not complete registration. Check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const goToLogin = () => navigate("/client-login");
 
   if (view === "success") {
     return (
-      <div className="rg-page">
+      <div className={`rg-page ${theme === "dark" ? "rg-dark" : "rg-light"}`}>
+        <button type="button" className="rg-theme-toggle" onClick={handleThemeToggle} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}>
+          {theme === "dark" ? "☀" : "☾"}
+        </button>
         <Toast toast={toast} />
         <div className="rg-card rg-success-card">
           <SuccessScreen name={successName} onLogin={goToLogin} />
@@ -278,17 +349,77 @@ export default function Register() {
   }
 
   return (
-    <div className="rg-page">
+    <div className={`rg-page ${theme === "dark" ? "rg-dark" : "rg-light"}`}>
       <Toast toast={toast} />
+
+      {/* OTP Verification Modal */}
+      {otpStep && (
+        <div className="rg-modal-overlay">
+          <div className="rg-modal-card">
+            <div className="rg-otp-badge">🔐</div>
+            <h2 className="rg-title" style={{ fontSize: "1.6rem" }}>Verify Your Email</h2>
+            <p className="rg-subtitle" style={{ fontSize: "0.95rem", margin: "8px 0 20px" }}>
+              We sent a 6-digit verification code to<br />
+              <strong style={{ color: "var(--rg-accent)" }}>{client.email}</strong>
+            </p>
+
+            <form onSubmit={handleVerifyAndRegister}>
+              <Field error={otpErr}>
+                <input
+                  type="text"
+                  className="rg-input rg-otp-input"
+                  placeholder="000000"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => {
+                    setOtpCode(e.target.value.replace(/\D/g, ""));
+                    setOtpErr("");
+                  }}
+                  autoFocus
+                  disabled={loading}
+                />
+              </Field>
+
+              <button type="submit" className="rg-btn-primary rg-btn-lg" disabled={loading}>
+                {loading ? <><span className="rg-spinner" /> Verifying…</> : "Verify & Complete Registration →"}
+              </button>
+            </form>
+
+            <div style={{ marginTop: 18, fontSize: "0.88rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <button
+                type="button"
+                style={{ background: "none", border: 0, color: "var(--rg-muted)", cursor: "pointer", textDecoration: "underline", font: "inherit" }}
+                onClick={() => setOtpStep(false)}
+                disabled={loading}
+              >
+                ← Edit Registration Details
+              </button>
+
+              <button
+                type="button"
+                style={{ background: "none", border: 0, color: resendTimer > 0 ? "var(--rg-muted)" : "var(--rg-accent)", cursor: resendTimer > 0 ? "default" : "pointer", fontWeight: 700, font: "inherit" }}
+                onClick={handleResendOtp}
+                disabled={resendTimer > 0 || loading}
+              >
+                {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : "Resend OTP Code"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="rg-card">
 
-        <div className="rg-top-bar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-          <Link to="/signup" className="rg-back-link" style={{ color: "#0f172a", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <button type="button" className="rg-theme-toggle" onClick={handleThemeToggle} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}>
+          {theme === "dark" ? "☀" : "☾"}
+        </button>
+
+        <div className="rg-top-bar">
+          <Link to="/signup" className="rg-back-link">
             <span>←</span> Back to Sign Up Page
           </Link>
-          <Link to="/" className="rg-logo" style={{ textDecoration: "none", display: "inline-flex", justifyContent: "center" }}>
-            <BrandLogo size={40} wordmark={true} />
+          <Link to="/" className="rg-logo">
+            <BrandLogo size={38} wordmark={true} dark={theme === "dark"} />
           </Link>
         </div>
 
@@ -329,17 +460,27 @@ export default function Register() {
 
           <div className="rg-grid-2">
             <Field label="City" error={err.city}>
-              <Select icon="📍" value={client.city} onChange={(e) => setC("city", e.target.value)} disabled={loading}>
-                <option value="">Select your city</option>
-                {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </Select>
+              <ScrollSelect
+                icon="📍"
+                placeholder="Select your city"
+                value={client.city}
+                onChange={(val) => setC("city", val)}
+                options={CITIES}
+                disabled={loading}
+                error={err.city}
+              />
             </Field>
 
             <Field label="Legal Issue" error={err.legalIssue}>
-              <Select icon="⚖️" value={client.legalIssue} onChange={(e) => setC("legalIssue", e.target.value)} disabled={loading}>
-                <option value="">Select legal issue</option>
-                {PRACTICE_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
-              </Select>
+              <ScrollSelect
+                icon="⚖️"
+                placeholder="Select legal issue"
+                value={client.legalIssue}
+                onChange={(val) => setC("legalIssue", val)}
+                options={PRACTICE_AREAS}
+                disabled={loading}
+                error={err.legalIssue}
+              />
             </Field>
           </div>
 
@@ -373,7 +514,7 @@ export default function Register() {
           {err.agreeTerms && <p className="rg-field-err">⚠ {err.agreeTerms}</p>}
 
           <button type="submit" className="rg-btn-primary rg-btn-lg" disabled={loading}>
-            {loading ? <><span className="rg-spinner" /> Creating account…</> : "Create Client Account →"}
+            {loading ? <><span className="rg-spinner" /> Sending verification code…</> : "Send Verification Code & Continue →"}
           </button>
 
           <p className="rg-login-link">
@@ -381,6 +522,77 @@ export default function Register() {
           </p>
         </form>
       </div>
+    </div>
+  );
+}
+
+// ── Reusable Custom Scrollable Dropdown ───────────────────────
+function ScrollSelect({ icon, placeholder, value, onChange, options = [], disabled, error }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const containerRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = options.filter((opt) =>
+    opt.toLowerCase().includes(query.toLowerCase())
+  );
+
+  return (
+    <div className={`rg-scroll-select-container ${error ? "error" : ""}`} ref={containerRef}>
+      <button
+        type="button"
+        className={`rg-input rg-scroll-select-trigger ${error ? "error" : ""}`}
+        onClick={() => !disabled && setOpen(!open)}
+        disabled={disabled}
+      >
+        {icon && <span className="rg-input-icon">{icon}</span>}
+        <span className={`rg-select-value ${!value ? "placeholder" : ""}`}>
+          {value || placeholder}
+        </span>
+        <span className="rg-caret">{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && (
+        <div className="rg-scroll-dropdown-menu">
+          <div className="rg-dropdown-search">
+            <input
+              type="text"
+              placeholder="🔍 Type to search..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="rg-dropdown-list">
+            {filtered.length === 0 ? (
+              <div className="rg-dropdown-item no-match">No matches found</div>
+            ) : (
+              filtered.map((item) => (
+                <div
+                  key={item}
+                  className={`rg-dropdown-item ${item === value ? "selected" : ""}`}
+                  onClick={() => {
+                    onChange(item);
+                    setOpen(false);
+                    setQuery("");
+                  }}
+                >
+                  {item}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

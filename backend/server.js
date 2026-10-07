@@ -22,6 +22,7 @@ loadDotEnv(path.join(__dirname, ".env"));
 const {
   notifyAdminNewClient,
   notifyAdminNewAdvocate,
+  sendOtpEmail,
   getStoredNotifications,
   deliverUndeliveredNotifications,
 } = require("./emailService");
@@ -444,6 +445,7 @@ function serveFrontendFile(response, filePath) {
   };
   response.writeHead(200, {
     "Content-Type": contentTypes[extension] || "application/octet-stream",
+    "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *; font-src * data:; media-src *; frame-src *;",
     "Cache-Control": path.basename(filePath) === "index.html"
       ? "no-cache"
       : "public, max-age=31536000, immutable",
@@ -458,6 +460,7 @@ function corsHeaders(request) {
     "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *; font-src * data:; media-src *; frame-src *;",
     "Vary": "Origin",
   };
 }
@@ -530,12 +533,81 @@ function buildAdvocateRecord(payload, id, status) {
   };
 }
 
-// Public: advocate self-registration → pending until admin approves.
-async function registerAdvocate(request, payload, { status = "pending", byAdmin = false } = {}) {
+// ── OTP Store ──────────────────────────────────────────────────
+const otpStore = new Map();
+
+function generateOtpCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function handleSendOtp(payload) {
+  const email = normalizeEmail(payload.email);
+  if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
+  const name = String(payload.name || "User").trim();
+  const role = payload.role === "advocate" ? "advocate" : "client";
+
+  if (role === "client") {
+    if (loadClients().some((c) => normalizeEmail(c.email) === email)) {
+      throw new HttpError(409, "An account with this email already exists");
+    }
+  } else {
+    if (loadAdvocates().some((a) => normalizeEmail(a.email) === email)) {
+      throw new HttpError(409, "An account with this email already exists");
+    }
+  }
+
+  const otp = generateOtpCode();
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+  otpStore.set(email, { otp, expiresAt, attempts: 0, role, name });
+
+  try {
+    await sendOtpEmail({ to: email, otp, name, role });
+    console.log(`[OTP] Dispatched OTP code ${otp} to ${email}`);
+  } catch (err) {
+    console.warn(`[OTP] Email delivery warning: ${err.message}`);
+  }
+
+  return { success: true, message: `Verification code sent to ${email}` };
+}
+
+function verifyOtpCode(email, code) {
+  const normEmail = normalizeEmail(email);
+  const record = otpStore.get(normEmail);
+  if (!record) {
+    throw new HttpError(400, "No OTP requested for this email or code expired. Please request a new OTP.");
+  }
+  if (Date.now() > record.expiresAt) {
+    otpStore.delete(normEmail);
+    throw new HttpError(400, "OTP expired. Please request a new verification code.");
+  }
+  if (record.attempts >= 5) {
+    otpStore.delete(normEmail);
+    throw new HttpError(400, "Too many invalid attempts. Please request a new OTP.");
+  }
+  if (String(code).trim() !== String(record.otp).trim()) {
+    record.attempts += 1;
+    throw new HttpError(400, "Invalid verification code. Please check your email and try again.");
+  }
+  otpStore.delete(normEmail);
+  return true;
+}
+
+function handleVerifyOtpEndpoint(payload) {
+  const email = normalizeEmail(payload.email);
+  const otp = payload.otp;
+  verifyOtpCode(email, otp);
+  return { verified: true, message: "Email verified successfully" };
+}
+
+// Public: advocate self-registration → approved upon OTP verification.
+async function registerAdvocate(request, payload, { status = "approved", byAdmin = false } = {}) {
   const email = normalizeEmail(payload.email);
   if (!String(payload.name || "").trim()) throw new HttpError(400, "Name is required");
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   if (!byAdmin && String(payload.password || "").length < 6) throw new HttpError(400, "Password must be at least 6 characters");
+  if (!byAdmin && payload.otp) {
+    verifyOtpCode(email, payload.otp);
+  }
 
   const list = loadAdvocates();
   if (list.some((a) => normalizeEmail(a.email) === email)) throw new HttpError(409, "An account with this email already exists");
@@ -566,6 +638,9 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   const password = payload.password || "client123";
   if (String(password).length < 6) throw new HttpError(400, "Password must be at least 6 characters");
+  if (!byAdmin && payload.otp) {
+    verifyOtpCode(email, payload.otp);
+  }
 
   const list = loadClients();
   if (list.some((c) => normalizeEmail(c.email) === email)) throw new HttpError(409, "An account with this email already exists");
@@ -1223,7 +1298,9 @@ async function route(request, response) {
     });
   }
 
-  // Auth
+  // Auth & OTP
+  if (method === "POST" && p === "/api/auth/send-otp") return send(request, response, 200, await handleSendOtp(await readBody(request)));
+  if (method === "POST" && p === "/api/auth/verify-otp") return send(request, response, 200, handleVerifyOtpEndpoint(await readBody(request)));
   if (method === "POST" && p === "/api/auth/advocate/login") return send(request, response, 200, advocateLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/admin/login") return send(request, response, 200, adminLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/client/login") return send(request, response, 200, clientLogin(await readBody(request)));

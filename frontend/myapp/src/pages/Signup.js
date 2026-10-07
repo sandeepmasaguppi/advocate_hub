@@ -24,7 +24,7 @@ import { getTheme, toggleTheme } from "../data/themeStore";
 import "./Signup.css";
 
 // ── Data from JSON ────────────────────────────────────────────
-const CITIES = [
+const ALL_CITIES = [
   // =====================a====
   // A
   // =========================
@@ -277,12 +277,15 @@ const CITIES = [
   "Yelburga"
 ];
 
-const PRACTICE_AREAS = [
+const ALL_PRACTICE_AREAS = [
   "Criminal Law","Family Law","Property Law","Civil Law",
   "Corporate Law","Tax Law","Labour Law","Consumer Law",
   "Cyber Law","Immigration","Banking Law","Intellectual Property",
   "Divorce","Cheque Bounce","NRI Matters","Supreme Court",
 ];
+
+export const CITIES = ALL_CITIES;
+export const PRACTICE_AREAS = ALL_PRACTICE_AREAS;
 
 const POPULAR_LEGAL_ISSUES = [
   "Family Law",
@@ -585,6 +588,17 @@ export default function Signup() {
   const [showPw,  setShowPw]  = useState(false);
   const [showCPw, setShowCPw] = useState(false);
   const [successName, setSuccessName] = useState("");
+
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpErr, setOtpErr] = useState("");
+  const [resendTimer, setResendTimer] = useState(60);
+
+  useEffect(() => {
+    if (!otpStep || resendTimer <= 0) return;
+    const interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
+    return () => clearInterval(interval);
+  }, [otpStep, resendTimer]);
 
   const [theme, setLocalTheme] = useState(getTheme);
   const [lang, setLang] = useState(() => {
@@ -939,64 +953,122 @@ export default function Signup() {
 
     setLoading(true);
 
-    // Simulate a short delay so the loading state is visible
-    setTimeout(async () => {
+    (async () => {
       try {
         if (tab === "client") {
-          const emailLower = client.email.trim().toLowerCase();
-
-          const auth = await registerClient({
-            name:       client.fullName.trim(),
-            email:      emailLower,
-            password:   client.password,
-            phone:      client.phone.trim(),
-            city:       client.city,
-            legalIssue: client.legalIssue,
-          });
-          localStorage.setItem("law4u_client_id", String(auth.client.id));
-          localStorage.setItem("law4u_client", JSON.stringify(auth.client));
-          localStorage.setItem("law4u_client_token", auth.token);
-          navigate("/client-main", { replace: true });
-
-        } else {
-          const emailLower = adv.email.trim().toLowerCase();
-          const specsList = (adv.specialities && adv.specialities.length > 0)
-            ? adv.specialities
-            : (adv.speciality ? adv.speciality.split(/,\s*/).map(s => s.trim()).filter(Boolean) : []);
-          const finalSpeciality = specsList.join(", ");
-
-          await registerAdvocate({
-            name:          adv.fullName.trim(),
-            email:         emailLower,
-            password:      adv.password,
-            phone:         adv.phone.trim(),
-            barId:         adv.barId.trim(),
-            speciality:    finalSpeciality,
-            practiceArea:  finalSpeciality,
-            practiceAreas: specsList,
-            courtLevel:    adv.courtLevel,
-            district:      adv.district,
-            taluk:         adv.taluk,
-            court:         adv.court,
-            barCouncil:    adv.barCouncil,
-            experience:    adv.experience,
-            city:          adv.city || adv.taluk || adv.district,
-            fee:           adv.fee || "",
-            bio:           adv.bio,
-            avatarData:    adv.avatarData, // stored server-side; status starts as "pending"
-          });
-
-          setSuccessName(adv.fullName);
-          showToast("Application submitted! Awaiting approval. 🎉", "success");
-          setView("success");
+          navigate("/client-register");
+          return;
         }
+
+        const emailLower = adv.email.trim().toLowerCase();
+        const res = await fetch("/api/auth/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: adv.fullName.trim(),
+            email: emailLower,
+            role: "advocate",
+          }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          if (res.status === 409) setAdvErr((p) => ({ ...p, email: data.message || "Email already registered" }));
+          showToast(data.message || "Failed to send verification code. Try again.", "error");
+          setLoading(false);
+          return;
+        }
+
+        showToast(`Verification code sent to ${emailLower} ✉️`, "success");
+        setOtpStep(true);
+        setResendTimer(60);
       } catch (err) {
-        if (err.status === 409) (tab === "client" ? setClientErr : setAdvErr)({ email: err.message });
-        showToast(err.message || "Something went wrong. Try again.", "error");
+        console.error(err);
+        showToast("Could not reach the server. Please try again.", "error");
       } finally {
         setLoading(false);
       }
-    }, 500);
+    })();
+  };
+
+  const handleResendAdvOtp = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+    try {
+      const emailLower = adv.email.trim().toLowerCase();
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: adv.fullName.trim(),
+          email: emailLower,
+          role: "advocate",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        showToast("A new verification code has been sent!", "success");
+        setResendTimer(60);
+      } else {
+        showToast(data.message || "Failed to resend code.", "error");
+      }
+    } catch {
+      showToast("Network error during resend.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndRegisterAdv = async (e) => {
+    e?.preventDefault();
+    if (!otpCode || otpCode.trim().length !== 6) {
+      setOtpErr("Please enter the 6-digit verification code");
+      return;
+    }
+
+    setLoading(true);
+    setOtpErr("");
+
+    try {
+      const emailLower = adv.email.trim().toLowerCase();
+      const specsList = (adv.specialities && adv.specialities.length > 0)
+        ? adv.specialities
+        : (adv.speciality ? adv.speciality.split(/,\s*/).map(s => s.trim()).filter(Boolean) : []);
+      const finalSpeciality = specsList.join(", ");
+
+      await registerAdvocate({
+        name:          adv.fullName.trim(),
+        email:         emailLower,
+        password:      adv.password,
+        phone:         adv.phone.trim(),
+        barId:         adv.barId.trim(),
+        speciality:    finalSpeciality,
+        practiceArea:  finalSpeciality,
+        practiceAreas: specsList,
+        courtLevel:    adv.courtLevel,
+        district:      adv.district,
+        taluk:         adv.taluk,
+        court:         adv.court,
+        barCouncil:    adv.barCouncil,
+        experience:    adv.experience,
+        city:          adv.city || adv.taluk || adv.district,
+        fee:           adv.fee || "",
+        bio:           adv.bio,
+        avatarData:    adv.avatarData,
+        otp:           otpCode.trim(),
+      });
+
+      setSuccessName(adv.fullName);
+      showToast("Email verified & Advocate Profile Approved! 🎉", "success");
+      setOtpStep(false);
+      setView("success");
+    } catch (err) {
+      setOtpErr(err.message || "Verification failed.");
+      showToast(err.message || "Verification failed.", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const goToLogin = () => {
@@ -1027,6 +1099,63 @@ export default function Signup() {
   return (
     <div className={`su-page ${theme === "dark" ? "theme-dark su-dark" : "theme-light su-light"}`} data-theme={theme}>
       <Toast toast={toast} />
+
+      {/* OTP Verification Modal */}
+      {otpStep && (
+        <div className="rg-modal-overlay">
+          <div className="rg-modal-card">
+            <div className="rg-otp-badge">🔐</div>
+            <h2 className="su-title" style={{ fontSize: "1.6rem" }}>Verify Advocate Email</h2>
+            <p className="su-subtitle" style={{ fontSize: "0.95rem", margin: "8px 0 20px" }}>
+              We sent a 6-digit verification code to<br />
+              <strong style={{ color: "var(--su-accent, #2dd4bf)" }}>{adv.email}</strong>
+            </p>
+
+            <form onSubmit={handleVerifyAndRegisterAdv}>
+              <div className="su-field">
+                <input
+                  type="text"
+                  className="su-input rg-otp-input"
+                  placeholder="000000"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => {
+                    setOtpCode(e.target.value.replace(/\D/g, ""));
+                    setOtpErr("");
+                  }}
+                  autoFocus
+                  disabled={loading}
+                />
+                {otpErr && <p className="su-field-err" style={{ color: "#ef4444", marginTop: 6 }}>⚠ {otpErr}</p>}
+              </div>
+
+              <button type="submit" className="su-btn-primary su-btn-lg" style={{ marginTop: 16 }} disabled={loading}>
+                {loading ? <><span className="su-spinner" /> Verifying…</> : "Verify & Approve Profile →"}
+              </button>
+            </form>
+
+            <div style={{ marginTop: 18, fontSize: "0.88rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <button
+                type="button"
+                style={{ background: "none", border: 0, color: "#94a3b8", cursor: "pointer", textDecoration: "underline", font: "inherit" }}
+                onClick={() => setOtpStep(false)}
+                disabled={loading}
+              >
+                ← Edit Form Details
+              </button>
+
+              <button
+                type="button"
+                style={{ background: "none", border: 0, color: resendTimer > 0 ? "#94a3b8" : "#2dd4bf", cursor: resendTimer > 0 ? "default" : "pointer", fontWeight: 700, font: "inherit" }}
+                onClick={handleResendAdvOtp}
+                disabled={resendTimer > 0 || loading}
+              >
+                {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : "Resend OTP Code"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="su-card">
         {/* Top Control Bar: Back link, Language switcher, Theme toggle */}
@@ -1084,26 +1213,6 @@ export default function Signup() {
 
           <h1 className="su-title">{t.title}</h1>
           <p className="su-subtitle">{t.subtitle}</p>
-
-          {/* Executive Trust Matrix */}
-          <div className="su-trust-row">
-            <span className="su-trust-chip">
-              <span className="su-trust-icon">🛡️</span>
-              <span>{t.trustVerified}</span>
-            </span>
-            <span className="su-trust-chip">
-              <span className="su-trust-icon">🔒</span>
-              <span>{t.trustSecure}</span>
-            </span>
-            <span className="su-trust-chip">
-              <span className="su-trust-icon">⚡</span>
-              <span>{t.trustInstant}</span>
-            </span>
-            <span className="su-trust-chip">
-              <span className="su-trust-icon">⚖️</span>
-              <span>{t.trustCompliant}</span>
-            </span>
-          </div>
         </div>
 
         {/* ══ STEP 1: INTERACTIVE ROLE SELECTION DECK ══ */}

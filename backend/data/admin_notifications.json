@@ -1,5 +1,149 @@
 [
   {
+    "id": "NOTIF_1791363680604_k7o6cq",
+    "to": "santoshchachadi47@gmail.com",
+    "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔐 Advocates Hub — Your OTP Verification Code: 691471",
+    "text": "Hello Adv Sanotsh Tokallya,\n\nYour verification code for registering your Advocate account on Advocates Hub is:\n\n691471\n\nThis code is valid for 10 minutes. Please enter this OTP on the registration page to complete your signup.\n\nIf you did not request this code, please ignore this email.\n\nBest regards,\nAdvocates Hub Team\nadvocatehub.in@gmail.com",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; text-align: center; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; text-align: center; }\n    .otp-box { display: inline-block; background: #f8fafc; border: 2px dashed #2563eb; color: #1e293b; letter-spacing: 8px; font-size: 32px; font-weight: 800; padding: 14px 28px; border-radius: 10px; margin: 20px 0; font-family: monospace; }\n    .info { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub</h2>\n      <p>Email Verification Code</p>\n    </div>\n    <div class=\"content\">\n      <p style=\"font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 0;\">\n        Hello Adv Sanotsh Tokallya,\n      </p>\n      <p class=\"info\">\n        Use the One-Time Password (OTP) below to verify your email and complete your <strong>Advocate</strong> account registration on Advocates Hub:\n      </p>\n      <div class=\"otp-box\">691471</div>\n      <p class=\"info\" style=\"font-size: 13px; color: #ef4444;\">\n        ⏱️ This code will expire in 10 minutes. Do not share this OTP with anyone.\n      </p>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Verification Desk · <a href=\"mailto:advocatehub.in@gmail.com\" style=\"color: #2563eb;\">advocatehub.in@gmail.com</a>\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "otp_verification",
+      "email": "santoshchachadi47@gmail.com",
+      "role": "advocate"
+    },
+    "timestamp": "2026-10-07T09:01:20.604Z",
+    "delivered": true,
+    "messageId": "<2dd348a3-3a80-4154-e122-4f211b5afe3b@gmail.com>",
+    "provider": "smtp",
+    "deliveredAt": "2026-10-07T09:01:24.223Z"
+  },
+  {
+    "id": "NOTIF_1791363264152_gqec4v",
+    "to": "sandeepmasaguppi@gmail.com",
+    "from": "Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔔 New Client Registration - Santosh Tolakya (Aland)",
+    "text": "New Client Registration on Advocates Hub\n=========================================\nName:          Santosh Tolakya\nEmail:         santoshchachadi47@gmail.com\nPhone:         9876543234\nCity:          Aland\nLegal Issue:   Family Law\nStatus:        approved\nRegistered At: 7/10/2026, 2:24:24 pm (IST)\n\nAdmin Portal:  https://advocate-hub.up.railway.app/admin",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; }\n    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; margin-bottom: 18px; }\n    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }\n    th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }\n    th { color: #64748b; font-weight: 600; width: 35%; background: #f8fafc; }\n    td { color: #0f172a; font-weight: 500; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub — Admin Alert</h2>\n      <p>Automated notification for account registration</p>\n    </div>\n    <div class=\"content\">\n      <span class=\"badge\">👤 New Client Account</span>\n      <p style=\"margin-top: 0; font-size: 15px; line-height: 1.5;\">\n        A new client has registered on the <strong>Advocates Hub</strong> platform. Here are the details:\n      </p>\n      <table>\n        <tr><th>Full Name</th><td><strong>Santosh Tolakya</strong></td></tr>\n        <tr><th>Email Address</th><td><a href=\"mailto:santoshchachadi47@gmail.com\" style=\"color: #2563eb;\">santoshchachadi47@gmail.com</a></td></tr>\n        <tr><th>Phone Number</th><td>9876543234</td></tr>\n        <tr><th>City / Location</th><td>Aland</td></tr>\n        <tr><th>Legal Matter</th><td>Family Law</td></tr>\n        <tr><th>Account Status</th><td><span style=\"color: #16a34a; font-weight: 600;\">approved</span></td></tr>\n        <tr><th>Registered At</th><td>7/10/2026, 2:24:24 pm IST</td></tr>\n      </table>\n      <div style=\"text-align: center; margin-top: 24px;\">\n        <a href=\"https://advocate-hub.up.railway.app/admin\" class=\"btn\">Open Admin Console →</a>\n      </div>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Automated Notification Desk · Sent to sandeepmasaguppi@gmail.com\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "client_registration",
+      "clientId": 5,
+      "email": "santoshchachadi47@gmail.com"
+    },
+    "timestamp": "2026-10-07T08:54:24.152Z",
+    "delivered": true,
+    "messageId": "<554b58a1-647f-4e32-d70f-b5e28c23367f@gmail.com>",
+    "provider": "smtp",
+    "deliveredAt": "2026-10-07T08:54:27.763Z"
+  },
+  {
+    "id": "NOTIF_1791363235163_8xw5rz",
+    "to": "santoshchachadi47@gmail.com",
+    "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔐 Advocates Hub — Your OTP Verification Code: 567391",
+    "text": "Hello Santosh Tolakya,\n\nYour verification code for registering your Client account on Advocates Hub is:\n\n567391\n\nThis code is valid for 10 minutes. Please enter this OTP on the registration page to complete your signup.\n\nIf you did not request this code, please ignore this email.\n\nBest regards,\nAdvocates Hub Team\nadvocatehub.in@gmail.com",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; text-align: center; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; text-align: center; }\n    .otp-box { display: inline-block; background: #f8fafc; border: 2px dashed #2563eb; color: #1e293b; letter-spacing: 8px; font-size: 32px; font-weight: 800; padding: 14px 28px; border-radius: 10px; margin: 20px 0; font-family: monospace; }\n    .info { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub</h2>\n      <p>Email Verification Code</p>\n    </div>\n    <div class=\"content\">\n      <p style=\"font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 0;\">\n        Hello Santosh Tolakya,\n      </p>\n      <p class=\"info\">\n        Use the One-Time Password (OTP) below to verify your email and complete your <strong>Client</strong> account registration on Advocates Hub:\n      </p>\n      <div class=\"otp-box\">567391</div>\n      <p class=\"info\" style=\"font-size: 13px; color: #ef4444;\">\n        ⏱️ This code will expire in 10 minutes. Do not share this OTP with anyone.\n      </p>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Verification Desk · <a href=\"mailto:advocatehub.in@gmail.com\" style=\"color: #2563eb;\">advocatehub.in@gmail.com</a>\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "otp_verification",
+      "email": "santoshchachadi47@gmail.com",
+      "role": "client"
+    },
+    "timestamp": "2026-10-07T08:53:55.163Z",
+    "delivered": true,
+    "messageId": "<b36687d2-7d5a-e124-f866-f06336a18fa3@gmail.com>",
+    "provider": "smtp",
+    "deliveredAt": "2026-10-07T08:53:58.763Z"
+  },
+  {
+    "id": "NOTIF_1791362217243_eq6y7o",
+    "to": "sandeepmasaguppi@gmail.com",
+    "from": "Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔔 New Client Registration - Vishal (Bailhongal)",
+    "text": "New Client Registration on Advocates Hub\n=========================================\nName:          Vishal\nEmail:         vishalnarasannavar01@gmail.com\nPhone:         9008324559\nCity:          Bailhongal\nLegal Issue:   Family Law\nStatus:        approved\nRegistered At: 7/10/2026, 2:06:57 pm (IST)\n\nAdmin Portal:  https://advocate-hub.up.railway.app/admin",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; }\n    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; margin-bottom: 18px; }\n    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }\n    th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }\n    th { color: #64748b; font-weight: 600; width: 35%; background: #f8fafc; }\n    td { color: #0f172a; font-weight: 500; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub — Admin Alert</h2>\n      <p>Automated notification for account registration</p>\n    </div>\n    <div class=\"content\">\n      <span class=\"badge\">👤 New Client Account</span>\n      <p style=\"margin-top: 0; font-size: 15px; line-height: 1.5;\">\n        A new client has registered on the <strong>Advocates Hub</strong> platform. Here are the details:\n      </p>\n      <table>\n        <tr><th>Full Name</th><td><strong>Vishal</strong></td></tr>\n        <tr><th>Email Address</th><td><a href=\"mailto:vishalnarasannavar01@gmail.com\" style=\"color: #2563eb;\">vishalnarasannavar01@gmail.com</a></td></tr>\n        <tr><th>Phone Number</th><td>9008324559</td></tr>\n        <tr><th>City / Location</th><td>Bailhongal</td></tr>\n        <tr><th>Legal Matter</th><td>Family Law</td></tr>\n        <tr><th>Account Status</th><td><span style=\"color: #16a34a; font-weight: 600;\">approved</span></td></tr>\n        <tr><th>Registered At</th><td>7/10/2026, 2:06:57 pm IST</td></tr>\n      </table>\n      <div style=\"text-align: center; margin-top: 24px;\">\n        <a href=\"https://advocate-hub.up.railway.app/admin\" class=\"btn\">Open Admin Console →</a>\n      </div>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Automated Notification Desk · Sent to sandeepmasaguppi@gmail.com\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "client_registration",
+      "clientId": 4,
+      "email": "vishalnarasannavar01@gmail.com"
+    },
+    "timestamp": "2026-10-07T08:36:57.243Z",
+    "delivered": true,
+    "messageId": "<86868522-094e-6870-c2f4-df246384fa97@gmail.com>",
+    "provider": "smtp",
+    "deliveredAt": "2026-10-07T08:37:00.530Z"
+  },
+  {
+    "id": "NOTIF_1791362183269_6bwxur",
+    "to": "vishalnarasannavar01@gmail.com",
+    "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔐 Advocates Hub — Your OTP Verification Code: 116309",
+    "text": "Hello Vishal,\n\nYour verification code for registering your Client account on Advocates Hub is:\n\n116309\n\nThis code is valid for 10 minutes. Please enter this OTP on the registration page to complete your signup.\n\nIf you did not request this code, please ignore this email.\n\nBest regards,\nAdvocates Hub Team\nadvocatehub.in@gmail.com",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; text-align: center; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; text-align: center; }\n    .otp-box { display: inline-block; background: #f8fafc; border: 2px dashed #2563eb; color: #1e293b; letter-spacing: 8px; font-size: 32px; font-weight: 800; padding: 14px 28px; border-radius: 10px; margin: 20px 0; font-family: monospace; }\n    .info { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub</h2>\n      <p>Email Verification Code</p>\n    </div>\n    <div class=\"content\">\n      <p style=\"font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 0;\">\n        Hello Vishal,\n      </p>\n      <p class=\"info\">\n        Use the One-Time Password (OTP) below to verify your email and complete your <strong>Client</strong> account registration on Advocates Hub:\n      </p>\n      <div class=\"otp-box\">116309</div>\n      <p class=\"info\" style=\"font-size: 13px; color: #ef4444;\">\n        ⏱️ This code will expire in 10 minutes. Do not share this OTP with anyone.\n      </p>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Verification Desk · <a href=\"mailto:advocatehub.in@gmail.com\" style=\"color: #2563eb;\">advocatehub.in@gmail.com</a>\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "otp_verification",
+      "email": "vishalnarasannavar01@gmail.com",
+      "role": "client"
+    },
+    "timestamp": "2026-10-07T08:36:23.269Z",
+    "delivered": true,
+    "messageId": "<8cd9c5e5-7814-a075-836f-403119c6d659@gmail.com>",
+    "provider": "smtp",
+    "deliveredAt": "2026-10-07T08:36:27.281Z"
+  },
+  {
+    "id": "NOTIF_1791361636499_4oax8w",
+    "to": "advocate.in@gmail.com",
+    "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔐 Advocates Hub — Your OTP Verification Code: 803967",
+    "text": "Hello Vijay sir,\n\nYour verification code for registering your Client account on Advocates Hub is:\n\n803967\n\nThis code is valid for 10 minutes. Please enter this OTP on the registration page to complete your signup.\n\nIf you did not request this code, please ignore this email.\n\nBest regards,\nAdvocates Hub Team\nadvocatehub.in@gmail.com",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; text-align: center; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; text-align: center; }\n    .otp-box { display: inline-block; background: #f8fafc; border: 2px dashed #2563eb; color: #1e293b; letter-spacing: 8px; font-size: 32px; font-weight: 800; padding: 14px 28px; border-radius: 10px; margin: 20px 0; font-family: monospace; }\n    .info { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub</h2>\n      <p>Email Verification Code</p>\n    </div>\n    <div class=\"content\">\n      <p style=\"font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 0;\">\n        Hello Vijay sir,\n      </p>\n      <p class=\"info\">\n        Use the One-Time Password (OTP) below to verify your email and complete your <strong>Client</strong> account registration on Advocates Hub:\n      </p>\n      <div class=\"otp-box\">803967</div>\n      <p class=\"info\" style=\"font-size: 13px; color: #ef4444;\">\n        ⏱️ This code will expire in 10 minutes. Do not share this OTP with anyone.\n      </p>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Verification Desk · <a href=\"mailto:advocatehub.in@gmail.com\" style=\"color: #2563eb;\">advocatehub.in@gmail.com</a>\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "otp_verification",
+      "email": "advocate.in@gmail.com",
+      "role": "client"
+    },
+    "timestamp": "2026-10-07T08:27:16.499Z",
+    "delivered": true,
+    "messageId": "<8ea89253-ef34-b1ff-0814-c0e13b93dc40@gmail.com>",
+    "provider": "smtp",
+    "deliveredAt": "2026-10-07T08:31:12.544Z"
+  },
+  {
+    "id": "NOTIF_1791360871987_gcbkil",
+    "to": "sandeepmasaguppi@gmail.com",
+    "from": "Advocates Hub <advocatehub.in@gmail.com>",
+    "subject": "🔔 New Client Registration - manish (Gokak)",
+    "text": "New Client Registration on Advocates Hub\n=========================================\nName:          manish\nEmail:         advocatehub.in@gmail.com\nPhone:         9876543234\nCity:          Gokak\nLegal Issue:   Family Law\nStatus:        approved\nRegistered At: 7/10/2026, 1:44:31 pm (IST)\n\nAdmin Portal:  https://advocate-hub.up.railway.app/admin",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; }\n    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; margin-bottom: 18px; }\n    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }\n    th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }\n    th { color: #64748b; font-weight: 600; width: 35%; background: #f8fafc; }\n    td { color: #0f172a; font-weight: 500; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub — Admin Alert</h2>\n      <p>Automated notification for account registration</p>\n    </div>\n    <div class=\"content\">\n      <span class=\"badge\">👤 New Client Account</span>\n      <p style=\"margin-top: 0; font-size: 15px; line-height: 1.5;\">\n        A new client has registered on the <strong>Advocates Hub</strong> platform. Here are the details:\n      </p>\n      <table>\n        <tr><th>Full Name</th><td><strong>manish</strong></td></tr>\n        <tr><th>Email Address</th><td><a href=\"mailto:advocatehub.in@gmail.com\" style=\"color: #2563eb;\">advocatehub.in@gmail.com</a></td></tr>\n        <tr><th>Phone Number</th><td>9876543234</td></tr>\n        <tr><th>City / Location</th><td>Gokak</td></tr>\n        <tr><th>Legal Matter</th><td>Family Law</td></tr>\n        <tr><th>Account Status</th><td><span style=\"color: #16a34a; font-weight: 600;\">approved</span></td></tr>\n        <tr><th>Registered At</th><td>7/10/2026, 1:44:31 pm IST</td></tr>\n      </table>\n      <div style=\"text-align: center; margin-top: 24px;\">\n        <a href=\"https://advocate-hub.up.railway.app/admin\" class=\"btn\">Open Admin Console →</a>\n      </div>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Automated Notification Desk · Sent to sandeepmasaguppi@gmail.com\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "client_registration",
+      "clientId": 3,
+      "email": "advocatehub.in@gmail.com"
+    },
+    "timestamp": "2026-10-07T08:14:31.987Z",
+    "delivered": true,
+    "messageId": "<cee541be-8212-45b0-3c46-4afd7fb2f13f@gmail.com>",
+    "provider": "smtp",
+    "deliveredAt": "2026-10-07T08:31:17.199Z"
+  },
+  {
+    "id": "NOTIF_1791360610328_7hkvz4",
+    "to": "sandeepmasaguppi@gmail.com",
+    "from": "Advocates Hub <advocatehub.in@gmail.com>",
+    "subject": "🔔 New Client Registration - Vijay sir (Gokak)",
+    "text": "New Client Registration on Advocates Hub\n=========================================\nName:          Vijay sir\nEmail:         sandeepmasaguppi@gmail.com\nPhone:         9876543234\nCity:          Gokak\nLegal Issue:   Labour Law\nStatus:        approved\nRegistered At: 7/10/2026, 1:40:10 pm (IST)\n\nAdmin Portal:  https://advocate-hub.up.railway.app/admin",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; }\n    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; margin-bottom: 18px; }\n    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }\n    th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }\n    th { color: #64748b; font-weight: 600; width: 35%; background: #f8fafc; }\n    td { color: #0f172a; font-weight: 500; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub — Admin Alert</h2>\n      <p>Automated notification for account registration</p>\n    </div>\n    <div class=\"content\">\n      <span class=\"badge\">👤 New Client Account</span>\n      <p style=\"margin-top: 0; font-size: 15px; line-height: 1.5;\">\n        A new client has registered on the <strong>Advocates Hub</strong> platform. Here are the details:\n      </p>\n      <table>\n        <tr><th>Full Name</th><td><strong>Vijay sir</strong></td></tr>\n        <tr><th>Email Address</th><td><a href=\"mailto:sandeepmasaguppi@gmail.com\" style=\"color: #2563eb;\">sandeepmasaguppi@gmail.com</a></td></tr>\n        <tr><th>Phone Number</th><td>9876543234</td></tr>\n        <tr><th>City / Location</th><td>Gokak</td></tr>\n        <tr><th>Legal Matter</th><td>Labour Law</td></tr>\n        <tr><th>Account Status</th><td><span style=\"color: #16a34a; font-weight: 600;\">approved</span></td></tr>\n        <tr><th>Registered At</th><td>7/10/2026, 1:40:10 pm IST</td></tr>\n      </table>\n      <div style=\"text-align: center; margin-top: 24px;\">\n        <a href=\"https://advocate-hub.up.railway.app/admin\" class=\"btn\">Open Admin Console →</a>\n      </div>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Automated Notification Desk · Sent to sandeepmasaguppi@gmail.com\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "client_registration",
+      "clientId": 2,
+      "email": "sandeepmasaguppi@gmail.com"
+    },
+    "timestamp": "2026-10-07T08:10:10.328Z",
+    "delivered": true,
+    "messageId": "<a8465574-05f9-2ed2-85df-4b3b1e68e4ea@gmail.com>",
+    "provider": "smtp",
+    "deliveredAt": "2026-10-07T08:31:20.319Z"
+  },
+  {
     "id": "NOTIF_1791051171465_nrq194",
     "to": "sandeepmasaguppi@gmail.com",
     "from": "Advocates Hub <advocatehub.in@gmail.com>",

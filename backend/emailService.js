@@ -467,11 +467,88 @@ async function deliverUndeliveredNotifications() {
   return { sent: sentCount, results };
 }
 
+/**
+ * Sends a real-time OTP verification email to the registering client or advocate.
+ */
+async function sendOtpEmail({ to, otp, name, role = "client" }) {
+  const recipientName = name || (role === "advocate" ? "Advocate" : "Client");
+  const subject = `🔐 Advocates Hub — Your OTP Verification Code: ${otp}`;
+
+  const text = `
+Hello ${recipientName},
+
+Your verification code for registering your ${role === "advocate" ? "Advocate account" : "Client account"} on Advocates Hub is:
+
+${otp}
+
+This code is valid for 10 minutes. Please enter this OTP on the registration page to complete your signup.
+
+If you did not request this code, please ignore this email.
+
+Best regards,
+Advocates Hub Team
+advocatehub.in@gmail.com
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
+    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; text-align: center; }
+    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }
+    .header p { margin: 0; font-size: 13px; color: #94a3b8; }
+    .content { padding: 28px 30px; text-align: center; }
+    .otp-box { display: inline-block; background: #f8fafc; border: 2px dashed #2563eb; color: #1e293b; letter-spacing: 8px; font-size: 32px; font-weight: 800; padding: 14px 28px; border-radius: 10px; margin: 20px 0; font-family: monospace; }
+    .info { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h2>⚖️ Advocates Hub</h2>
+      <p>Email Verification Code</p>
+    </div>
+    <div class="content">
+      <p style="font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 0;">
+        Hello ${recipientName},
+      </p>
+      <p class="info">
+        Use the One-Time Password (OTP) below to verify your email and complete your <strong>${role === "advocate" ? "Advocate" : "Client"}</strong> account registration on Advocates Hub:
+      </p>
+      <div class="otp-box">${otp}</div>
+      <p class="info" style="font-size: 13px; color: #ef4444;">
+        ⏱️ This code will expire in 10 minutes. Do not share this OTP with anyone.
+      </p>
+    </div>
+    <div class="footer">
+      Advocates Hub Verification Desk · <a href="mailto:advocatehub.in@gmail.com" style="color: #2563eb;">advocatehub.in@gmail.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  return sendAdminEmail({
+    subject,
+    text,
+    html,
+    to,
+    from: `"Advocates Hub" <advocatehub.in@gmail.com>`,
+    meta: { type: "otp_verification", email: to, role },
+  });
+}
+
 module.exports = {
   getAdminEmail,
   get ADMIN_EMAIL() { return getAdminEmail(); },
   notifyAdminNewClient,
   notifyAdminNewAdvocate,
+  sendOtpEmail,
   sendAdminEmail,
   getStoredNotifications,
   deliverUndeliveredNotifications,

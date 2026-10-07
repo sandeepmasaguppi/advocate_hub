@@ -3566,10 +3566,6 @@
    ============================================================ */
 
 @media (max-width: 1040px) {
-  .cmp-nav-links {
-    display: none;
-  }
-
   .cmp-services-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3577,15 +3573,17 @@
 
 @media (max-width: 768px) {
   .cmp-navbar {
-    padding: 10px 16px;
+    padding: 10px 14px;
   }
 
   .cmp-brand-portal-badge {
-    display: none;
+    font-size: 0.65rem;
+    padding: 2px 6px;
   }
 
   .cmp-avatar-name {
-    display: none;
+    display: inline-block;
+    max-width: 85px;
   }
 
   .cmp-container {
@@ -3708,5 +3706,199 @@
     max-width: calc(100vw - 20px) !important;
     max-height: calc(100vh - 80px) !important;
     overflow-y: auto !important;
+  }
+}
+
+/* ============================================================
+   WHATSAPP-STYLE BOTTOM NAVIGATION BAR STYLES
+   ============================================================ */
+.cmp-page {
+  padding-bottom: 78px !important;
+}
+
+.cmp-wa-bottom-navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.08);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  transition: all 0.25s ease;
+}
+
+.cmp-page.cmp-dark .cmp-wa-bottom-navbar {
+  background: rgba(11, 20, 32, 0.94);
+  border-top-color: #1e293b;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
+}
+
+.cmp-wa-nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.cmp-wa-nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cmp-page.cmp-dark .cmp-wa-nav-tab {
+  color: #94a3b8;
+}
+
+/* WhatsApp-style Active Oval Pill */
+.cmp-wa-tab-pill {
+  padding: 3px 16px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: transparent;
+}
+
+.cmp-wa-tab-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform 0.18s ease;
+}
+
+.cmp-wa-tab-label {
+  font-size: 0.71rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.cmp-wa-nav-tab:hover .cmp-wa-tab-icon {
+  transform: translateY(-1px);
+}
+
+.cmp-wa-nav-tab.active .cmp-wa-tab-pill {
+  background: #dbeafe;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.cmp-page.cmp-dark .cmp-wa-nav-tab.active .cmp-wa-tab-pill {
+  background: #1e3a8a;
+  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.4);
+}
+
+.cmp-wa-nav-tab.active {
+  color: #2563eb;
+}
+
+.cmp-page.cmp-dark .cmp-wa-nav-tab.active {
+  color: #60a5fa;
+}
+
+.cmp-wa-nav-tab.active .cmp-wa-tab-icon {
+  transform: scale(1.12);
+}
+
+/* Profile button & Popup tab inside WhatsApp bottom bar */
+.cmp-wa-avatar-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.cmp-wa-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 4px 12px 4px 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.cmp-page.cmp-dark .cmp-wa-avatar-btn {
+  background: #111c2e;
+  border-color: #1e293b;
+  color: #f8fafc;
+}
+
+.cmp-wa-avatar-btn:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.cmp-page.cmp-dark .cmp-wa-avatar-btn:hover {
+  background: #18273f;
+  border-color: #38bdf8;
+}
+
+.cmp-wa-avatar-btn .cmp-avatar-name {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 750;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Upward opening profile dropdown when clicked from bottom bar on Laptop, Desktop, Tablet & Mobile */
+.cmp-avatar-tab-up {
+  position: fixed !important;
+  top: auto !important;
+  bottom: 76px !important;
+  right: 16px !important;
+  width: 340px !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100vh - 90px) !important;
+  overflow-y: auto !important;
+  z-index: 99999 !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 -12px 40px -4px rgba(15, 23, 42, 0.22), 0 -4px 16px rgba(0, 0, 0, 0.08) !important;
+  animation: cmpSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.cmp-page.cmp-dark .cmp-avatar-tab-up {
+  background: #111c2e !important;
+  border-color: #1e293b !important;
+  box-shadow: 0 -12px 40px -4px rgba(0, 0, 0, 0.65), 0 -4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+@keyframes cmpSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
