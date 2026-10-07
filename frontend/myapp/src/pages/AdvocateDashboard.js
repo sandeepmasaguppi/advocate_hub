@@ -59,7 +59,7 @@ const PROFILE_FIELDS = [
 const NAV_ITEMS = [
   { key: "dashboard", icon: "🏠", label: "Dashboard",       group: "Work" },
   { key: "requests",  icon: "📥", label: "Client Requests", group: "Work" },
-  { key: "chat",      icon: "💬", label: "Clients & WhatsApp Chat", group: "Work" },
+  { key: "chat",      icon: "💬", label: "Clients", group: "Work" },
   { key: "sessions",  icon: "📅", label: "Booked Consultations", group: "Work" },
   { key: "cases",     icon: "⚖️", label: "My Cases",        group: "Work" },
   { key: "earnings",  icon: "💰", label: "Earnings",        group: "Work" },
@@ -132,8 +132,7 @@ function RequestCard({ req, onAccept, onDecline, onSaveStage, onOpenChat }) {
             className="ad-btn-accept"
             style={{ background: "#25d366", color: "#ffffff", border: "none" }}
             onClick={() => onOpenChat(req)}
-          >
-            💬 WhatsApp Chat
+          >Chat
           </button>
         )}
       </div>
@@ -846,18 +845,7 @@ export default function AdvocateDashboard() {
             <BrandLogo size={32} />
           
         </div>
-        <div className="ad-topbar-actions">
-          <button
-            type="button"
-            className="ad-theme-toggle-btn"
-            onClick={() => toggleTheme()}
-            title={theme === "dark" ? "Switch to Light Theme" : "Switch to Black/Dark Theme"}
-          >
-            {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
-          </button>
-         
-          <button className="ad-logout-btn" onClick={requestLogout}>Logout ↩</button>
-        </div>
+       
       </div>
 
       {/* ── Mobile Drawer Overlay ── */}
@@ -884,6 +872,28 @@ export default function AdvocateDashboard() {
                 ))}
               </nav>
               <hr className="ad-divider" />
+              <button
+                type="button"
+                className="ad-drawer-theme-btn"
+                onClick={() => toggleTheme()}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  marginBottom: "8px",
+                  background: theme === "dark" ? "#1e293b" : "#f1f5f9",
+                  color: theme === "dark" ? "#ffffff" : "#0f172a",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px"
+                }}
+              >
+                {theme === "dark" ? "☀️ Switch to Light Theme" : "🌙 Switch to Dark Theme"}
+              </button>
               <button className="ad-drawer-logout" onClick={() => { setMobileMenuOpen(false); requestLogout(); }}>
                 Logout ↩
               </button>
@@ -1286,10 +1296,11 @@ export default function AdvocateDashboard() {
                                 <div className="ad-chat-snippet" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                   {conv.lastMsg ? conv.lastMsg.text : "Start conversation"}
                                 </div>
-                                <div style={{ display: "flex", gap: "6px", marginTop: "2px" }}>
-                                  {conv.isPaidBooked && <span className="ad-wa-paid-tag">💳 Paid Appointment</span>}
-                                  {conv.reqStatus === "pending" && <span className="ad-wa-pending-tag">⏳ Pending</span>}
-                                </div>
+                                {conv.reqStatus === "pending" && (
+                                  <div style={{ display: "flex", gap: "6px", marginTop: "2px" }}>
+                                    <span className="ad-wa-pending-tag">⏳ Pending</span>
+                                  </div>
+                                )}
                               </div>
                             </button>
                           );
@@ -1303,7 +1314,7 @@ export default function AdvocateDashboard() {
                 {!activeConv ? (
                   <div className="ad-empty ad-empty-chat ad-wa-placeholder">
                     <div style={{ fontSize: "56px", marginBottom: "12px" }}>💬</div>
-                    <h3 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a" }}>WhatsApp Advocate Client Portal</h3>
+                    <h3 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a" }}> Client Portal</h3>
                     <p style={{ color: "#64748b", maxWidth: "340px", marginTop: "6px", fontSize: "14px" }}>
                       Select a client from the left menu to view messages, manage booked appointments, and send real-time consultation responses.
                     </p>
@@ -1327,7 +1338,6 @@ export default function AdvocateDashboard() {
                       <div className="ad-conversation-header-text">
                         <div className="ad-conversation-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           {activeConv.clientName}
-                          {activeConv.isPaidBooked && <span className="ad-wa-paid-pill">💳 Paid Consultation</span>}
                         </div>
                         <div className="ad-conversation-subtitle">
                           {activeConv.clientCity ? `${activeConv.clientCity} · ` : ""}{activeConv.clientPhone ? `📱 ${activeConv.clientPhone} · ` : ""}Client ID: {activeConv.clientId}
@@ -1354,39 +1364,6 @@ export default function AdvocateDashboard() {
 
                     {/* WhatsApp Message Body Container */}
                     <div className="ad-conversation-body ad-wa-chat-body">
-                      {/* Client Details Summary Banner */}
-                      <div className="ad-wa-client-details-card" style={{
-                        background: "rgba(255, 255, 255, 0.95)",
-                        border: "1px solid #cbd5e1",
-                        borderRadius: "12px",
-                        padding: "12px 16px",
-                        marginBottom: "12px",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
-                      }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", borderBottom: "1px solid #e2e8f0", paddingBottom: "6px" }}>
-                          <span style={{ fontWeight: "800", fontSize: "13.5px", color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
-                            📋 Client Profile & Case Details
-                          </span>
-                          <span style={{ fontSize: "12px", background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "6px", fontWeight: "700" }}>
-                            Fee: {activeConv.fee || advocate.fee || "₹2,000"}
-                          </span>
-                        </div>
-
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "8px", fontSize: "13px" }}>
-                          <div><strong>👤 Name:</strong> {activeConv.clientName}</div>
-                          {activeConv.clientPhone && <div><strong>📱 Phone:</strong> {activeConv.clientPhone}</div>}
-                          {activeConv.clientEmail && <div><strong>✉️ Email:</strong> {activeConv.clientEmail}</div>}
-                          {activeConv.clientCity && <div><strong>📍 City:</strong> {activeConv.clientCity}</div>}
-                          <div><strong>⚖️ Status:</strong> {activeConv.caseStage || "Start Case"}</div>
-                        </div>
-
-                        {activeConv.notes && (
-                          <div style={{ marginTop: "8px", fontSize: "12.5px", background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #e2e8f0", color: "#334155" }}>
-                            <strong>📝 Case Notes:</strong> {activeConv.notes}
-                          </div>
-                        )}
-                      </div>
-
                       {convMessages.length === 0 ? (
                         <div className="ad-empty ad-empty-chat" style={{ color: "#64748b", background: "rgba(255,255,255,0.8)", padding: "12px 20px", borderRadius: "20px" }}>
                           No messages yet with {activeConv.clientName}. Send a reply below.
@@ -1557,6 +1534,67 @@ export default function AdvocateDashboard() {
                   </>
                 )}
               </section>
+            </div>
+          )}
+
+          {/* VIEW: BOOKED CONSULTATIONS / SESSIONS */}
+          {activeNav === "sessions" && (
+            <div className="ad-fade-in">
+              <div className="ad-card">
+                <h2>📅 Booked Consultations & Sessions</h2>
+                <p style={{ color: "#64748b", fontSize: "14px", marginTop: "4px", marginBottom: "20px" }}>
+                  All scheduled and accepted consultation appointments with clients.
+                </p>
+
+                {acceptedRequests.length === 0 ? (
+                  <div className="ad-empty">No booked consultation sessions found yet. Accept client requests to view them here.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {acceptedRequests.map(req => {
+                      const override = earningsOverrides[req.id] || {};
+                      const displayName = override.clientName || req.clientName;
+                      const displayDate = override.requestedAt || req.requestedAt;
+
+                      return (
+                        <div key={req.id} className="ad-item-card" style={{ padding: "16px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                          <div>
+                            <h3 style={{ fontSize: "16px", margin: 0 }}>{displayName}</h3>
+                            <p style={{ fontSize: "13px", marginTop: "4px", margin: "4px 0 0" }} className="ad-item-sub">
+                              📅 Date: <strong>{formatDate(displayDate)}</strong> · 📍 City: {req.clientCity || "Not Specified"}
+                            </p>
+                          </div>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <span className={`ad-stage-pill ${(req.caseStage || "Start Case").toLowerCase().replace(" ", "-")}`}>
+                              {req.caseStage || "Start Case"}
+                            </span>
+                            <button
+                              type="button"
+                              className="ad-btn-accept"
+                              style={{ background: "#25d366", color: "#ffffff", border: "none" }}
+                              onClick={() => {
+                                const key = `chat_${req.clientId || req.id}_${advocateId}`;
+                                setActiveConv({
+                                  key,
+                                  clientId: req.clientId || req.id,
+                                  clientName: displayName,
+                                  clientCity: req.clientCity,
+                                  clientPhone: req.clientPhone,
+                                  isPaidBooked: true,
+                                  reqStatus: req.status
+                                });
+                                setMobileChatActive(true);
+                                setActiveNav("chat");
+                              }}
+                            >
+                              💬 Open Chat
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1783,7 +1821,7 @@ export default function AdvocateDashboard() {
                 {!profileForm ? (
                   <div className="ad-empty" style={{ marginTop: 20 }}>Loading profile…</div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+                  <div className="ad-profile-grid" style={{ marginTop: 16 }}>
                     <div style={{ gridColumn: "1 / 2", display: "flex", flexDirection: "column", gap: 8 }}>
                       <label className="ad-label">Full name</label>
                       <input className="ad-input" disabled={!isProfileEditing} value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} />
@@ -1887,17 +1925,57 @@ export default function AdvocateDashboard() {
           {/* VIEW: SETTINGS */}
           {activeNav === "settings" && (
             <div className="ad-fade-in">
-              <div className="ad-card" style={{ padding: "40px", textAlign: "center" }}>
-                <div style={{ fontSize: "48px", marginBottom: "16px" }}>
-                  {NAV_ITEMS.find(n => n.key === activeNav)?.icon}
-                </div>
-                <h2>{NAV_ITEMS.find(n => n.key === activeNav)?.label}</h2>
-                <p style={{ color: "#64748b", marginTop: "8px" }}>
-                  Configuration settings and profile updates for your advocate account.
+              <div className="ad-card" style={{ padding: "28px" }}>
+                <h2 style={{ marginTop: 0 }}>⚙️ Account Settings & Preferences</h2>
+                <p style={{ color: "#64748b", fontSize: "14px", marginTop: "4px", marginBottom: "20px" }}>
+                  Manage your display preferences, theme modes, and advocate portal options.
                 </p>
-                <button className="ad-btn-primary" style={{ marginTop: "20px" }} onClick={() => setActiveNav("dashboard")}>
-                  Return to Dashboard
-                </button>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "600px" }}>
+                  <div className="ad-item-card" style={{ padding: "16px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: "15px" }}>🎨 Visual Theme Mode</h4>
+                      <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#64748b" }}>Choose between Light (White) or Dark (Black) appearance.</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="ad-theme-toggle-btn"
+                      onClick={() => toggleTheme()}
+                      style={{ padding: "8px 16px", fontWeight: "700" }}
+                    >
+                      {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
+                    </button>
+                  </div>
+
+                  <div className="ad-item-card" style={{ padding: "16px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: "15px" }}> Chat</h4>
+                      <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#64748b" }}>Jump straight into full screen client chat section.</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="ad-btn-primary"
+                      style={{ background: "#25d366", color: "#ffffff", border: "none", padding: "8px 16px" }}
+                      onClick={() => setActiveNav("chat")}
+                    >
+                      Open Chat →
+                    </button>
+                  </div>
+
+                  <div className="ad-item-card" style={{ padding: "16px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: "15px" }}>👤 Public Profile & Bio</h4>
+                      <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#64748b" }}>Update your qualifications, photo, city, and consultation fee.</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="ad-btn-secondary"
+                      onClick={() => setActiveNav("profile")}
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
