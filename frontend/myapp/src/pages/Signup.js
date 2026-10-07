@@ -578,6 +578,8 @@ export default function Signup() {
   const [tab,     setTab]     = useState(() => (roleParam === "advocate" ? "advocate" : "client"));
   const [view,    setView]    = useState("form");      // "form" | "success"
   const [toast,   setToast]   = useState(null);
+  const isRoleSelectionView = roleParam === "";
+  const showBackToSignup = roleParam === "advocate" || roleParam === "client";
   const [loading, setLoading] = useState(false);
   const [showDemoAdvocates, setShowDemoAdvocates] = useState(false);
   const [showPw,  setShowPw]  = useState(false);
@@ -1029,9 +1031,15 @@ export default function Signup() {
       <div className="su-card">
         {/* Top Control Bar: Back link, Language switcher, Theme toggle */}
         <div className="su-top-bar">
-          <Link to="/" className="su-back-link">
-            <span className="su-back-arrow">←</span> {t.backHome}
-          </Link>
+          {showBackToSignup ? (
+            <Link to="/signup" className="su-back-link" style={{ marginRight: "auto" }}>
+              <span className="su-back-arrow">←</span> Back to Sign Up Page
+            </Link>
+          ) : (
+            <Link to="/" className="su-back-link" style={{ marginRight: "auto" }}>
+              <span className="su-back-arrow">←</span> {t.backHome}
+            </Link>
+          )}
 
           <div className="su-top-controls">
             <div className="su-lang-pills">
@@ -1099,7 +1107,7 @@ export default function Signup() {
         </div>
 
         {/* ══ STEP 1: INTERACTIVE ROLE SELECTION DECK ══ */}
-        {roleParam !== "advocate" && <div className="su-role-section">
+        {isRoleSelectionView && <div className="su-role-section">
           <div className="su-role-header">
             <span className="su-role-step-pill">{t.step1}</span>
             <h2 className="su-role-heading">{t.chooseRole}</h2>
@@ -1211,7 +1219,7 @@ export default function Signup() {
         </div>}
 
         {/* ══ CLIENT FORM ══ */}
-        {tab === "client" && (
+        {roleParam === "client" && tab === "client" && (
           <form className="su-form" onSubmit={handleSubmit} noValidate>
 
             {/* Target Advocate Direct Consultation Banner */}
@@ -1436,7 +1444,7 @@ export default function Signup() {
         )}
 
         {/* ══ ADVOCATE FORM ══ */}
-        {tab === "advocate" && (
+        {roleParam === "advocate" && tab === "advocate" && (
           <form className="su-form" onSubmit={handleSubmit} noValidate>
 
             {/* Demo fill from JSON */}

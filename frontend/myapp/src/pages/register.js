@@ -283,11 +283,17 @@ export default function Register() {
 
       <div className="rg-card">
 
-        {/* Header */}
-        <div className="rg-header">
+        <div className="rg-top-bar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+          <Link to="/signup" className="rg-back-link" style={{ color: "#0f172a", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span>←</span> Back to Sign Up Page
+          </Link>
           <Link to="/" className="rg-logo" style={{ textDecoration: "none", display: "inline-flex", justifyContent: "center" }}>
             <BrandLogo size={40} wordmark={true} />
           </Link>
+        </div>
+
+        {/* Header */}
+        <div className="rg-header">
           <h1 className="rg-title">Create Your Client Account</h1>
           <p className="rg-subtitle">India's Most Trusted Legal Platform</p>
         </div>
