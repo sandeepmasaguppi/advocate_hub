@@ -974,8 +974,9 @@ export default function Signup() {
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          if (res.status === 409) setAdvErr((p) => ({ ...p, email: data.message || "Email already registered" }));
-          showToast(data.message || "Failed to send verification code. Try again.", "error");
+          const errorMessage = data.message || data.error || "Failed to send verification code. Try again.";
+          if (res.status === 409) setAdvErr((p) => ({ ...p, email: errorMessage }));
+          showToast(errorMessage, "error");
           setLoading(false);
           return;
         }
@@ -1011,7 +1012,7 @@ export default function Signup() {
         showToast("A new verification code has been sent!", "success");
         setResendTimer(60);
       } else {
-        showToast(data.message || "Failed to resend code.", "error");
+        showToast(data.message || data.error || "Failed to resend code.", "error");
       }
     } catch {
       showToast("Network error during resend.", "error");
