@@ -72,7 +72,11 @@ function loadDotEnv(file) {
   if (!fs.existsSync(file)) return;
   for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/i);
-    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    if (m && process.env[m[1]] === undefined) {
+      const value = m[2];
+      const quote = value[0];
+      process.env[m[1]] = quote && value.endsWith(quote) ? value.slice(1, -1) : value;
+    }
   }
 }
 
@@ -537,7 +541,7 @@ function buildAdvocateRecord(payload, id, status) {
 const otpStore = new Map();
 
 function generateOtpCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(crypto.randomInt(100000, 1000000));
 }
 
 async function handleSendOtp(payload) {
@@ -558,15 +562,15 @@ async function handleSendOtp(payload) {
 
   const otp = generateOtpCode();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-  otpStore.set(email, { otp, expiresAt, attempts: 0, role, name });
 
   try {
     await sendOtpEmail({ to: email, otp, name, role });
-    console.log(`[OTP] Dispatched OTP code ${otp} to ${email}`);
   } catch (err) {
-    console.warn(`[OTP] Email delivery warning: ${err.message}`);
+    console.error(`[OTP] Email delivery failed: ${err.message}`);
+    throw new HttpError(503, "We could not send your verification email. Please try again later.");
   }
 
+  otpStore.set(email, { otp, expiresAt, attempts: 0, role, name });
   return { success: true, message: `Verification code sent to ${email}` };
 }
 

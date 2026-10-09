@@ -25,7 +25,10 @@ Registration email alerts use Resend's HTTPS API on Railway Hobby/Free plans,
 where outbound SMTP is disabled. Set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`,
 and a domain-verified `RESEND_FROM` on the Node API service. Undelivered
 registration alerts are retried automatically after the API starts with a
-working email provider.
+working email provider. Advocate and client email-verification codes use this
+same provider and sender configuration. OTP requests now fail visibly if the
+provider is missing or rejects delivery; verification codes are not logged or
+stored in notification history.
 
 ## 1. Prepare the Railway project
 
@@ -53,6 +56,10 @@ working email provider.
 ## 2. Configure the Node API service
 
 In the `advocate_hub` **production → Variables**, set or confirm:
+
+The local `backend/.env` file is not copied into the production Docker image.
+Set these values in the Railway API service variables; editing `.env` locally
+does not change the live service.
 
 - `AUTH_SECRET`: a fresh random secret (generate locally with
   `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`).
@@ -83,6 +90,14 @@ supported with `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, and
 `SMTP_PASS`. Gmail SMTP requires an app password for the same account used as
 the sender. An HTTPS email provider can send only from an address verified
 with that provider; it may not use the requested Gmail sender address.
+
+After changing the API service's email variables, redeploy that service. To
+check OTP delivery, submit an advocate signup using an inbox you control and
+confirm the verification message arrives. If the API responds that it could
+not send the email, inspect the `advocate_hub` deployment logs for the
+`[OTP] Email delivery failed` detail and check the provider's sender/domain
+verification and API-key status. Do not put OTPs or email-provider credentials
+in logs, source control, or support messages.
 
 Attach a volume to the Node API at `/data` so uploaded avatars persist.
 Do not commit `.env` files or paste passwords, hashes, MongoDB URLs, or

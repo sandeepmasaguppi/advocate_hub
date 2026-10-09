@@ -13,7 +13,9 @@ function loadDotEnv(file) {
   for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/i);
     if (m && (process.env[m[1]] === undefined || process.env[m[1]] === "")) {
-      process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+      const value = m[2];
+      const quote = value[0];
+      process.env[m[1]] = quote && value.endsWith(quote) ? value.slice(1, -1) : value;
     }
   }
 }
@@ -88,12 +90,12 @@ function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT) || 465;
   const secure = process.env.SMTP_SECURE !== "false";
-  const user = process.env.SMTP_USER || "sandeepmasaguppi@gmail.com";
+  const user = process.env.SMTP_USER;
   const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
   const pass = rawPass.replace(/\s+/g, "");
 
-  if (!pass) {
-    return null; // Awaiting user's SMTP password / App password
+  if (!user || !pass) {
+    return null;
   }
 
   return nodemailer.createTransport({
@@ -142,7 +144,7 @@ async function deliverEmail(message) {
 
   if (provider === "smtp") {
     const info = await getTransporter().sendMail({
-      from: message.from || process.env.SMTP_FROM || `"Advocates Hub" <advocatehub.in@gmail.com>`,
+      from: message.from || process.env.SMTP_FROM || `"Advocates Hub" <${process.env.SMTP_USER}>`,
       replyTo: process.env.SMTP_REPLY_TO || "advocatehub.in@gmail.com",
       to: message.to,
       subject: message.subject,
@@ -472,7 +474,14 @@ async function deliverUndeliveredNotifications() {
  */
 async function sendOtpEmail({ to, otp, name, role = "client" }) {
   const recipientName = name || (role === "advocate" ? "Advocate" : "Client");
-  const subject = `🔐 Advocates Hub — Your OTP Verification Code: ${otp}`;
+  const safeRecipientName = recipientName.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character]);
+  const subject = "Your Advocates Hub email verification code";
 
   const text = `
 Hello ${recipientName},
@@ -515,7 +524,7 @@ advocatehub.in@gmail.com
     </div>
     <div class="content">
       <p style="font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 0;">
-        Hello ${recipientName},
+        Hello ${safeRecipientName},
       </p>
       <p class="info">
         Use the One-Time Password (OTP) below to verify your email and complete your <strong>${role === "advocate" ? "Advocate" : "Client"}</strong> account registration on Advocates Hub:
@@ -533,14 +542,14 @@ advocatehub.in@gmail.com
 </html>
 `.trim();
 
-  return sendAdminEmail({
+  const result = await deliverEmail({
+    to,
     subject,
     text,
     html,
-    to,
-    from: `"Advocates Hub" <advocatehub.in@gmail.com>`,
-    meta: { type: "otp_verification", email: to, role },
   });
+  console.log(`[EmailService] OTP email delivered via ${result.provider}. MessageId: ${result.messageId || "not provided"}`);
+  return result;
 }
 
 module.exports = {
