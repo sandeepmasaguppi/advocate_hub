@@ -624,7 +624,7 @@ async function handleSendOtp(payload) {
       if (failedChannel === "email") {
         return "Email needs EMAIL_PROVIDER=resend, RESEND_API_KEY, and RESEND_FROM";
       }
-      return `${failedChannel === "sms" ? "SMS" : "WhatsApp"} needs TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_VERIFY_SERVICE_SID; Twilio trial recipients must be verified`;
+      return `${failedChannel === "sms" ? "SMS" : "WhatsApp"} needs TWILIO_VERIFY_SERVICE_SID and either TWILIO_API_KEY_SID plus TWILIO_API_KEY_SECRET, or TWILIO_ACCOUNT_SID plus TWILIO_AUTH_TOKEN; Twilio trial recipients must be verified`;
     });
     throw new HttpError(503, `Could not send via ${failedLabels.join(", ")}. ${setupHints.join(". ")}. Set these on the Railway API service and try again.`);
   }

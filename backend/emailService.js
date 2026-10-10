@@ -481,21 +481,35 @@ function normalizeOtpPhone(phone) {
 function getTwilioVerifyConfig() {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const apiKeySid = process.env.TWILIO_API_KEY_SID;
+  const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
-  if (!accountSid || !authToken || !serviceSid) {
-    throw new Error("Configure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_VERIFY_SERVICE_SID");
+  const hasApiKey = Boolean(apiKeySid && apiKeySecret);
+  const hasAccountCredentials = Boolean(accountSid && authToken);
+  if (Boolean(apiKeySid) !== Boolean(apiKeySecret)) {
+    throw new Error("Configure both TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET");
   }
-  return { accountSid, authToken, serviceSid };
+  if (!hasApiKey && !hasAccountCredentials) {
+    throw new Error("Configure TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET, or TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN");
+  }
+  if (!serviceSid) {
+    throw new Error("Configure TWILIO_VERIFY_SERVICE_SID from your Twilio Verify Service");
+  }
+  return {
+    username: hasApiKey ? apiKeySid : accountSid,
+    password: hasApiKey ? apiKeySecret : authToken,
+    serviceSid,
+  };
 }
 
 async function twilioVerifyRequest(resource, parameters) {
-  const { accountSid, authToken, serviceSid } = getTwilioVerifyConfig();
+  const { username, password, serviceSid } = getTwilioVerifyConfig();
   const response = await fetch(
     `https://verify.twilio.com/v2/Services/${serviceSid}/${resource}`,
     {
       method: "POST",
       headers: {
-        Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
+        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams(parameters),

@@ -32,9 +32,13 @@ stored in notification history. The 60-second resend cooldown applies
 independently to each successful destination/channel; failed sends do not
 consume the cooldown, so another configured channel can be tried immediately.
 
-SMS and WhatsApp OTP delivery uses Twilio Verify. Set `TWILIO_ACCOUNT_SID`,
-`TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` on the Node API service.
-The Verify Service SID starts with `VA`. Twilio trial accounts can send only
+SMS and WhatsApp OTP delivery uses Twilio Verify. Set
+`TWILIO_VERIFY_SERVICE_SID` plus one Twilio credential pair on the Node API
+service: preferably `TWILIO_API_KEY_SID` and `TWILIO_API_KEY_SECRET` (the API
+key SID starts with `SK`), or `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN`
+(the account SID starts with `AC`). Keep all secret values in Railway
+Variables, never in source control. The Verify Service SID starts with `VA`.
+Twilio trial accounts can send only
 to verified recipient numbers (up to five) and have trial quotas/expiry; verify
 the signup/test number in Twilio before testing. The app sends to the phone
 number entered during signup and must not hard-code an administrator's phone.
@@ -92,8 +96,10 @@ does not change the live service.
 - `RESEND_API_KEY`: a Resend API key, stored as a Railway secret.
 - `RESEND_FROM`: an address on a domain verified with Resend, for example
   `Advocates Hub <notifications@your-verified-domain.example>`.
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID`:
-  Twilio Verify credentials and service SID, stored as Railway secrets.
+- `TWILIO_VERIFY_SERVICE_SID`: the Verify Service SID from Twilio.
+- `TWILIO_API_KEY_SID` and `TWILIO_API_KEY_SECRET` (preferred), or
+  `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN`: Twilio credentials, stored as
+  Railway secrets.
 - `ADMIN_NOTIFICATION_EMAIL`: where client and advocate registration alerts
   should be delivered.
 - `ADVOCATE_REGISTRATION_EMAIL`: recipient for pending advocate registration
