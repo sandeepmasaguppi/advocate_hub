@@ -469,6 +469,94 @@ async function deliverUndeliveredNotifications() {
   return { sent: sentCount, results };
 }
 
+function normalizeOtpPhone(phone) {
+  const value = String(phone || "").trim();
+  const digits = value.replace(/\D/g, "");
+  if (value.startsWith("+") && digits.length >= 8 && digits.length <= 15) return `+${digits}`;
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
+  throw new Error("A valid phone number with country code is required");
+}
+
+async function sendTwilioOtp({ channel, to, body, contentSid, contentVariables }) {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  if (!accountSid || !authToken) {
+    throw new Error("Twilio requires TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN");
+  }
+
+  const parameters = new URLSearchParams({ To: to });
+  if (contentSid) {
+    parameters.set("ContentSid", contentSid);
+    parameters.set("ContentVariables", JSON.stringify(contentVariables));
+  } else {
+    parameters.set("Body", body);
+  }
+
+  const smsMessagingServiceSid = channel === "sms" && process.env.TWILIO_SMS_MESSAGING_SERVICE_SID;
+  const from = channel === "whatsapp"
+    ? process.env.TWILIO_WHATSAPP_FROM
+    : process.env.TWILIO_SMS_FROM;
+  if (smsMessagingServiceSid) {
+    parameters.set("MessagingServiceSid", smsMessagingServiceSid);
+  } else if (from) {
+    parameters.set("From", channel === "whatsapp" && !from.startsWith("whatsapp:")
+      ? `whatsapp:${from}`
+      : from);
+  } else {
+    throw new Error(channel === "whatsapp"
+      ? "TWILIO_WHATSAPP_FROM is not configured"
+      : "Set TWILIO_SMS_FROM or TWILIO_SMS_MESSAGING_SERVICE_SID");
+  }
+
+  const response = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: parameters,
+      signal: AbortSignal.timeout(15000),
+    }
+  );
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const providerCode = result.code ? ` (${result.code})` : "";
+    throw new Error(`Twilio ${channel} delivery failed with HTTP ${response.status}${providerCode}`);
+  }
+  return { provider: "twilio", messageId: result.sid };
+}
+
+async function sendWhatsappOtp({ phone, otp, name, role = "client" }) {
+  const recipient = normalizeOtpPhone(phone);
+  const recipientName = name || (role === "advocate" ? "Advocate" : "Client");
+  const message = `Advocates Hub verification code for ${recipientName}: ${otp}. This code expires in 10 minutes. Do not share it.`;
+  const contentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID;
+  const result = await sendTwilioOtp({
+    channel: "whatsapp",
+    to: `whatsapp:${recipient}`,
+    body: message,
+    contentSid,
+    contentVariables: { "1": otp, "2": role === "advocate" ? "Advocate" : "Client" },
+  });
+  console.log(`[OTP] WhatsApp message accepted by ${result.provider}`);
+  return result;
+}
+
+async function sendSmsOtp({ phone, otp, role = "client" }) {
+  const recipient = normalizeOtpPhone(phone);
+  const message = `Advocates Hub ${role === "advocate" ? "Advocate" : "Client"} verification code: ${otp}. Valid for 10 minutes. Do not share it.`;
+  const result = await sendTwilioOtp({
+    channel: "sms",
+    to: recipient,
+    body: message,
+  });
+  console.log(`[OTP] SMS message accepted by ${result.provider}`);
+  return result;
+}
+
 /**
  * Sends a real-time OTP verification email to the registering client or advocate.
  */
@@ -558,6 +646,8 @@ module.exports = {
   notifyAdminNewClient,
   notifyAdminNewAdvocate,
   sendOtpEmail,
+  sendWhatsappOtp,
+  sendSmsOtp,
   sendAdminEmail,
   getStoredNotifications,
   deliverUndeliveredNotifications,

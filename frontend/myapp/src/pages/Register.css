@@ -230,25 +230,145 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(10px);
   display: grid;
   place-items: center;
   padding: 20px;
+  animation: rg-fade .22s ease-out;
 }
+@keyframes rg-fade { from { opacity: 0; } to { opacity: 1; } }
+
 .rg-modal-card {
-  width: min(100%, 460px);
+  box-sizing: border-box;
+  width: min(100%, 520px);
   background: var(--rg-card);
   border: 1px solid var(--rg-border);
-  border-radius: 20px;
-  padding: 32px 28px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-  text-align: center;
+  border-radius: 24px;
+  padding: clamp(24px, 5vw, 36px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  animation: rg-pop .28s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
+@keyframes rg-pop { from { opacity: 0; transform: scale(0.92) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
 .rg-otp-badge {
-  font-size: 2.8rem;
-  margin-bottom: 12px;
+  display: inline-grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.18), rgba(99, 102, 241, 0.18));
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  font-size: 2.2rem;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
+
+/* OTP Channel Selection Modal (Mobile App Card Style) */
+.rg-channel-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 22px 0 26px;
+}
+
+.rg-channel-option-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--rg-panel);
+  border: 1px solid var(--rg-border);
+  border-radius: 18px;
+  color: var(--rg-text);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.rg-channel-option-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+.rg-channel-option-card.chan-email:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.rg-channel-option-card.chan-sms:hover { border-color: #0d9488; background: rgba(13, 148, 136, 0.1); }
+.rg-channel-option-card.chan-wa:hover { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+.rg-channel-option-card.chan-all:hover { border-color: #818cf8; background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(45, 212, 191, 0.14)); }
+
+.rg-channel-icon-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.chan-email .rg-channel-icon-avatar { background: rgba(59, 130, 246, 0.18); color: #3b82f6; }
+.chan-sms .rg-channel-icon-avatar { background: rgba(13, 148, 136, 0.18); color: #0d9488; }
+.chan-wa .rg-channel-icon-avatar { background: rgba(34, 197, 94, 0.18); color: #22c55e; }
+.chan-all .rg-channel-icon-avatar { background: linear-gradient(135deg, rgba(99, 102, 241, 0.28), rgba(45, 212, 191, 0.28)); color: #818cf8; }
+
+.rg-channel-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.rg-channel-title {
+  font-family: Manrope, "Segoe UI", sans-serif;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--rg-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rg-channel-badge {
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--rg-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.rg-channel-desc {
+  font-size: 0.83rem;
+  color: var(--rg-muted);
+  margin-top: 3px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rg-channel-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.12);
+  display: grid;
+  place-items: center;
+  color: var(--rg-muted);
+  font-size: 1rem;
+  font-weight: 700;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.rg-channel-option-card:hover .rg-channel-arrow {
+  background: var(--rg-accent);
+  color: #04211e;
+  transform: translateX(3px);
+}
+
 .rg-otp-input {
   letter-spacing: 12px;
   font-size: 28px;

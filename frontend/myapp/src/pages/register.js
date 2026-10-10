@@ -25,6 +25,18 @@ const CLIENT_TOKEN_KEY = "law4u_client_token";
 // ── Helpers ───────────────────────────────────────────────────
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidPhone(p) { return /^\d{10}$/.test(p.replace(/\s|-/g, "")); }
+function formatOtpChannels(channels) {
+  const labels = { email: "Email", sms: "SMS", phone: "SMS", whatsapp: "WhatsApp" };
+  const expanded = channels.flatMap((channel) => channel === "all" ? ["email", "sms", "whatsapp"] : [channel]);
+  return expanded.map((channel) => labels[channel] || channel).join(", ");
+}
+function maskPhone(p) {
+  if (!p) return "";
+  const cleaned = p.replace(/\D/g, "");
+  if (cleaned.length <= 4) return cleaned;
+  const last4 = cleaned.slice(-4);
+  return `******${last4}`;
+}
 
 function PwStrength({ pw }) {
   if (!pw) return null;
@@ -169,16 +181,20 @@ export default function Register() {
     setErr((p) => ({ ...p, [k]: "" }));
   };
 
+  const [showChannelModal, setShowChannelModal] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpErr, setOtpErr] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
+  const [otpSentChannels, setOtpSentChannels] = useState([]);
 
   useEffect(() => {
     if (!otpStep || resendTimer <= 0) return;
     const interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
   }, [otpStep, resendTimer]);
+
+  const [otpChannel, setOtpChannel] = useState("all"); // "all" | "email" | "phone" | "whatsapp"
 
   // ── Validate ──────────────────────────────────────────────
   const validate = () => {
@@ -196,11 +212,18 @@ export default function Register() {
     return !Object.keys(e).length;
   };
 
-  // ── Initiate Signup / Send OTP ─────────────────────────────
+  // ── Initiate Signup: Open Channel Modal ───────────────────
   const handleSubmit = (e) => {
     e?.preventDefault();
     if (!validate()) return;
+    setShowChannelModal(true);
+  };
 
+  // ── Dispatch OTP via Selected Channel ─────────────────────
+  const handleConfirmChannelAndSend = (selectedChannel) => {
+    const channelToUse = selectedChannel || otpChannel;
+    setOtpChannel(channelToUse);
+    setShowChannelModal(false);
     setLoading(true);
 
     (async () => {
@@ -212,7 +235,9 @@ export default function Register() {
           body: JSON.stringify({
             name: client.fullName.trim(),
             email: emailLower,
+            phone: client.phone.trim(),
             role: "client",
+            channel: channelToUse,
           }),
         });
 
@@ -228,7 +253,14 @@ export default function Register() {
           return;
         }
 
-        showToast(`Verification code sent to ${emailLower} ✉️`, "success");
+        const sentChannels = Array.isArray(data.sentChannels)
+          ? data.sentChannels
+          : [channelToUse === "phone" ? "sms" : channelToUse];
+        setOtpSentChannels(sentChannels);
+        showToast(
+          data.message || `Verification code sent via ${formatOtpChannels(sentChannels)}.`,
+          data.failedChannels?.length ? "info" : "success"
+        );
         setOtpStep(true);
         setResendTimer(60);
       } catch (err) {
@@ -251,12 +283,21 @@ export default function Register() {
         body: JSON.stringify({
           name: client.fullName.trim(),
           email: emailLower,
+          phone: client.phone.trim(),
           role: "client",
+          channel: otpChannel,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        showToast("A new verification code has been sent!", "success");
+        const sentChannels = Array.isArray(data.sentChannels)
+          ? data.sentChannels
+          : [otpChannel === "phone" ? "sms" : otpChannel];
+        setOtpSentChannels(sentChannels);
+        showToast(
+          data.message || `A new verification code was sent via ${formatOtpChannels(sentChannels)}.`,
+          data.failedChannels?.length ? "info" : "success"
+        );
         setResendTimer(60);
       } else {
         showToast(data.message || data.error || "Failed to resend code.", "error");
@@ -353,15 +394,97 @@ export default function Register() {
     <div className={`rg-page ${theme === "dark" ? "rg-dark" : "rg-light"}`}>
       <Toast toast={toast} />
 
+      {/* Full Screen OTP Delivery Channel Selection Modal (Mobile App Style) */}
+      {showChannelModal && (
+        <div className="rg-modal-overlay">
+          <div className="rg-modal-card" style={{ maxWidth: 480, textAlign: "center" }}>
+            <div className="rg-otp-badge">📲</div>
+            <h2 className="rg-title" style={{ fontSize: "1.55rem" }}>Select OTP Delivery Channel</h2>
+            <p className="rg-subtitle" style={{ fontSize: "0.92rem", margin: "6px 0 20px" }}>
+              How would you like to receive your 6-digit verification code?
+            </p>
+
+            <div className="rg-channel-card-list">
+              <button
+                type="button"
+                className="rg-channel-option-card chan-email"
+                onClick={() => handleConfirmChannelAndSend("email")}
+              >
+                <div className="rg-channel-icon-avatar">✉️</div>
+                <div className="rg-channel-body">
+                  <div className="rg-channel-title">Email Address Only</div>
+                  <div className="rg-channel-desc">Sent directly to {client.email}</div>
+                </div>
+                <div className="rg-channel-arrow">→</div>
+              </button>
+
+              <button
+                type="button"
+                className="rg-channel-option-card chan-sms"
+                onClick={() => handleConfirmChannelAndSend("phone")}
+              >
+                <div className="rg-channel-icon-avatar">📱</div>
+                <div className="rg-channel-body">
+                  <div className="rg-channel-title">Mobile SMS Message</div>
+                  <div className="rg-channel-desc">Sent via SMS to +91 {maskPhone(client.phone)}</div>
+                </div>
+                <div className="rg-channel-arrow">→</div>
+              </button>
+
+              <button
+                type="button"
+                className="rg-channel-option-card chan-wa"
+                onClick={() => handleConfirmChannelAndSend("whatsapp")}
+              >
+                <div className="rg-channel-icon-avatar">💬</div>
+                <div className="rg-channel-body">
+                  <div className="rg-channel-title">WhatsApp Chat Message</div>
+                  <div className="rg-channel-desc">Instant OTP to WhatsApp number {maskPhone(client.phone)}</div>
+                </div>
+                <div className="rg-channel-arrow">→</div>
+              </button>
+
+              <button
+                type="button"
+                className="rg-channel-option-card chan-all"
+                onClick={() => handleConfirmChannelAndSend("all")}
+              >
+                <div className="rg-channel-icon-avatar">✨</div>
+                <div className="rg-channel-body">
+                  <div className="rg-channel-title">
+                    All Channels <span className="rg-channel-badge">Recommended</span>
+                  </div>
+                  <div className="rg-channel-desc">Receive code via Email, SMS & WhatsApp simultaneously</div>
+                </div>
+                <div className="rg-channel-arrow">→</div>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              style={{ background: "none", border: 0, color: "var(--rg-muted)", cursor: "pointer", textDecoration: "underline", font: "inherit", fontSize: "0.88rem" }}
+              onClick={() => setShowChannelModal(false)}
+            >
+              ← Cancel & Back to Form
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* OTP Verification Modal */}
       {otpStep && (
         <div className="rg-modal-overlay">
           <div className="rg-modal-card">
             <div className="rg-otp-badge">🔐</div>
-            <h2 className="rg-title" style={{ fontSize: "1.6rem" }}>Verify Your Email</h2>
-            <p className="rg-subtitle" style={{ fontSize: "0.95rem", margin: "8px 0 20px" }}>
-              We sent a 6-digit verification code to<br />
-              <strong style={{ color: "var(--rg-accent)" }}>{client.email}</strong>
+            <h2 className="rg-title" style={{ fontSize: "1.6rem" }}>Verify Client Account</h2>
+            <p className="rg-subtitle" style={{ fontSize: "0.95rem", margin: "8px 0 16px" }}>
+              Verification code sent via<br />
+              <strong style={{ color: "var(--rg-accent)" }}>
+                {formatOtpChannels(otpSentChannels.length ? otpSentChannels : [otpChannel])}
+              </strong>
+            </p>
+            <p style={{ fontSize: "0.82rem", color: "var(--rg-muted, #64748b)", background: "rgba(0,0,0,0.04)", padding: "8px 12px", borderRadius: "8px", margin: "0 0 20px" }}>
+              Check the listed inboxes/messages and enter the code below to complete registration.
             </p>
 
             <form onSubmit={handleVerifyAndRegister}>
@@ -515,7 +638,7 @@ export default function Register() {
           {err.agreeTerms && <p className="rg-field-err">⚠ {err.agreeTerms}</p>}
 
           <button type="submit" className="rg-btn-primary rg-btn-lg" disabled={loading}>
-            {loading ? <><span className="rg-spinner" /> Sending verification code…</> : "Send Verification Code & Continue →"}
+            {loading ? <><span className="rg-spinner" /> Validating details…</> : "Send Verification Code →"}
           </button>
 
           <p className="rg-login-link">

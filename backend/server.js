@@ -23,6 +23,8 @@ const {
   notifyAdminNewClient,
   notifyAdminNewAdvocate,
   sendOtpEmail,
+  sendWhatsappOtp,
+  sendSmsOtp,
   getStoredNotifications,
   deliverUndeliveredNotifications,
 } = require("./emailService");
@@ -539,6 +541,8 @@ function buildAdvocateRecord(payload, id, status) {
 
 // ── OTP Store ──────────────────────────────────────────────────
 const otpStore = new Map();
+const otpSendTimestamps = new Map();
+const OTP_SEND_COOLDOWN_MS = 60 * 1000;
 
 function generateOtpCode() {
   return String(crypto.randomInt(100000, 1000000));
@@ -546,7 +550,16 @@ function generateOtpCode() {
 
 async function handleSendOtp(payload) {
   const email = normalizeEmail(payload.email);
+  const phone = String(payload.phone || "").trim();
+  const requestedChannel = String(payload.channel || "all").toLowerCase();
+  const channel = requestedChannel === "phone" ? "sms" : requestedChannel;
+  if (!["all", "email", "sms", "whatsapp"].includes(channel)) {
+    throw new HttpError(400, "Invalid verification delivery channel");
+  }
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
+  if (channel !== "email" && !phone) {
+    throw new HttpError(400, "A phone number is required for SMS and WhatsApp verification");
+  }
   const name = String(payload.name || "User").trim();
   const role = payload.role === "advocate" ? "advocate" : "client";
 
@@ -560,17 +573,57 @@ async function handleSendOtp(payload) {
     }
   }
 
+  const now = Date.now();
+  for (const [key, timestamp] of otpSendTimestamps) {
+    if (now - timestamp >= OTP_SEND_COOLDOWN_MS) otpSendTimestamps.delete(key);
+  }
+  const destinationKeys = [`email:${email}`];
+  if (channel !== "email") destinationKeys.push(`phone:${phone.replace(/\D/g, "")}`);
+  if (destinationKeys.some((key) => now - (otpSendTimestamps.get(key) || 0) < OTP_SEND_COOLDOWN_MS)) {
+    throw new HttpError(429, "Please wait 60 seconds before requesting another verification code.");
+  }
+  destinationKeys.forEach((key) => otpSendTimestamps.set(key, now));
+
   const otp = generateOtpCode();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+  const requestedChannels = channel === "all" ? ["email", "sms", "whatsapp"] : [channel];
+  const deliveries = await Promise.allSettled(requestedChannels.map((deliveryChannel) => {
+    if (deliveryChannel === "email") return sendOtpEmail({ to: email, otp, name, role });
+    if (deliveryChannel === "sms") return sendSmsOtp({ phone, otp, role });
+    return sendWhatsappOtp({ phone, otp, name, role });
+  }));
+  const sentChannels = [];
+  const failedChannels = [];
 
-  try {
-    await sendOtpEmail({ to: email, otp, name, role });
-  } catch (err) {
-    console.error(`[OTP] Outbound email delivery failed (${err.message}). OTP stored locally for verification: ${otp}`);
+  deliveries.forEach((delivery, index) => {
+    const deliveryChannel = requestedChannels[index];
+    if (delivery.status === "fulfilled") {
+      sentChannels.push(deliveryChannel);
+      return;
+    }
+    failedChannels.push(deliveryChannel);
+    console.error(`[OTP] ${deliveryChannel} delivery failed: ${delivery.reason?.message || "provider error"}`);
+  });
+
+  if (sentChannels.length === 0) {
+    throw new HttpError(503, "We could not send your verification code. Check the delivery settings or try again later.");
   }
 
-  otpStore.set(email, { otp, expiresAt, attempts: 0, role, name });
-  return { success: true, message: `Verification code generated for ${email}. Please enter the OTP to verify.` };
+  otpStore.set(email, { otp, expiresAt, attempts: 0, role, name, phone, channel });
+  const channelLabel = (deliveryChannel) => ({
+    email: "Email",
+    sms: "SMS",
+    whatsapp: "WhatsApp",
+  })[deliveryChannel] || deliveryChannel;
+
+  return {
+    success: true,
+    message: failedChannels.length
+      ? `Verification code sent via ${sentChannels.map(channelLabel).join(", ")}. Could not send via ${failedChannels.map(channelLabel).join(", ")}.`
+      : `Verification code sent via ${sentChannels.map(channelLabel).join(", ")}.`,
+    sentChannels,
+    failedChannels,
+  };
 }
 
 function verifyOtpCode(email, code) {

@@ -30,6 +30,16 @@ same provider and sender configuration. OTP requests now fail visibly if the
 provider is missing or rejects delivery; verification codes are not logged or
 stored in notification history.
 
+SMS and WhatsApp OTP delivery uses Twilio. Set `TWILIO_ACCOUNT_SID` and
+`TWILIO_AUTH_TOKEN` on the Node API service, plus either `TWILIO_SMS_FROM` or
+`TWILIO_SMS_MESSAGING_SERVICE_SID` for SMS and `TWILIO_WHATSAPP_FROM` for
+WhatsApp. For WhatsApp business-initiated messages, configure an approved
+Twilio content template and set `TWILIO_WHATSAPP_CONTENT_SID`; the template
+must use `{{1}}` for the code and `{{2}}` for the account type. Twilio must have
+senders enabled for the destination countries. Only channels with successful
+provider acceptance are reported as sent; partial delivery is stated in the
+response.
+
 ## 1. Prepare the Railway project
 
 1. Open the existing Railway project that contains the `MongoDB` service.
@@ -78,6 +88,13 @@ does not change the live service.
 - `RESEND_API_KEY`: a Resend API key, stored as a Railway secret.
 - `RESEND_FROM`: an address on a domain verified with Resend, for example
   `Advocates Hub <notifications@your-verified-domain.example>`.
+- `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN`: Twilio API credentials, stored
+  as Railway secrets.
+- `TWILIO_SMS_FROM` or `TWILIO_SMS_MESSAGING_SERVICE_SID`: an SMS-capable
+  Twilio sender or Messaging Service.
+- `TWILIO_WHATSAPP_FROM`: the Twilio WhatsApp-enabled sender.
+- `TWILIO_WHATSAPP_CONTENT_SID`: the approved OTP template for WhatsApp
+  business-initiated messages.
 - `ADMIN_NOTIFICATION_EMAIL`: where client and advocate registration alerts
   should be delivered.
 - `ADVOCATE_REGISTRATION_EMAIL`: recipient for pending advocate registration
@@ -85,8 +102,8 @@ does not change the live service.
 - `ADVOCATE_REGISTRATION_FROM`: sender for advocate registration alerts (set
   to `sandeepmasaguppi@gmail.com` when using that account's SMTP credentials).
 
-Railway Hobby/Free plans block SMTP delivery. On Railway Pro, SMTP is also
-supported with `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, and
+Railway Hobby/Free plans block SMTP delivery. Use Resend for email on those
+plans. On Railway Pro, SMTP is also supported with `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, and
 `SMTP_PASS`. Gmail SMTP requires an app password for the same account used as
 the sender. An HTTPS email provider can send only from an address verified
 with that provider; it may not use the requested Gmail sender address.
