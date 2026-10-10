@@ -607,6 +607,7 @@ export default function Signup() {
   const [resendTimer, setResendTimer] = useState(60);
   const [advOtpSentChannels, setAdvOtpSentChannels] = useState([]);
   const [advOtpChannel, setAdvOtpChannel] = useState("all"); // "all" | "email" | "phone" | "whatsapp"
+  const [advOtpSetupError, setAdvOtpSetupError] = useState("");
 
   useEffect(() => {
     if (!otpStep || resendTimer <= 0) return;
@@ -978,7 +979,7 @@ export default function Signup() {
   const handleConfirmAdvChannelAndSend = (selectedChannel) => {
     const channelToUse = selectedChannel || advOtpChannel;
     setAdvOtpChannel(channelToUse);
-    setShowAdvChannelModal(false);
+    setAdvOtpSetupError("");
     setLoading(true);
 
     (async () => {
@@ -1001,6 +1002,7 @@ export default function Signup() {
         if (!res.ok) {
           const errorMessage = data.message || data.error || "Failed to send verification code. Try again.";
           if (res.status === 409) setAdvErr((p) => ({ ...p, email: errorMessage }));
+          setAdvOtpSetupError(errorMessage);
           showToast(errorMessage, "error");
           setLoading(false);
           return;
@@ -1009,7 +1011,9 @@ export default function Signup() {
         const sentChannels = Array.isArray(data.sentChannels)
           ? data.sentChannels
           : [channelToUse === "phone" ? "sms" : channelToUse];
+        setAdvOtpSetupError("");
         setAdvOtpSentChannels(sentChannels);
+        setShowAdvChannelModal(false);
         showToast(
           data.message || `Verification code sent via ${formatOtpChannels(sentChannels)}.`,
           data.failedChannels?.length ? "info" : "success"
@@ -1047,13 +1051,16 @@ export default function Signup() {
           ? data.sentChannels
           : [advOtpChannel === "phone" ? "sms" : advOtpChannel];
         setAdvOtpSentChannels(sentChannels);
+        setAdvOtpSetupError("");
         showToast(
           data.message || `A new verification code was sent via ${formatOtpChannels(sentChannels)}.`,
           data.failedChannels?.length ? "info" : "success"
         );
         setResendTimer(60);
       } else {
-        showToast(data.message || data.error || "Failed to resend code.", "error");
+        const errorMessage = data.message || data.error || "Failed to resend code.";
+        setAdvOtpSetupError(errorMessage);
+        showToast(errorMessage, "error");
       }
     } catch {
       showToast("Network error during resend.", "error");
@@ -1146,17 +1153,31 @@ export default function Signup() {
       {showAdvChannelModal && (
         <div className="rg-modal-overlay">
           <div className="rg-modal-card" style={{ maxWidth: 480, textAlign: "center" }}>
+            <button
+              type="button"
+              className="rg-modal-theme-toggle"
+              onClick={handleThemeToggle}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
             <div className="rg-otp-badge">📲</div>
             <h2 className="su-title" style={{ fontSize: "1.55rem" }}>{isKn ? "ಒಟಿಪಿ ವಿಧಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select OTP Delivery Channel"}</h2>
             <p className="su-subtitle" style={{ fontSize: "0.92rem", margin: "6px 0 20px" }}>
               {isKn ? "ನಿಮ್ಮ ೬-ಅಂಕಿಯ ಪರಿಶೀಲನಾ ಕೋಡ್ ಅನ್ನು ಎಲ್ಲಿ ಕಳುಹಿಸಬೇಕು?" : "How would you like to receive your 6-digit verification code?"}
             </p>
+            {advOtpSetupError && (
+              <p className="su-otp-setup-error" role="alert">{advOtpSetupError}</p>
+            )}
+            {loading && <p className="su-otp-sending" role="status">Sending your verification code…</p>}
 
             <div className="rg-channel-card-list">
               <button
                 type="button"
                 className="rg-channel-option-card chan-email"
                 onClick={() => handleConfirmAdvChannelAndSend("email")}
+                disabled={loading}
               >
                 <div className="rg-channel-icon-avatar">✉️</div>
                 <div className="rg-channel-body">
@@ -1170,6 +1191,7 @@ export default function Signup() {
                 type="button"
                 className="rg-channel-option-card chan-sms"
                 onClick={() => handleConfirmAdvChannelAndSend("phone")}
+                disabled={loading}
               >
                 <div className="rg-channel-icon-avatar">📱</div>
                 <div className="rg-channel-body">
@@ -1183,6 +1205,7 @@ export default function Signup() {
                 type="button"
                 className="rg-channel-option-card chan-wa"
                 onClick={() => handleConfirmAdvChannelAndSend("whatsapp")}
+                disabled={loading}
               >
                 <div className="rg-channel-icon-avatar">💬</div>
                 <div className="rg-channel-body">
@@ -1196,6 +1219,7 @@ export default function Signup() {
                 type="button"
                 className="rg-channel-option-card chan-all"
                 onClick={() => handleConfirmAdvChannelAndSend("all")}
+                disabled={loading}
               >
                 <div className="rg-channel-icon-avatar">✨</div>
                 <div className="rg-channel-body">
@@ -1211,7 +1235,11 @@ export default function Signup() {
             <button
               type="button"
               style={{ background: "none", border: 0, color: "var(--rg-muted)", cursor: "pointer", textDecoration: "underline", font: "inherit", fontSize: "0.88rem" }}
-              onClick={() => setShowAdvChannelModal(false)}
+              onClick={() => {
+                setAdvOtpSetupError("");
+                setShowAdvChannelModal(false);
+              }}
+              disabled={loading}
             >
               ← Cancel & Back to Form
             </button>
@@ -1223,6 +1251,15 @@ export default function Signup() {
       {otpStep && (
         <div className="rg-modal-overlay">
           <div className="rg-modal-card">
+            <button
+              type="button"
+              className="rg-modal-theme-toggle"
+              onClick={handleThemeToggle}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
             <div className="rg-otp-badge">🔐</div>
             <h2 className="su-title" style={{ fontSize: "1.6rem" }}>Verify Advocate Account</h2>
             <p className="su-subtitle" style={{ fontSize: "0.95rem", margin: "8px 0 16px" }}>
@@ -1234,6 +1271,9 @@ export default function Signup() {
             <p style={{ fontSize: "0.82rem", color: "#64748b", background: "rgba(0,0,0,0.04)", padding: "8px 12px", borderRadius: "8px", margin: "0 0 20px" }}>
               Check the listed inboxes/messages and enter the code below to approve your profile.
             </p>
+            {advOtpSetupError && (
+              <p className="su-otp-setup-error" role="alert">{advOtpSetupError}</p>
+            )}
 
             <form onSubmit={handleVerifyAndRegisterAdv}>
               <div className="su-field">

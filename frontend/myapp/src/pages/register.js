@@ -187,6 +187,7 @@ export default function Register() {
   const [otpErr, setOtpErr] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
   const [otpSentChannels, setOtpSentChannels] = useState([]);
+  const [otpSetupError, setOtpSetupError] = useState("");
 
   useEffect(() => {
     if (!otpStep || resendTimer <= 0) return;
@@ -223,7 +224,7 @@ export default function Register() {
   const handleConfirmChannelAndSend = (selectedChannel) => {
     const channelToUse = selectedChannel || otpChannel;
     setOtpChannel(channelToUse);
-    setShowChannelModal(false);
+    setOtpSetupError("");
     setLoading(true);
 
     (async () => {
@@ -248,6 +249,7 @@ export default function Register() {
           if (res.status === 409) {
             setErr((p) => ({ ...p, email: errorMessage }));
           }
+          setOtpSetupError(errorMessage);
           showToast(errorMessage, "error");
           setLoading(false);
           return;
@@ -256,7 +258,9 @@ export default function Register() {
         const sentChannels = Array.isArray(data.sentChannels)
           ? data.sentChannels
           : [channelToUse === "phone" ? "sms" : channelToUse];
+        setOtpSetupError("");
         setOtpSentChannels(sentChannels);
+        setShowChannelModal(false);
         showToast(
           data.message || `Verification code sent via ${formatOtpChannels(sentChannels)}.`,
           data.failedChannels?.length ? "info" : "success"
@@ -294,13 +298,16 @@ export default function Register() {
           ? data.sentChannels
           : [otpChannel === "phone" ? "sms" : otpChannel];
         setOtpSentChannels(sentChannels);
+        setOtpSetupError("");
         showToast(
           data.message || `A new verification code was sent via ${formatOtpChannels(sentChannels)}.`,
           data.failedChannels?.length ? "info" : "success"
         );
         setResendTimer(60);
       } else {
-        showToast(data.message || data.error || "Failed to resend code.", "error");
+        const errorMessage = data.message || data.error || "Failed to resend code.";
+        setOtpSetupError(errorMessage);
+        showToast(errorMessage, "error");
       }
     } catch {
       showToast("Network error during resend.", "error");
@@ -398,17 +405,29 @@ export default function Register() {
       {showChannelModal && (
         <div className="rg-modal-overlay">
           <div className="rg-modal-card" style={{ maxWidth: 480, textAlign: "center" }}>
+            <button
+              type="button"
+              className="rg-modal-theme-toggle"
+              onClick={handleThemeToggle}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
             <div className="rg-otp-badge">📲</div>
             <h2 className="rg-title" style={{ fontSize: "1.55rem" }}>Select OTP Delivery Channel</h2>
             <p className="rg-subtitle" style={{ fontSize: "0.92rem", margin: "6px 0 20px" }}>
               How would you like to receive your 6-digit verification code?
             </p>
+            {otpSetupError && <p className="rg-otp-setup-error" role="alert">{otpSetupError}</p>}
+            {loading && <p className="rg-otp-sending" role="status">Sending your verification code…</p>}
 
             <div className="rg-channel-card-list">
               <button
                 type="button"
                 className="rg-channel-option-card chan-email"
                 onClick={() => handleConfirmChannelAndSend("email")}
+                disabled={loading}
               >
                 <div className="rg-channel-icon-avatar">✉️</div>
                 <div className="rg-channel-body">
@@ -422,6 +441,7 @@ export default function Register() {
                 type="button"
                 className="rg-channel-option-card chan-sms"
                 onClick={() => handleConfirmChannelAndSend("phone")}
+                disabled={loading}
               >
                 <div className="rg-channel-icon-avatar">📱</div>
                 <div className="rg-channel-body">
@@ -435,6 +455,7 @@ export default function Register() {
                 type="button"
                 className="rg-channel-option-card chan-wa"
                 onClick={() => handleConfirmChannelAndSend("whatsapp")}
+                disabled={loading}
               >
                 <div className="rg-channel-icon-avatar">💬</div>
                 <div className="rg-channel-body">
@@ -448,6 +469,7 @@ export default function Register() {
                 type="button"
                 className="rg-channel-option-card chan-all"
                 onClick={() => handleConfirmChannelAndSend("all")}
+                disabled={loading}
               >
                 <div className="rg-channel-icon-avatar">✨</div>
                 <div className="rg-channel-body">
@@ -463,7 +485,11 @@ export default function Register() {
             <button
               type="button"
               style={{ background: "none", border: 0, color: "var(--rg-muted)", cursor: "pointer", textDecoration: "underline", font: "inherit", fontSize: "0.88rem" }}
-              onClick={() => setShowChannelModal(false)}
+              onClick={() => {
+                setOtpSetupError("");
+                setShowChannelModal(false);
+              }}
+              disabled={loading}
             >
               ← Cancel & Back to Form
             </button>
@@ -475,6 +501,15 @@ export default function Register() {
       {otpStep && (
         <div className="rg-modal-overlay">
           <div className="rg-modal-card">
+            <button
+              type="button"
+              className="rg-modal-theme-toggle"
+              onClick={handleThemeToggle}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
             <div className="rg-otp-badge">🔐</div>
             <h2 className="rg-title" style={{ fontSize: "1.6rem" }}>Verify Client Account</h2>
             <p className="rg-subtitle" style={{ fontSize: "0.95rem", margin: "8px 0 16px" }}>
@@ -486,6 +521,7 @@ export default function Register() {
             <p style={{ fontSize: "0.82rem", color: "var(--rg-muted, #64748b)", background: "rgba(0,0,0,0.04)", padding: "8px 12px", borderRadius: "8px", margin: "0 0 20px" }}>
               Check the listed inboxes/messages and enter the code below to complete registration.
             </p>
+            {otpSetupError && <p className="rg-otp-setup-error" role="alert">{otpSetupError}</p>}
 
             <form onSubmit={handleVerifyAndRegister}>
               <Field error={otpErr}>

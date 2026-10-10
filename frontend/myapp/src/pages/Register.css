@@ -240,6 +240,7 @@
 @keyframes rg-fade { from { opacity: 0; } to { opacity: 1; } }
 
 .rg-modal-card {
+  position: relative;
   box-sizing: border-box;
   width: min(100%, 520px);
   background: var(--rg-card);
@@ -248,6 +249,65 @@
   padding: clamp(24px, 5vw, 36px);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
   animation: rg-pop .28s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+.rg-dark .rg-modal-overlay { background: rgba(2, 6, 23, .82); }
+.rg-light .rg-modal-overlay { background: rgba(226, 232, 240, .78); }
+.rg-light .rg-modal-card {
+  --rg-card: #ffffff;
+  --rg-panel: #f8fafc;
+  --rg-text: #172033;
+  --rg-muted: #526176;
+  --rg-border: #d7e0ea;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, .22);
+}
+.rg-modal-theme-toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--rg-border);
+  border-radius: 50%;
+  background: var(--rg-panel);
+  color: var(--rg-text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform .18s, background .18s;
+}
+.rg-modal-theme-toggle:hover { transform: rotate(12deg); }
+.rg-modal-theme-toggle:focus-visible,
+.rg-channel-option-card:focus-visible {
+  outline: 3px solid var(--rg-accent);
+  outline-offset: 3px;
+}
+.rg-otp-setup-error {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: .88rem;
+  line-height: 1.5;
+  text-align: left;
+}
+.rg-otp-sending {
+  margin: 0 0 16px;
+  color: var(--rg-accent);
+  font-size: .9rem;
+  font-weight: 700;
+}
+.rg-channel-option-card:disabled {
+  cursor: wait;
+  opacity: .62;
+  transform: none;
+}
+.rg-dark .rg-otp-setup-error {
+  border-color: rgba(248, 113, 113, .45);
+  background: rgba(127, 29, 29, .28);
+  color: #fecaca;
 }
 @keyframes rg-pop { from { opacity: 0; transform: scale(0.92) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
@@ -377,4 +437,3 @@
   font-family: monospace;
   padding-left: 20px;
 }
-

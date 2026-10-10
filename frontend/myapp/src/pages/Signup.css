@@ -2242,6 +2242,102 @@ body {
 /*  EXECUTIVE DARK THEME ENHANCEMENTS FOR ADVOCATE REGISTRATION */
 /* ============================================================ */
 
+/* OTP modals live inside the signup theme root. */
+.su-page {
+  --rg-card: #ffffff;
+  --rg-panel: #f8fafc;
+  --rg-text: #172033;
+  --rg-muted: #526176;
+  --rg-border: #d7e0ea;
+  --rg-accent: #0f766e;
+}
+.su-dark.su-page {
+  --rg-card: #0f172a;
+  --rg-panel: #111e33;
+  --rg-text: #f8fafc;
+  --rg-muted: #94a3b8;
+  --rg-border: #26364c;
+  --rg-accent: #2dd4bf;
+}
+.su-page .rg-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+.su-dark.su-page .rg-modal-overlay { background: rgba(2, 6, 23, .82); }
+.su-light.su-page .rg-modal-overlay { background: rgba(226, 232, 240, .78); }
+.su-page .rg-modal-card {
+  position: relative;
+  box-sizing: border-box;
+  width: min(100%, 520px);
+  padding: clamp(24px, 5vw, 36px);
+  border: 1px solid var(--rg-border);
+  border-radius: 24px;
+  background: var(--rg-card);
+  color: var(--rg-text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .3);
+}
+.su-page .rg-channel-option-card {
+  background: var(--rg-panel);
+  border-color: var(--rg-border);
+  color: var(--rg-text);
+}
+.su-page .rg-channel-title { color: var(--rg-text); }
+.su-page .rg-channel-desc { color: var(--rg-muted); }
+.su-page .rg-modal-theme-toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--rg-border);
+  border-radius: 50%;
+  background: var(--rg-panel);
+  color: var(--rg-text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform .18s, background .18s;
+}
+.su-page .rg-modal-theme-toggle:hover { transform: rotate(12deg); }
+.su-page .rg-modal-theme-toggle:focus-visible,
+.su-page .rg-channel-option-card:focus-visible {
+  outline: 3px solid var(--rg-accent);
+  outline-offset: 3px;
+}
+.su-page .su-otp-setup-error {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: .88rem;
+  line-height: 1.5;
+  text-align: left;
+}
+.su-page .su-otp-sending {
+  margin: 0 0 16px;
+  color: var(--rg-accent);
+  font-size: .9rem;
+  font-weight: 700;
+}
+.su-page .rg-channel-option-card:disabled {
+  cursor: wait;
+  opacity: .62;
+  transform: none;
+}
+.su-dark.su-page .su-otp-setup-error {
+  border-color: rgba(248, 113, 113, .45);
+  background: rgba(127, 29, 29, .28);
+  color: #fecaca;
+}
+
 /* 1. Base Dark Theme Containers */
 [data-theme="dark"] .su-page,
 .theme-dark .su-page,
