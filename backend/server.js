@@ -620,7 +620,13 @@ async function handleSendOtp(payload) {
       sms: "SMS",
       whatsapp: "WhatsApp",
     })[failedChannel] || failedChannel);
-    throw new HttpError(503, `Could not send via ${failedLabels.join(", ")}. Check that delivery channel's Railway provider settings, then try again.`);
+    const setupHints = failedChannels.map((failedChannel) => {
+      if (failedChannel === "email") {
+        return "Email needs EMAIL_PROVIDER=resend, RESEND_API_KEY, and RESEND_FROM";
+      }
+      return `${failedChannel === "sms" ? "SMS" : "WhatsApp"} needs TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_VERIFY_SERVICE_SID; Twilio trial recipients must be verified`;
+    });
+    throw new HttpError(503, `Could not send via ${failedLabels.join(", ")}. ${setupHints.join(". ")}. Set these on the Railway API service and try again.`);
   }
 
   const sentAt = Date.now();
