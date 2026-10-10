@@ -577,16 +577,24 @@ async function handleSendOtp(payload) {
   for (const [key, timestamp] of otpSendTimestamps) {
     if (now - timestamp >= OTP_SEND_COOLDOWN_MS) otpSendTimestamps.delete(key);
   }
-  const destinationKeys = [`email:${email}`];
-  if (channel !== "email") destinationKeys.push(`phone:${phone.replace(/\D/g, "")}`);
-  if (destinationKeys.some((key) => now - (otpSendTimestamps.get(key) || 0) < OTP_SEND_COOLDOWN_MS)) {
-    throw new HttpError(429, "Please wait 60 seconds before requesting another verification code.");
+  const requestedChannels = channel === "all" ? ["email", "sms", "whatsapp"] : [channel];
+  const normalizedPhone = phone.replace(/\D/g, "");
+  const destinationKeys = requestedChannels.map((deliveryChannel) => (
+    deliveryChannel === "email"
+      ? `email:${email}`
+      : `${deliveryChannel}:${normalizedPhone}`
+  ));
+  const cooldownRemaining = destinationKeys.reduce((remaining, key) => {
+    const sentAt = otpSendTimestamps.get(key);
+    return sentAt ? Math.max(remaining, OTP_SEND_COOLDOWN_MS - (now - sentAt)) : remaining;
+  }, 0);
+  if (cooldownRemaining > 0) {
+    const seconds = Math.ceil(cooldownRemaining / 1000);
+    throw new HttpError(429, `Please wait ${seconds} seconds before requesting another code via this channel.`);
   }
-  destinationKeys.forEach((key) => otpSendTimestamps.set(key, now));
 
   const otp = generateOtpCode();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-  const requestedChannels = channel === "all" ? ["email", "sms", "whatsapp"] : [channel];
   const deliveries = await Promise.allSettled(requestedChannels.map((deliveryChannel) => {
     if (deliveryChannel === "email") return sendOtpEmail({ to: email, otp, name, role });
     if (deliveryChannel === "sms") return sendSmsOtp({ phone, otp, role });
@@ -606,8 +614,21 @@ async function handleSendOtp(payload) {
   });
 
   if (sentChannels.length === 0) {
-    throw new HttpError(503, "We could not send your verification code. Check the delivery settings or try again later.");
+    const failedLabels = failedChannels.map((failedChannel) => ({
+      email: "email",
+      sms: "SMS",
+      whatsapp: "WhatsApp",
+    })[failedChannel] || failedChannel);
+    throw new HttpError(503, `Could not send via ${failedLabels.join(", ")}. Check that delivery channel's Railway provider settings, then try again.`);
   }
+
+  const sentAt = Date.now();
+  sentChannels.forEach((deliveryChannel) => {
+    const key = deliveryChannel === "email"
+      ? `email:${email}`
+      : `${deliveryChannel}:${normalizedPhone}`;
+    otpSendTimestamps.set(key, sentAt);
+  });
 
   otpStore.set(email, { otp, expiresAt, attempts: 0, role, name, phone, channel });
   const channelLabel = (deliveryChannel) => ({

@@ -529,15 +529,15 @@ async function sendTwilioOtp({ channel, to, body, contentSid, contentVariables }
   return { provider: "twilio", messageId: result.sid };
 }
 
-async function sendWhatsappOtp({ phone, otp, name, role = "client" }) {
+async function sendWhatsappOtp({ phone, otp, role = "client" }) {
   const recipient = normalizeOtpPhone(phone);
-  const recipientName = name || (role === "advocate" ? "Advocate" : "Client");
-  const message = `Advocates Hub verification code for ${recipientName}: ${otp}. This code expires in 10 minutes. Do not share it.`;
   const contentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID;
+  if (!contentSid) {
+    throw new Error("Set an approved TWILIO_WHATSAPP_CONTENT_SID for WhatsApp OTP delivery");
+  }
   const result = await sendTwilioOtp({
     channel: "whatsapp",
     to: `whatsapp:${recipient}`,
-    body: message,
     contentSid,
     contentVariables: { "1": otp, "2": role === "advocate" ? "Advocate" : "Client" },
   });

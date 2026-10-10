@@ -28,7 +28,9 @@ registration alerts are retried automatically after the API starts with a
 working email provider. Advocate and client email-verification codes use this
 same provider and sender configuration. OTP requests now fail visibly if the
 provider is missing or rejects delivery; verification codes are not logged or
-stored in notification history.
+stored in notification history. The 60-second resend cooldown applies
+independently to each successful destination/channel; failed sends do not
+consume the cooldown, so another configured channel can be tried immediately.
 
 SMS and WhatsApp OTP delivery uses Twilio. Set `TWILIO_ACCOUNT_SID` and
 `TWILIO_AUTH_TOKEN` on the Node API service, plus either `TWILIO_SMS_FROM` or
