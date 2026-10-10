@@ -31,7 +31,7 @@
     },
     "timestamp": "2026-10-09T03:03:57.531Z",
     "delivered": false,
-    "error": "read ECONNRESET"
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-3537ca76e5asm11911034eec.15 - gsmtp"
   },
   {
     "id": "NOTIF_1791428207970_mxx6nt",
