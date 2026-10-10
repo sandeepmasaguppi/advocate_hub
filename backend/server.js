@@ -25,6 +25,7 @@ const {
   sendOtpEmail,
   sendWhatsappOtp,
   sendSmsOtp,
+  checkTwilioPhoneVerification,
   getStoredNotifications,
   deliverUndeliveredNotifications,
 } = require("./emailService");
@@ -577,7 +578,7 @@ async function handleSendOtp(payload) {
   for (const [key, timestamp] of otpSendTimestamps) {
     if (now - timestamp >= OTP_SEND_COOLDOWN_MS) otpSendTimestamps.delete(key);
   }
-  const requestedChannels = channel === "all" ? ["email", "sms", "whatsapp"] : [channel];
+  const requestedChannels = channel === "all" ? ["email", "sms"] : [channel];
   const normalizedPhone = phone.replace(/\D/g, "");
   const destinationKeys = requestedChannels.map((deliveryChannel) => (
     deliveryChannel === "email"
@@ -597,8 +598,8 @@ async function handleSendOtp(payload) {
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
   const deliveries = await Promise.allSettled(requestedChannels.map((deliveryChannel) => {
     if (deliveryChannel === "email") return sendOtpEmail({ to: email, otp, name, role });
-    if (deliveryChannel === "sms") return sendSmsOtp({ phone, otp, role });
-    return sendWhatsappOtp({ phone, otp, name, role });
+    if (deliveryChannel === "sms") return sendSmsOtp({ phone });
+    return sendWhatsappOtp({ phone });
   }));
   const sentChannels = [];
   const failedChannels = [];
@@ -630,7 +631,15 @@ async function handleSendOtp(payload) {
     otpSendTimestamps.set(key, sentAt);
   });
 
-  otpStore.set(email, { otp, expiresAt, attempts: 0, role, name, phone, channel });
+  otpStore.set(email, {
+    otp: sentChannels.includes("email") ? otp : null,
+    expiresAt,
+    attempts: 0,
+    role,
+    name,
+    phone,
+    verificationChannels: sentChannels.filter((deliveryChannel) => ["sms", "whatsapp"].includes(deliveryChannel)),
+  });
   const channelLabel = (deliveryChannel) => ({
     email: "Email",
     sms: "SMS",
@@ -647,7 +656,7 @@ async function handleSendOtp(payload) {
   };
 }
 
-function verifyOtpCode(email, code) {
+async function verifyOtpCode(email, code) {
   const normEmail = normalizeEmail(email);
   const record = otpStore.get(normEmail);
   if (!record) {
@@ -661,19 +670,37 @@ function verifyOtpCode(email, code) {
     otpStore.delete(normEmail);
     throw new HttpError(400, "Too many invalid attempts. Please request a new OTP.");
   }
-  if (String(code).trim() !== String(record.otp).trim()) {
-    record.attempts += 1;
-    throw new HttpError(400, "Invalid verification code. Please check your email and try again.");
+  const submittedCode = String(code).trim();
+  if (record.otp && submittedCode === record.otp) {
+    otpStore.delete(normEmail);
+    return true;
   }
-  otpStore.delete(normEmail);
-  return true;
+
+  if (record.verificationChannels.length > 0) {
+    try {
+      if (await checkTwilioPhoneVerification({ phone: record.phone, code: submittedCode })) {
+        otpStore.delete(normEmail);
+        return true;
+      }
+    } catch (err) {
+      console.error(`[OTP] Twilio Verify check failed: ${err.message}`);
+      throw new HttpError(503, "Could not verify this code with the SMS/WhatsApp provider. Please try again.");
+    }
+  }
+
+  record.attempts += 1;
+  if (record.attempts >= 5) {
+    otpStore.delete(normEmail);
+    throw new HttpError(400, "Too many invalid attempts. Please request a new OTP.");
+  }
+  throw new HttpError(400, "Invalid verification code. Please check your email, SMS, or WhatsApp and try again.");
 }
 
-function handleVerifyOtpEndpoint(payload) {
+async function handleVerifyOtpEndpoint(payload) {
   const email = normalizeEmail(payload.email);
   const otp = payload.otp;
-  verifyOtpCode(email, otp);
-  return { verified: true, message: "Email verified successfully" };
+  await verifyOtpCode(email, otp);
+  return { verified: true, message: "Verification code accepted" };
 }
 
 // Public: advocate self-registration → approved upon OTP verification.
@@ -682,8 +709,9 @@ async function registerAdvocate(request, payload, { status = "approved", byAdmin
   if (!String(payload.name || "").trim()) throw new HttpError(400, "Name is required");
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   if (!byAdmin && String(payload.password || "").length < 6) throw new HttpError(400, "Password must be at least 6 characters");
-  if (!byAdmin && payload.otp) {
-    verifyOtpCode(email, payload.otp);
+  if (!byAdmin) {
+    if (!payload.otp) throw new HttpError(400, "A verification code is required");
+    await verifyOtpCode(email, payload.otp);
   }
 
   const list = loadAdvocates();
@@ -715,8 +743,9 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   const password = payload.password || "client123";
   if (String(password).length < 6) throw new HttpError(400, "Password must be at least 6 characters");
-  if (!byAdmin && payload.otp) {
-    verifyOtpCode(email, payload.otp);
+  if (!byAdmin) {
+    if (!payload.otp) throw new HttpError(400, "A verification code is required");
+    await verifyOtpCode(email, payload.otp);
   }
 
   const list = loadClients();
@@ -1377,7 +1406,7 @@ async function route(request, response) {
 
   // Auth & OTP
   if (method === "POST" && p === "/api/auth/send-otp") return send(request, response, 200, await handleSendOtp(await readBody(request)));
-  if (method === "POST" && p === "/api/auth/verify-otp") return send(request, response, 200, handleVerifyOtpEndpoint(await readBody(request)));
+  if (method === "POST" && p === "/api/auth/verify-otp") return send(request, response, 200, await handleVerifyOtpEndpoint(await readBody(request)));
   if (method === "POST" && p === "/api/auth/advocate/login") return send(request, response, 200, advocateLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/admin/login") return send(request, response, 200, adminLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/client/login") return send(request, response, 200, clientLogin(await readBody(request)));

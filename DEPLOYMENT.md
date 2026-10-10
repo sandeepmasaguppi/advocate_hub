@@ -32,15 +32,17 @@ stored in notification history. The 60-second resend cooldown applies
 independently to each successful destination/channel; failed sends do not
 consume the cooldown, so another configured channel can be tried immediately.
 
-SMS and WhatsApp OTP delivery uses Twilio. Set `TWILIO_ACCOUNT_SID` and
-`TWILIO_AUTH_TOKEN` on the Node API service, plus either `TWILIO_SMS_FROM` or
-`TWILIO_SMS_MESSAGING_SERVICE_SID` for SMS and `TWILIO_WHATSAPP_FROM` for
-WhatsApp. For WhatsApp business-initiated messages, configure an approved
-Twilio content template and set `TWILIO_WHATSAPP_CONTENT_SID`; the template
-must use `{{1}}` for the code and `{{2}}` for the account type. Twilio must have
-senders enabled for the destination countries. Only channels with successful
-provider acceptance are reported as sent; partial delivery is stated in the
-response.
+SMS and WhatsApp OTP delivery uses Twilio Verify. Set `TWILIO_ACCOUNT_SID`,
+`TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` on the Node API service.
+The Verify Service SID starts with `VA`. Twilio trial accounts can send only
+to verified recipient numbers (up to five) and have trial quotas/expiry; verify
+the signup/test number in Twilio before testing. The app sends to the phone
+number entered during signup and must not hard-code an administrator's phone.
+Twilio Verify generates and validates the phone OTP; the email OTP is
+independently generated, so a person may enter either code when both channels
+are selected. The “All Channels” option sends email and SMS; select WhatsApp
+separately to request a WhatsApp verification. Only channels accepted by their
+provider are reported as sent.
 
 ## 1. Prepare the Railway project
 
@@ -90,13 +92,8 @@ does not change the live service.
 - `RESEND_API_KEY`: a Resend API key, stored as a Railway secret.
 - `RESEND_FROM`: an address on a domain verified with Resend, for example
   `Advocates Hub <notifications@your-verified-domain.example>`.
-- `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN`: Twilio API credentials, stored
-  as Railway secrets.
-- `TWILIO_SMS_FROM` or `TWILIO_SMS_MESSAGING_SERVICE_SID`: an SMS-capable
-  Twilio sender or Messaging Service.
-- `TWILIO_WHATSAPP_FROM`: the Twilio WhatsApp-enabled sender.
-- `TWILIO_WHATSAPP_CONTENT_SID`: the approved OTP template for WhatsApp
-  business-initiated messages.
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID`:
+  Twilio Verify credentials and service SID, stored as Railway secrets.
 - `ADMIN_NOTIFICATION_EMAIL`: where client and advocate registration alerts
   should be delivered.
 - `ADVOCATE_REGISTRATION_EMAIL`: recipient for pending advocate registration
@@ -110,13 +107,11 @@ plans. On Railway Pro, SMTP is also supported with `SMTP_HOST`, `SMTP_PORT`, `SM
 the sender. An HTTPS email provider can send only from an address verified
 with that provider; it may not use the requested Gmail sender address.
 
-After changing the API service's email variables, redeploy that service. To
-check OTP delivery, submit an advocate signup using an inbox you control and
-confirm the verification message arrives. If the API responds that it could
-not send the email, inspect the `advocate_hub` deployment logs for the
-`[OTP] Email delivery failed` detail and check the provider's sender/domain
-verification and API-key status. Do not put OTPs or email-provider credentials
-in logs, source control, or support messages.
+After changing the API service's provider variables, redeploy that service.
+For Twilio trial SMS, first verify the recipient number in the Twilio Console.
+Then submit a signup using that phone number and check the API/service logs and
+Twilio Verify logs. Do not put OTPs or provider credentials in source control,
+logs, or support messages.
 
 Attach a volume to the Node API at `/data` so uploaded avatars persist.
 Do not commit `.env` files or paste passwords, hashes, MongoDB URLs, or

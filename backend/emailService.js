@@ -478,83 +478,69 @@ function normalizeOtpPhone(phone) {
   throw new Error("A valid phone number with country code is required");
 }
 
-async function sendTwilioOtp({ channel, to, body, contentSid, contentVariables }) {
+function getTwilioVerifyConfig() {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
-  if (!accountSid || !authToken) {
-    throw new Error("Twilio requires TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN");
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+  if (!accountSid || !authToken || !serviceSid) {
+    throw new Error("Configure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_VERIFY_SERVICE_SID");
   }
+  return { accountSid, authToken, serviceSid };
+}
 
-  const parameters = new URLSearchParams({ To: to });
-  if (contentSid) {
-    parameters.set("ContentSid", contentSid);
-    parameters.set("ContentVariables", JSON.stringify(contentVariables));
-  } else {
-    parameters.set("Body", body);
-  }
-
-  const smsMessagingServiceSid = channel === "sms" && process.env.TWILIO_SMS_MESSAGING_SERVICE_SID;
-  const from = channel === "whatsapp"
-    ? process.env.TWILIO_WHATSAPP_FROM
-    : process.env.TWILIO_SMS_FROM;
-  if (smsMessagingServiceSid) {
-    parameters.set("MessagingServiceSid", smsMessagingServiceSid);
-  } else if (from) {
-    parameters.set("From", channel === "whatsapp" && !from.startsWith("whatsapp:")
-      ? `whatsapp:${from}`
-      : from);
-  } else {
-    throw new Error(channel === "whatsapp"
-      ? "TWILIO_WHATSAPP_FROM is not configured"
-      : "Set TWILIO_SMS_FROM or TWILIO_SMS_MESSAGING_SERVICE_SID");
-  }
-
+async function twilioVerifyRequest(resource, parameters) {
+  const { accountSid, authToken, serviceSid } = getTwilioVerifyConfig();
   const response = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+    `https://verify.twilio.com/v2/Services/${serviceSid}/${resource}`,
     {
       method: "POST",
       headers: {
         Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: parameters,
+      body: new URLSearchParams(parameters),
       signal: AbortSignal.timeout(15000),
     }
   );
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
     const providerCode = result.code ? ` (${result.code})` : "";
-    throw new Error(`Twilio ${channel} delivery failed with HTTP ${response.status}${providerCode}`);
+    throw new Error(`Twilio Verify request failed with HTTP ${response.status}${providerCode}`);
   }
-  return { provider: "twilio", messageId: result.sid };
-}
-
-async function sendWhatsappOtp({ phone, otp, role = "client" }) {
-  const recipient = normalizeOtpPhone(phone);
-  const contentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID;
-  if (!contentSid) {
-    throw new Error("Set an approved TWILIO_WHATSAPP_CONTENT_SID for WhatsApp OTP delivery");
-  }
-  const result = await sendTwilioOtp({
-    channel: "whatsapp",
-    to: `whatsapp:${recipient}`,
-    contentSid,
-    contentVariables: { "1": otp, "2": role === "advocate" ? "Advocate" : "Client" },
-  });
-  console.log(`[OTP] WhatsApp message accepted by ${result.provider}`);
   return result;
 }
 
-async function sendSmsOtp({ phone, otp, role = "client" }) {
+async function startTwilioPhoneVerification({ phone, channel }) {
   const recipient = normalizeOtpPhone(phone);
-  const message = `Advocates Hub ${role === "advocate" ? "Advocate" : "Client"} verification code: ${otp}. Valid for 10 minutes. Do not share it.`;
-  const result = await sendTwilioOtp({
-    channel: "sms",
-    to: recipient,
-    body: message,
+  if (channel !== "sms" && channel !== "whatsapp") {
+    throw new Error("Twilio Verify supports SMS or WhatsApp for phone verification");
+  }
+  const result = await twilioVerifyRequest("Verifications", {
+    To: recipient,
+    Channel: channel,
   });
-  console.log(`[OTP] SMS message accepted by ${result.provider}`);
-  return result;
+  if (result.status !== "pending") {
+    throw new Error(`Twilio Verify did not accept the ${channel} verification`);
+  }
+  console.log(`[OTP] ${channel} verification accepted by Twilio Verify`);
+  return { provider: "twilio-verify", status: result.status };
+}
+
+async function sendSmsOtp({ phone }) {
+  return startTwilioPhoneVerification({ phone, channel: "sms" });
+}
+
+async function sendWhatsappOtp({ phone }) {
+  return startTwilioPhoneVerification({ phone, channel: "whatsapp" });
+}
+
+async function checkTwilioPhoneVerification({ phone, code }) {
+  const recipient = normalizeOtpPhone(phone);
+  const result = await twilioVerifyRequest("VerificationCheck", {
+    To: recipient,
+    Code: String(code).trim(),
+  });
+  return result.status === "approved";
 }
 
 /**
@@ -648,6 +634,8 @@ module.exports = {
   sendOtpEmail,
   sendWhatsappOtp,
   sendSmsOtp,
+  startTwilioPhoneVerification,
+  checkTwilioPhoneVerification,
   sendAdminEmail,
   getStoredNotifications,
   deliverUndeliveredNotifications,

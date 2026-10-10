@@ -435,7 +435,7 @@ function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidPhone(p) { return /^\d{10}$/.test(p.replace(/\s|-/g, "")); }
 function formatOtpChannels(channels) {
   const labels = { email: "Email", sms: "SMS", phone: "SMS", whatsapp: "WhatsApp" };
-  const expanded = channels.flatMap((channel) => channel === "all" ? ["email", "sms", "whatsapp"] : [channel]);
+  const expanded = channels.flatMap((channel) => channel === "all" ? ["email", "sms"] : [channel]);
   return expanded.map((channel) => labels[channel] || channel).join(", ");
 }
 function maskPhone(p) {
@@ -1202,7 +1202,7 @@ export default function Signup() {
                   <div className="rg-channel-title">
                     All Channels <span className="rg-channel-badge">Recommended</span>
                   </div>
-                  <div className="rg-channel-desc">Receive code via Email, SMS & WhatsApp simultaneously</div>
+                  <div className="rg-channel-desc">Receive code via Email and SMS simultaneously</div>
                 </div>
                 <div className="rg-channel-arrow">→</div>
               </button>
