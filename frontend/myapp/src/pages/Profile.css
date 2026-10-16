@@ -1207,31 +1207,171 @@
   }
 
   .lw-profile-hero-card {
-    padding: 22px 18px;
-    border-radius: 16px;
+    padding: 26px 18px 24px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  }
+
+  .lw-hero-top {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .lw-hero-top-badges {
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .lw-trust-badge {
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    letter-spacing: 0.01em;
+  }
+
+  .lw-hero-court-chip {
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lw-status-indicator {
+    margin: 0 auto;
+    font-size: 0.8rem;
+    padding: 5px 14px;
+    justify-content: center;
+    display: inline-flex;
   }
 
   .lw-hero-main {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .lw-avatar-container {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lw-avatar-ring {
+    width: 106px;
+    height: 106px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%);
+    box-shadow: 0 10px 28px rgba(37, 99, 235, 0.38);
+    padding: 4px;
+  }
+
+  .lw-hero-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .lw-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  .lw-advocate-name {
+    font-size: 1.65rem;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .lw-verified-mark {
+    width: 22px;
+    height: 22px;
+    font-size: 0.78rem;
+  }
+
+  .lw-advocate-spec-headline {
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: #93c5fd;
+    text-align: center;
+    margin: 4px auto 14px;
+    max-width: 95%;
+    line-height: 1.4;
+  }
+
+  .lw-hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .lw-hero-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .lw-hero-action-box {
-    text-align: left;
-    align-items: stretch;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
-    padding-top: 16px;
-    margin-top: 8px;
-    gap: 10px;
+    padding-top: 20px;
+    margin-top: 10px;
+    gap: 12px;
   }
 
   .lw-hero-chat-btn,
   .lw-hero-consult-btn {
     width: 100%;
+    max-width: 380px;
+    min-height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    min-width: unset;
+    margin: 0 auto;
   }
 
   .lw-stats-matrix {
@@ -1253,5 +1393,37 @@
 
   .lw-more-advocates-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .lw-profile-hero-card {
+    padding: 20px 14px 20px;
+    border-radius: 18px;
+  }
+
+  .lw-advocate-name {
+    font-size: 1.45rem;
+  }
+
+  .lw-advocate-spec-headline {
+    font-size: 0.95rem;
+  }
+
+  .lw-avatar-ring {
+    width: 96px;
+    height: 96px;
+  }
+
+  .lw-hero-tag {
+    font-size: 0.78rem;
+    padding: 5px 11px;
+  }
+
+  .lw-hero-chat-btn,
+  .lw-hero-consult-btn {
+    font-size: 0.94rem;
+    min-height: 46px;
+    padding: 11px 16px;
   }
 }
