@@ -666,7 +666,6 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-              <span className="lw-hero-online-dot" />
             </div>
 
             {/* Advocate Key Titles */}
