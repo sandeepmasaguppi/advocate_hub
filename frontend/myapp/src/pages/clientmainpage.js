@@ -1566,7 +1566,6 @@ export default function ClientMainPage() {
                             (adv.name || "A").replace(/^Adv\.\s*/i, "").charAt(0).toUpperCase()
                           )}
                         </div>
-                        <span className="cmp-fl-online-beacon" title="Online for instant consultation" />
                       </div>
 
                       <div className="cmp-fl-details">

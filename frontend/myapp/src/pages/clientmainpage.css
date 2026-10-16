@@ -1688,15 +1688,7 @@
 }
 
 .cmp-fl-online-beacon {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: #10b981;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+  display: none !important;
 }
 
 .cmp-fl-details {

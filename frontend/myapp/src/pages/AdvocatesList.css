@@ -776,19 +776,7 @@
 }
 
 .fl-online-pulse {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 13px;
-  height: 13px;
-  background: #22c55e;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
-}
-
-.fl-dark .fl-online-pulse {
-  border-color: #111c2e;
+  display: none !important;
 }
 
 .fl-card-info {
@@ -885,24 +873,12 @@
 }
 
 .fl-status-active {
-  color: #16a34a !important;
-}
-
-.fl-dark .fl-status-active {
-  color: #4ade80 !important;
+  display: none !important;
 }
 
 /* Card Bio */
 .fl-card-bio {
-  font-size: 13px;
-  color: #475569;
-  line-height: 1.5;
-  margin: 0 0 16px 0;
-  flex-grow: 1;
-}
-
-.fl-dark .fl-card-bio {
-  color: #94a3b8;
+  display: none !important;
 }
 
 /* Spoken Languages */

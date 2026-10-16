@@ -735,14 +735,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
                     </div>
                   </div>
 
-                  {/* Bio Preview */}
-                  <p className="fl-card-bio">
-                    {adv.bio
-                      ? adv.bio.length > 130
-                        ? adv.bio.slice(0, 128) + "…"
-                        : adv.bio
-                      : `${adv.name} is a verified advocate representing clients before the ${adv.court || "District Courts"} with specialization in ${adv.speciality || "comprehensive legal advisory"}.`}
-                  </p>
 
                   {/* Spoken Languages */}
                   <div className="fl-card-languages">

@@ -944,7 +944,6 @@ export default function Profile() {
                         ) : (
                           getInitials(other.name)
                         )}
-                        <span className="fl-online-pulse" />
                       </div>
                       <div className="fl-card-info">
                         <h3
@@ -986,19 +985,7 @@ export default function Profile() {
                         <span className="fl-matrix-label">{isKn ? "ಅನುಭವ" : "Experience"}</span>
                         <strong className="fl-matrix-val">{other.experience || "6+ Yrs"}</strong>
                       </div>
-                      <div className="fl-matrix-tile">
-                        <span className="fl-matrix-label">{isKn ? "ಸ್ಥಿತಿ" : "Status"}</span>
-                        <strong className="fl-matrix-val fl-status-active">
-                          {isKn ? "⚡ ಸಕ್ರಿಯ" : "⚡ Available"}
-                        </strong>
-                      </div>
                     </div>
-
-                    <p className="fl-card-bio">
-                      {other.bio
-                        ? (other.bio.length > 130 ? other.bio.slice(0, 128) + "…" : other.bio)
-                        : `${other.name} is a verified advocate representing clients before ${other.court || "District Courts"}.`}
-                    </p>
 
                     <div className="fl-card-actions">
                       <button

@@ -1173,10 +1173,10 @@
   color: #f8fafc !important;
 }
 
-[data-theme="dark"] .fl-card-bio,
-.theme-dark .fl-card-bio,
-.lw-dark .fl-card-bio {
-  color: #94a3b8 !important;
+.fl-card-bio,
+.fl-online-pulse,
+.fl-status-active {
+  display: none !important;
 }
 
 [data-theme="dark"] .fl-card-actions,
