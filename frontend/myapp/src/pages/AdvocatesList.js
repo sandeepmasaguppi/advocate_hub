@@ -61,10 +61,6 @@ const PRACTICE_AREAS = [
   "Intellectual Property"
 ];
 
-const POPULAR_SEARCHES = [
-  "Divorce", "Criminal", "Property", "Cheque Bounce", "Civil", "GST", "Cyber"
-];
-
 const QUICK_FILTER_PILLS = [
   { id: "all", labelEn: "All Practices", labelKn: "ಎಲ್ಲಾ ಕ್ಷೇತ್ರಗಳು", icon: "⚖️" },
   { id: "Criminal", labelEn: "Criminal Law", labelKn: "ಕ್ರಿಮಿನಲ್ ಕಾನೂನು", icon: "🔒" },
@@ -483,21 +479,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
 
   const displayedAdvocates = filteredAndSortedList.slice(0, visibleCount);
 
-  // Chat Now Handler — Direct connection to client registration or client dashboard
-  const handleChatNow = (adv) => {
-    const cid = Number(
-      localStorage.getItem("law4u_client_id") || sessionStorage.getItem("law4u_client_id") || 0
-    );
-    if (cid && adv?.id) {
-      sessionStorage.setItem(`law4u_active_chat_${cid}`, String(adv.id));
-      localStorage.setItem(`law4u_active_chat_${cid}`, String(adv.id));
-      navigate(`/client-dashboard?advocateId=${adv.id}`);
-    } else if (adv?.id) {
-      navigate(`/client-login?redirect=/client-dashboard?advocateId=${adv.id}`);
-    } else {
-      navigate("/client-login");
-    }
-  };
 
   const handleResetFilters = () => {
     setCity("");
@@ -511,6 +492,10 @@ export default function AdvocatesList({ lang: propLang } = {}) {
       {/* ── HERO BANNER ── */}
       <section className="fl-hero-section">
         <div className="fl-hero-inner">
+          <div className="fl-hero-badge">
+            <span className="fl-hero-badge-icon">⚖️</span>
+            <span>{isKn ? "ನ್ಯಾಯ • ನಂಬಿಕೆ • ಕಾನೂನು" : "Justice • Trust • Law"}</span>
+          </div>
           <h1 className="fl-hero-title">
             {isKn
               ? "ಪರಿಶೀಲಿತ ಹಿರಿಯ ಮತ್ತು ತಜ್ಞ ವಕೀಲರನ್ನು ಹುಡುಕಿ"
@@ -518,8 +503,8 @@ export default function AdvocatesList({ lang: propLang } = {}) {
           </h1>
           <p className="fl-hero-subtitle">
             {isKn
-              ? "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳು, ಕರ್ನಾಟಕ ಹೈಕೋರ್ಟ್ ಮತ್ತು ರಾಷ್ಟ್ರೀಯ ನ್ಯಾಯಮಂಡಳಿಗಳ ಪರಿಣಿತ ವಕೀಲರೊಂದಿಗೆ ನೇರ ಸಮಾಲೋಚನೆ ಅಥವಾ ಚಾಟ್ ಆರಂಭಿಸಿ."
-              : "Connect directly with top practitioners across District Courts, High Court of Karnataka, and National Tribunals for immediate legal counsel and representation."}
+              ? "ನ್ಯಾಯ • ನಂಬಿಕೆ • ಕಾನೂನು — ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ, ಕರ್ನಾಟಕ ಹೈಕೋರ್ಟ್ ಮತ್ತು ಇತರ ನ್ಯಾಯಮಂಡಳಿಗಳ ಪರಿಣಿತ ವಕೀಲರನ್ನು ಸಂಪರ್ಕಿಸಿ. ಕಾನೂನು ಸಲಹೆ ಪಡೆಯಿರಿ ಅಥವಾ ಚಾಟ್ ಮಾಡಿ."
+              : "Find and connect with experienced lawyers for your legal needs. Get legal advice or chat with lawyers from District Courts, the Karnataka High Court, and other tribunals."}
           </p>
         </div>
       </section>
@@ -580,28 +565,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
                 <span>{isKn ? pill.labelKn : pill.labelEn}</span>
               </button>
             ))}
-          </div>
-
-          {/* Popular Search Keywords */}
-          <div className="fl-popular-row">
-            <span className="fl-popular-label">
-              {isKn ? "ಜನಪ್ರಿಯ ಹುಡುಕಾಟಗಳು:" : "Popular Searches:"}
-            </span>
-            <div className="fl-popular-tags">
-              {POPULAR_SEARCHES.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  className={`fl-popular-tag ${practice === tag ? "active" : ""}`}
-                  onClick={() => {
-                    setPractice(tag);
-                    setVisibleCount(9);
-                  }}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </section>

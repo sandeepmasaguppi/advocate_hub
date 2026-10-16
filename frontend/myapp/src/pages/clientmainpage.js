@@ -152,22 +152,11 @@ const I18N = {
     heroTrust1: "End-to-End Encrypted",
     heroTrust2: "Instant Advocate Connect",
     heroTrust3: "770+ Legal Situations",
-    card1Point1: "Verified Bar Council Legal Practitioners",
-    card1Point2: "Confidential Document & Case Details Sharing",
-    card1Point3: "Real-Time Expert Legal Guidance & Action Plan",
-    card2Point1: "Identify Governing Acts, Laws (BNS/IPC) & Sections",
-    card2Point2: "Determine Standing to File & Accused Liability",
-    card2Point3: "1-Click Case Setup & Automatic Specialist Match",
     quickServicesTitle: "Quick Legal Services & Tools",
-    quickServicesSub: "Access essential resources across the Advocates Hub ecosystem",
     qs1Title: "Find Lawyers By City",
-    qs1Desc: "Explore 50,000+ advocates across 700+ cities in India",
     qs2Title: "AI Legal Assistant",
-    qs2Desc: "Ask 24/7 legal questions and get instant guidance",
     qs3Title: "Indian Bare Acts & Laws",
-    qs3Desc: "Access complete statutes, BNS, penal codes & acts",
     qs4Title: "Legal Documents & Drafts",
-    qs4Desc: "Download rental agreements, notices, wills & drafts",
     clientRole: "Client Account",
     profileSettings: "Profile & Settings",
     hubBadge: "🌟 Client Services Hub",
@@ -175,11 +164,9 @@ const I18N = {
     hubSubtitle: "Choose an below option to proceed.",
     card1Tag: "Direct Communication",
     card1Title: "Chat with Advocates",
-    card1Desc: "Browse approved legal practitioners, ask real-time questions, discuss your case details, and get professional advice directly through our secure chat.",
     card1Btn: "Open Advocate Chat →",
     card2Tag: "Case Clarity Purpose",
     card2Title: "Case Clarity & Advocate Matching",
-    card2Desc: "Confused about laws, accused parties, or who to hire? Review our legal clarity guide with practical examples to pinpoint the exact law and advocate specialization you need.",
     card2Btn: "View Clarity Guide →",
     backBtn: "← Back to Main Menu",
     chatCta: "💬 Ready to Consult? Chat with Advocates →",
@@ -275,22 +262,11 @@ const I18N = {
     heroTrust1: "ಎಂಡ್‌-ಟು-ಎಂಡ್‌ ಎನ್‌ಕ್ರಿಪ್ಟೆಡ್‌",
     heroTrust2: "ತಕ್ಷಣದ ವಕೀಲರ ಸಂಪರ್ಕ",
     heroTrust3: "೭೭೦+ ಪ್ರಕರಣಗಳ ಡಾಟಾಬೇಸ್",
-    card1Point1: "ಬಾರ್ ಕೌನ್ಸಿಲ್ ಮಾನ್ಯತೆ ಪಡೆದ ತಜ್ಞ ವಕೀಲರು",
-    card1Point2: "ಸುರಕ್ಷಿತ ದಾಖಲೆ ಹಂಚಿಕೆ ಮತ್ತು ಕೇಸ್ ವಿವರಣೆ",
-    card1Point3: "ತಕ್ಷಣದ ಸಲಹೆ ಮತ್ತು ನೈಜ ಸಮಯದ ಸಂಭಾಷಣೆ",
-    card2Point1: "ಅನ್ವಯವಾಗುವ ಕಾಯ್ದೆಗಳು (BNS, IPC) ಮತ್ತು ಕಲಂಗಳು",
-    card2Point2: "ಯಾರು ಅರ್ಜಿ ಸಲ್ಲಿಸಬಹುದು ಮತ್ತು ಆರೋಪಿ ಹೊಣೆಗಾರಿಕೆ",
-    card2Point3: "೧-ಕ್ಲಿಕ್‌ನಲ್ಲಿ ಕೇಸ್ ಸೆಟ್ ಮಾಡಿ ಸೂಕ್ತ ವಕೀಲರ ಹೊಂದಾಣಿಕೆ",
     quickServicesTitle: "ತ್ವರಿತ ಕಾನೂನು ಸೇವೆಗಳು ಮತ್ತು ಪರಿಕರಗಳು",
-    quickServicesSub: "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್‌ನ ಎಲ್ಲಾ ಪ್ರಮುಖ ಸೇವೆಗಳನ್ನು ಸುಲಭವಾಗಿ ಬಳಸಿ",
     qs1Title: "ನಗರವಾರು ವಕೀಲರನ್ನು ಹುಡುಕಿ",
-    qs1Desc: "ಬೆಂಗಳೂರು, ದೆಹಲಿ ಸೇರಿದಂತೆ ೭೦೦+ ನಗರಗಳ ೫೦,೦೦೦+ ವಕೀಲರು",
     qs2Title: "ಎಐ ಕಾನೂನು ಸಹಾಯಕ",
-    qs2Desc: "೨೪/೭ ತಕ್ಷಣವೇ ಕಾನೂನು ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರ ಪಡೆಯಿರಿ",
     qs3Title: "ಭಾರತೀಯ ಕಾಯ್ದೆಗಳು (Bare Acts)",
-    qs3Desc: "BNS, BNSS, ಸಂವಿಧಾನ ಮತ್ತು ಎಲ್ಲಾ ಪ್ರಮುಖ ಕಾಯ್ದೆಗಳು",
     qs4Title: "ಕಾನೂನು ದಾಖಲೆಗಳು (Documents)",
-    qs4Desc: "ಕರಾರು ಒಪ್ಪಂದಗಳು, ನೋಟಿಸ್‌ಗಳು ಮತ್ತು ಫಾರ್ಮ್‌ಗಳು",
     clientRole: "ಕ್ಲೈಂಟ್ ಖಾತೆ",
     profileSettings: "ಪ್ರೊಫೈಲ್ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್ಸ್",
     hubBadge: "🌟 ಕ್ಲೈಂಟ್ ಸೇವಾ ಕೇಂದ್ರ",
@@ -298,11 +274,9 @@ const I18N = {
     hubSubtitle: "ಮುಂದುವರಿಯಲು ಕೆಳಗಿನ ಆಯ್ಕೆಯನ್ನು ಆರಿಸಿ. ನೀವು ನೇರವಾಗಿ ವಕೀಲರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಬಹುದು ಅಥವಾ ನಿಮ್ಮ ಕೇಸ್‌ಗೆ ಸೂಕ್ತವಾದ ವಕೀಲರನ್ನು ಆಯ್ಕೆ ಮಾಡಲು ನಮ್ಮ ಸ್ಪಷ್ಟತೆ ಮಾರ್ಗದರ್ಶಿಯನ್ನು ಪರಿಶೀಲಿಸಬಹುದು.",
     card1Tag: "ನೇರ ಸಂಭಾಷಣೆ",
     card1Title: "ವಕೀಲರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಿ",
-    card1Desc: "ಅನುಮೋದಿತ ವಕೀಲರನ್ನು ಹುಡುಕಿ, ನಿಮ್ಮ ಕಾನೂನು ಸಮಸ್ಯೆಗಳನ್ನು ಚರ್ಚಿಸಿ, ಸಂದೇಹಗಳನ್ನು ಕೇಳಿ ಮತ್ತು ಸುರಕ್ಷಿತ ಚಾಟ್ ಮೂಲಕ ತಕ್ಷಣವೇ ಸಲಹೆ ಪಡೆಯಿರಿ.",
     card1Btn: "ವಕೀಲರ ಚಾಟ್ ತೆರೆಯಿರಿ →",
     card2Tag: "ಕೇಸ್ ಸ್ಪಷ್ಟತೆ ಉದ್ದೇಶ",
     card2Title: "ವಕೀಲರು ಮತ್ತು ಕೇಸ್ ಸ್ಪಷ್ಟತೆ",
-    card2Desc: "ಯಾವ ಕಾಯ್ದೆ ಅನ್ವಯವಾಗುತ್ತದೆ? ಆರೋಪಿ ಯಾರು? ಯಾವ ವಕೀಲರನ್ನು ಸಂಪರ್ಕಿಸಬೇಕು? ನಿಮ್ಮ ಪರಿಸ್ಥಿತಿಗೆ ಸೂಕ್ತವಾದ ನಿಖರ ಕಾಯ್ದೆ ಮತ್ತು ವಕೀಲರನ್ನು ತಿಳಿಯಿರಿ.",
     card2Btn: "ಸ್ಪಷ್ಟತೆ ಮಾರ್ಗದರ್ಶಿ ವೀಕ್ಷಿಸಿ →",
     backBtn: "← ಮುಖ್ಯ ಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ",
     chatCta: "💬 ಸಮಾಲೋಚನೆಗೆ ಸಿದ್ಧವೇ? ವಕೀಲರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಿ →",
@@ -335,7 +309,7 @@ const I18N = {
     // Embedded Sub-views
     flBadge: "📍 ೭೦೦+ ನಗರಗಳ ೫೦,೦೦೦+ ಮಾನ್ಯತೆ ಪಡೆದ ವಕೀಲರು",
     flTitle: "ನಗರ ಮತ್ತು ಪರಿಣತಿ ಆಧಾರಿತ ವಕೀಲರನ್ನು ಹುಡುಕಿ",
-    flSub: "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ, ಹೈಕೋರ್ಟ್ ಮತ್ತು ಸುಪ್ರೀಂ ಕೋರ್ಟ್‌ನಲ್ಲಿ ಅಭ್ಯಾಸ ಮಾಡುವ ಪರಿಣಿತ ವಕೀಲರನ್ನು ಸುಲಭವಾಗಿ ಹುಡುಕಿ ಸಂಪರ್ಕಿಸಿ.",
+    flSub: "ನ್ಯಾಯ • ನಂಬಿಕೆ • ಕಾನೂನು — ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ, ಹೈಕೋರ್ಟ್ ಮತ್ತು ಸುಪ್ರೀಂ ಕೋರ್ಟ್‌ನಲ್ಲಿ ಅಭ್ಯಾಸ ಮಾಡುವ ಪರಿಣಿತ ವಕೀಲರನ್ನು ಸುಲಭವಾಗಿ ಹುಡುಕಿ ಸಂಪರ್ಕಿಸಿ.",
     flCityAll: "ಎಲ್ಲಾ ನಗರಗಳು / ಪ್ರದೇಶಗಳು",
     flPracticeAll: "ಎಲ್ಲಾ ಕ್ಷೇತ್ರಗಳು",
     flSearchPlaceholder: "ವಕೀಲರ ಹೆಸರು, ಕೋರ್ಟ್, ನಗರ ಅಥವಾ ಬಾರ್ ಐಡಿ ಹುಡುಕಿ...",
@@ -1012,10 +986,6 @@ export default function ClientMainPage() {
              ======================================================== */
           <>
             <section className="cmp-hero">
-              <div className="cmp-badge">
-                <span className="cmp-badge-dot" />
-                <span>{lang === "kn" ? "೧೦೦% ಸುರಕ್ಷಿತ ಕ್ಲೈಂಟ್ ಸೇವಾ ಕೇಂದ್ರ" : "100% Secure & Confidential Legal Hub"}</span>
-              </div>
               <h1 className="cmp-title">
                 {t.welcome},{" "}
                 <span className="cmp-title-gradient">
@@ -1049,22 +1019,6 @@ export default function ClientMainPage() {
 
                 <div className="cmp-card-content">
                   <h2 className="cmp-card-title">{t.card1Title}</h2>
-                  <p className="cmp-card-desc">{t.card1Desc}</p>
-
-                  <ul className="cmp-card-points">
-                    <li>
-                      <span className="cmp-point-check">{CMP_ICONS.check}</span>
-                      <span>{t.card1Point1}</span>
-                    </li>
-                    <li>
-                      <span className="cmp-point-check">{CMP_ICONS.check}</span>
-                      <span>{t.card1Point2}</span>
-                    </li>
-                    <li>
-                      <span className="cmp-point-check">{CMP_ICONS.check}</span>
-                      <span>{t.card1Point3}</span>
-                    </li>
-                  </ul>
                 </div>
 
                 <div className="cmp-card-footer">
@@ -1103,22 +1057,6 @@ export default function ClientMainPage() {
 
                 <div className="cmp-card-content">
                   <h2 className="cmp-card-title">{t.card2Title}</h2>
-                  <p className="cmp-card-desc">{t.card2Desc}</p>
-
-                  <ul className="cmp-card-points">
-                    <li>
-                      <span className="cmp-point-check">{CMP_ICONS.check}</span>
-                      <span>{t.card2Point1}</span>
-                    </li>
-                    <li>
-                      <span className="cmp-point-check">{CMP_ICONS.check}</span>
-                      <span>{t.card2Point2}</span>
-                    </li>
-                    <li>
-                      <span className="cmp-point-check">{CMP_ICONS.check}</span>
-                      <span>{t.card2Point3}</span>
-                    </li>
-                  </ul>
                 </div>
 
                 <div className="cmp-card-footer">
@@ -1144,7 +1082,6 @@ export default function ClientMainPage() {
                   <span>{lang === "kn" ? "ತ್ವರಿತ ಸೇವೆಗಳು" : "Quick Access"}</span>
                 </div>
                 <h3 className="cmp-services-title">{t.quickServicesTitle}</h3>
-                <p className="cmp-services-sub">{t.quickServicesSub}</p>
               </div>
 
               <div className="cmp-services-grid">
@@ -1162,7 +1099,6 @@ export default function ClientMainPage() {
                   </div>
                   <div className="cmp-service-info">
                     <h4>{t.qs1Title}</h4>
-                    <p>{t.qs1Desc}</p>
                   </div>
                   <span className="cmp-service-arrow">{CMP_ICONS.arrowRight}</span>
                 </div>
@@ -1181,7 +1117,6 @@ export default function ClientMainPage() {
                   </div>
                   <div className="cmp-service-info">
                     <h4>{t.qs2Title}</h4>
-                    <p>{t.qs2Desc}</p>
                   </div>
                   <span className="cmp-service-arrow">{CMP_ICONS.arrowRight}</span>
                 </div>
@@ -1200,7 +1135,6 @@ export default function ClientMainPage() {
                   </div>
                   <div className="cmp-service-info">
                     <h4>{t.qs3Title}</h4>
-                    <p>{t.qs3Desc}</p>
                   </div>
                   <span className="cmp-service-arrow">{CMP_ICONS.arrowRight}</span>
                 </div>
@@ -1219,7 +1153,6 @@ export default function ClientMainPage() {
                   </div>
                   <div className="cmp-service-info">
                     <h4>{t.qs4Title}</h4>
-                    <p>{t.qs4Desc}</p>
                   </div>
                   <span className="cmp-service-arrow">{CMP_ICONS.arrowRight}</span>
                 </div>

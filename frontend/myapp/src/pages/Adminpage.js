@@ -32,7 +32,7 @@ import {
   getTaluksForDistrict,
   buildTargetCourt,
 } from "../data/CourtsData";
-import { getTheme, toggleTheme as toggleGlobalTheme } from "../data/themeStore";
+import { getTheme, toggleTheme as toggleGlobalTheme, applyTheme } from "../data/themeStore";
 import "./AdminPage.css";
 const REQUESTS_KEY   = "law4u_requests";    // { [advocateId]: Request[] }
 const BOOKINGS_KEY   = "law4u_bookings";    // { bookingId: Booking }
@@ -185,6 +185,7 @@ function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidPhone(p) { return /^\d{10}$/.test(String(p).replace(/\s|-/g, "")); }
 // Status badge
 function SBadge({ status }) {
+  const norm = (status || "").toLowerCase();
   const M = {
     approved: ["#dcfce7","#14532d"],
     pending:  ["#fef9c3","#92400e"],
@@ -193,11 +194,20 @@ function SBadge({ status }) {
     declined: ["#fee2e2","#7f1d1d"],
     active:   ["#dcfce7","#14532d"],
   };
-  const [bg, c] = M[status] || ["#f1f5f9","#64748b"];
+  const [bg, c] = M[norm] || ["#f1f5f9","#64748b"];
   return (
-    <span style={{ background:bg, color:c, fontSize:11, fontWeight:700,
-      padding:"2px 10px", borderRadius:20 }}>
-      {(status||"").charAt(0).toUpperCase()+(status||"").slice(1)}
+    <span
+      className={`am-status-pill am-status-${norm || "pending"}`}
+      style={{
+        background: bg,
+        color: c,
+        fontSize: 11,
+        fontWeight: 700,
+        padding: "2px 10px",
+        borderRadius: 20,
+      }}
+    >
+      {(status || "").charAt(0).toUpperCase() + (status || "").slice(1)}
     </span>
   );
 }
@@ -300,14 +310,16 @@ function ConsultationModal({ consultation, onClose, onUpdateStatus }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
+        className="am-modal"
         style={{
-          background: "#fff",
+          background: "var(--adm-bg-card)",
           borderRadius: 16,
           width: "100%",
           maxWidth: 520,
           maxHeight: "92vh",
           overflowY: "auto",
           boxShadow: "0 24px 64px rgba(0,0,0,.25)",
+          border: "1px solid var(--adm-border)",
         }}
       >
         <div
@@ -316,7 +328,7 @@ function ConsultationModal({ consultation, onClose, onUpdateStatus }) {
             alignItems: "center",
             justifyContent: "space-between",
             padding: "16px 20px",
-            borderBottom: "1px solid #e2e8f0",
+            borderBottom: "1px solid var(--adm-border)",
             background: "linear-gradient(135deg,#008069,#0f766e)",
             borderRadius: "16px 16px 0 0",
           }}
@@ -358,15 +370,15 @@ function ConsultationModal({ consultation, onClose, onUpdateStatus }) {
                 alignItems: "flex-start",
                 gap: 12,
                 padding: "9px 0",
-                borderBottom: "1px solid #f1f5f9",
+                borderBottom: "1px solid var(--adm-border)",
                 fontSize: 13.5,
               }}
             >
               <span style={{ fontSize: 16, width: 22, flexShrink: 0 }}>{r.icon}</span>
-              <span style={{ color: "#64748b", minWidth: 125, flexShrink: 0, fontWeight: 500 }}>
+              <span style={{ color: "var(--adm-muted)", minWidth: 125, flexShrink: 0, fontWeight: 500 }}>
                 {r.label}
               </span>
-              <span style={{ color: "#0f172a", fontWeight: 600, wordBreak: "break-word" }}>
+              <span style={{ color: "var(--adm-text)", fontWeight: 600, wordBreak: "break-word" }}>
                 {r.label === "Paid Status" ? (
                   <span
                     style={{
@@ -420,33 +432,52 @@ function ConsultationModal({ consultation, onClose, onUpdateStatus }) {
 // ─────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────
+//  CLIENT & CONSULTATION MATCHING HELPER
+//  Strictly matches consultations/bookings by exact email or non-conflicting client ID
+// ─────────────────────────────────────────────────────────────
+export function matchesClientRecord(client, item) {
+  if (!client || !item) return false;
+
+  const clientEmail = (client.email || "").toLowerCase().trim();
+  const itemEmail = (item.clientEmail || item.email || "").toLowerCase().trim();
+
+  // 1. Direct Email match (most reliable primary identifier)
+  if (clientEmail && itemEmail) {
+    return clientEmail === itemEmail;
+  }
+
+  const clientId = client.id !== undefined && client.id !== null ? String(client.id).trim() : "";
+  const itemClientId = item.clientId !== undefined && item.clientId !== null ? String(item.clientId).trim() : "";
+
+  // 2. Direct Client ID match (only when there is no conflicting email)
+  if (clientId && itemClientId && (clientId === itemClientId || Number(clientId) === Number(itemClientId))) {
+    if (itemEmail && clientEmail && itemEmail !== clientEmail) {
+      return false; // Conflicting email belongs to a different client
+    }
+    return true;
+  }
+
+  // 3. Direct 10-digit Phone match (only when client phone matches consultation phone, not UPI ID)
+  const cleanClientPhone = String(client.phone || "").replace(/\D/g, "").slice(-10);
+  const cleanItemPhone = String(item.clientPhone || item.phone || "").replace(/\D/g, "").slice(-10);
+  if (cleanClientPhone && cleanItemPhone && cleanClientPhone.length >= 10 && cleanClientPhone === cleanItemPhone) {
+    if (itemEmail && clientEmail && itemEmail !== clientEmail) {
+      return false; // Conflicting email belongs to a different client
+    }
+    return true;
+  }
+
+  return false;
+}
+
+// ─────────────────────────────────────────────────────────────
 //  CLIENT DETAIL MODAL — Full details of the selected client & chosen advocate
 // ─────────────────────────────────────────────────────────────
 function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, onApprove, onReject, onDelete, onUpdateConsultStatus }) {
   if (!client) return null;
 
-  const clientCons = (consultations || []).filter(c => {
-    if (client.id && c.clientId !== undefined && c.clientId !== null && c.clientId !== "") {
-      return Number(c.clientId) === Number(client.id) || String(c.clientId) === String(client.id);
-    }
-    if (client.email && c.clientEmail) {
-      return String(c.clientEmail).toLowerCase().trim() === String(client.email).toLowerCase().trim();
-    }
-    return false;
-  });
-
-  const clientBookings = Object.values(bookings || {}).filter(b => {
-    if (client.id && b.clientId !== undefined && b.clientId !== null && b.clientId !== "") {
-      return Number(b.clientId) === Number(client.id) || String(b.clientId) === String(client.id);
-    }
-    if (client.email && b.clientEmail) {
-      return String(b.clientEmail).toLowerCase().trim() === String(client.email).toLowerCase().trim();
-    }
-    if (client.phone && b.clientPhone) {
-      return String(b.clientPhone).replace(/\D/g, "") === String(client.phone).replace(/\D/g, "");
-    }
-    return false;
-  });
+  const clientCons = (consultations || []).filter(c => matchesClientRecord(client, c));
+  const clientBookings = Object.values(bookings || {}).filter(b => matchesClientRecord(client, b));
 
   const totalPaid = clientCons
     .filter(c => (c.status || c.paymentStatus || "").toLowerCase() === "paid")
@@ -467,14 +498,16 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
+        className="am-modal"
         style={{
-          background: "#fff",
+          background: "var(--adm-bg-card)",
           borderRadius: 16,
           width: "100%",
-          maxWidth: 620,
+          maxWidth: 640,
           maxHeight: "92vh",
           overflowY: "auto",
           boxShadow: "0 24px 64px rgba(0,0,0,.25)",
+          border: "1px solid var(--adm-border)",
         }}
       >
         {/* Header */}
@@ -484,7 +517,7 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
             alignItems: "center",
             justifyContent: "space-between",
             padding: "18px 24px",
-            borderBottom: "1px solid #e2e8f0",
+            borderBottom: "1px solid var(--adm-border)",
             background: "linear-gradient(135deg, #1e293b, #0f172a)",
             color: "#fff",
             borderRadius: "16px 16px 0 0",
@@ -529,25 +562,25 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Client Profile Details */}
           <div>
-            <h4 style={{ margin: "0 0 10px 0", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, color: "#64748b" }}>
+            <h4 style={{ margin: "0 0 10px 0", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, color: "var(--adm-muted)" }}>
               👤 Client Contact &amp; Profile Details
             </h4>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, background: "#f8fafc", padding: 14, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, background: "var(--adm-bg)", padding: 14, borderRadius: 10, border: "1px solid var(--adm-border)" }}>
               <div>
-                <span style={{ fontSize: 11, color: "#64748b", display: "block" }}>Full Name</span>
-                <strong style={{ fontSize: 14, color: "#1e293b" }}>{client.name}</strong>
+                <span style={{ fontSize: 11, color: "var(--adm-muted)", display: "block" }}>Full Name</span>
+                <strong style={{ fontSize: 14, color: "var(--adm-text)" }}>{client.name}</strong>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: "#64748b", display: "block" }}>Email Address</span>
-                <strong style={{ fontSize: 13, color: "#1e293b" }}>{client.email || "—"}</strong>
+                <span style={{ fontSize: 11, color: "var(--adm-muted)", display: "block" }}>Email Address</span>
+                <strong style={{ fontSize: 13, color: "var(--adm-text)" }}>{client.email || "—"}</strong>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: "#64748b", display: "block" }}>Phone Number</span>
-                <strong style={{ fontSize: 13, color: "#1e293b" }}>{client.phone ? `📞 ${client.phone}` : "—"}</strong>
+                <span style={{ fontSize: 11, color: "var(--adm-muted)", display: "block" }}>Phone Number</span>
+                <strong style={{ fontSize: 13, color: "var(--adm-text)" }}>{client.phone ? `📞 ${client.phone}` : "—"}</strong>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: "#64748b", display: "block" }}>Location / City</span>
-                <strong style={{ fontSize: 13, color: "#1e293b" }}>📍 {client.city || "Gokak, Karnataka"}</strong>
+                <span style={{ fontSize: 11, color: "var(--adm-muted)", display: "block" }}>Location / City</span>
+                <strong style={{ fontSize: 13, color: "var(--adm-text)" }}>📍 {client.city || "Gokak, Karnataka"}</strong>
               </div>
             </div>
           </div>
@@ -555,16 +588,13 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
           {/* Selected Advocate & Paid Consultations */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 6 }}>
-              <h4 style={{ margin: 0, fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, color: "#64748b" }}>
-                ⚖️ Selected Advocate &amp; ₹10 Paid Consultations ({clientCons.length})
+              <h4 style={{ margin: 0, fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, color: "var(--adm-muted)" }}>
+                ⚖️ Selected Advocate &amp; Consultations ({clientCons.length})
               </h4>
-              <span style={{ fontSize: 11, color: "#059669", fontWeight: 700 }}>
-                PhonePe: 9108717353-3@ybl
-              </span>
             </div>
 
             {clientCons.length === 0 ? (
-              <div style={{ background: "#f8fafc", padding: 16, borderRadius: 10, border: "1px dashed #cbd5e1", textAlign: "center", color: "#64748b", fontSize: 13 }}>
+              <div style={{ background: "var(--adm-bg)", padding: 16, borderRadius: 10, border: "1px dashed var(--adm-border)", textAlign: "center", color: "var(--adm-muted)", fontSize: 13 }}>
                 This client has not selected an advocate or paid for a consultation chat yet.
               </div>
             ) : (
@@ -575,8 +605,8 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
                     <div
                       key={con.id}
                       style={{
-                        background: "#fff",
-                        border: "1px solid #e2e8f0",
+                        background: "var(--adm-bg-card)",
+                        border: "1px solid var(--adm-border)",
                         borderRadius: 12,
                         padding: "14px 16px",
                         boxShadow: "0 2px 4px rgba(0,0,0,0.03)",
@@ -589,10 +619,10 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <Avi name={con.advocateName} color={colorFor(con.advocateId)} size={40} />
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>
+                            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--adm-text)" }}>
                               Adv. {con.advocateName}
                             </div>
-                            <div style={{ fontSize: 12, color: "#64748b" }}>
+                            <div style={{ fontSize: 12, color: "var(--adm-muted)" }}>
                               {con.advocateSpec || "Advocate & Legal Consultant"} · {con.advocateCity || "Karnataka"}
                             </div>
                           </div>
@@ -616,13 +646,14 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
                               type="button"
                               onClick={() => onUpdateConsultStatus(con.id, isPaid ? "Pending" : "Paid")}
                               style={{
-                                background: "#f1f5f9",
-                                border: "1px solid #cbd5e1",
+                                background: "var(--adm-bg)",
+                                border: "1px solid var(--adm-border)",
                                 padding: "4px 8px",
                                 borderRadius: 6,
                                 fontSize: 11,
                                 cursor: "pointer",
                                 fontWeight: 600,
+                                color: "var(--adm-text)",
                               }}
                             >
                               {isPaid ? "Mark Pending" : "Mark Paid"}
@@ -631,10 +662,10 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
                         </div>
                       </div>
 
-                      {/* Payment Details */}
+                      {/* Consultation Details */}
                       <div
                         style={{
-                          background: "#f8fafc",
+                          background: "var(--adm-bg)",
                           borderRadius: 8,
                           padding: "8px 12px",
                           display: "flex",
@@ -642,30 +673,13 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
                           justifyContent: "space-between",
                           gap: 8,
                           fontSize: 12,
-                          color: "#475569",
+                          color: "var(--adm-muted)",
+                          border: "1px solid var(--adm-border)",
                         }}
                       >
-                        <span>📱 PhonePe: <b>{con.phonePeNumber || "9108717353"}</b></span>
-                        <span>UPI ID: <b>{con.upiId || "9108717353-3@ybl"}</b></span>
                         <span>Txn: <b>{con.transactionId || con.id}</b></span>
                         <span>🕒 {fmtDateTime(con.paidAt || con.createdAt)}</span>
                       </div>
-
-                      {/* Case inquiry message */}
-                      {con.message && (
-                        <div
-                          style={{
-                            background: "#fffbeb",
-                            border: "1px solid #fef3c7",
-                            color: "#92400e",
-                            borderRadius: 8,
-                            padding: "8px 12px",
-                            fontSize: 12.5,
-                          }}
-                        >
-                          💬 <b>Case Details / Inquiry:</b> &ldquo;{con.message}&rdquo;
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -676,15 +690,15 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
           {/* Bookings & Stages */}
           {clientBookings.length > 0 && (
             <div>
-              <h4 style={{ margin: "0 0 10px 0", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, color: "#64748b" }}>
+              <h4 style={{ margin: "0 0 10px 0", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, color: "var(--adm-muted)" }}>
                 📂 Case Bookings &amp; Stages ({clientBookings.length})
               </h4>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {clientBookings.map((b, i) => (
-                  <div key={i} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div key={i} style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>⚖️ Adv. {b.advocateName}</div>
-                      <div style={{ fontSize: 11.5, color: "#64748b" }}>Requested: {fmtDate(b.requestedAt)} · Accepted: {fmtDate(b.acceptedAt)}</div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: "var(--adm-text)" }}>⚖️ Adv. {b.advocateName}</div>
+                      <div style={{ fontSize: 11.5, color: "var(--adm-muted)" }}>Requested: {fmtDate(b.requestedAt)} · Accepted: {fmtDate(b.acceptedAt)}</div>
                     </div>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <SBadge status={b.status} />
@@ -697,7 +711,7 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
           )}
 
           {/* Actions */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", paddingTop: 16, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--adm-border)", paddingTop: 16, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {client.status === "pending" && onApprove && (
                 <button className="am-btn-approve" onClick={() => { onApprove(client.id); onClose(); }}>
@@ -922,14 +936,6 @@ function ClientAddModal({ advocates, onClose, onSave }) {
                     <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
                   </div>
                 </div>
-                <div className="am-form-row">
-                  <label>Case / Inquiry Note</label>
-                  <input 
-                    placeholder="e.g. Legal assistance for civil property dispute" 
-                    value={form.message} 
-                    onChange={(e) => setForm({ ...form, message: e.target.value })} 
-                  />
-                </div>
               </div>
             )}
           </div>
@@ -1072,16 +1078,20 @@ function useAdminTheme() {
   const [theme, setTheme] = useState(getTheme);
 
   useEffect(() => {
+    applyTheme(theme);
     const handle = (e) => {
-      setTheme(e?.detail || getTheme());
+      const next = e?.detail || getTheme();
+      setTheme(next);
+      applyTheme(next);
     };
     window.addEventListener("law4u_theme_change", handle);
     return () => window.removeEventListener("law4u_theme_change", handle);
-  }, []);
+  }, [theme]);
 
   const toggle = useCallback(() => {
     const next = toggleGlobalTheme();
     setTheme(next);
+    applyTheme(next);
   }, []);
 
   return [theme, toggle];
@@ -1246,9 +1256,9 @@ function RailButton({ id, label, tab, setTab, count }) {
 // ── Advocate row (All Advocates tab) ───────────────────────
 function AdvocateRow({ adv, onEdit, onDelete }) {
   const STATUS_MAP = {
-    approved: { bg: "#dcfce7", c: "#14532d", label: "Approved" },
-    pending:  { bg: "#fef3c7", c: "#92400e", label: "Pending" },
-    rejected: { bg: "#fee2e2", c: "#7f1d1d", label: "Rejected" },
+    approved: { bg: "#dcfce7", c: "#14532d", border: "#86efac", icon: "✓", label: "Approved & Live" },
+    pending:  { bg: "#fef3c7", c: "#92400e", border: "#fde047", icon: "⏳", label: "Pending Review" },
+    rejected: { bg: "#fee2e2", c: "#7f1d1d", border: "#fca5a5", icon: "✕", label: "Rejected" },
   };
   const s = STATUS_MAP[adv.status] || STATUS_MAP.pending;
 
@@ -1256,13 +1266,18 @@ function AdvocateRow({ adv, onEdit, onDelete }) {
     <div className="am-row">
       <div className="am-row-main">
         <div className="am-row-avatar">{adv.name.replace(/^Adv\.\s*/i, "").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
-        <div>
-          <div className="am-row-name">{adv.name}</div>
-          <div className="am-row-sub" style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 2 }}>
-            <span style={{ color: "#334155", fontWeight: 600 }}>{adv.speciality || adv.practiceArea || "General Practice"}</span>
-            {adv.city && <span style={{ color: "#64748b" }}>· 📍 {adv.city}</span>}
+        <div className="am-row-meta">
+          <div className="am-row-name-line">
+            <span className="am-row-name">{adv.name}</span>
+            <span className={`am-status-pill am-status-pill-mobile am-status-${adv.status || "pending"}`} style={{ background: s.bg, color: s.c, borderColor: s.border }}>
+              <span className="am-status-icon">{s.icon}</span> {s.label}
+            </span>
+          </div>
+          <div className="am-row-sub">
+            <span className="am-spec-badge">{adv.speciality || adv.practiceArea || "General Practice"}</span>
+            {adv.city && <span className="am-loc-badge">📍 {adv.city}</span>}
             {adv.court && (
-              <span style={{ fontSize: 11, background: "#eff6ff", color: "#1e40af", padding: "1px 8px", borderRadius: 8, border: "1px solid #bfdbfe", fontWeight: 600 }}>
+              <span className="am-court-badge-sm" title={adv.court}>
                 🏛️ {adv.court}
               </span>
             )}
@@ -1270,13 +1285,15 @@ function AdvocateRow({ adv, onEdit, onDelete }) {
         </div>
       </div>
       <div className="am-row-contact">
-        <div>{adv.email}</div>
-        <div>{adv.phone}</div>
+        <div className="am-contact-line"><span className="am-contact-icon">✉️</span> {adv.email}</div>
+        <div className="am-contact-line"><span className="am-contact-icon">📞</span> {adv.phone ? `+91 ${adv.phone}` : "—"}</div>
       </div>
-      <span className="am-status-pill" style={{ background: s.bg, color: s.c }}>{s.label}</span>
+      <span className={`am-status-pill am-status-pill-desktop am-status-${adv.status || "pending"}`} style={{ background: s.bg, color: s.c, borderColor: s.border }}>
+        <span className="am-status-icon">{s.icon}</span> {s.label}
+      </span>
       <div className="am-row-actions">
-        <button className="am-btn-edit" onClick={() => onEdit(adv)}>✎ Edit</button>
-        <button className="am-btn-delete" onClick={() => onDelete(adv)}>🗑 Delete</button>
+        <button type="button" className="am-btn-edit" onClick={() => onEdit(adv)}>✎ Edit</button>
+        <button type="button" className="am-btn-delete" onClick={() => onDelete(adv)}>🗑 Delete</button>
       </div>
     </div>
   );
@@ -1284,93 +1301,84 @@ function AdvocateRow({ adv, onEdit, onDelete }) {
 
 // ── Pending approval card ──────────────────────────────────
 function PendingCard({ adv, onApprove, onReject, onEdit }) {
+  const [loadingAction, setLoadingAction] = useState(null); // 'approve' | 'reject' | null
+
+  const handleApproveClick = async () => {
+    if (loadingAction) return;
+    setLoadingAction("approve");
+    try {
+      await onApprove(adv.id);
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  const handleRejectClick = async () => {
+    if (loadingAction) return;
+    setLoadingAction("reject");
+    try {
+      await onReject(adv.id);
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
   const specs = Array.isArray(adv.practiceAreas) && adv.practiceAreas.length > 0
     ? adv.practiceAreas
     : (adv.speciality || adv.practiceArea ? (adv.speciality || adv.practiceArea).split(/,\s*/).filter(Boolean) : []);
 
   return (
-    <div className="am-pending-card" style={{
-      background: "#ffffff",
-      borderRadius: 14,
-      border: "1px solid #e2e8f0",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-      padding: "18px 20px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 12,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <div className="am-row-main" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <div className="am-pending-card">
+      <div className="am-pending-header">
+        <div className="am-row-main">
           <div className="am-row-avatar">{adv.name.replace(/^Adv\.\s*/i, "").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</div>
-          <div>
-            <div className="am-row-name" style={{ fontSize: 16, fontWeight: 800, color: "#0f172a" }}>{adv.name}</div>
-            <div className="am-row-sub" style={{ fontSize: 13, color: "#64748b" }}>
+          <div className="am-pending-name-meta">
+            <div className="am-row-name">{adv.name}</div>
+            <div className="am-row-sub">
               {adv.city ? `📍 ${adv.city}` : ""} {adv.experience ? `· ${adv.experience}` : ""}
             </div>
           </div>
         </div>
 
-        <span style={{
-          background: "#fef9c3",
-          color: "#854d0e",
-          fontSize: 11.5,
-          fontWeight: 700,
-          padding: "3px 10px",
-          borderRadius: 16,
-          border: "1px solid #fef08a",
-        }}>
-          ⏳ Awaiting Approval
+        <span className="am-status-pill am-status-awaiting">
+          <span className="am-status-icon">⏳</span> Awaiting Approval
         </span>
       </div>
 
       {/* Selected Practice Areas Badge Strip */}
       {specs.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Fields:</span>
-          {specs.map(s => (
-            <span key={s} style={{
-              fontSize: 11.5,
-              background: "#eff6ff",
-              color: "#1e40af",
-              padding: "2px 8px",
-              borderRadius: 12,
-              fontWeight: 600,
-              border: "1px solid #dbeafe"
-            }}>
-              ⚖️ {s}
-            </span>
-          ))}
+        <div className="am-specs-strip">
+          <span className="am-specs-label">Fields:</span>
+          <div className="am-specs-tags">
+            {specs.map(s => (
+              <span key={s} className="am-spec-tag">
+                ⚖️ {s}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Selected Jurisdiction Box (Target Court & Dependencies) */}
       {(adv.court || adv.courtLevel || adv.district || adv.taluk) && (
-        <div style={{
-          background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
-          border: "1px solid #86efac",
-          borderRadius: 10,
-          padding: "10px 14px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 6,
-        }}>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="am-jurisdiction-box">
+          <div className="am-jurisdiction-title">
             <span>🏛️</span>
             <span>{adv.court || "Target Court"}</span>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11.5 }}>
+          <div className="am-jurisdiction-tags">
             {adv.courtLevel && (
-              <span style={{ color: "#1e3a8a", background: "#ffffff", padding: "2px 8px", borderRadius: 12, fontWeight: 600, border: "1px solid #bfdbfe" }}>
+              <span className="am-jur-tag am-jur-level">
                 Level: <strong>{adv.courtLevel}</strong>
               </span>
             )}
             {adv.district && (
-              <span style={{ color: "#065f46", background: "#ffffff", padding: "2px 8px", borderRadius: 12, fontWeight: 600, border: "1px solid #a7f3d0" }}>
+              <span className="am-jur-tag am-jur-dist">
                 District: <strong>{adv.district}</strong>
               </span>
             )}
             {adv.taluk && (
-              <span style={{ color: "#7c2d12", background: "#ffffff", padding: "2px 8px", borderRadius: 12, fontWeight: 600, border: "1px solid #fed7aa" }}>
+              <span className="am-jur-tag am-jur-taluk">
                 Taluk: <strong>{adv.taluk}</strong>
               </span>
             )}
@@ -1378,23 +1386,44 @@ function PendingCard({ adv, onApprove, onReject, onEdit }) {
         </div>
       )}
 
-      <div className="am-pending-details" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8, fontSize: 12.5 }}>
+      <div className="am-pending-details">
         <div><strong>Email:</strong> {adv.email}</div>
-        <div><strong>Phone:</strong> {adv.phone}</div>
+        <div><strong>Phone:</strong> {adv.phone ? `+91 ${adv.phone}` : "—"}</div>
         <div><strong>Bar ID:</strong> {adv.barId || "—"}</div>
         <div><strong>Fee:</strong> {adv.fee || "—"}</div>
       </div>
 
       {adv.bio && (
-        <p className="am-pending-bio" style={{ fontSize: 12.5, color: "#475569", background: "#f8fafc", padding: "8px 12px", borderRadius: 8, margin: 0, fontStyle: "italic" }}>
+        <p className="am-pending-bio">
           "{adv.bio}"
         </p>
       )}
 
-      <div className="am-pending-actions" style={{ display: "flex", gap: 8, marginTop: 4 }}>
-        <button className="am-btn-approve" onClick={() => onApprove(adv.id)}>✓ Approve</button>
-        <button className="am-btn-reject" onClick={() => onReject(adv.id)}>✕ Reject</button>
-        <button className="am-btn-edit" onClick={() => onEdit(adv)}>✎ Edit first</button>
+      <div className="am-pending-actions">
+        <button
+          type="button"
+          className="am-btn-approve"
+          disabled={Boolean(loadingAction)}
+          onClick={handleApproveClick}
+        >
+          {loadingAction === "approve" ? "⏳ Approving…" : "✓ Approve"}
+        </button>
+        <button
+          type="button"
+          className="am-btn-reject"
+          disabled={Boolean(loadingAction)}
+          onClick={handleRejectClick}
+        >
+          {loadingAction === "reject" ? "⏳ Rejecting…" : "✕ Reject"}
+        </button>
+        <button
+          type="button"
+          className="am-btn-edit"
+          disabled={Boolean(loadingAction)}
+          onClick={() => onEdit(adv)}
+        >
+          ✎ Edit first
+        </button>
       </div>
     </div>
   );
@@ -1649,13 +1678,13 @@ function AdvocateFormModal({ initial, onClose, onSave }) {
                 flexWrap: "wrap",
                 gap: 8,
                 margin: "4px 0 10px 0",
-                background: "#f8fafc",
+                background: "var(--adm-bg)",
                 padding: "10px 12px",
                 borderRadius: 10,
-                border: "1px solid #e2e8f0",
+                border: "1px solid var(--adm-border)",
                 boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)"
               }}>
-                <div style={{ width: "100%", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 2 }}>
+                <div style={{ width: "100%", fontSize: 11, fontWeight: 700, color: "var(--adm-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 2 }}>
                   Selected Fields of Expertise (Click ✕ to remove):
                 </div>
                 {specialities.map((item) => (
@@ -1704,11 +1733,11 @@ function AdvocateFormModal({ initial, onClose, onSave }) {
             ) : (
               <div style={{
                 padding: "8px 12px",
-                background: "#f8fafc",
-                border: "1px dashed #cbd5e1",
+                background: "var(--adm-bg)",
+                border: "1px dashed var(--adm-border)",
                 borderRadius: 8,
                 fontSize: 12,
-                color: "#64748b",
+                color: "var(--adm-muted)",
                 marginBottom: 8,
                 display: "flex",
                 alignItems: "center",
@@ -1905,22 +1934,22 @@ function AdvocateFormModal({ initial, onClose, onSave }) {
                 {/* Summary Chips: ONLY what is selected! */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 2 }}>
                   {form.courtLevel && (
-                    <span style={{ fontSize: 11.5, background: "#ffffff", color: "#1e3a8a", padding: "2px 8px", borderRadius: 14, fontWeight: 600, border: "1px solid #bfdbfe" }}>
+                    <span style={{ fontSize: 11.5, background: "var(--adm-bg-card)", color: "#1e3a8a", padding: "2px 8px", borderRadius: 14, fontWeight: 600, border: "1px solid #bfdbfe" }}>
                       ⚖️ Level: <strong>{form.courtLevel}</strong>
                     </span>
                   )}
                   {form.district && (
-                    <span style={{ fontSize: 11.5, background: "#ffffff", color: "#065f46", padding: "2px 8px", borderRadius: 14, fontWeight: 600, border: "1px solid #a7f3d0" }}>
+                    <span style={{ fontSize: 11.5, background: "var(--adm-bg-card)", color: "#065f46", padding: "2px 8px", borderRadius: 14, fontWeight: 600, border: "1px solid #a7f3d0" }}>
                       🗺️ District: <strong>{form.district}</strong>
                     </span>
                   )}
                   {form.taluk && (
-                    <span style={{ fontSize: 11.5, background: "#ffffff", color: "#7c2d12", padding: "2px 8px", borderRadius: 14, fontWeight: 600, border: "1px solid #fed7aa" }}>
+                    <span style={{ fontSize: 11.5, background: "var(--adm-bg-card)", color: "#7c2d12", padding: "2px 8px", borderRadius: 14, fontWeight: 600, border: "1px solid #fed7aa" }}>
                       📍 Taluk: <strong>{form.taluk}</strong>
                     </span>
                   )}
                   {form.city && (
-                    <span style={{ fontSize: 11.5, background: "#ffffff", color: "#475569", padding: "2px 8px", borderRadius: 14, fontWeight: 600, border: "1px solid #cbd5e1" }}>
+                    <span style={{ fontSize: 11.5, background: "var(--adm-bg-card)", color: "var(--adm-muted)", padding: "2px 8px", borderRadius: 14, fontWeight: 600, border: "1px solid var(--adm-border)" }}>
                       🏙️ Base Location: <strong>{form.city}</strong>
                     </span>
                   )}
@@ -1930,11 +1959,11 @@ function AdvocateFormModal({ initial, onClose, onSave }) {
               <div style={{
                 marginTop: 10,
                 padding: "8px 12px",
-                background: "#f8fafc",
-                border: "1px dashed #cbd5e1",
+                background: "var(--adm-bg)",
+                border: "1px dashed var(--adm-border)",
                 borderRadius: 8,
                 fontSize: 12,
-                color: "#64748b",
+                color: "var(--adm-muted)",
               }}>
                 👉 Select Level of Court and District above to compute target court jurisdiction.
               </div>
@@ -2213,7 +2242,7 @@ export default function AdminPage() {
 
   // Admin sees every status (pending/rejected too), so pull the full list.
   const refreshAdvocates = useCallback(() => {
-    loadAdvocates({ all: true })
+    return loadAdvocates({ all: true })
       .then(setAdvocates)
       .catch(() => setAdvocates(getAdvocates()));
   }, []);
@@ -2241,7 +2270,7 @@ export default function AdminPage() {
     };
   }, [authed]);
   const refreshClients = useCallback(() => {
-    getClients()
+    return getClients()
       .then((list) => {
         if (Array.isArray(list)) {
           setClients(list);
@@ -2257,22 +2286,29 @@ export default function AdminPage() {
   const refreshQuestions = () => setQuestions(getQuestions());
 
   const refreshConsultations = useCallback(() => {
+    const DUMMY_EMAILS = new Set(["chetan@gmail.com", "giri@gmail.com", "gagan@gmail.com", "ajay@gmail.com", "man@gmail.com", "sandeep@gmail.com"]);
+    const isClean = (item) => {
+      if (!item) return false;
+      const email = (item.clientEmail || item.email || "").toLowerCase().trim();
+      return !DUMMY_EMAILS.has(email);
+    };
+
     api("/api/consultations")
       .then((list) => {
         try {
           const local = JSON.parse(localStorage.getItem("law4u_consultation_payments") || "[]");
           const map = new Map();
-          (list || []).forEach(item => map.set(item.id || `${item.clientId}_${item.advocateId}`, item));
-          local.forEach(item => map.set(item.id || `${item.clientId}_${item.advocateId}`, item));
+          (list || []).filter(isClean).forEach(item => map.set(item.id || `${item.clientId}_${item.advocateId}`, item));
+          (local || []).filter(isClean).forEach(item => map.set(item.id || `${item.clientId}_${item.advocateId}`, item));
           setConsultations(Array.from(map.values()));
         } catch {
-          setConsultations(list || []);
+          setConsultations((list || []).filter(isClean));
         }
       })
       .catch(() => {
         try {
           const local = JSON.parse(localStorage.getItem("law4u_consultation_payments") || "[]");
-          setConsultations(local);
+          setConsultations((local || []).filter(isClean));
         } catch {
           setConsultations([]);
         }
@@ -2376,16 +2412,12 @@ export default function AdminPage() {
     );
   }, [consultations, consultFilter, consultSearch]);
 
-  const getClientConsultations = useCallback((cid, cemail) => {
-    return consultations.filter(c => {
-      if (cid && c.clientId !== undefined && c.clientId !== null && c.clientId !== "") {
-        return Number(c.clientId) === Number(cid) || String(c.clientId) === String(cid);
-      }
-      if (cemail && c.clientEmail) {
-        return String(c.clientEmail).toLowerCase().trim() === String(cemail).toLowerCase().trim();
-      }
-      return false;
-    });
+  const getClientConsultations = useCallback((clientOrId, cemail, cphone, cname, ccity) => {
+    const clientObj = (typeof clientOrId === "object" && clientOrId !== null)
+      ? clientOrId
+      : { id: clientOrId, email: cemail, phone: cphone, name: cname, city: ccity };
+
+    return consultations.filter(c => matchesClientRecord(clientObj, c));
   }, [consultations]);
 
   const navigate = useNavigate();
@@ -2436,7 +2468,7 @@ export default function AdminPage() {
       if (clientStatusFilter === "approved" && c.status !== "approved") return false;
       if (clientStatusFilter === "pending" && c.status !== "pending") return false;
       if (clientStatusFilter === "with-consultations") {
-        const cons = getClientConsultations(c.id, c.email);
+        const cons = getClientConsultations(c);
         if (cons.length === 0) return false;
       }
       if (!clientSearch.trim()) return true;
@@ -2457,8 +2489,7 @@ export default function AdminPage() {
     } catch (error) {
       showToast(error.message || "Request failed", "error");
     } finally {
-      refreshAdvocates();
-      refreshClients();
+      await Promise.allSettled([refreshAdvocates(), refreshClients()]);
     }
   }, [refreshAdvocates, refreshClients, showToast]);
 
@@ -2657,19 +2688,7 @@ export default function AdminPage() {
           <section
             role="status"
             aria-live="polite"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 12,
-              marginBottom: 18,
-              padding: "14px 18px",
-              border: "1px solid #fcd34d",
-              borderRadius: 12,
-              background: "#fffbeb",
-              color: "#78350f",
-            }}
+            className="am-pending-alert-banner"
           >
             <div>
               <strong>
@@ -2770,30 +2789,30 @@ export default function AdminPage() {
                     </h3>
                     <div className="am-pending-grid">
                       {pendingClients.map((c) => (
-                        <div key={c.id} className="am-pending-card" style={{ background: "var(--adm-card, #fff)", border: "1px solid var(--adm-border, #e2e8f0)", borderRadius: 14, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div key={c.id} className="am-pending-card">
+                          <div className="am-pending-header">
+                            <div className="am-row-main">
                               <Avi name={c.name} color={colorFor(c.id)} size={44} />
                               <div>
-                                <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--adm-text, #0f172a)" }}>{c.name}</h4>
-                                <div style={{ fontSize: 12, color: "var(--adm-muted, #64748b)", marginTop: 2 }}>
+                                <h4 className="am-row-name" style={{ margin: 0 }}>{c.name}</h4>
+                                <div className="am-row-sub" style={{ marginTop: 2 }}>
                                   Client ID #{c.id} · {c.city || "Karnataka"}
                                 </div>
                               </div>
                             </div>
-                            <span style={{ background: "#fef9c3", color: "#854d0e", fontSize: 11.5, fontWeight: 700, padding: "3px 10px", borderRadius: 16, border: "1px solid #fef08a" }}>
-                              ⏳ Awaiting Approval
+                            <span className="am-status-pill am-status-awaiting">
+                              <span className="am-status-icon">⏳</span> Awaiting Approval
                             </span>
                           </div>
 
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8, fontSize: 12.5, background: "rgba(0,0,0,0.02)", padding: 10, borderRadius: 8 }}>
+                          <div className="am-pending-details">
                             <div><strong>Email:</strong> {c.email}</div>
                             <div><strong>Phone:</strong> {c.phone ? `+91 ${c.phone}` : "—"}</div>
-                            <div><strong>Legal Issue:</strong> {c.legalIssue || "General Inquiry"}</div>
+                            <div><strong>Legal Issue:</strong> {c.legalIssue || "General Consultation"}</div>
                             <div><strong>City:</strong> {c.city || "—"}</div>
                           </div>
 
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <div className="am-pending-actions">
                             <button className="am-btn-approve" onClick={() => handleApproveClient(c.id)}>✓ Approve Client</button>
                             <button className="am-btn-reject" onClick={() => handleRejectClient(c.id)}>✕ Reject Client</button>
                           </div>
@@ -2881,7 +2900,7 @@ export default function AdminPage() {
                   <span className="am-count-pill">{clients.length} Registered in clients.json</span>
                 </h2>
                 <div style={{ fontSize: 13, color: "var(--adm-muted)", marginTop: 4 }}>
-                  All client account profiles stored in <b style={{ fontFamily: "monospace" }}>backend/data/clients.json</b> with linked ₹10 PhonePe (<b>9108717353-3@ybl</b>) advocate consultations.
+                  All client account profiles stored in <b style={{ fontFamily: "monospace" }}>backend/data/clients.json</b> with linked advocate consultations.
                 </div>
               </div>
 
@@ -2891,7 +2910,7 @@ export default function AdminPage() {
                     { id: "all", label: `All (${clients.length})` },
                     { id: "approved", label: `Approved (${clients.filter(c => c.status === "approved").length})` },
                     { id: "pending", label: `Pending (${clients.filter(c => c.status === "pending").length})` },
-                    { id: "with-consultations", label: `With Consultations (${clients.filter(c => getClientConsultations(c.id, c.email).length > 0).length})` }
+                    { id: "with-consultations", label: `With Consultations (${clients.filter(c => getClientConsultations(c).length > 0).length})` }
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -2925,7 +2944,7 @@ export default function AdminPage() {
               <StatCard label="Total Clients" value={clients.length} tone="am-tone-navy" hint="backend/data/clients.json" />
               <StatCard label="Approved Accounts" value={clients.filter(c => c.status === "approved").length} tone="am-tone-good" />
               <StatCard label="Pending Approval" value={clients.filter(c => c.status === "pending").length} tone="am-tone-warn" />
-              <StatCard label="Consultation Chits" value={paidConsultations.length} tone="am-tone-gold" hint="PhonePe 9108717353-3@ybl" />
+              <StatCard label="Consultations" value={paidConsultations.length} tone="am-tone-gold" hint="Client advocate sessions" />
             </div>
 
             {filteredClients.length === 0 ? (
@@ -2947,7 +2966,7 @@ export default function AdminPage() {
             ) : (
               <div className="am-list">
                 {filteredClients.map((c) => {
-                  const clientCons = getClientConsultations(c.id, c.email);
+                  const clientCons = getClientConsultations(c);
                   const paidConsCount = clientCons.filter(x => (x.status || x.paymentStatus || "").toLowerCase() === "paid").length;
                   return (
                     <div key={c.id} className="am-row" style={{ flexDirection: "column", gap: 14, alignItems: "stretch", position: "relative", padding: "18px 20px" }}>
@@ -3017,15 +3036,14 @@ export default function AdminPage() {
                       {/* Advocate Consultation Breakdown for this client */}
                       <div style={{ borderTop: "1px dashed var(--adm-border)", paddingTop: 12, marginTop: 4 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--adm-muted)", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
-                          <span>⚖️ Selected Advocate &amp; ₹10 PhonePe Consultations ({clientCons.length})</span>
-                          <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--adm-good)" }}>PhonePe UPI ID: <b>9108717353-3@ybl</b></span>
+                          <span>⚖️ Selected Advocate Consultations ({clientCons.length})</span>
                         </div>
 
                         {clientCons.length === 0 ? (
                           <div style={{ fontSize: 12.5, color: "var(--adm-muted)", background: "var(--adm-bg)", padding: "12px 16px", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                             <span>ℹ️ This client has not unlocked an advocate consultation chat yet.</span>
                             <button 
-                              type="button"
+                              type="button" 
                               className="am-btn-secondary am-btn-sm" 
                               onClick={() => handleEditClient(c)}
                               style={{ fontSize: 11.5, padding: "4px 10px" }}
@@ -3060,23 +3078,6 @@ export default function AdminPage() {
                                   </div>
                                   <div style={{ fontSize: 12, color: "var(--adm-muted)" }}>
                                     {con.advocateSpec || "Advocate & Legal Consultant"} · {con.advocateCity || "Karnataka"}
-                                  </div>
-                                  {con.message && (
-                                    <div style={{ fontSize: 12, color: "var(--adm-text)", background: "rgba(0,0,0,0.03)", borderLeft: "3px solid var(--adm-accent)", padding: "6px 10px", borderRadius: 4 }}>
-                                      💬 <b>Inquiry:</b> &ldquo;{con.message}&rdquo;
-                                    </div>
-                                  )}
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11.5, color: "var(--adm-muted)", marginTop: 2, flexWrap: "wrap", gap: 6 }}>
-                                    <span>📱 PhonePe: <b>{con.phonePeNumber || "9108717353"}</b></span>
-                                    <span>UPI: <b>{con.upiId || "9108717353-3@ybl"}</b></span>
-                                    <button 
-                                      type="button" 
-                                      className="am-link-btn" 
-                                      style={{ fontSize: 11.5, color: "var(--adm-accent)", fontWeight: 700, cursor: "pointer" }}
-                                      onClick={() => setConsultModal(con)}
-                                    >
-                                      Receipt →
-                                    </button>
                                   </div>
                                 </div>
                               );

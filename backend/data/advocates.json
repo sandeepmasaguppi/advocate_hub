@@ -567,7 +567,7 @@
     "practiceArea": "Cyber",
     "speciality": "Cybercrime & Digital Fraud",
     "experience": "9 years",
-    "rating": 4.7,
+    "rating": 4,
     "cases": 200,
     "fee": "₹2,500 / consult",
     "phone": "+91 98765 43235",
@@ -580,7 +580,16 @@
     "availability": "Available this week",
     "bio": "Assists victims of online fraud, hacking, social media abuse, and cyber blackmail with legal redress.",
     "status": "approved",
-    "passwordHash": "scrypt$6bec7fdc310ce1e80123aaa4aa5238a9$7b19c624eb16615ae47b6cff1e72706244f8f54fad8f180026d84381d82b2b7eff095276fdf0ac687b8ba0789dc80c130bdde040f4ae9b0d7525dd928dc7b954"
+    "passwordHash": "scrypt$6bec7fdc310ce1e80123aaa4aa5238a9$7b19c624eb16615ae47b6cff1e72706244f8f54fad8f180026d84381d82b2b7eff095276fdf0ac687b8ba0789dc80c130bdde040f4ae9b0d7525dd928dc7b954",
+    "ratings": {
+      "1": {
+        "score": 4,
+        "clientName": "Sandeep",
+        "comment": "",
+        "date": "2026-10-16T18:57:06.267Z"
+      }
+    },
+    "ratingCount": 1
   },
   {
     "id": 27,
@@ -2022,7 +2031,7 @@
     "barCouncil": "Bar Council of Karnataka",
     "barId": "479fu",
     "experience": "3–5 years",
-    "rating": 0,
+    "rating": 5,
     "cases": 0,
     "fee": "1500",
     "phone": "8884393044",
@@ -2040,7 +2049,16 @@
     ],
     "courtLevel": "",
     "district": "",
-    "taluk": ""
+    "taluk": "",
+    "ratings": {
+      "1": {
+        "score": 5,
+        "clientName": "Sandeep",
+        "comment": "",
+        "date": "2026-10-16T13:47:01.274Z"
+      }
+    },
+    "ratingCount": 1
   },
   {
     "id": 90,

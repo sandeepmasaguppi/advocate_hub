@@ -371,7 +371,7 @@ export default function Home() {
         <div className="lw-hero-inner">
           <div className="lw-hero-text">
             <div className="lw-hero-badge">
-              {isKn ? "೧೦೦% ಭಾರತದ ಅತ್ಯುತ್ತಮ ಕಾನೂನು ವೇದಿಕೆ" : "100% Best Indian Law Platform"}
+              {isKn ? "⚖️ ನ್ಯಾಯ • ನಂಬಿಕೆ • ಕಾನೂನು" : "100% Best Indian Law Platform"}
             </div>
             <h1 className="lw-hero-title">
               {isKn

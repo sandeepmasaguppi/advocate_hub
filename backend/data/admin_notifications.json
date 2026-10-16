@@ -1,5 +1,21 @@
 [
   {
+    "id": "NOTIF_1792159187683_h3mylp",
+    "to": "sandeepmasaguppi@gmail.com",
+    "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔔 New Client Registration - Sandeep (Gokak)",
+    "text": "New Client Registration on Advocates Hub\n=========================================\nName:          Sandeep\nEmail:         sandeepm@gmail.com\nPhone:         9108717353\nCity:          Gokak\nLegal Issue:   Criminal Law\nStatus:        pending\nRegistered At: 16/10/2026, 7:29:47 pm (IST)\n\nAdmin Portal:  http://localhost:3000/admin",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; }\n    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; margin-bottom: 18px; }\n    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }\n    th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }\n    th { color: #64748b; font-weight: 600; width: 35%; background: #f8fafc; }\n    td { color: #0f172a; font-weight: 500; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub — Admin Alert</h2>\n      <p>Automated notification for account registration</p>\n    </div>\n    <div class=\"content\">\n      <span class=\"badge\">👤 New Client Account</span>\n      <p style=\"margin-top: 0; font-size: 15px; line-height: 1.5;\">\n        A new client has registered on the <strong>Advocates Hub</strong> platform. Here are the details:\n      </p>\n      <table>\n        <tr><th>Full Name</th><td><strong>Sandeep</strong></td></tr>\n        <tr><th>Email Address</th><td><a href=\"mailto:sandeepm@gmail.com\" style=\"color: #2563eb;\">sandeepm@gmail.com</a></td></tr>\n        <tr><th>Phone Number</th><td>9108717353</td></tr>\n        <tr><th>City / Location</th><td>Gokak</td></tr>\n        <tr><th>Legal Matter</th><td>Criminal Law</td></tr>\n        <tr><th>Account Status</th><td><span style=\"color: #16a34a; font-weight: 600;\">pending</span></td></tr>\n        <tr><th>Registered At</th><td>16/10/2026, 7:29:47 pm IST</td></tr>\n      </table>\n      <div style=\"text-align: center; margin-top: 24px;\">\n        <a href=\"http://localhost:3000/admin\" class=\"btn\">Open Admin Console →</a>\n      </div>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Automated Notification Desk · Sent to sandeepmasaguppi@gmail.com\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "client_registration",
+      "clientId": 11,
+      "email": "sandeepm@gmail.com"
+    },
+    "timestamp": "2026-10-16T13:59:47.683Z",
+    "delivered": false,
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials d2e1a72fcca58-89f57947fb2sm1168694b3a.37 - gsmtp"
+  },
+  {
     "id": "NOTIF_1792133189175_o73tqb",
     "to": "sandeepmasaguppi@gmail.com",
     "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
@@ -13,7 +29,7 @@
     },
     "timestamp": "2026-10-16T06:46:29.175Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-36082f7f6e0sm5168007eec.27 - gsmtp"
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-36082a7b33bsm13394444eec.24 - gsmtp"
   },
   {
     "id": "NOTIF_1792132931185_9qlbx1",
@@ -29,7 +45,7 @@
     },
     "timestamp": "2026-10-16T06:42:11.185Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 98e67ed59e1d1-3acc38b457esm3385548a91.0 - gsmtp"
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-3608308a87csm11609658eec.28 - gsmtp"
   },
   {
     "id": "NOTIF_1792131445098_pymify",
@@ -45,7 +61,7 @@
     },
     "timestamp": "2026-10-16T06:17:25.098Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 98e67ed59e1d1-3acd3b798d3sm982259a91.3 - gsmtp"
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-3607ee0cab0sm8792946eec.3 - gsmtp"
   },
   {
     "id": "NOTIF_1792131355073_udj0du",
@@ -61,7 +77,7 @@
     },
     "timestamp": "2026-10-16T06:15:55.073Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 41be03b00d2f7-cd6549b761bsm712270a12.15 - gsmtp"
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-36082a7b33bsm13395395eec.24 - gsmtp"
   },
   {
     "id": "NOTIF_1792131201398_fodzwd",
@@ -77,7 +93,7 @@
     },
     "timestamp": "2026-10-16T06:13:21.398Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 98e67ed59e1d1-3ac94748c6csm8282440a91.10 - gsmtp"
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 98e67ed59e1d1-3acc4991b8asm4098845a91.16 - gsmtp"
   },
   {
     "id": "NOTIF_1792131162542_ld9v4e",
@@ -93,7 +109,7 @@
     },
     "timestamp": "2026-10-16T06:12:42.542Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-3607ee0cab0sm5960175eec.3 - gsmtp"
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-36082a7b33bsm13396209eec.24 - gsmtp"
   },
   {
     "id": "NOTIF_1791515101590_u7taal",
@@ -127,7 +143,7 @@
     },
     "timestamp": "2026-10-09T03:03:57.531Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-3607ee0cab0sm5960445eec.3 - gsmtp"
+    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-36081ab80f9sm11568359eec.12 - gsmtp"
   },
   {
     "id": "NOTIF_1791428207970_mxx6nt",

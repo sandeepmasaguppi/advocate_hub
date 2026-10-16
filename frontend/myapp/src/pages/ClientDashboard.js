@@ -36,7 +36,43 @@ const PAY_I18N = {
   },
 };
 
+function playWhatsAppNotificationSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+    const now = ctx.currentTime;
+    
+    // Tone 1: High crisp pop
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(880, now);
+    osc1.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
+    gain1.gain.setValueAtTime(0.2, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.12);
 
+    // Tone 2: Pleasant confirmation pop
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(1320, now + 0.13);
+    osc2.frequency.exponentialRampToValueAtTime(1760, now + 0.24);
+    gain2.gain.setValueAtTime(0.25, now + 0.13);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.13);
+    osc2.stop(now + 0.32);
+  } catch (e) { /* ignore audio permission restrictions */ }
+}
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
@@ -209,6 +245,36 @@ export default function ClientDashboard() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [message, setMessage] = useState(() => (isPrefillAlreadySent ? "" : initialPrefill));
   const [messages, setMessages] = useState([]);
+  const [editingMsgIndex, setEditingMsgIndex] = useState(null);
+  const [editingMsgText, setEditingMsgText] = useState("");
+  const [activeMenuMsgIndex, setActiveMenuMsgIndex] = useState(null);
+  const [copyFeedback, setCopyFeedback] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [incomingToast, setIncomingToast] = useState(null);
+
+  // Auto-dismiss WhatsApp incoming message toast after 6.5s
+  useEffect(() => {
+    if (!incomingToast) return;
+    const timer = setTimeout(() => {
+      setIncomingToast(null);
+    }, 6500);
+    return () => clearTimeout(timer);
+  }, [incomingToast]);
+
+  // Close message context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (activeMenuMsgIndex !== null && !e.target.closest(".wa-bubble-menu-wrap") && !e.target.closest(".wa-bubble-container")) {
+        setActiveMenuMsgIndex(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [activeMenuMsgIndex]);
   const [ratingMessage, setRatingMessage] = useState("");
   const [ratingDraft, setRatingDraft] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -257,8 +323,50 @@ export default function ClientDashboard() {
   const isAdvocatePaid = (advId) => {
     if (!advId) return false;
     const cid = clientId || "guest";
-    return localStorage.getItem(`law4u_client_paid_${cid}_adv_${advId}`) === "true";
+    if (localStorage.getItem(`law4u_client_paid_${cid}_adv_${advId}`) === "true") return true;
+
+    // Also verify from local/server consultation payments list
+    try {
+      const raw = localStorage.getItem("law4u_consultation_payments");
+      const list = raw ? JSON.parse(raw) : [];
+      const cleanPhone = String(clientObj?.phone || "").replace(/\D/g, "").slice(-10);
+      const cleanEmail = (clientObj?.email || "").toLowerCase().trim();
+      const hasPaid = list.some(p => {
+        if (Number(p.advocateId) !== Number(advId)) return false;
+        if ((p.status || "").toLowerCase() !== "paid") return false;
+        if (cid && (Number(p.clientId) === Number(cid) || String(p.clientId) === String(cid))) return true;
+        if (cleanEmail && p.clientEmail && p.clientEmail.toLowerCase().trim() === cleanEmail) return true;
+        if (cleanPhone && p.clientPhone && String(p.clientPhone).replace(/\D/g, "").slice(-10) === cleanPhone) return true;
+        if (cleanPhone && p.upiId && String(p.upiId).includes(cleanPhone)) return true;
+        return false;
+      });
+      if (hasPaid) {
+        localStorage.setItem(`law4u_client_paid_${cid}_adv_${advId}`, "true");
+        return true;
+      }
+    } catch {}
+
+    return false;
   };
+
+  // Sync latest consultation payments from backend server
+  useEffect(() => {
+    api("/api/consultations")
+      .then((serverConsults) => {
+        if (!Array.isArray(serverConsults)) return;
+        try {
+          const raw = localStorage.getItem("law4u_consultation_payments");
+          const localList = raw ? JSON.parse(raw) : [];
+          const map = new Map();
+          serverConsults.forEach(item => map.set(item.id || `${item.clientId}_${item.advocateId}`, item));
+          localList.forEach(item => map.set(item.id || `${item.clientId}_${item.advocateId}`, item));
+          const merged = Array.from(map.values());
+          localStorage.setItem("law4u_consultation_payments", JSON.stringify(merged));
+          setPaidVersion(v => v + 1);
+        } catch {}
+      })
+      .catch(() => {});
+  }, [clientId]);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState("");
@@ -352,24 +460,96 @@ export default function ClientDashboard() {
     setMessages(raw ? JSON.parse(raw) : []);
   }, [selected, clientId]);
 
-  // listen for storage changes (advocate replies from other tab) and refresh ordering/messages
+  // Real-time listener for advocate messages across tabs / intervals with WhatsApp audio chime & popup toast
   useEffect(() => {
-    const handler = (e) => {
-      if (!e.key) return;
-      if (!e.key.startsWith(`chat_${clientId}_`)) return;
-      try {
-        // if the changed key is the currently selected advocate, refresh messages
-        if (selected && e.key === `chat_${clientId}_${selected.id}`) {
-          const raw = localStorage.getItem(e.key);
-          setMessages(raw ? JSON.parse(raw) : []);
-        }
-      } catch (err) { /* ignore */ }
-      // bump version so displayedAdvocates recomputes and reorders list
+    let lastAlertedTime = 0;
+
+    const triggerAdvocateNotification = (payload) => {
+      if (!payload) return;
+      const msgTime = payload.t ? new Date(payload.t).getTime() : Date.now();
+      if (msgTime <= lastAlertedTime) return;
+      lastAlertedTime = msgTime;
+
       setMessagesVersion(v => v + 1);
+
+      // Play WhatsApp notification chime
+      playWhatsAppNotificationSound();
+
+      // If client currently has this advocate's chat open, refresh messages immediately
+      if (selected && Number(selected.id) === Number(payload.advocateId)) {
+        const raw = localStorage.getItem(`chat_${clientId}_${payload.advocateId}`);
+        if (raw) setMessages(JSON.parse(raw));
+      } else {
+        // Client is viewing another advocate or list: show popup toast banner!
+        const advMatch = advocates.find(a => Number(a.id) === Number(payload.advocateId));
+        setIncomingToast({
+          advocateId: payload.advocateId,
+          advocateName: payload.advocateName || advMatch?.name || "Advocate",
+          advocateAvatar: payload.advocateAvatar || advMatch?.avatar || "",
+          text: payload.text || "New message",
+          t: payload.t || new Date().toISOString()
+        });
+      }
     };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, [clientId, selected]);
+
+    const handleAdvocateMsgSent = (e) => {
+      const detail = e?.detail;
+      if (detail && (!detail.clientId || String(detail.clientId) === String(clientId))) {
+        triggerAdvocateNotification(detail);
+      }
+    };
+
+    const handleStorage = (e) => {
+      if (!e?.key) return;
+      if (e.key === `law4u_notify_client_${clientId}` || e.key === "law4u_latest_advocate_message") {
+        try {
+          const payload = JSON.parse(e.newValue);
+          if (payload && (!payload.clientId || String(payload.clientId) === String(clientId))) {
+            triggerAdvocateNotification(payload);
+          }
+        } catch {}
+      } else if (e.key.startsWith(`chat_${clientId}_`)) {
+        setMessagesVersion(v => v + 1);
+        try {
+          const raw = localStorage.getItem(e.key);
+          const msgs = raw ? JSON.parse(raw) : [];
+          const lastM = msgs[msgs.length - 1];
+          if (lastM && (lastM.from === "advocate" || lastM.from === "admin")) {
+            const advId = Number(e.key.split("_")[2]);
+            triggerAdvocateNotification({
+              clientId,
+              advocateId: advId,
+              text: lastM.text,
+              t: lastM.t
+            });
+          } else if (selected && e.key === `chat_${clientId}_${selected.id}`) {
+            setMessages(msgs);
+          }
+        } catch {}
+      }
+    };
+
+    const handleChatUpdated = (e) => {
+      const detail = e?.detail;
+      setMessagesVersion(v => v + 1);
+      if (selected && detail?.key === `chat_${clientId}_${selected.id}`) {
+        try {
+          const raw = localStorage.getItem(detail.key);
+          if (raw) setMessages(JSON.parse(raw));
+        } catch {}
+      }
+    };
+
+    window.addEventListener("law4u_advocate_message_sent", handleAdvocateMsgSent);
+    window.addEventListener("law4u_chat_updated", handleChatUpdated);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("law4u_advocate_message_sent", handleAdvocateMsgSent);
+      window.removeEventListener("law4u_chat_updated", handleChatUpdated);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [clientId, selected, advocates]);
 
   // Emoji & File attachment states for Client chat
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -426,11 +606,18 @@ export default function ClientDashboard() {
 
   const executeSendMessage = (textToSend) => {
     const key = `chat_${clientId}_${selected.id}`;
+    const clientAvatar = clientObj?.avatar || localStorage.getItem(`law4u_client_avatar_${clientId}`) || undefined;
     const newMsgObj = {
       from: "client",
       text: textToSend,
       t: new Date().toISOString(),
-      clientName: clientObj?.name || undefined
+      clientName: clientObj?.name || undefined,
+      clientAvatar: clientAvatar,
+      replyTo: replyingTo ? {
+        text: replyingTo.text,
+        sender: replyingTo.sender,
+        from: replyingTo.from
+      } : null
     };
     if (pendingAttachment) {
       newMsgObj.attachment = pendingAttachment;
@@ -441,6 +628,64 @@ export default function ClientDashboard() {
     setMessage("");
     setPendingAttachment(null);
     setShowEmojiPicker(false);
+    setReplyingTo(null);
+
+    // Sync with law4u_requests so advocate dashboard updates immediately
+    try {
+      const allReqsRaw = localStorage.getItem("law4u_requests");
+      const allReqs = allReqsRaw ? JSON.parse(allReqsRaw) : {};
+      const advId = selected.id;
+      const advReqs = allReqs[advId] || [];
+      const matchIdx = advReqs.findIndex(r => (r.clientId && String(r.clientId) === String(clientId)) || String(r.id) === String(clientId) || (clientObj?.name && r.clientName === clientObj.name));
+      if (matchIdx >= 0) {
+        advReqs[matchIdx] = {
+          ...advReqs[matchIdx],
+          lastMessage: textToSend,
+          requestedAt: newMsgObj.t,
+          clientName: clientObj?.name || advReqs[matchIdx].clientName,
+          clientAvatar: clientAvatar || advReqs[matchIdx].clientAvatar,
+          clientPhone: clientObj?.phone || advReqs[matchIdx].clientPhone,
+          clientEmail: clientObj?.email || advReqs[matchIdx].clientEmail,
+          clientCity: clientObj?.city || advReqs[matchIdx].clientCity
+        };
+      } else {
+        advReqs.unshift({
+          id: clientId || Date.now(),
+          clientId: clientId || Date.now(),
+          clientName: clientObj?.name || (clientId ? `Client #${clientId}` : "Client"),
+          clientAvatar: clientAvatar || "",
+          clientPhone: clientObj?.phone || "",
+          clientEmail: clientObj?.email || "",
+          clientCity: clientObj?.city || "Online",
+          requestedAt: newMsgObj.t,
+          message: textToSend,
+          lastMessage: textToSend,
+          status: "accepted",
+          paymentStatus: "Paid / Completed",
+          caseStage: "Start Case",
+          fee: selected?.fee || "₹2,000"
+        });
+      }
+      allReqs[advId] = advReqs;
+      localStorage.setItem("law4u_requests", JSON.stringify(allReqs));
+    } catch (e) { /* ignore */ }
+
+    // Broadcast instant client message event & notification keys for Advocate Dashboard
+    try {
+      const notifPayload = {
+        clientId,
+        advocateId: selected.id,
+        text: textToSend,
+        t: newMsgObj.t,
+        clientName: clientObj?.name || (clientId ? `Client #${clientId}` : "Client"),
+        clientAvatar: clientAvatar
+      };
+      localStorage.setItem("law4u_latest_client_message", JSON.stringify(notifPayload));
+      localStorage.setItem(`law4u_notify_adv_${selected.id}`, JSON.stringify(notifPayload));
+      window.dispatchEvent(new CustomEvent("law4u_client_message_sent", { detail: notifPayload }));
+      window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) { /* ignore */ }
 
     // Remember this advocate as active chat
     if (clientId && selected) {
@@ -450,6 +695,127 @@ export default function ClientDashboard() {
 
     // Clean URL so browser refresh stays in active chat without re-triggering case setup
     navigate('/client-dashboard', { replace: true });
+  };
+
+  // Delete message (WhatsApp style: "🚫 This message was deleted")
+  const handleDeleteChatMessage = (msgIndex) => {
+    if (!selected) return;
+    const key = `chat_${clientId}_${selected.id}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    const msgs = JSON.parse(raw);
+    if (!msgs[msgIndex]) return;
+
+    msgs[msgIndex] = {
+      ...msgs[msgIndex],
+      isDeleted: true,
+      text: "",
+      attachment: null,
+      deletedAt: new Date().toISOString(),
+      deletedBy: "client"
+    };
+
+    localStorage.setItem(key, JSON.stringify(msgs));
+    setMessages(msgs);
+
+    // Update law4u_requests if this was the last message
+    try {
+      const allReqsRaw = localStorage.getItem("law4u_requests");
+      if (allReqsRaw) {
+        const allReqs = JSON.parse(allReqsRaw);
+        const advReqs = allReqs[selected.id] || [];
+        const mIdx = advReqs.findIndex(r => String(r.clientId || r.id) === String(clientId));
+        if (mIdx >= 0) {
+          const lastM = msgs[msgs.length - 1];
+          advReqs[mIdx].lastMessage = lastM?.isDeleted ? "🚫 This message was deleted" : (lastM?.text || "");
+          allReqs[selected.id] = advReqs;
+          localStorage.setItem("law4u_requests", JSON.stringify(allReqs));
+        }
+      }
+    } catch {}
+
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
+    window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key, clientId, advocateId: selected.id } }));
+  };
+
+  // Edit message (adds "Edited" tag and updates text)
+  const handleSaveEditChatMessage = (msgIndex, newText) => {
+    if (!selected || !newText.trim()) return;
+    const key = `chat_${clientId}_${selected.id}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    const msgs = JSON.parse(raw);
+    if (!msgs[msgIndex]) return;
+
+    msgs[msgIndex] = {
+      ...msgs[msgIndex],
+      text: newText.trim(),
+      isEdited: true,
+      editedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem(key, JSON.stringify(msgs));
+    setMessages(msgs);
+    setEditingMsgIndex(null);
+    setEditingMsgText("");
+
+    // Update law4u_requests if this was the last message
+    try {
+      const allReqsRaw = localStorage.getItem("law4u_requests");
+      if (allReqsRaw) {
+        const allReqs = JSON.parse(allReqsRaw);
+        const advReqs = allReqs[selected.id] || [];
+        const mIdx = advReqs.findIndex(r => String(r.clientId || r.id) === String(clientId));
+        if (mIdx >= 0) {
+          const lastM = msgs[msgs.length - 1];
+          advReqs[mIdx].lastMessage = lastM?.isDeleted ? "🚫 This message was deleted" : (lastM?.text || "");
+          allReqs[selected.id] = advReqs;
+          localStorage.setItem("law4u_requests", JSON.stringify(allReqs));
+        }
+      }
+    } catch {}
+
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
+    window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key, clientId, advocateId: selected.id } }));
+  };
+
+  // Copy message text to clipboard
+  const handleCopyMessage = (text) => {
+    if (!text) return;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    } catch {}
+    setActiveMenuMsgIndex(null);
+  };
+
+  // Reply to a message (WhatsApp style quote reply)
+  const handleReplyMessage = (msg) => {
+    if (!msg) return;
+    const isClient = msg.from === "client";
+    const senderName = isClient ? "You" : (selected?.name || "Advocate");
+    setReplyingTo({
+      text: msg.text || (msg.attachment ? `[Attachment: ${msg.attachment.fileName}]` : "Message"),
+      sender: senderName,
+      from: msg.from
+    });
+    setActiveMenuMsgIndex(null);
+    setTimeout(() => {
+      const inputEl = document.querySelector(".wa-input-box input");
+      if (inputEl) inputEl.focus();
+    }, 50);
   };
 
   const handleConfirmPayment = () => {
@@ -593,6 +959,79 @@ export default function ClientDashboard() {
               <button type="button" className="wa-logout-btn-cancel" onClick={cancelLogout}>Stay signed in</button>
               <button type="button" className="wa-logout-btn-confirm" onClick={confirmLogout}>Log out</button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Real-time WhatsApp Incoming Message Toast from Advocate */}
+      {incomingToast && (
+        <div
+          className="wa-toast-notification"
+          onClick={() => {
+            const advMatch = advocates.find(a => Number(a.id) === Number(incomingToast.advocateId));
+            if (advMatch) {
+              setSelected(advMatch);
+              setMobileChatActive(true);
+            }
+            setIncomingToast(null);
+          }}
+          role="alert"
+        >
+          <div className="wa-toast-avatar-box">
+            {incomingToast.advocateAvatar ? (
+              <img
+                src={assetUrl ? assetUrl(incomingToast.advocateAvatar) : incomingToast.advocateAvatar}
+                alt={incomingToast.advocateName}
+                className="wa-toast-avatar"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  if (e.currentTarget.nextElementSibling) {
+                    e.currentTarget.nextElementSibling.style.display = "flex";
+                  }
+                }}
+              />
+            ) : null}
+            <div
+              className="wa-toast-avatar-fallback"
+              style={{ display: incomingToast.advocateAvatar ? "none" : "flex" }}
+            >
+              {(incomingToast.advocateName || "A").charAt(0).toUpperCase()}
+            </div>
+            <span className="wa-toast-online-pip" />
+          </div>
+          <div className="wa-toast-content">
+            <div className="wa-toast-header">
+              <span className="wa-toast-title">{incomingToast.advocateName}</span>
+              <span className="wa-toast-tag">WhatsApp Message</span>
+            </div>
+            <div className="wa-toast-msg">{incomingToast.text}</div>
+          </div>
+          <div className="wa-toast-actions">
+            <button
+              type="button"
+              className="wa-toast-open-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                const advMatch = advocates.find(a => Number(a.id) === Number(incomingToast.advocateId));
+                if (advMatch) {
+                  setSelected(advMatch);
+                  setMobileChatActive(true);
+                }
+                setIncomingToast(null);
+              }}
+            >
+              Reply →
+            </button>
+            <button
+              type="button"
+              className="wa-toast-dismiss-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIncomingToast(null);
+              }}
+              aria-label="Dismiss notification"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
@@ -855,10 +1294,39 @@ export default function ClientDashboard() {
       </aside>
 
       {selected && profileOpen && (
-        <div className="wa-profile-overlay" onClick={() => setProfileOpen(false)}>
-          <div className={`wa-profile-card ${theme === "dark" ? "dark" : ""}`} onClick={(e) => e.stopPropagation()}>
-            <button className="wa-profile-close" type="button" onClick={() => setProfileOpen(false)}>×</button>
-            <div className="wa-profile-header">
+        !isAdvocatePaid(selected.id) ? (
+          <div className="wa-profile-overlay" onClick={() => setProfileOpen(false)}>
+            <div className={`wa-profile-card wa-profile-card-locked ${theme === "dark" ? "dark" : ""}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "460px", textAlign: "center" }}>
+              <button className="wa-profile-close" type="button" onClick={() => setProfileOpen(false)}>×</button>
+              <div style={{ padding: "30px 16px" }}>
+                <div style={{ fontSize: "56px", marginBottom: "16px" }}>🔒</div>
+                <h2 style={{ fontSize: "22px", fontWeight: "800", color: theme === "dark" ? "#f8fafc" : "#0f172a", marginBottom: "10px" }}>
+                  {lang === "kn" ? "ವಕೀಲರ ಪ್ರೊಫೈಲ್ ಲಾಕ್ ಆಗಿದೆ" : "Advocate Profile Locked"}
+                </h2>
+                <p style={{ color: theme === "dark" ? "#94a3b8" : "#64748b", fontSize: "14px", lineHeight: "1.6", maxWidth: "340px", margin: "0 auto 24px" }}>
+                  {lang === "kn"
+                    ? `${selected.name} ಅವರ ಸಂಪೂರ್ಣ ಪ್ರೊಫೈಲ್, ರೇಟಿಂಗ್‌ಗಳು ಮತ್ತು ಸಂಪರ್ಕ ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಲು ₹10 ಒಂದು ಬಾರಿಯ ಸಮಾಲೋಚನಾ ಶುಲ್ಕ ಪಾವತಿಸಿ.`
+                    : `Complete the one-time ₹10 consultation fee to unlock and view ${selected.name}'s verified credentials, bar council record, ratings, and direct contact details.`}
+                </p>
+                <button
+                  type="button"
+                  className="wa-pay-confirm-btn"
+                  style={{ width: "100%", padding: "13px 20px", fontSize: "15px", fontWeight: "700" }}
+                  onClick={() => {
+                    setProfileOpen(false);
+                    setShowPaymentModal(true);
+                  }}
+                >
+                  ✓ {lang === "kn" ? "₹10 ಪಾವತಿಸಿ ಪ್ರೊಫೈಲ್ ಅನ್‌ಲಾಕ್ ಮಾಡಿ →" : "Pay ₹10 to Unlock Profile Details →"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="wa-profile-overlay" onClick={() => setProfileOpen(false)}>
+            <div className={`wa-profile-card ${theme === "dark" ? "dark" : ""}`} onClick={(e) => e.stopPropagation()}>
+              <button className="wa-profile-close" type="button" onClick={() => setProfileOpen(false)}>×</button>
+              <div className="wa-profile-header">
               <div className="wa-profile-avatar-wrap">
                 {selected.avatar ? (
                   <img src={assetUrl ? assetUrl(selected.avatar) : selected.avatar} alt={selected.name} className="wa-profile-avatar" />
@@ -892,9 +1360,6 @@ export default function ClientDashboard() {
               <div className="wa-profile-section">
                 <div className="wa-rating-header-row">
                   <h3>{lang === "kn" ? "ಈ ವಕೀಲರಿಗೆ ರೇಟಿಂಗ್ ನೀಡಿ" : "Rate this Advocate"}</h3>
-                  <span className="wa-movie-style-chip">
-                    🎬 {lang === "kn" ? "ಚಲನಚಿತ್ರ ಶೈಲಿಯ ರೇಟಿಂಗ್" : "Movie-Style Average"}
-                  </span>
                 </div>
 
                 <div className="wa-rating-box">
@@ -1015,6 +1480,7 @@ export default function ClientDashboard() {
             </div>
           </div>
         </div>
+        )
       )}
 
       <main className="wa-chat-panel">
@@ -1029,7 +1495,18 @@ export default function ClientDashboard() {
             ‹
           </button>
           {selected ? (
-            <div className="wa-header-contact-info" onClick={() => setProfileOpen(true)}>
+            <div
+              className="wa-header-contact-info"
+              onClick={() => {
+                if (!isAdvocatePaid(selected.id)) {
+                  setShowPaymentModal(true);
+                  return;
+                }
+                setProfileOpen(true);
+              }}
+              title={isAdvocatePaid(selected.id) ? "View Advocate Profile" : "🔒 Complete ₹10 Payment to Unlock Profile Details"}
+              style={{ cursor: "pointer" }}
+            >
               <div className="wa-header-avatar">
                 {selected && selected.avatar ? (
                   <img src={assetUrl ? assetUrl(selected.avatar) : selected.avatar} alt={selected.name} style={{ width:48, height:48, borderRadius:12, objectFit: 'cover' }} />
@@ -1166,44 +1643,232 @@ export default function ClientDashboard() {
               <div className="wa-empty-list">No messages yet. Say hi!</div>
             )
           ) : (
-            messages.map((m, i) => (
-              <div key={i} className={`wa-message-wrapper ${m.from === "client" ? "outgoing" : "incoming"}`}>
-                <div className="wa-bubble-container">
-                  {m.attachment && (
-                    <div className="wa-msg-attachment-box" style={{ marginBottom: m.text ? "8px" : "4px" }}>
-                      {m.attachment.isImage ? (
-                        <div style={{ borderRadius: "8px", overflow: "hidden", marginBottom: "4px" }}>
-                          <img
-                            src={m.attachment.dataUrl}
-                            alt={m.attachment.fileName}
-                            style={{ maxWidth: "100%", maxHeight: "240px", objectFit: "cover", display: "block" }}
-                          />
-                        </div>
-                      ) : (
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(0,0,0,0.06)", padding: "8px 12px", borderRadius: "8px" }}>
-                          <span style={{ fontSize: "24px" }}>📄</span>
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ fontWeight: "700", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {m.attachment.fileName}
-                            </div>
-                            <div style={{ fontSize: "11px", opacity: 0.75 }}>{m.attachment.fileSize}</div>
+            messages.map((m, i) => {
+              const isClient = m.from === "client";
+              const isEditingThis = editingMsgIndex === i;
+              const isDeleted = Boolean(m.isDeleted);
+              const isEdited = Boolean(m.isEdited);
+              const isMenuActive = activeMenuMsgIndex === i;
+              const isNearBottom = i >= messages.length - 2;
+
+              return (
+                <div key={i} className={`wa-message-wrapper ${isClient ? "outgoing" : "incoming"} ${isDeleted ? "is-deleted-wrapper" : ""} ${isMenuActive ? "wa-msg-row-active" : ""}`}>
+                  <div
+                    className={`wa-bubble-container ${isDeleted ? "wa-bubble-deleted" : ""} ${isMenuActive ? "wa-bubble-focused" : ""}`}
+                    onClick={() => {
+                      if (!isDeleted && !isEditingThis) {
+                        setActiveMenuMsgIndex(prev => prev === i ? null : i);
+                      }
+                    }}
+                    style={{ cursor: (!isDeleted && !isEditingThis) ? "pointer" : "default" }}
+                  >
+                    
+                    {/* WhatsApp 3-Dots Action Menu Trigger & Dropdown */}
+                    {!isDeleted && !isEditingThis && (
+                      <div className="wa-bubble-menu-wrap" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className={`wa-bubble-trigger-btn ${isMenuActive ? "active" : ""}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuMsgIndex(prev => prev === i ? null : i);
+                          }}
+                          title="Message options"
+                          aria-label="Message options"
+                        >
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                          </svg>
+                        </button>
+
+                        {activeMenuMsgIndex === i && (
+                          <div
+                            className={`wa-bubble-dropdown ${isClient ? "dropdown-outgoing" : "dropdown-incoming"} ${isNearBottom ? "dropdown-upward" : ""}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Reply option */}
+                            <button
+                              type="button"
+                              className="wa-bubble-menu-item"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReplyMessage(m);
+                              }}
+                            >
+                              <span className="wa-bubble-menu-icon">↩️</span>
+                              <span>Reply</span>
+                            </button>
+
+                            {/* Edit option - ONLY FOR CLIENT'S OWN SENT MESSAGES */}
+                            {isClient && m.text && (
+                              <button
+                                type="button"
+                                className="wa-bubble-menu-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveMenuMsgIndex(null);
+                                  setEditingMsgIndex(i);
+                                  setEditingMsgText(m.text || "");
+                                }}
+                              >
+                                <span className="wa-bubble-menu-icon">✏️</span>
+                                <span>Edit</span>
+                              </button>
+                            )}
+
+                            {/* Copy option */}
+                            {m.text && (
+                              <button
+                                type="button"
+                                className="wa-bubble-menu-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyMessage(m.text);
+                                }}
+                              >
+                                <span className="wa-bubble-menu-icon">📋</span>
+                                <span>Copy</span>
+                              </button>
+                            )}
+
+                            {/* Delete option */}
+                            <button
+                              type="button"
+                              className="wa-bubble-menu-item wa-bubble-menu-item-delete"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuMsgIndex(null);
+                                if (window.confirm ? window.confirm("Are you sure you want to delete this message for everyone?") : true) {
+                                  handleDeleteChatMessage(i);
+                                }
+                              }}
+                            >
+                              <span className="wa-bubble-menu-icon">🗑️</span>
+                              <span>Delete</span>
+                            </button>
                           </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Quoted Reply Block (Message to Message) */}
+                    {!isDeleted && m.replyTo && (
+                      <div className={`wa-bubble-quote ${isClient ? "quote-outgoing" : "quote-incoming"}`}>
+                        <div className="wa-quote-border" />
+                        <div className="wa-quote-content">
+                          <div className="wa-quote-sender">{m.replyTo.sender}</div>
+                          <div className="wa-quote-text">{m.replyTo.text}</div>
                         </div>
+                      </div>
+                    )}
+
+                    {isDeleted ? (
+                      <div className="wa-deleted-msg-box" style={{ display: "flex", alignItems: "center", gap: "6px", fontStyle: "italic", opacity: 0.8, color: "#64748b", padding: "4px 2px" }}>
+                        <span style={{ fontSize: "15px" }}>🚫</span>
+                        <span>This message was deleted</span>
+                      </div>
+                    ) : isEditingThis ? (
+                      <div className="wa-inline-edit-box" onClick={(e) => e.stopPropagation()}>
+                        <textarea
+                          className="wa-inline-edit-textarea"
+                          value={editingMsgText}
+                          onChange={(e) => setEditingMsgText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSaveEditChatMessage(i, editingMsgText);
+                            } else if (e.key === "Escape") {
+                              setEditingMsgIndex(null);
+                              setEditingMsgText("");
+                            }
+                          }}
+                          rows={2}
+                          autoFocus
+                        />
+                        <div className="wa-inline-edit-actions">
+                          <button
+                            type="button"
+                            className="wa-inline-save-btn"
+                            onClick={() => handleSaveEditChatMessage(i, editingMsgText)}
+                          >
+                            ✓ Save
+                          </button>
+                          <button
+                            type="button"
+                            className="wa-inline-cancel-btn"
+                            onClick={() => {
+                              setEditingMsgIndex(null);
+                              setEditingMsgText("");
+                            }}
+                          >
+                            ✕ Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {m.attachment && (
+                          <div className="wa-msg-attachment-box" style={{ marginBottom: m.text ? "8px" : "4px" }}>
+                            {m.attachment.isImage ? (
+                              <div style={{ borderRadius: "8px", overflow: "hidden", marginBottom: "4px" }}>
+                                <img
+                                  src={m.attachment.dataUrl}
+                                  alt={m.attachment.fileName}
+                                  style={{ maxWidth: "100%", maxHeight: "240px", objectFit: "cover", display: "block" }}
+                                />
+                              </div>
+                            ) : (
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(0,0,0,0.06)", padding: "8px 12px", borderRadius: "8px" }}>
+                                <span style={{ fontSize: "24px" }}>📄</span>
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <div style={{ fontWeight: "700", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {m.attachment.fileName}
+                                  </div>
+                                  <div style={{ fontSize: "11px", opacity: 0.75 }}>{m.attachment.fileSize}</div>
+                                </div>
+                              </div>
+                            )}
+                            <a
+                              href={m.attachment.dataUrl}
+                              download={m.attachment.fileName}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", color: isClient ? "#008069" : "#2563eb", fontWeight: "700", marginTop: "4px", textDecoration: "none" }}
+                            >
+                              ⬇ Download {m.attachment.fileName}
+                            </a>
+                          </div>
+                        )}
+                        {m.text && <div className="wa-bubble-text">{m.text}</div>}
+                      </>
+                    )}
+
+                    <div className="wa-bubble-meta" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "6px" }}>
+                      <div className="wa-bubble-time">{new Date(m.t || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                      {!isDeleted && isEdited && (
+                        <span className="wa-edited-badge" title={m.editedAt ? `Edited at ${new Date(m.editedAt).toLocaleTimeString()}` : "Edited"}>
+                          ✏️ Edited
+                        </span>
                       )}
-                      <a
-                        href={m.attachment.dataUrl}
-                        download={m.attachment.fileName}
-                        style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", color: m.from === "client" ? "#008069" : "#2563eb", fontWeight: "700", marginTop: "4px", textDecoration: "none" }}
-                      >
-                        ⬇ Download {m.attachment.fileName}
-                      </a>
+                      {!isDeleted && isClient && <span style={{ color: "#34b7f1", fontWeight: "bold", fontSize: "11px" }}>✓✓</span>}
                     </div>
-                  )}
-                  {m.text && <div className="wa-bubble-text">{m.text}</div>}
-                  <div className="wa-bubble-meta"><div className="wa-bubble-time">{new Date(m.t).toLocaleString()}</div></div>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
+          )}
+          {copyFeedback && (
+            <div className="wa-copy-toast">
+              ✓ Copied to clipboard
+            </div>
+          )}
+          {activeMenuMsgIndex !== null && (
+            <div
+              className="wa-msg-menu-backdrop"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveMenuMsgIndex(null);
+              }}
+            />
           )}
         </div>
 
@@ -1270,6 +1935,30 @@ export default function ClientDashboard() {
                 {emo}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* WhatsApp Reply Composer Banner */}
+        {replyingTo && (
+          <div className="wa-reply-composer-banner">
+            <div className="wa-rc-bar" />
+            <div className="wa-rc-content">
+              <div className="wa-rc-sender">
+                Replying to <strong>{replyingTo.sender}</strong>
+              </div>
+              <div className="wa-rc-text">
+                {replyingTo.text}
+              </div>
+            </div>
+            <button
+              type="button"
+              className="wa-rc-close"
+              onClick={() => setReplyingTo(null)}
+              title="Cancel reply"
+              aria-label="Cancel reply"
+            >
+              ✕
+            </button>
           </div>
         )}
 

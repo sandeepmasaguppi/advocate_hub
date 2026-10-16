@@ -53,16 +53,20 @@
   align-items: center;
   gap: 8px;
   background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
-  padding: 6px 16px;
+  padding: 7px 18px;
   border-radius: 30px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  letter-spacing: 0.6px;
   margin-bottom: 20px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.fl-hero-badge-icon {
+  font-size: 14px;
 }
 
 .fl-hero-title {

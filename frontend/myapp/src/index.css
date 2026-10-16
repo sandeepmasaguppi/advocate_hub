@@ -78,18 +78,18 @@ body.theme-dark {
   color: #94a3b8 !important;
 }
 
-[data-theme="dark"] .lw-lang-pills,
-.theme-dark .lw-lang-pills {
+[data-theme="dark"] .lw-lang-bar .lw-lang-pills,
+.theme-dark .lw-lang-bar .lw-lang-pills {
   background: #1e293b !important;
 }
 
-[data-theme="dark"] .lw-lang-pill,
-.theme-dark .lw-lang-pill {
+[data-theme="dark"] .lw-lang-bar .lw-lang-pill,
+.theme-dark .lw-lang-bar .lw-lang-pill {
   color: #cbd5e1 !important;
 }
 
-[data-theme="dark"] .lw-lang-pill.active,
-.theme-dark .lw-lang-pill.active {
+[data-theme="dark"] .lw-lang-bar .lw-lang-pill.active,
+.theme-dark .lw-lang-bar .lw-lang-pill.active {
   background: #2563eb !important;
   color: #ffffff !important;
 }

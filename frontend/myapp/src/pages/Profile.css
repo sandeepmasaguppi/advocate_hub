@@ -112,33 +112,62 @@
 .lw-lang-pill-wrap {
   display: inline-flex;
   align-items: center;
-  background: var(--pf-tile-bg);
-  border: 1px solid var(--pf-card-border);
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   border-radius: 9999px;
   padding: 3px;
   gap: 2px;
+  transition: all 0.2s ease;
 }
 
 .lw-lang-pill-btn {
   border: none;
   background: transparent;
-  color: var(--pf-text-muted);
+  color: #64748b;
   font-size: 0.82rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.18s ease;
+  line-height: 1;
 }
 
 .lw-lang-pill-btn:hover {
-  color: var(--pf-text-primary);
+  color: #0f172a;
 }
 
 .lw-lang-pill-btn.active {
-  background: var(--pf-brand-teal);
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.3);
+  background: #2563eb;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+}
+
+.lw-profile-page.lw-dark .lw-lang-pill-wrap,
+[data-theme="dark"] .lw-profile-page .lw-lang-pill-wrap,
+.theme-dark .lw-profile-page .lw-lang-pill-wrap {
+  background: #131d2e;
+  border-color: #243550;
+}
+
+.lw-profile-page.lw-dark .lw-lang-pill-btn,
+[data-theme="dark"] .lw-profile-page .lw-lang-pill-btn,
+.theme-dark .lw-profile-page .lw-lang-pill-btn {
+  color: #94a3b8;
+}
+
+.lw-profile-page.lw-dark .lw-lang-pill-btn:hover,
+[data-theme="dark"] .lw-profile-page .lw-lang-pill-btn:hover,
+.theme-dark .lw-profile-page .lw-lang-pill-btn:hover {
+  color: #f8fafc;
+}
+
+.lw-profile-page.lw-dark .lw-lang-pill-btn.active,
+[data-theme="dark"] .lw-profile-page .lw-lang-pill-btn.active,
+.theme-dark .lw-profile-page .lw-lang-pill-btn.active {
+  background: #3b82f6;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
 }
 
 /* ── Theme Toggle Button ── */
@@ -648,21 +677,85 @@
   color: var(--pf-text-primary);
 }
 
-/* Languages */
-.lw-lang-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+/* ── Spoken Languages Section ── */
+.lw-lang-pills,
+.lw-profile-page .lw-lang-pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  width: auto !important;
 }
 
-.lw-lang-pill {
-  padding: 8px 16px;
-  border-radius: 9999px;
-  background: var(--pf-tile-bg);
-  border: 1px solid var(--pf-tile-border);
-  color: var(--pf-text-primary);
-  font-size: 0.88rem;
-  font-weight: 600;
+/* Individual Spoken Language Pill */
+.lw-lang-pill,
+.lw-profile-page .lw-lang-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 18px !important;
+  border-radius: 9999px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.4 !important;
+  cursor: default !important;
+  user-select: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  /* Light theme default */
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+.lw-lang-pill:hover,
+.lw-profile-page .lw-lang-pill:hover {
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Dark Theme Overrides for Spoken Languages */
+[data-theme="dark"] .lw-lang-pills,
+.theme-dark .lw-lang-pills,
+.lw-profile-page.lw-dark .lw-lang-pills,
+[data-theme="dark"] .lw-profile-page .lw-lang-pills,
+.theme-dark .lw-profile-page .lw-lang-pills {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .lw-lang-pill,
+.theme-dark .lw-lang-pill,
+.lw-profile-page.lw-dark .lw-lang-pill,
+[data-theme="dark"] .lw-profile-page .lw-lang-pill,
+.theme-dark .lw-profile-page .lw-lang-pill {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .lw-lang-pill:hover,
+.theme-dark .lw-lang-pill:hover,
+.lw-profile-page.lw-dark .lw-lang-pill:hover,
+[data-theme="dark"] .lw-profile-page .lw-lang-pill:hover,
+.theme-dark .lw-profile-page .lw-lang-pill:hover {
+  background: #27354f !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
 }
 
 /* ── Right Column: Sticky Sidebar ── */

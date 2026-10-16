@@ -24,7 +24,6 @@ const I18N = {
   en: {
     backToDirectory: "← Back to Directory",
     profileId: "Profile ID",
-    verifiedBarMember: "Verified Bar Member",
     availableForConsult: "Available for Consultation",
     consultationStatus: "Consultation Status",
     directAccess: "⚡ Direct Access",
@@ -633,21 +632,6 @@ export default function Profile() {
 
         {/* Executive Hero Banner Card */}
         <div className="lw-profile-hero-card">
-          <div className="lw-hero-top">
-            <div className="lw-hero-top-badges">
-              <span className="lw-trust-badge">
-                <span className="lw-badge-check">✓</span> {t.verifiedBarMember}
-              </span>
-              {advocate.court && (
-                <span className="lw-hero-court-chip" title={advocate.court}>
-                  🏛️ {advocate.court}
-                </span>
-              )}
-            </div>
-            <span className="lw-status-indicator">
-              <span className="lw-status-pulse" /> {t.availableForConsult}
-            </span>
-          </div>
 
           <div className="lw-hero-main">
             {/* Avatar with Status Ring */}
@@ -925,10 +909,7 @@ export default function Profile() {
                 return (
                   <article key={other.id} className="fl-card">
                     <div className="fl-card-topbar">
-                      <span className="fl-verified-badge">
-                        <span className="fl-badge-check">✓</span>
-                        <span>{isKn ? "ಬಾರ್ ಪರಿಶೀಲಿತ" : "Verified Bar Member"}</span>
-                      </span>
+                      
                       {other.court && (
                         <span className="fl-court-badge" title={other.court}>
                           🏛️ {other.court.length > 22 ? other.court.slice(0, 20) + "…" : other.court}
