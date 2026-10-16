@@ -2128,5 +2128,33 @@
     "avatar": "/uploads/adv-sanotsh-tokallya-92.jpg",
     "status": "approved",
     "passwordHash": "scrypt$aa8332c434108d4257a7e503f70b0590$1f9dc724fe157111c20001e02315369f977dca13b22bb233010c622f1a8ba38c9c0cd48c7804db8fd0bac5f006c104df098dc973920720de9c829d53f2abd4bd"
+  },
+  {
+    "id": 93,
+    "name": "Advocate Ramesh",
+    "city": "Bengaluru",
+    "practiceArea": "Criminal Defense",
+    "speciality": "Criminal Defense",
+    "practiceAreas": [
+      "Criminal Defense"
+    ],
+    "courtLevel": "",
+    "district": "",
+    "taluk": "",
+    "court": "",
+    "barCouncil": "Karnataka Bar Council",
+    "barId": "KAR/1443/2026",
+    "experience": "8 years",
+    "rating": 0,
+    "cases": 0,
+    "fee": "",
+    "phone": "9876131443",
+    "email": "adv_test_1792131443@example.com",
+    "languages": [],
+    "availability": "Available",
+    "bio": "",
+    "avatar": "/uploads/advocate-ramesh-93.png",
+    "status": "approved",
+    "passwordHash": "scrypt$5f834b904c9876f6cb6ce0b55af9aba0$f6cea48105ce2d93f478861a354f244e7f93a2bde7d6b415df246ec41af58deda9ebcdfe40bdda5b31f544742c1c3ac74f95226b3ffa991ce5812068cc109a3c"
   }
 ]

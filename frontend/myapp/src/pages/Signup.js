@@ -608,6 +608,7 @@ export default function Signup() {
   const [advOtpSentChannels, setAdvOtpSentChannels] = useState([]);
   const [advOtpChannel, setAdvOtpChannel] = useState("all"); // "all" | "email" | "phone" | "whatsapp"
   const [advOtpSetupError, setAdvOtpSetupError] = useState("");
+  const [activeAdvWhatsappUrl, setActiveAdvWhatsappUrl] = useState("");
 
   useEffect(() => {
     if (!otpStep || resendTimer <= 0) return;
@@ -1013,6 +1014,11 @@ export default function Signup() {
           : [channelToUse === "phone" ? "sms" : channelToUse];
         setAdvOtpSetupError("");
         setAdvOtpSentChannels(sentChannels);
+        if (data.whatsappUrl) {
+          setActiveAdvWhatsappUrl(data.whatsappUrl);
+        } else {
+          setActiveAdvWhatsappUrl("");
+        }
         setShowAdvChannelModal(false);
         showToast(
           data.message || `Verification code sent via ${formatOtpChannels(sentChannels)}.`,
@@ -1027,6 +1033,52 @@ export default function Signup() {
         setLoading(false);
       }
     })();
+  };
+
+  const handleSelectAdvAdminApproval = async () => {
+    setLoading(true);
+    setAdvOtpSetupError("");
+    try {
+      const emailLower = adv.email.trim().toLowerCase();
+      const specsList = (adv.specialities && adv.specialities.length > 0)
+        ? adv.specialities
+        : (adv.speciality ? adv.speciality.split(/,\s*/).map(s => s.trim()).filter(Boolean) : []);
+      const finalSpeciality = specsList.join(", ");
+
+      await registerAdvocate({
+        name:          adv.fullName.trim(),
+        email:         emailLower,
+        password:      adv.password,
+        phone:         adv.phone.trim(),
+        barId:         adv.barId.trim(),
+        speciality:    finalSpeciality,
+        practiceArea:  finalSpeciality,
+        practiceAreas: specsList,
+        courtLevel:    adv.courtLevel,
+        district:      adv.district,
+        taluk:         adv.taluk,
+        court:         adv.court,
+        barCouncil:    adv.barCouncil,
+        experience:    adv.experience,
+        city:          adv.city || adv.taluk || adv.district,
+        fee:           adv.fee || "",
+        bio:           adv.bio,
+        avatarData:    adv.avatarData,
+        channel:       "admin",
+        verificationMethod: "admin",
+      });
+
+      setSuccessName(adv.fullName);
+      setShowAdvChannelModal(false);
+      setOtpStep(false);
+      setView("success");
+      showToast("Advocate profile submitted for Admin Approval ⏳", "success");
+    } catch (err) {
+      setAdvOtpSetupError(err.message || "Failed to submit for Admin Approval.");
+      showToast(err.message || "Submission failed.", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResendAdvOtp = async () => {
@@ -1051,6 +1103,9 @@ export default function Signup() {
           ? data.sentChannels
           : [advOtpChannel === "phone" ? "sms" : advOtpChannel];
         setAdvOtpSentChannels(sentChannels);
+        if (data.whatsappUrl) {
+          setActiveAdvWhatsappUrl(data.whatsappUrl);
+        }
         setAdvOtpSetupError("");
         showToast(
           data.message || `A new verification code was sent via ${formatOtpChannels(sentChannels)}.`,
@@ -1217,16 +1272,16 @@ export default function Signup() {
 
               <button
                 type="button"
-                className="rg-channel-option-card chan-all"
-                onClick={() => handleConfirmAdvChannelAndSend("all")}
+                className="rg-channel-option-card chan-admin"
+                onClick={handleSelectAdvAdminApproval}
                 disabled={loading}
               >
-                <div className="rg-channel-icon-avatar">✨</div>
+                <div className="rg-channel-icon-avatar">🏛️</div>
                 <div className="rg-channel-body">
                   <div className="rg-channel-title">
-                    All Channels <span className="rg-channel-badge">Recommended</span>
+                    Admin Approval <span className="rg-channel-badge badge-admin">Direct Review</span>
                   </div>
-                  <div className="rg-channel-desc">Receive code via Email and SMS simultaneously</div>
+                  <div className="rg-channel-desc">Submit profile directly to Admin for verification & approval</div>
                 </div>
                 <div className="rg-channel-arrow">→</div>
               </button>
@@ -1273,6 +1328,34 @@ export default function Signup() {
             </p>
             {advOtpSetupError && (
               <p className="su-otp-setup-error" role="alert">{advOtpSetupError}</p>
+            )}
+
+            {activeAdvWhatsappUrl && (
+              <div style={{ marginBottom: 16 }}>
+                <a
+                  href={activeAdvWhatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    width: "100%",
+                    padding: "12px 18px",
+                    background: "#22c55e",
+                    color: "#ffffff",
+                    borderRadius: 10,
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    fontSize: "0.92rem",
+                    boxShadow: "0 4px 14px rgba(34, 197, 94, 0.35)",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  💬 Open WhatsApp for Instant OTP →
+                </a>
+              </div>
             )}
 
             <form onSubmit={handleVerifyAndRegisterAdv}>

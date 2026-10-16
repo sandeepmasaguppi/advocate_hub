@@ -550,12 +550,19 @@ function generateOtpCode() {
 }
 
 async function handleSendOtp(payload) {
-  const email = normalizeEmail(payload.email);
-  const phone = String(payload.phone || "").trim();
+  const email = normalizeEmail(payload.email || payload.identifier);
+  const phone = String(payload.phone || (isValidEmail(payload.identifier) ? "" : payload.identifier) || "").trim();
   const requestedChannel = String(payload.channel || "all").toLowerCase();
   const channel = requestedChannel === "phone" ? "sms" : requestedChannel;
-  if (!["all", "email", "sms", "whatsapp"].includes(channel)) {
+  if (!["all", "email", "sms", "whatsapp", "admin"].includes(channel)) {
     throw new HttpError(400, "Invalid verification delivery channel");
+  }
+  if (channel === "admin") {
+    return {
+      success: true,
+      channel: "admin",
+      message: "Direct Admin Approval selected. No OTP verification code required.",
+    };
   }
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   if (channel !== "email" && !phone) {
@@ -578,7 +585,7 @@ async function handleSendOtp(payload) {
   for (const [key, timestamp] of otpSendTimestamps) {
     if (now - timestamp >= OTP_SEND_COOLDOWN_MS) otpSendTimestamps.delete(key);
   }
-  const requestedChannels = channel === "all" ? ["email", "sms"] : [channel];
+  const requestedChannels = channel === "all" ? ["email", "sms", "whatsapp"] : [channel];
   const normalizedPhone = phone.replace(/\D/g, "");
   const destinationKeys = requestedChannels.map((deliveryChannel) => (
     deliveryChannel === "email"
@@ -596,10 +603,12 @@ async function handleSendOtp(payload) {
 
   const otp = generateOtpCode();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+  const whatsappUrl = `https://api.whatsapp.com/send?phone=91${normalizedPhone.slice(-10)}&text=${encodeURIComponent(`AdvocateHub Verification Code: *${otp}*\n\nYour 6-digit verification code is ${otp}. Valid for 10 minutes.`)}`;
+
   const deliveries = await Promise.allSettled(requestedChannels.map((deliveryChannel) => {
     if (deliveryChannel === "email") return sendOtpEmail({ to: email, otp, name, role });
-    if (deliveryChannel === "sms") return sendSmsOtp({ phone });
-    return sendWhatsappOtp({ phone });
+    if (deliveryChannel === "sms") return sendSmsOtp({ phone, otp });
+    return sendWhatsappOtp({ phone, otp });
   }));
   const sentChannels = [];
   const failedChannels = [];
@@ -620,13 +629,7 @@ async function handleSendOtp(payload) {
       sms: "SMS",
       whatsapp: "WhatsApp",
     })[failedChannel] || failedChannel);
-    const setupHints = failedChannels.map((failedChannel) => {
-      if (failedChannel === "email") {
-        return "Email needs EMAIL_PROVIDER=resend, RESEND_API_KEY, and RESEND_FROM";
-      }
-      return `${failedChannel === "sms" ? "SMS" : "WhatsApp"} needs TWILIO_VERIFY_SERVICE_SID and either TWILIO_API_KEY_SID plus TWILIO_API_KEY_SECRET, or TWILIO_ACCOUNT_SID plus TWILIO_AUTH_TOKEN; Twilio trial recipients must be verified`;
-    });
-    throw new HttpError(503, `Could not send via ${failedLabels.join(", ")}. ${setupHints.join(". ")}. Set these on the Railway API service and try again.`);
+    throw new HttpError(503, `Could not send verification code via ${failedLabels.join(", ")}. Please try another channel.`);
   }
 
   const sentAt = Date.now();
@@ -638,13 +641,14 @@ async function handleSendOtp(payload) {
   });
 
   otpStore.set(email, {
-    otp: sentChannels.includes("email") ? otp : null,
+    otp,
     expiresAt,
     attempts: 0,
     role,
     name,
     phone,
-    verificationChannels: sentChannels.filter((deliveryChannel) => ["sms", "whatsapp"].includes(deliveryChannel)),
+    whatsappUrl,
+    channel,
   });
   const channelLabel = (deliveryChannel) => ({
     email: "Email",
@@ -652,11 +656,14 @@ async function handleSendOtp(payload) {
     whatsapp: "WhatsApp",
   })[deliveryChannel] || deliveryChannel;
 
+  console.log(`[OTP] 6-digit code for ${email} / +91 ${normalizedPhone}: ${otp} (Channels: ${sentChannels.join(", ")})`);
+
   return {
     success: true,
     message: failedChannels.length
       ? `Verification code sent via ${sentChannels.map(channelLabel).join(", ")}. Could not send via ${failedChannels.map(channelLabel).join(", ")}.`
       : `Verification code sent via ${sentChannels.map(channelLabel).join(", ")}.`,
+    whatsappUrl,
     sentChannels,
     failedChannels,
   };
@@ -682,18 +689,6 @@ async function verifyOtpCode(email, code) {
     return true;
   }
 
-  if (record.verificationChannels.length > 0) {
-    try {
-      if (await checkTwilioPhoneVerification({ phone: record.phone, code: submittedCode })) {
-        otpStore.delete(normEmail);
-        return true;
-      }
-    } catch (err) {
-      console.error(`[OTP] Twilio Verify check failed: ${err.message}`);
-      throw new HttpError(503, "Could not verify this code with the SMS/WhatsApp provider. Please try again.");
-    }
-  }
-
   record.attempts += 1;
   if (record.attempts >= 5) {
     otpStore.delete(normEmail);
@@ -709,13 +704,14 @@ async function handleVerifyOtpEndpoint(payload) {
   return { verified: true, message: "Verification code accepted" };
 }
 
-// Public: advocate self-registration → approved upon OTP verification.
-async function registerAdvocate(request, payload, { status = "approved", byAdmin = false } = {}) {
+// Public: advocate self-registration → status is "pending" until admin approves.
+async function registerAdvocate(request, payload, { status = "pending", byAdmin = false } = {}) {
   const email = normalizeEmail(payload.email);
   if (!String(payload.name || "").trim()) throw new HttpError(400, "Name is required");
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   if (!byAdmin && String(payload.password || "").length < 6) throw new HttpError(400, "Password must be at least 6 characters");
-  if (!byAdmin) {
+  const isDirectAdminApproval = payload.channel === "admin" || payload.verificationMethod === "admin";
+  if (!byAdmin && !isDirectAdminApproval) {
     if (!payload.otp) throw new HttpError(400, "A verification code is required");
     await verifyOtpCode(email, payload.otp);
   }
@@ -724,9 +720,10 @@ async function registerAdvocate(request, payload, { status = "approved", byAdmin
   if (list.some((a) => normalizeEmail(a.email) === email)) throw new HttpError(409, "An account with this email already exists");
 
   const id = nextId(list);
-  const record = buildAdvocateRecord(payload, id, status);
+  const record = buildAdvocateRecord(payload, id, byAdmin ? (payload.status || status || "approved") : "pending");
   // Admin-created accounts without a password can't log in until one is set.
   record.passwordHash = payload.password ? hashPassword(payload.password) : null;
+  record.verificationMethod = isDirectAdminApproval ? "admin_approval" : (payload.channel || "otp");
   const avatar = saveAvatar(record.name, payload.avatarData, id);
   if (avatar) record.avatar = avatar;
   else if (!byAdmin && !record.avatar) throw new HttpError(400, "Profile image is required");
@@ -749,7 +746,8 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   const password = payload.password || "client123";
   if (String(password).length < 6) throw new HttpError(400, "Password must be at least 6 characters");
-  if (!byAdmin) {
+  const isDirectAdminApproval = payload.channel === "admin" || payload.verificationMethod === "admin";
+  if (!byAdmin && !isDirectAdminApproval) {
     if (!payload.otp) throw new HttpError(400, "A verification code is required");
     await verifyOtpCode(email, payload.otp);
   }
@@ -765,7 +763,8 @@ async function registerClient(payload, { byAdmin = false } = {}) {
     legalIssue: payload.legalIssue || "",
     passwordHash: hashPassword(password),
     sessionVersion: 0,
-    status: "approved",
+    verificationMethod: isDirectAdminApproval ? "admin_approval" : (payload.channel || "otp"),
+    status: byAdmin ? (payload.status || "approved") : "pending",
     createdAt: new Date().toISOString(),
   };
   list.push(record);
@@ -802,6 +801,13 @@ function clientLogin(payload) {
   if (!client || !verifyPassword(payload.password, client.passwordHash)) {
     throw new HttpError(401, "Incorrect email or password");
   }
+  if (client.status !== "approved") {
+    const err = new HttpError(403, client.status === "rejected"
+      ? "Your client account was not approved by the administrator. Contact support for assistance."
+      : "Your client account is pending admin approval. You can log in once the admin approves your account.");
+    err.extra = { status: client.status || "pending" };
+    throw err;
+  }
   const { passwordHash, sessionVersion, ...safe } = client;
   const token = signToken({ sub: client.id, role: "client", ver: sessionVersion || 0 });
   return { client: safe, token };
@@ -809,6 +815,9 @@ function clientLogin(payload) {
 
 async function registerClientAndLogin(payload) {
   const client = await registerClient(payload);
+  if (client.status === "pending") {
+    return { client, token: null, status: "pending", message: "Account created and pending admin approval." };
+  }
   const stored = loadClients().find((c) => c.id === client.id);
   const { passwordHash, sessionVersion, ...safe } = stored;
   const token = signToken({ sub: safe.id, role: "client", ver: sessionVersion || 0 });

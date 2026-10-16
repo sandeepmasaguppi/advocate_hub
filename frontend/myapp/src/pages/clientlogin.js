@@ -101,7 +101,7 @@ export default function ClientLogin() {
         if (res.status === 401) {
           setErr("Incorrect email or password.");
         } else {
-          setErr(data.message || "Login failed. Please check your credentials.");
+          setErr(data.error || data.message || "Login failed. Please check your credentials.");
         }
         return;
       }

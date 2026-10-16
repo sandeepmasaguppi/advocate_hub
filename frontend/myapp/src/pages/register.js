@@ -17,9 +17,6 @@ import "./Register.css";
 // ── If your backend runs on a different origin/port, set it here ──
 // e.g. const API_BASE = "http://localhost:5000";
 const API_BASE = "";
-const CLIENT_SESSION_KEY = "law4u_client_id";
-const CLIENT_OBJECT_KEY = "law4u_client";
-const CLIENT_TOKEN_KEY = "law4u_client_token";
 
 // ── Data ─────────────────────────────────────────────────────
 // ── Helpers ───────────────────────────────────────────────────
@@ -91,31 +88,22 @@ function Input({ icon, error, type = "text", rightEl, ...props }) {
   );
 }
 
-function Select({ icon, error, children, ...props }) {
-  return (
-    <div className={`rg-input-wrap ${error ? "error" : ""}`}>
-      {icon && <span className="rg-input-icon">{icon}</span>}
-      <select className="rg-input rg-select" {...props}>{children}</select>
-    </div>
-  );
-}
-
 // ── Success Screen ────────────────────────────────────────────
-function SuccessScreen({ name, onLogin }) {
+function SuccessScreen({ name, onLogin, isDirectAdmin = false }) {
   return (
     <div className="rg-success">
-      <div className="rg-success-icon">✅</div>
-      <h2 className="rg-success-title">Registration Successful</h2>
+      <div className="rg-success-icon">⏳</div>
+      <h2 className="rg-success-title">Registration Submitted!</h2>
       <p className="rg-success-msg">
         Welcome to Advocate Hub, <strong>{name}</strong>!<br />
-        Your client account is active and you are signed in automatically.
+        Your client account has been registered and is <strong>awaiting administrator approval</strong>. Once your profile is reviewed and approved by the admin, you will be able to log in.
       </p>
       <div className="rg-success-steps">
-        <div className="rg-ss done">✅ Account created</div>
-        <div className="rg-ss done">✅ Logged in automatically</div>
+        <div className="rg-ss done">{isDirectAdmin ? "🏛️ Submitted for Admin Verification" : "✅ 6-digit OTP code verified"}</div>
+        <div className="rg-ss done" style={{ color: "#d97706", fontWeight: 700 }}>⏳ Awaiting Admin Approval</div>
       </div>
-      <button className="rg-btn-primary rg-btn-lg" onClick={onLogin}>
-        Continue to Client Portal →
+      <button className="rg-btn-primary rg-btn-lg" onClick={onLogin} style={{ marginTop: 20 }}>
+        Go to Client Login →
       </button>
     </div>
   );
@@ -153,6 +141,7 @@ export default function Register() {
   const [showPw, setShowPw]   = useState(false);
   const [showCPw, setShowCPw] = useState(false);
   const [successName, setSuccessName] = useState("");
+  const [isDirectAdmin, setIsDirectAdmin] = useState(false);
 
   const [client, setClient] = useState({
     fullName: "", email: "", phone: "", password: "", confirmPw: "",
@@ -188,6 +177,7 @@ export default function Register() {
   const [resendTimer, setResendTimer] = useState(60);
   const [otpSentChannels, setOtpSentChannels] = useState([]);
   const [otpSetupError, setOtpSetupError] = useState("");
+  const [activeWhatsappUrl, setActiveWhatsappUrl] = useState("");
 
   useEffect(() => {
     if (!otpStep || resendTimer <= 0) return;
@@ -260,6 +250,11 @@ export default function Register() {
           : [channelToUse === "phone" ? "sms" : channelToUse];
         setOtpSetupError("");
         setOtpSentChannels(sentChannels);
+        if (data.whatsappUrl) {
+          setActiveWhatsappUrl(data.whatsappUrl);
+        } else {
+          setActiveWhatsappUrl("");
+        }
         setShowChannelModal(false);
         showToast(
           data.message || `Verification code sent via ${formatOtpChannels(sentChannels)}.`,
@@ -274,6 +269,53 @@ export default function Register() {
         setLoading(false);
       }
     })();
+  };
+
+  const handleSelectAdminApproval = async () => {
+    setLoading(true);
+    setOtpSetupError("");
+    try {
+      const emailLower = client.email.trim().toLowerCase();
+      const res = await fetch(`${API_BASE}/api/clients/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: client.fullName.trim(),
+          email: emailLower,
+          password: client.password,
+          phone: client.phone.trim(),
+          city: client.city,
+          legalIssue: client.legalIssue,
+          channel: "admin",
+          verificationMethod: "admin",
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const errorMessage = data.message || data.error || "Failed to submit for Admin Approval.";
+        if (res.status === 409) {
+          setErr((p) => ({ ...p, email: errorMessage }));
+        }
+        setOtpSetupError(errorMessage);
+        showToast(errorMessage, "error");
+        setLoading(false);
+        return;
+      }
+
+      setSuccessName(client.fullName.trim());
+      setIsDirectAdmin(true);
+      setShowChannelModal(false);
+      setOtpStep(false);
+      setView("success");
+      showToast("Registration submitted directly for Admin Approval ⏳", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("Could not reach the server. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResendOtp = async () => {
@@ -298,6 +340,9 @@ export default function Register() {
           ? data.sentChannels
           : [otpChannel === "phone" ? "sms" : otpChannel];
         setOtpSentChannels(sentChannels);
+        if (data.whatsappUrl) {
+          setActiveWhatsappUrl(data.whatsappUrl);
+        }
         setOtpSetupError("");
         showToast(
           data.message || `A new verification code was sent via ${formatOtpChannels(sentChannels)}.`,
@@ -351,28 +396,11 @@ export default function Register() {
         return;
       }
 
-      // Auto-authenticate / login client immediately
-      const clientObj = data.client || data;
-      const token = data.token || "client-session-token";
-      const clientId = clientObj.id || Date.now();
-
-      localStorage.setItem(CLIENT_SESSION_KEY, String(clientId));
-      localStorage.setItem(CLIENT_OBJECT_KEY, JSON.stringify(clientObj));
-      localStorage.setItem(CLIENT_TOKEN_KEY, token);
-      sessionStorage.setItem(CLIENT_SESSION_KEY, String(clientId));
-      sessionStorage.setItem(CLIENT_OBJECT_KEY, JSON.stringify(clientObj));
-      sessionStorage.setItem(CLIENT_TOKEN_KEY, token);
-
-      showToast("Email verified & Client Account Approved! 🎉", "success");
-
-      const requestedRedirect = new URLSearchParams(window.location.search).get("redirect");
-      const redirectPath = requestedRedirect && requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
-        ? requestedRedirect
-        : "/client-main";
-
-      setTimeout(() => {
-        navigate(redirectPath, { replace: true });
-      }, 600);
+      // Registration successful with pending status
+      setSuccessName(client.fullName.trim());
+      setOtpStep(false);
+      setView("success");
+      showToast("OTP verified! Account submitted for admin approval ⏳", "success");
     } catch (err) {
       console.error(err);
       setOtpErr("Could not complete registration. Check your connection.");
@@ -391,7 +419,7 @@ export default function Register() {
         </button>
         <Toast toast={toast} />
         <div className="rg-card rg-success-card">
-          <SuccessScreen name={successName} onLogin={goToLogin} />
+          <SuccessScreen name={successName} onLogin={goToLogin} isDirectAdmin={isDirectAdmin} />
         </div>
       </div>
     );
@@ -467,16 +495,16 @@ export default function Register() {
 
               <button
                 type="button"
-                className="rg-channel-option-card chan-all"
-                onClick={() => handleConfirmChannelAndSend("all")}
+                className="rg-channel-option-card chan-admin"
+                onClick={handleSelectAdminApproval}
                 disabled={loading}
               >
-                <div className="rg-channel-icon-avatar">✨</div>
+                <div className="rg-channel-icon-avatar">🏛️</div>
                 <div className="rg-channel-body">
                   <div className="rg-channel-title">
-                    All Channels <span className="rg-channel-badge">Recommended</span>
+                    Admin Approval <span className="rg-channel-badge badge-admin">Direct Review</span>
                   </div>
-                  <div className="rg-channel-desc">Receive code via Email and SMS simultaneously</div>
+                  <div className="rg-channel-desc">Submit application directly to Admin for verification & approval</div>
                 </div>
                 <div className="rg-channel-arrow">→</div>
               </button>
@@ -522,6 +550,32 @@ export default function Register() {
               Check the listed inboxes/messages and enter the code below to complete registration.
             </p>
             {otpSetupError && <p className="rg-otp-setup-error" role="alert">{otpSetupError}</p>}
+
+            {activeWhatsappUrl && (
+              <div style={{ marginBottom: 16 }}>
+                <a
+                  href={activeWhatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    width: "100%",
+                    padding: "12px 18px",
+                    background: "#22c55e",
+                    color: "#ffffff",
+                    borderRadius: 10,
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    boxShadow: "0 4px 14px rgba(34, 197, 94, 0.35)",
+                  }}
+                >
+                  💬 Receive Verification Code on WhatsApp →
+                </a>
+              </div>
+            )}
 
             <form onSubmit={handleVerifyAndRegister}>
               <Field error={otpErr}>

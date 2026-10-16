@@ -426,15 +426,27 @@ function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, o
   if (!client) return null;
 
   const clientCons = (consultations || []).filter(c => {
-    const matchId = client.id && (Number(c.clientId) === Number(client.id) || String(c.clientId) === String(client.id));
-    const matchName = client.name && (c.clientName || "").toLowerCase().trim() === String(client.name).toLowerCase().trim();
-    return matchId || matchName;
+    if (client.id && c.clientId !== undefined && c.clientId !== null && c.clientId !== "") {
+      return Number(c.clientId) === Number(client.id) || String(c.clientId) === String(client.id);
+    }
+    if (client.email && c.clientEmail) {
+      return String(c.clientEmail).toLowerCase().trim() === String(client.email).toLowerCase().trim();
+    }
+    return false;
   });
 
-  const clientBookings = Object.values(bookings || {}).filter(b =>
-    (b.clientName || "").toLowerCase().trim() === String(client.name || "").toLowerCase().trim() ||
-    (client.phone && b.clientPhone === client.phone)
-  );
+  const clientBookings = Object.values(bookings || {}).filter(b => {
+    if (client.id && b.clientId !== undefined && b.clientId !== null && b.clientId !== "") {
+      return Number(b.clientId) === Number(client.id) || String(b.clientId) === String(client.id);
+    }
+    if (client.email && b.clientEmail) {
+      return String(b.clientEmail).toLowerCase().trim() === String(client.email).toLowerCase().trim();
+    }
+    if (client.phone && b.clientPhone) {
+      return String(b.clientPhone).replace(/\D/g, "") === String(client.phone).replace(/\D/g, "");
+    }
+    return false;
+  });
 
   const totalPaid = clientCons
     .filter(c => (c.status || c.paymentStatus || "").toLowerCase() === "paid")
@@ -2364,11 +2376,15 @@ export default function AdminPage() {
     );
   }, [consultations, consultFilter, consultSearch]);
 
-  const getClientConsultations = useCallback((cid, cname) => {
+  const getClientConsultations = useCallback((cid, cemail) => {
     return consultations.filter(c => {
-      const matchId = cid && (Number(c.clientId) === Number(cid) || String(c.clientId) === String(cid));
-      const matchName = cname && (c.clientName || "").toLowerCase().trim() === String(cname).toLowerCase().trim();
-      return matchId || matchName;
+      if (cid && c.clientId !== undefined && c.clientId !== null && c.clientId !== "") {
+        return Number(c.clientId) === Number(cid) || String(c.clientId) === String(cid);
+      }
+      if (cemail && c.clientEmail) {
+        return String(c.clientEmail).toLowerCase().trim() === String(cemail).toLowerCase().trim();
+      }
+      return false;
     });
   }, [consultations]);
 
@@ -2388,6 +2404,7 @@ export default function AdminPage() {
     handleLogout();
   };
   const pending  = useMemo(() => advocates.filter(a => a.status === "pending"), [advocates]);
+  const pendingClients = useMemo(() => clients.filter(c => c.status === "pending"), [clients]);
   const approved = useMemo(() => advocates.filter(a => a.status === "approved"), [advocates]);
   const unreadMessages = useMemo(() => messages.filter(m => !m.read), [messages]);
   const unreadQuestions = useMemo(() => questions.filter(q => !q.read), [questions]);
@@ -2419,7 +2436,7 @@ export default function AdminPage() {
       if (clientStatusFilter === "approved" && c.status !== "approved") return false;
       if (clientStatusFilter === "pending" && c.status !== "pending") return false;
       if (clientStatusFilter === "with-consultations") {
-        const cons = getClientConsultations(c.id, c.name);
+        const cons = getClientConsultations(c.id, c.email);
         if (cons.length === 0) return false;
       }
       if (!clientSearch.trim()) return true;
@@ -2589,7 +2606,7 @@ export default function AdminPage() {
           <img className="am-rail-logo-mark" src={`${process.env.PUBLIC_URL || ""}/brand/logo-mark.svg`} alt="" />
           <span className="am-rail-label">Advocate<b>Hub</b></span>
         </Link>
-        <RailButton id="pending"   label="Pending approvals" tab={tab} setTab={setTab} count={pending.length} />
+        <RailButton id="pending"   label="Pending approvals" tab={tab} setTab={setTab} count={pending.length + pendingClients.length} />
         <RailButton id="all"       label="All advocates"     tab={tab} setTab={setTab} />
         <RailButton id="messages"  label="Messages"          tab={tab} setTab={setTab} count={unreadMessages.length} />
         <RailButton id="clients"   label="Clients"           tab={tab} setTab={setTab} count={clients.length} />
@@ -2679,8 +2696,8 @@ export default function AdminPage() {
         {/* ── Stats ── */}
         <div className="am-stats-row">
           <StatCard label="Total advocates"  value={advocates.length}      hint="All registered accounts" tone="am-tone-navy" />
-          <StatCard label="Pending approval" value={pending.length}        hint="Needs your action" tone="am-tone-warn" />
-          <StatCard label="Approved"         value={approved.length}       hint={advocates.length ? `${Math.round((approved.length / advocates.length) * 100)}% of directory` : "—"} tone="am-tone-good" />
+          <StatCard label="Pending approval" value={pending.length + pendingClients.length} hint="Needs your action" tone="am-tone-warn" />
+          <StatCard label="Approved advocates" value={approved.length} hint={advocates.length ? `${Math.round((approved.length / advocates.length) * 100)}% of directory` : "—"} tone="am-tone-good" />
           <StatCard label="Total clients"    value={clients.length}        hint="Registered client accounts" tone="am-tone-cyan" />
           <StatCard label="Paid consultations" value={paidConsultations.length} hint="₹10 PhonePe chat unlocks" tone="am-tone-good" />
           <StatCard label="Consultation fees" value={`₹${paidConsultations.length * 10}`} hint="PhonePe 9108717353-3@ybl" tone="am-tone-gold" />
@@ -2692,7 +2709,7 @@ export default function AdminPage() {
         <div className="am-panel">
         <div className="am-tabs">
           <button className={`am-tab ${tab === "pending" ? "active" : ""}`} onClick={() => setTab("pending")}>
-            Pending Approvals {pending.length > 0 && <span className="am-tab-badge">{pending.length}</span>}
+            Pending Approvals {(pending.length + pendingClients.length) > 0 && <span className="am-tab-badge">{pending.length + pendingClients.length}</span>}
           </button>
           <button className={`am-tab ${tab === "all" ? "active" : ""}`} onClick={() => setTab("all")}>
             All Advocates
@@ -2721,19 +2738,70 @@ export default function AdminPage() {
         {/* ── Pending Approvals tab ── */}
         {tab === "pending" && (
           <div className="am-section">
-            {pending.length === 0 ? (
+            {pending.length === 0 && pendingClients.length === 0 ? (
               <div className="am-empty">🎉 No pending applications right now.</div>
             ) : (
-              <div className="am-pending-grid">
-                {pending.map((adv) => (
-                  <PendingCard
-                    key={adv.id}
-                    adv={adv}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                    onEdit={setEditing}
-                  />
-                ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+                {/* Pending Advocates Section */}
+                {pending.length > 0 && (
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 14px", display: "flex", alignItems: "center", gap: 8, color: "var(--adm-text)" }}>
+                      ⚖️ Pending Advocate Applications <span className="am-count-pill">{pending.length}</span>
+                    </h3>
+                    <div className="am-pending-grid">
+                      {pending.map((adv) => (
+                        <PendingCard
+                          key={adv.id}
+                          adv={adv}
+                          onApprove={handleApprove}
+                          onReject={handleReject}
+                          onEdit={setEditing}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pending Clients Section */}
+                {pendingClients.length > 0 && (
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 14px", display: "flex", alignItems: "center", gap: 8, color: "var(--adm-text)" }}>
+                      👤 Pending Client Registrations <span className="am-count-pill">{pendingClients.length}</span>
+                    </h3>
+                    <div className="am-pending-grid">
+                      {pendingClients.map((c) => (
+                        <div key={c.id} className="am-pending-card" style={{ background: "var(--adm-card, #fff)", border: "1px solid var(--adm-border, #e2e8f0)", borderRadius: 14, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <Avi name={c.name} color={colorFor(c.id)} size={44} />
+                              <div>
+                                <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--adm-text, #0f172a)" }}>{c.name}</h4>
+                                <div style={{ fontSize: 12, color: "var(--adm-muted, #64748b)", marginTop: 2 }}>
+                                  Client ID #{c.id} · {c.city || "Karnataka"}
+                                </div>
+                              </div>
+                            </div>
+                            <span style={{ background: "#fef9c3", color: "#854d0e", fontSize: 11.5, fontWeight: 700, padding: "3px 10px", borderRadius: 16, border: "1px solid #fef08a" }}>
+                              ⏳ Awaiting Approval
+                            </span>
+                          </div>
+
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8, fontSize: 12.5, background: "rgba(0,0,0,0.02)", padding: 10, borderRadius: 8 }}>
+                            <div><strong>Email:</strong> {c.email}</div>
+                            <div><strong>Phone:</strong> {c.phone ? `+91 ${c.phone}` : "—"}</div>
+                            <div><strong>Legal Issue:</strong> {c.legalIssue || "General Inquiry"}</div>
+                            <div><strong>City:</strong> {c.city || "—"}</div>
+                          </div>
+
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            <button className="am-btn-approve" onClick={() => handleApproveClient(c.id)}>✓ Approve Client</button>
+                            <button className="am-btn-reject" onClick={() => handleRejectClient(c.id)}>✕ Reject Client</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -2823,7 +2891,7 @@ export default function AdminPage() {
                     { id: "all", label: `All (${clients.length})` },
                     { id: "approved", label: `Approved (${clients.filter(c => c.status === "approved").length})` },
                     { id: "pending", label: `Pending (${clients.filter(c => c.status === "pending").length})` },
-                    { id: "with-consultations", label: `With Consultations (${clients.filter(c => getClientConsultations(c.id, c.name).length > 0).length})` }
+                    { id: "with-consultations", label: `With Consultations (${clients.filter(c => getClientConsultations(c.id, c.email).length > 0).length})` }
                   ].map((f) => (
                     <button
                       key={f.id}
@@ -2879,7 +2947,7 @@ export default function AdminPage() {
             ) : (
               <div className="am-list">
                 {filteredClients.map((c) => {
-                  const clientCons = getClientConsultations(c.id, c.name);
+                  const clientCons = getClientConsultations(c.id, c.email);
                   const paidConsCount = clientCons.filter(x => (x.status || x.paymentStatus || "").toLowerCase() === "paid").length;
                   return (
                     <div key={c.id} className="am-row" style={{ flexDirection: "column", gap: 14, alignItems: "stretch", position: "relative", padding: "18px 20px" }}>
@@ -3090,8 +3158,8 @@ export default function AdminPage() {
               <div className="am-list">
                 {filteredConsultations.map((con) => {
                   const clientObj = clients.find(c => 
-                    (c.id && con.clientId && Number(c.id) === Number(con.clientId)) ||
-                    (c.name && con.clientName && c.name.toLowerCase().trim() === con.clientName.toLowerCase().trim())
+                    (c.id && con.clientId && (Number(c.id) === Number(con.clientId) || String(c.id) === String(con.clientId))) ||
+                    (c.email && con.clientEmail && c.email.toLowerCase().trim() === con.clientEmail.toLowerCase().trim())
                   );
                   const clientData = clientObj || { 
                     id: con.clientId, 
