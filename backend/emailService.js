@@ -42,7 +42,8 @@ function getAdvocateRegistrationFrom() {
 }
 
 function getAdminPortalUrl() {
-  return `${(process.env.FRONTEND_URL || "https://advocate-hub.up.railway.app").replace(/\/+$/, "")}/admin`;
+  const base = (process.env.FRONTEND_URL || "").trim().replace(/\/+$/, "");
+  return base ? `${base}/admin` : "/admin";
 }
 
 const NOTIFICATIONS_FILE = path.join(
