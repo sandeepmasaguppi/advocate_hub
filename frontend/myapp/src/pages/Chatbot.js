@@ -869,17 +869,14 @@ export default function Chatbot() {
     sendMessage(msg);
   };
 
-  // ── Key handler ───────────────────────────────────────────
+  // ── Key handler (Enter sends message across desktop & mobile) ─
   const handleKey = (e) => {
     // Never auto-send while voice recognition is active or during IME composition
     if (isListening || e.isComposing || e.nativeEvent?.isComposing) {
       return;
     }
-    // On mobile devices, require tapping the Send button directly
-    if (typeof window !== "undefined" && window.innerWidth <= 768) {
-      return;
-    }
-    if (e.key === "Enter" && !e.shiftKey) {
+    const isEnter = e.key === "Enter" || e.keyCode === 13 || e.which === 13;
+    if (isEnter && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -1062,6 +1059,7 @@ export default function Chatbot() {
               ref={inputRef}
               className={`cb-input ${isListening ? "cb-input-listening" : ""}`}
               rows={1}
+              enterKeyHint="send"
               placeholder={
                 isListening
                   ? (lang === "kn" ? "🎙️ ಆಲಿಸಲಾಗುತ್ತಿದೆ... ಕನ್ನಡದಲ್ಲಿ ಮಾತನಾಡಿ..." : "🎙️ Listening... Speak naturally now...")
