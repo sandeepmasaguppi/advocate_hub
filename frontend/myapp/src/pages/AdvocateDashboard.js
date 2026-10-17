@@ -731,13 +731,56 @@ export default function AdvocateDashboard() {
     }
   }, [advocateId, reloadRequestsAndEarnings]);
 
-  // Initial load on mount and window focus
+  // Initial load on mount and window focus: sync with backend server messages.json
   useEffect(() => {
     if (!advocateId) return;
     refreshConversationsAndRequests();
+
+    // Fetch full history from server
+    api(`/api/messages?advocateId=${advocateId}`)
+      .then((serverMsgs) => {
+        if (Array.isArray(serverMsgs) && serverMsgs.length > 0) {
+          const groups = {};
+          for (const m of serverMsgs) {
+            const k = m.key || `chat_${m.clientId}_${advocateId}`;
+            if (!groups[k]) groups[k] = [];
+            groups[k].push(m);
+          }
+          const allReqs = loadAllRequests();
+          const advReqs = allReqs[advocateId] || [];
+
+          for (const [k, msgs] of Object.entries(groups)) {
+            localStorage.setItem(k, JSON.stringify(msgs));
+            const last = msgs[msgs.length - 1];
+            if (!advReqs.some((r) => String(r.clientId || r.id) === String(last.clientId))) {
+              advReqs.unshift({
+                id: last.clientId,
+                clientId: last.clientId,
+                clientName: last.clientName || `Client #${last.clientId}`,
+                clientAvatar: last.clientAvatar || "",
+                clientPhone: "",
+                clientEmail: "",
+                clientCity: "Online Client",
+                requestedAt: last.t,
+                message: last.text,
+                lastMessage: last.text,
+                status: "accepted",
+                paymentStatus: "Paid / Completed",
+                caseStage: "Start Case",
+                fee: advocate?.fee || "₹2,000",
+              });
+            }
+          }
+          allReqs[advocateId] = advReqs;
+          saveAllRequests(allReqs);
+          refreshConversationsAndRequests();
+        }
+      })
+      .catch(() => {});
+
     window.addEventListener("focus", refreshConversationsAndRequests);
     return () => window.removeEventListener("focus", refreshConversationsAndRequests);
-  }, [advocateId, refreshConversationsAndRequests]);
+  }, [advocateId, refreshConversationsAndRequests, advocate?.fee]);
 
   // Helper to determine unread messages in a conversation
   const getConvUnreadCount = useCallback((convKey, cid) => {
@@ -1599,15 +1642,70 @@ export default function AdvocateDashboard() {
       }
     }, 1000);
 
+    // 5. Native continuous SSE socket stream for instant live chat
+    let es = null;
+    try {
+      const sseUrl = `${process.env.REACT_APP_API_BASE || ""}/api/messages/stream?advocateId=${advocateId}`;
+      es = new EventSource(sseUrl);
+      es.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (!msg || !msg.clientId) return;
+          const k = msg.key || `chat_${msg.clientId}_${advocateId}`;
+          const raw = localStorage.getItem(k);
+          const currentMsgs = raw ? JSON.parse(raw) : [];
+          if (!currentMsgs.some((m) => m.id === msg.id || (m.t === msg.t && m.text === msg.text))) {
+            const next = [...currentMsgs, msg];
+            localStorage.setItem(k, JSON.stringify(next));
+
+            // Ensure client is present in law4u_requests
+            const allReqs = loadAllRequests();
+            const advReqs = allReqs[advocateId] || [];
+            if (!advReqs.some((r) => String(r.clientId || r.id) === String(msg.clientId))) {
+              advReqs.unshift({
+                id: msg.clientId,
+                clientId: msg.clientId,
+                clientName: msg.clientName || `Client #${msg.clientId}`,
+                clientAvatar: msg.clientAvatar || "",
+                clientPhone: "",
+                clientEmail: "",
+                clientCity: "Online Client",
+                requestedAt: msg.t,
+                message: msg.text,
+                lastMessage: msg.text,
+                status: "accepted",
+                paymentStatus: "Paid / Completed",
+                caseStage: "Start Case",
+                fee: advocate?.fee || "₹2,000",
+              });
+              allReqs[advocateId] = advReqs;
+              saveAllRequests(allReqs);
+            }
+
+            refreshConversationsAndRequests();
+            const curConv = activeConvRef.current;
+            if (curConv && (curConv.key === k || String(curConv.clientId) === String(msg.clientId))) {
+              setConvMessages(next);
+              scrollToBottom("smooth");
+            }
+            if (msg.from === "client") {
+              triggerClientNotification(msg);
+            }
+          }
+        } catch (err) {}
+      };
+    } catch (err) {}
+
     return () => {
       if (channel) channel.close();
+      if (es) es.close();
       window.removeEventListener("law4u_client_message_sent", handleClientMsgSent);
       window.removeEventListener("law4u_chat_updated", handleChatUpdated);
       window.removeEventListener("law4u_requests_updated", handleRequestsUpdated);
       window.removeEventListener("storage", handleStorage);
       clearInterval(interval);
     };
-  }, [advocateId, refreshConversationsAndRequests, scrollToBottom]);
+  }, [advocateId, refreshConversationsAndRequests, scrollToBottom, advocate?.fee]);
 
   if (!ready) return null;
 

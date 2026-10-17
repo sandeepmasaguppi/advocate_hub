@@ -475,6 +475,30 @@ export default function ClientDashboard() {
     }
   }, [searchParams, advocates, clientId, isPrefillAlreadySent]);
 
+  // Initial sync of all conversations for this client from server backend messages.json
+  useEffect(() => {
+    if (!clientId) return;
+    api(`/api/messages?clientId=${clientId}`)
+      .then((allMsgs) => {
+        if (Array.isArray(allMsgs) && allMsgs.length > 0) {
+          const groups = {};
+          for (const m of allMsgs) {
+            const k = m.key || `chat_${clientId}_${m.advocateId}`;
+            if (!groups[k]) groups[k] = [];
+            groups[k].push(m);
+          }
+          for (const [k, msgs] of Object.entries(groups)) {
+            localStorage.setItem(k, JSON.stringify(msgs));
+          }
+          setMessagesVersion((v) => v + 1);
+          const cur = selectedRef.current;
+          if (cur && cur.id && groups[`chat_${clientId}_${cur.id}`]) {
+            setMessages(groups[`chat_${clientId}_${cur.id}`]);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [clientId]);
 
   useEffect(() => {
     if (!selected) return;
@@ -673,8 +697,38 @@ export default function ClientDashboard() {
       } catch {}
     }, 1000);
 
+    // 5. Native continuous SSE socket stream for instant live chat
+    let es = null;
+    try {
+      const sseUrl = `${process.env.REACT_APP_API_BASE || ""}/api/messages/stream?clientId=${clientId}`;
+      es = new EventSource(sseUrl);
+      es.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (!msg || !msg.advocateId) return;
+          const k = msg.key || `chat_${clientId}_${msg.advocateId}`;
+          const raw = localStorage.getItem(k);
+          const currentMsgs = raw ? JSON.parse(raw) : [];
+          if (!currentMsgs.some((m) => m.id === msg.id || (m.t === msg.t && m.text === msg.text))) {
+            const next = [...currentMsgs, msg];
+            localStorage.setItem(k, JSON.stringify(next));
+            setMessagesVersion((v) => v + 1);
+            const curSel = selectedRef.current;
+            if (curSel && Number(curSel.id) === Number(msg.advocateId)) {
+              setMessages(next);
+              scrollToBottom("smooth");
+            }
+            if (msg.from === "advocate") {
+              triggerAdvocateNotification(msg);
+            }
+          }
+        } catch (err) {}
+      };
+    } catch (err) {}
+
     return () => {
       if (channel) channel.close();
+      if (es) es.close();
       window.removeEventListener("law4u_advocate_message_sent", handleAdvocateMsgSent);
       window.removeEventListener("law4u_chat_updated", handleChatUpdated);
       window.removeEventListener("storage", handleStorage);

@@ -199,6 +199,25 @@ function loadMessages() {
   return defaultMessages;
 }
 function saveMessages(list) { saveCollection("messages", MESSAGES_FILE, list); }
+
+// ── Real-Time Streaming Socket (SSE) ───────────────────────────
+const sseConnections = new Set();
+function broadcastMessage(newMsg) {
+  const payload = `data: ${JSON.stringify(newMsg)}\n\n`;
+  for (const conn of sseConnections) {
+    try {
+      if (conn.advocateId && Number(conn.advocateId) === Number(newMsg.advocateId)) {
+        conn.res.write(payload);
+      } else if (conn.clientId && Number(conn.clientId) === Number(newMsg.clientId)) {
+        conn.res.write(payload);
+      } else if (!conn.advocateId && !conn.clientId) {
+        conn.res.write(payload);
+      }
+    } catch {
+      sseConnections.delete(conn);
+    }
+  }
+}
 function loadClarityGuide() {
   return loadCollection("clarity_guide", CLARITY_FILE);
 }
@@ -1605,7 +1624,41 @@ async function route(request, response) {
 
     messages.push(newMsg);
     saveMessages(messages);
+    broadcastMessage(newMsg);
     return send(request, response, 201, newMsg);
+  }
+
+  // Real-Time Socket Stream (Server-Sent Events) for continuous live bi-directional chat
+  if (method === "GET" && p === "/api/messages/stream") {
+    const advId = url.searchParams.get("advocateId");
+    const cliId = url.searchParams.get("clientId");
+
+    response.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no",
+      ...corsHeaders(request),
+    });
+    response.write(": connected\n\n");
+
+    const conn = { res: response, advocateId: advId, clientId: cliId };
+    sseConnections.add(conn);
+
+    const heartbeat = setInterval(() => {
+      try {
+        response.write(": ping\n\n");
+      } catch {
+        clearInterval(heartbeat);
+        sseConnections.delete(conn);
+      }
+    }, 20000);
+
+    request.on("close", () => {
+      clearInterval(heartbeat);
+      sseConnections.delete(conn);
+    });
+    return;
   }
 
   if (method === "DELETE" && p === "/api/messages") {
