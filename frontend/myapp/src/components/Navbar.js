@@ -168,8 +168,6 @@ const LAWYER_ITEMS_EN = [
   { icon: NAV_ICONS.criminal, label: "Criminal / Property", path: "/find-lawyer?cat=criminal" },
   { icon: NAV_ICONS.civil, label: "Civil / Debt Matter", path: "/find-lawyer?cat=civil" },
   { icon: NAV_ICONS.corporate, label: "Corporate Law", path: "/find-lawyer?cat=corporate" },
-  { icon: NAV_ICONS.navLawyer, label: "View All Lawyers", path: "/find-lawyer" },
-  { icon: NAV_ICONS.talk, label: "Talk to a Lawyer Now", path: "/talk-to-advocate" },
 ];
 
 const LAWYER_ITEMS_KN = [
@@ -177,8 +175,6 @@ const LAWYER_ITEMS_KN = [
   { icon: NAV_ICONS.criminal, label: "ಕ್ರಿಮಿನಲ್ / ಆಸ್ತಿ", path: "/find-lawyer?cat=criminal" },
   { icon: NAV_ICONS.civil, label: "ಸಿವಿಲ್ / ಸಾಲ ಪ್ರಕರಣ", path: "/find-lawyer?cat=civil" },
   { icon: NAV_ICONS.corporate, label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು", path: "/find-lawyer?cat=corporate" },
-  { icon: NAV_ICONS.navLawyer, label: "ಎಲ್ಲಾ ವಕೀಲರನ್ನು ನೋಡಿ", path: "/find-lawyer" },
-  { icon: NAV_ICONS.talk, label: "ಈಗಲೇ ವಕೀಲರೊಂದಿಗೆ ಮಾತನಾಡಿ", path: "/talk-to-advocate" },
 ];
 
 const LEGAL_ADVICE_EN = [
