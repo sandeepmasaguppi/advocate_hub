@@ -5,6 +5,7 @@ COPY frontend/myapp/package.json frontend/myapp/package-lock.json ./
 RUN npm ci
 COPY frontend/myapp/ ./
 ENV NODE_OPTIONS=--openssl-legacy-provider
+ENV CI=false
 RUN npm run build
 
 FROM node:22-alpine

@@ -249,6 +249,7 @@ export default function ClientDashboard() {
   const [editingMsgText, setEditingMsgText] = useState("");
   const [activeMenuMsgIndex, setActiveMenuMsgIndex] = useState(null);
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
   const [incomingToast, setIncomingToast] = useState(null);
 
   const selectedRef = useRef(selected);
@@ -629,7 +630,7 @@ export default function ClientDashboard() {
           if (payload && payload.t) {
             const time = new Date(payload.t).getTime();
             if (time > lastAlertedTimeRef.current) {
-              triggerClientNotification(payload);
+              triggerAdvocateNotification(payload);
             }
           }
         }

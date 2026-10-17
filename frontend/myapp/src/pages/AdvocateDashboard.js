@@ -602,6 +602,7 @@ export default function AdvocateDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [profileForm, setProfileForm] = useState(null);
   const [isProfileEditing, setIsProfileEditing] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
 
   const activeConvRef = useRef(activeConv);
