@@ -2174,5 +2174,34 @@
     "avatar": "/uploads/advocate-ramesh-93.png",
     "status": "approved",
     "passwordHash": "scrypt$5f834b904c9876f6cb6ce0b55af9aba0$f6cea48105ce2d93f478861a354f244e7f93a2bde7d6b415df246ec41af58deda9ebcdfe40bdda5b31f544742c1c3ac74f95226b3ffa991ce5812068cc109a3c"
+  },
+  {
+    "id": 94,
+    "name": "Adv. Priya Sharma",
+    "city": "Bengaluru",
+    "practiceArea": "Family Law",
+    "speciality": "Family Law",
+    "practiceAreas": [
+      "Family Law"
+    ],
+    "courtLevel": "Taluk / JMFC / Civil Court",
+    "district": "Belagavi",
+    "taluk": "Bengaluru",
+    "court": "Family Court",
+    "barCouncil": "Bar Council of Karnataka",
+    "barId": "BCI/KA/2016/4321",
+    "experience": "5–10 years",
+    "rating": 0,
+    "cases": 0,
+    "fee": "₹1500/hr",
+    "phone": "9823456781",
+    "email": "priya.sharma@advocatehub.in",
+    "languages": [],
+    "availability": "Available",
+    "bio": "Specialist in divorce, child custody and matrimonial disputes.",
+    "avatar": "/uploads/priya-sharma-94.jpg",
+    "status": "pending",
+    "passwordHash": "scrypt$8a6d5fad0fa473128704ba29c87f8339$9f97ac7bb21cde6f5a694bfe68099aac01557871f2a8d83e37fae2f5f87b0ee461e21e60b54bfe0dc8738a79fabb3960b7309270158ee20b0c875c65218d9427",
+    "verificationMethod": "admin_approval"
   }
 ]

@@ -133,6 +133,224 @@
   .rg-input, .rg-btn-primary, .rg-theme-toggle { transition: none; }
 }
 
+/* ── 2-Step Navigation Tabs for Client Registration ─────────── */
+.rg-step-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 24px;
+  background: var(--rg-panel);
+  border: 1px solid var(--rg-border);
+  padding: 8px;
+  border-radius: 16px;
+}
+
+.rg-step-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--rg-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  font-family: inherit;
+  position: relative;
+}
+
+.rg-step-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--rg-text);
+}
+
+.rg-light .rg-step-tab-btn:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.rg-step-tab-btn.active {
+  background: var(--rg-card);
+  border-color: var(--rg-accent);
+  color: var(--rg-text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.rg-step-tab-indicator {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--rg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.rg-step-tab-btn.active .rg-step-tab-indicator {
+  background: var(--rg-accent);
+  color: #04211e;
+  box-shadow: 0 2px 8px rgba(45, 212, 191, 0.4);
+}
+
+.rg-step-tab-btn.completed .rg-step-tab-indicator {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.rg-step-tab-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.rg-step-tab-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--rg-text);
+}
+
+.rg-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rg-accent);
+}
+
+.rg-tab-icon svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+}
+
+.rg-step-tab-sub {
+  font-size: 0.76rem;
+  color: var(--rg-muted);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rg-step-done-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.rg-step-tab-connector {
+  width: 1px;
+  height: 32px;
+  background: var(--rg-border);
+  flex-shrink: 0;
+}
+
+/* ── Navigation Actions Bar for Previous / Next ───────────── */
+.rg-step-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.rg-btn-prev {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: var(--rg-panel);
+  border: 1px solid var(--rg-border);
+  color: var(--rg-text);
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.rg-btn-prev:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--rg-accent);
+}
+
+.rg-light .rg-btn-prev:hover {
+  background: #f1f5f9;
+}
+
+.rg-btn-next,
+.rg-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--rg-accent-2), var(--rg-accent));
+  color: #04211e;
+  border: none;
+  font-weight: 800;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.25);
+  font-family: inherit;
+  margin-top: 0 !important;
+  width: auto !important;
+}
+
+.rg-btn-next:hover,
+.rg-btn-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 22px rgba(20, 184, 166, 0.35);
+}
+
+.rg-input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rg-muted);
+}
+
+.rg-input-icon svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+}
+
+@media (max-width: 600px) {
+  .rg-step-tabs-nav {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .rg-step-tab-connector {
+    display: none;
+  }
+  .rg-step-nav-actions {
+    flex-direction: column-reverse;
+  }
+  .rg-btn-prev,
+  .rg-btn-next,
+  .rg-btn-submit {
+    width: 100% !important;
+    justify-content: center;
+  }
+}
+
 /* Custom Scrollable Select Dropdown */
 .rg-scroll-select-container {
   position: relative;

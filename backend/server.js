@@ -356,7 +356,7 @@ function serveFrontendFile(response, filePath) {
   };
   response.writeHead(200, {
     "Content-Type": contentTypes[extension] || "application/octet-stream",
-    "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *; font-src * data:; media-src *; frame-src *;",
+    "Content-Security-Policy": "default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://127.0.0.1:* blob: data:; script-src-elem * 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://127.0.0.1:* blob: data:; style-src * 'self' 'unsafe-inline'; img-src * 'self' data: blob:; connect-src * 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* http://127.0.0.1:*; font-src * 'self' data:; media-src * 'self'; frame-src * 'self'; frame-ancestors *;",
     "Cache-Control": path.basename(filePath) === "index.html"
       ? "no-cache"
       : "public, max-age=31536000, immutable",
@@ -371,7 +371,7 @@ function corsHeaders(request) {
     "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *; font-src * data:; media-src *; frame-src *;",
+    "Content-Security-Policy": "default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://127.0.0.1:* blob: data:; script-src-elem * 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://127.0.0.1:* blob: data:; style-src * 'self' 'unsafe-inline'; img-src * 'self' data: blob:; connect-src * 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* http://127.0.0.1:*; font-src * 'self' data:; media-src * 'self'; frame-src * 'self'; frame-ancestors *;",
     "Vary": "Origin",
   };
 }
@@ -629,8 +629,11 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
   record.passwordHash = payload.password ? hashPassword(payload.password) : null;
   record.verificationMethod = isDirectAdminApproval ? "admin_approval" : (payload.channel || "otp");
   const avatar = saveAvatar(record.name, payload.avatarData, id);
-  if (avatar) record.avatar = avatar;
-  else if (!byAdmin && !record.avatar) throw new HttpError(400, "Profile image is required");
+  if (avatar) {
+    record.avatar = avatar;
+  } else if (!record.avatar) {
+    record.avatar = "";
+  }
 
   list.push(record);
   saveAdvocates(list);

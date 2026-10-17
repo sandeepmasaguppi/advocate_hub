@@ -9,7 +9,7 @@ module.exports = function (app) {
     // Explicitly set permissive Content-Security-Policy so scripts & simulators are never blocked
     res.setHeader(
       "Content-Security-Policy",
-      "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; connect-src *; font-src * data:; media-src *; frame-src *;"
+      "default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://127.0.0.1:* blob: data:; script-src-elem * 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* http://127.0.0.1:* blob: data:; style-src * 'self' 'unsafe-inline'; img-src * 'self' data: blob:; connect-src * 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* http://127.0.0.1:*; font-src * 'self' data:; media-src * 'self'; frame-src * 'self'; frame-ancestors *;"
     );
     res.removeHeader("X-Frame-Options");
     next();

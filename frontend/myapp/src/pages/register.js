@@ -18,6 +18,72 @@ import "./Register.css";
 // e.g. const API_BASE = "http://localhost:5000";
 const API_BASE = "";
 
+// ── Admin-Style SVG Icons (feather/lucide style) ───────────────
+export const ADMIN_ICONS = {
+  user: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  mail: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </svg>
+  ),
+  phone: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="2" width="14" height="20" rx="2" />
+      <line x1="12" y1="18" x2="12.01" y2="18" />
+    </svg>
+  ),
+  pin: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  ),
+  scale: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM7 21h10M12 3v18M3 7h18" />
+    </svg>
+  ),
+  lock: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  ),
+  key: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="7.5" cy="15.5" r="5.5" />
+      <path d="m21 2-9.6 9.6" />
+      <path d="m15.5 7.5 3 3L22 7l-3-3" />
+    </svg>
+  ),
+  shield: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  ),
+  check: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  ),
+  arrowRight: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+  ),
+  arrowLeft: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+  ),
+};
+
 // ── Data ─────────────────────────────────────────────────────
 // ── Helpers ───────────────────────────────────────────────────
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
@@ -136,6 +202,7 @@ export default function Register() {
     } catch { return "dark"; }
   });
   const [view, setView]       = useState("form"); // "form" | "success"
+  const [activeStep, setActiveStep] = useState(1);
   const [toast, setToast]     = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw]   = useState(false);
@@ -148,6 +215,35 @@ export default function Register() {
     city: "", legalIssue: "", agreeTerms: false,
   });
   const [err, setErr] = useState({});
+
+  const isStep1Done = Boolean(client.fullName.trim() && isValidPhone(client.phone) && isValidEmail(client.email));
+  const isStep2Done = Boolean(client.password && client.password.length >= 6 && client.password === client.confirmPw && client.agreeTerms);
+
+  const validateStep1 = () => {
+    const e = {};
+    if (!client.fullName.trim()) e.fullName = "Full name is required";
+    if (!client.phone.trim()) e.phone = "Phone is required";
+    else if (!isValidPhone(client.phone)) e.phone = "Enter valid 10-digit phone";
+    if (!client.email.trim()) e.email = "Email is required";
+    else if (!isValidEmail(client.email)) e.email = "Invalid email format";
+
+    if (Object.keys(e).length > 0) {
+      setErr((prev) => ({ ...prev, ...e }));
+      showToast("Please fill in required personal details", "error");
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep1()) {
+      setActiveStep(2);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setActiveStep(1);
+  };
 
   useEffect(() => {
     if (!toast) return;
@@ -190,16 +286,24 @@ export default function Register() {
   // ── Validate ──────────────────────────────────────────────
   const validate = () => {
     const e = {};
-    if (!client.fullName.trim())          e.fullName  = "Full name is required";
-    if (!client.email.trim())              e.email     = "Email is required";
-    else if (!isValidEmail(client.email))  e.email     = "Invalid email format";
-    if (!client.phone.trim())              e.phone     = "Phone is required";
-    else if (!isValidPhone(client.phone))  e.phone     = "Enter valid 10-digit phone";
-    if (!client.password)                  e.password  = "Password is required";
-    else if (client.password.length < 6)   e.password  = "Min 6 characters";
-    if (client.password !== client.confirmPw) e.confirmPw = "Passwords do not match";
-    if (!client.agreeTerms)                e.agreeTerms = "Please accept terms";
+    let firstErrStep = null;
+    if (!client.fullName.trim()) { e.fullName = "Full name is required"; if (!firstErrStep) firstErrStep = 1; }
+    if (!client.phone.trim()) { e.phone = "Phone is required"; if (!firstErrStep) firstErrStep = 1; }
+    else if (!isValidPhone(client.phone)) { e.phone = "Enter valid 10-digit phone"; if (!firstErrStep) firstErrStep = 1; }
+    if (!client.email.trim()) { e.email = "Email is required"; if (!firstErrStep) firstErrStep = 1; }
+    else if (!isValidEmail(client.email)) { e.email = "Invalid email format"; if (!firstErrStep) firstErrStep = 1; }
+
+    if (!client.password) { e.password = "Password is required"; if (!firstErrStep) firstErrStep = 2; }
+    else if (client.password.length < 6) { e.password = "Min 6 characters"; if (!firstErrStep) firstErrStep = 2; }
+    if (client.password !== client.confirmPw) { e.confirmPw = "Passwords do not match"; if (!firstErrStep) firstErrStep = 2; }
+    if (!client.agreeTerms) { e.agreeTerms = "Please accept terms"; if (!firstErrStep) firstErrStep = 2; }
+
     setErr(e);
+    if (firstErrStep) {
+      setActiveStep(firstErrStep);
+      showToast(firstErrStep === 1 ? "Please complete personal details" : "Please complete security details", "error");
+      return false;
+    }
     return !Object.keys(e).length;
   };
 
@@ -648,88 +752,236 @@ export default function Register() {
         </div>
 
         <form className="rg-form" onSubmit={handleSubmit} noValidate>
+          {/* 2-Step Navigation Tabs Header */}
+          <div className="rg-step-tabs-nav" role="tablist" aria-label="Registration Steps">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeStep === 1}
+              className={`rg-step-tab-btn ${activeStep === 1 ? "active" : ""} ${isStep1Done ? "completed" : ""}`}
+              onClick={() => setActiveStep(1)}
+            >
+              <div className="rg-step-tab-indicator">
+                {isStep1Done && activeStep !== 1 ? (
+                  <span className="rg-step-check">{ADMIN_ICONS.check}</span>
+                ) : (
+                  <span className="rg-step-num">1</span>
+                )}
+              </div>
+              <div className="rg-step-tab-content">
+                <div className="rg-step-tab-title">
+                  <span className="rg-tab-icon">{ADMIN_ICONS.user}</span>
+                  <span>Personal Details</span>
+                </div>
+                <div className="rg-step-tab-sub">Name, Phone, Email & Location</div>
+              </div>
+              {isStep1Done && <span className="rg-step-done-badge">Done</span>}
+            </button>
 
-          <div className="rg-form-section-title">Personal Information</div>
+            <div className="rg-step-tab-connector" />
 
-          <div className="rg-grid-2">
-            <Field label="Full Name" required error={err.fullName}>
-              <Input icon="👤" placeholder="Your full name"
-                value={client.fullName} onChange={(e) => setC("fullName", e.target.value)}
-                error={err.fullName} disabled={loading} />
-            </Field>
-
-            <Field label="Phone Number" required error={err.phone}>
-              <Input icon="📱" placeholder="10-digit mobile number" type="tel"
-                value={client.phone} onChange={(e) => setC("phone", e.target.value)}
-                error={err.phone} disabled={loading} maxLength={10} />
-            </Field>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeStep === 2}
+              className={`rg-step-tab-btn ${activeStep === 2 ? "active" : ""} ${isStep2Done ? "completed" : ""}`}
+              onClick={() => {
+                if (validateStep1()) {
+                  setActiveStep(2);
+                }
+              }}
+            >
+              <div className="rg-step-tab-indicator">
+                {isStep2Done ? (
+                  <span className="rg-step-check">{ADMIN_ICONS.check}</span>
+                ) : (
+                  <span className="rg-step-num">2</span>
+                )}
+              </div>
+              <div className="rg-step-tab-content">
+                <div className="rg-step-tab-title">
+                  <span className="rg-tab-icon">{ADMIN_ICONS.shield}</span>
+                  <span>Security</span>
+                </div>
+                <div className="rg-step-tab-sub">Password & Account Terms</div>
+              </div>
+              {isStep2Done && <span className="rg-step-done-badge">Done</span>}
+            </button>
           </div>
 
-          <Field label="Email Address" required error={err.email}>
-            <Input icon="✉️" type="email" placeholder="your@email.com"
-              value={client.email} onChange={(e) => setC("email", e.target.value)}
-              error={err.email} disabled={loading}
-              rightEl={client.email && isValidEmail(client.email) && <span className="rg-valid">✓</span>} />
-          </Field>
+          {/* STEP 1: Personal Details */}
+          {activeStep === 1 && (
+            <div className="rg-step-body rg-fade-in">
+              <div className="rg-form-section-title">
+                <span className="rg-tab-icon" style={{ marginRight: 6 }}>{ADMIN_ICONS.user}</span>
+                1. Personal Details
+              </div>
 
-          <div className="rg-grid-2">
-            <Field label="City" error={err.city}>
-              <ScrollSelect
-                icon="📍"
-                placeholder="Select your city"
-                value={client.city}
-                onChange={(val) => setC("city", val)}
-                options={CITIES}
-                disabled={loading}
-                error={err.city}
-              />
-            </Field>
+              <div className="rg-grid-2">
+                <Field label="Full Name" required error={err.fullName}>
+                  <Input
+                    icon={ADMIN_ICONS.user}
+                    placeholder="Your full name"
+                    value={client.fullName}
+                    onChange={(e) => setC("fullName", e.target.value)}
+                    error={err.fullName}
+                    disabled={loading}
+                  />
+                </Field>
 
-            <Field label="Legal Issue" error={err.legalIssue}>
-              <ScrollSelect
-                icon="⚖️"
-                placeholder="Select legal issue"
-                value={client.legalIssue}
-                onChange={(val) => setC("legalIssue", val)}
-                options={PRACTICE_AREAS}
-                disabled={loading}
-                error={err.legalIssue}
-              />
-            </Field>
-          </div>
+                <Field label="Phone Number" required error={err.phone}>
+                  <Input
+                    icon={ADMIN_ICONS.phone}
+                    placeholder="10-digit mobile number"
+                    type="tel"
+                    value={client.phone}
+                    onChange={(e) => setC("phone", e.target.value)}
+                    error={err.phone}
+                    disabled={loading}
+                    maxLength={10}
+                  />
+                </Field>
+              </div>
 
-          <div className="rg-form-section-title" style={{ marginTop: 8 }}>Security</div>
+              <Field label="Email Address" required error={err.email}>
+                <Input
+                  icon={ADMIN_ICONS.mail}
+                  type="email"
+                  placeholder="your@email.com"
+                  value={client.email}
+                  onChange={(e) => setC("email", e.target.value)}
+                  error={err.email}
+                  disabled={loading}
+                  rightEl={client.email && isValidEmail(client.email) && <span className="rg-valid">{ADMIN_ICONS.check}</span>}
+                />
+              </Field>
 
-          <div className="rg-grid-2">
-            <Field label="Password" required error={err.password}>
-              <Input icon="🔒" type={showPw ? "text" : "password"} placeholder="Min 6 characters"
-                value={client.password} onChange={(e) => setC("password", e.target.value)}
-                error={err.password} disabled={loading}
-                rightEl={<button type="button" className="rg-eye" onClick={() => setShowPw((p) => !p)}>{showPw ? "🙈" : "👁️"}</button>} />
-              <PwStrength pw={client.password} />
-            </Field>
+              <div className="rg-grid-2">
+                <Field label="City" error={err.city}>
+                  <ScrollSelect
+                    icon={ADMIN_ICONS.pin}
+                    placeholder="Select your city"
+                    value={client.city}
+                    onChange={(val) => setC("city", val)}
+                    options={CITIES}
+                    disabled={loading}
+                    error={err.city}
+                  />
+                </Field>
 
-            <Field label="Confirm Password" required error={err.confirmPw}>
-              <Input icon="🔑" type={showCPw ? "text" : "password"} placeholder="Re-enter password"
-                value={client.confirmPw} onChange={(e) => setC("confirmPw", e.target.value)}
-                error={err.confirmPw} disabled={loading}
-                rightEl={
-                  client.confirmPw && client.password === client.confirmPw
-                    ? <span className="rg-valid">✓</span>
-                    : <button type="button" className="rg-eye" onClick={() => setShowCPw((p) => !p)}>{showCPw ? "🙈" : "👁️"}</button>
-                } />
-            </Field>
-          </div>
+                <Field label="Legal Issue" error={err.legalIssue}>
+                  <ScrollSelect
+                    icon={ADMIN_ICONS.scale}
+                    placeholder="Select legal issue"
+                    value={client.legalIssue}
+                    onChange={(val) => setC("legalIssue", val)}
+                    options={PRACTICE_AREAS}
+                    disabled={loading}
+                    error={err.legalIssue}
+                  />
+                </Field>
+              </div>
 
-          <label className="rg-agree">
-            <input type="checkbox" checked={client.agreeTerms} onChange={(e) => setC("agreeTerms", e.target.checked)} />
-            <span>I agree to the <a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a></span>
-          </label>
-          {err.agreeTerms && <p className="rg-field-err">⚠ {err.agreeTerms}</p>}
+              <div className="rg-step-nav-actions">
+                <div />
+                <button
+                  type="button"
+                  className="rg-btn-next"
+                  onClick={handleNextStep}
+                >
+                  <span>Next: Security (2/2)</span>
+                  {ADMIN_ICONS.arrowRight}
+                </button>
+              </div>
+            </div>
+          )}
 
-          <button type="submit" className="rg-btn-primary rg-btn-lg" disabled={loading}>
-            {loading ? <><span className="rg-spinner" /> Validating details…</> : "Send Verification Code →"}
-          </button>
+          {/* STEP 2: Security & Credentials */}
+          {activeStep === 2 && (
+            <div className="rg-step-body rg-fade-in">
+              <div className="rg-form-section-title">
+                <span className="rg-tab-icon" style={{ marginRight: 6 }}>{ADMIN_ICONS.shield}</span>
+                2. Security &amp; Credentials
+              </div>
+
+              <div className="rg-grid-2">
+                <Field label="Password" required error={err.password}>
+                  <Input
+                    icon={ADMIN_ICONS.lock}
+                    type={showPw ? "text" : "password"}
+                    placeholder="Min 6 characters"
+                    value={client.password}
+                    onChange={(e) => setC("password", e.target.value)}
+                    error={err.password}
+                    disabled={loading}
+                    rightEl={
+                      <button type="button" className="rg-eye" onClick={() => setShowPw((p) => !p)}>
+                        {showPw ? "🙈" : "👁️"}
+                      </button>
+                    }
+                  />
+                  <PwStrength pw={client.password} />
+                </Field>
+
+                <Field label="Confirm Password" required error={err.confirmPw}>
+                  <Input
+                    icon={ADMIN_ICONS.key}
+                    type={showCPw ? "text" : "password"}
+                    placeholder="Re-enter password"
+                    value={client.confirmPw}
+                    onChange={(e) => setC("confirmPw", e.target.value)}
+                    error={err.confirmPw}
+                    disabled={loading}
+                    rightEl={
+                      client.confirmPw && client.password === client.confirmPw ? (
+                        <span className="rg-valid">{ADMIN_ICONS.check}</span>
+                      ) : (
+                        <button type="button" className="rg-eye" onClick={() => setShowCPw((p) => !p)}>
+                          {showCPw ? "🙈" : "👁️"}
+                        </button>
+                      )
+                    }
+                  />
+                </Field>
+              </div>
+
+              <label className="rg-agree">
+                <input
+                  type="checkbox"
+                  checked={client.agreeTerms}
+                  onChange={(e) => setC("agreeTerms", e.target.checked)}
+                />
+                <span>
+                  I agree to the <a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a> and{" "}
+                  <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>
+                </span>
+              </label>
+              {err.agreeTerms && <p className="rg-field-err">⚠ {err.agreeTerms}</p>}
+
+              <div className="rg-step-nav-actions">
+                <button
+                  type="button"
+                  className="rg-btn-prev"
+                  onClick={handlePrevStep}
+                  disabled={loading}
+                >
+                  {ADMIN_ICONS.arrowLeft}
+                  <span>Previous: Personal Details</span>
+                </button>
+
+                <button type="submit" className="rg-btn-submit" disabled={loading}>
+                  {loading ? (
+                    <><span className="rg-spinner" /> Validating details…</>
+                  ) : (
+                    <>
+                      <span>Send Verification Code</span>
+                      {ADMIN_ICONS.arrowRight}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           <p className="rg-login-link">
             Already have an account? <Link to="/client-login">Sign in here</Link>

@@ -337,10 +337,6 @@ function BookConsultationModal({ advocate, lang, onClose, onSent }) {
               />
               {err.message && <p className="lw-field-err">⚠ {err.message}</p>}
             </div>
-
-            <div className="lw-modal-notice">
-              🔒 <strong>{lang === "kn" ? "100% ಗೌಪ್ಯತೆ:" : "100% Confidential:"}</strong> {t.confidentialNotice}
-            </div>
           </div>
 
           <div className="lw-modal-footer">
@@ -701,7 +697,7 @@ export default function Profile() {
         {/* 4-Stat High Performance Matrix */}
         <div className="lw-stats-matrix">
           <div className="lw-matrix-card">
-            <span className="lw-matrix-icon">⭐</span>
+            <span className="lw-matrix-icon"></span>
             <div>
               <div className="lw-matrix-val">{advocate.rating} / 5.0</div>
               <div className="lw-matrix-sub">{t.verifiedClientRating}</div>
@@ -709,7 +705,7 @@ export default function Profile() {
           </div>
 
           <div className="lw-matrix-card">
-            <span className="lw-matrix-icon">💼</span>
+            <span className="lw-matrix-icon"></span>
             <div>
               <div className="lw-matrix-val">{advocate.cases}{t.casesUnit}</div>
               <div className="lw-matrix-sub">{t.casesWon}</div>
@@ -717,7 +713,7 @@ export default function Profile() {
           </div>
 
           <div className="lw-matrix-card">
-            <span className="lw-matrix-icon">⏳</span>
+            <span className="lw-matrix-icon"></span>
             <div>
               <div className="lw-matrix-val">{advocate.experience}</div>
               <div className="lw-matrix-sub">{t.courtPractice}</div>
@@ -725,7 +721,7 @@ export default function Profile() {
           </div>
 
           <div className="lw-matrix-card">
-            <span className="lw-matrix-icon">🛡️</span>
+            <span className="lw-matrix-icon"></span>
             <div>
               <div className="lw-matrix-val">{advocate.barId}</div>
               <div className="lw-matrix-sub">{advocate.barCouncil}</div>
@@ -741,7 +737,7 @@ export default function Profile() {
             <div className="lw-profile-card-section">
               <div className="lw-section-header">
                 <h2 className="lw-section-title">
-                  <span className="lw-title-icon">📜</span> {t.bioTitle}
+                  <span className="lw-title-icon"></span> {t.bioTitle}
                 </h2>
               </div>
               <p className="lw-bio-text">{advocate.bio}</p>
@@ -763,7 +759,7 @@ export default function Profile() {
             <div className="lw-profile-card-section">
               <div className="lw-section-header">
                 <h2 className="lw-section-title">
-                  <span className="lw-title-icon">⚖️</span> {t.practiceAreasTitle}
+                  <span className="lw-title-icon"></span> {t.practiceAreasTitle}
                 </h2>
               </div>
               <div className="lw-practice-chips-grid">
@@ -780,7 +776,7 @@ export default function Profile() {
             <div className="lw-profile-card-section">
               <div className="lw-section-header">
                 <h2 className="lw-section-title">
-                  <span className="lw-title-icon">🏛️</span> {t.jurisdictionTitle}
+                  <span className="lw-title-icon"></span> {t.jurisdictionTitle}
                 </h2>
               </div>
               <div className="lw-jurisdiction-grid">
@@ -843,7 +839,7 @@ export default function Profile() {
                   className="lw-sidebar-btn-chat"
                   onClick={() => handleChatNow(advocate)}
                 >
-                  <span>💬</span>
+                  <span></span>
                   <span>{isKn ? "ವಕೀಲರೊಂದಿಗೆ ನೇರ ಚಾಟ್" : "Direct Consultation Chat"}</span>
                 </button>
 
@@ -859,7 +855,7 @@ export default function Profile() {
               {/* Trust Features */}
               <div className="lw-sidebar-guarantees">
                 <div className="lw-guarantee-row">
-                  <span className="lw-g-icon">🛡️</span>
+                  <span className="lw-g-icon"></span>
                   <div>
                     <strong>{t.guaranteeBar}</strong>
                     <p>{t.guaranteeBarDesc}</p>
@@ -867,7 +863,7 @@ export default function Profile() {
                 </div>
 
                 <div className="lw-guarantee-row">
-                  <span className="lw-g-icon">🔒</span>
+                  <span className="lw-g-icon"></span>
                   <div>
                     <strong>{t.guaranteePriv}</strong>
                     <p>{t.guaranteePrivDesc}</p>
@@ -875,7 +871,7 @@ export default function Profile() {
                 </div>
 
                 <div className="lw-guarantee-row">
-                  <span className="lw-g-icon">⚡</span>
+                  <span className="lw-g-icon"></span>
                   <div>
                     <strong>{t.guaranteeSpeed}</strong>
                     <p>{t.guaranteeSpeedDesc}</p>

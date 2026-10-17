@@ -40,17 +40,17 @@ const I18N = {
     titleHighlight: "Verified Advocate",
     subtitle: "Connect directly with verified Advocates from Karnataka High Court and District Courts. Confidential consultation, transparent fees, and fast legal advisory.",
     trustBar: {
-      bar: "⚖️ Bar Council Verified",
-      direct: "⚡ Direct Consultation",
-      confidential: "🔒 100% Confidential",
-      rating: "⭐ 4.9 Average Rating",
+      bar: " Bar Council Verified",
+      direct: " Direct Consultation",
+      confidential: " 100% Confidential",
+      rating: " 4.9 Average Rating",
     },
     searchPlaceholder: "Search by advocate name, city, practice area, or court (e.g. Criminal, Sandeep, Belagavi)...",
     sortBy: "Sort by:",
     sortRecommended: "Recommended / Default",
-    sortRating: "Highest Rating (⭐)",
-    sortExperience: "Most Experienced (⏳)",
-    sortCases: "Most Cases Won (💼)",
+    sortRating: "Highest Rating ()",
+    sortExperience: "Most Experienced ()",
+    sortCases: "Most Cases Won ()",
     sortName: "Name (A → Z)",
     cardsPerPage: "Per page:",
     showingCount: (start, end, total) => `Showing ${start}–${end} of ${total} verified advocates`,
@@ -79,17 +79,17 @@ const I18N = {
     titleHighlight: "ವಕೀಲರೊಂದಿಗೆ ಮಾತನಾಡಿ",
     subtitle: "ನ್ಯಾಯ • ನಂಬಿಕೆ • ಕಾನೂನು — ಕರ್ನಾಟಕ ಹೈಕೋರ್ಟ್ ಮತ್ತು ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳ ಪರಿಶೀಲಿತ ವಕೀಲರೊಂದಿಗೆ ನೇರವಾಗಿ ಸಂಪರ್ಕಿಸಿ. ಗೌಪ್ಯ ಸಮಾಲೋಚನೆ, ಪಾರದರ್ಶಕ ಶುಲ್ಕ ಮತ್ತು ಶೀಘ್ರ ಕಾನೂನು ಸಲಹೆ.",
     trustBar: {
-      bar: "⚖️ ಬಾರ್ ಕೌನ್ಸಿಲ್ ಪರಿಶೀಲಿತ",
-      direct: "⚡ ನೇರ ಸಮಾಲೋಚನೆ",
-      confidential: "🔒 100% ಗೌಪ್ಯತೆ",
-      rating: "⭐ 4.9 ಸರಾಸರಿ ರೇಟಿಂಗ್",
+      bar: " ಬಾರ್ ಕೌನ್ಸಿಲ್ ಪರಿಶೀಲಿತ",
+      direct: " ನೇರ ಸಮಾಲೋಚನೆ",
+      confidential: " 100% ಗೌಪ್ಯತೆ",
+      rating: " 4.9 ಸರಾಸರಿ ರೇಟಿಂಗ್",
     },
     searchPlaceholder: "ವಕೀಲರ ಹೆಸರು, ನಗರ, ಕಾನೂನು ಕ್ಷೇತ್ರ ಅಥವಾ ಕೋರ್ಟ್ ಮೂಲಕ ಹುಡುಕಿ (ಉದಾ: ಕ್ರಿಮಿನಲ್, ಸಂದೀಪ್, ಬೆಳಗಾವಿ)...",
     sortBy: "ವಿಂಗಡಣೆ:",
     sortRecommended: "ಶಿಫಾರಸು ಮಾಡಿದ / ಡೀಫಾಲ್ಟ್",
-    sortRating: "ಹೆಚ್ಚಿನ ರೇಟಿಂಗ್ (⭐)",
-    sortExperience: "ಹೆಚ್ಚಿನ ಅನುಭವ (⏳)",
-    sortCases: "ಹೆಚ್ಚು ಪ್ರಕರಣಗಳು (💼)",
+    sortRating: "ಹೆಚ್ಚಿನ ರೇಟಿಂಗ್ ()",
+    sortExperience: "ಹೆಚ್ಚಿನ ಅನುಭವ ()",
+    sortCases: "ಹೆಚ್ಚು ಪ್ರಕರಣಗಳು ()",
     sortName: "ಹೆಸರು (A → Z)",
     cardsPerPage: "ಪ್ರತಿ ಪುಟಕ್ಕೆ:",
     showingCount: (start, end, total) => `${total} ವಕೀಲರಲ್ಲಿ ${start}–${end} ತೋರಿಸಲಾಗುತ್ತಿದೆ`,
@@ -225,10 +225,6 @@ function AdvocateCard({ advocate, isKn, t, onChatNow }) {
         </div>
       </div>
 
-      {/* Bio excerpt */}
-      <p className="tta-bio" title={bio}>
-        {bio}
-      </p>
 
       {/* Languages mini pills */}
       <div className="tta-languages-row">

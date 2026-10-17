@@ -145,17 +145,17 @@ const NAV_ICONS = {
 };
 
 const LAWYER_CATEGORIES_EN = [
-  { icon: NAV_ICONS.family, label: "Person / Family", desc: "Divorce, custody, marriage, adoption", path: "/find-lawyer?cat=family" },
-  { icon: NAV_ICONS.criminal, label: "Criminal / Property", desc: "FIR, bail, property disputes, theft", path: "/find-lawyer?cat=criminal" },
-  { icon: NAV_ICONS.civil, label: "Civil / Debt Matter", desc: "Civil suits, debt recovery, contracts", path: "/find-lawyer?cat=civil" },
-  { icon: NAV_ICONS.corporate, label: "Corporate Law", desc: "Company, GST, tax, compliance", path: "/find-lawyer?cat=corporate" },
+  { icon: NAV_ICONS.family, label: "Person / Family", path: "/find-lawyer?cat=family" },
+  { icon: NAV_ICONS.criminal, label: "Criminal / Property", path: "/find-lawyer?cat=criminal" },
+  { icon: NAV_ICONS.civil, label: "Civil / Debt Matter", path: "/find-lawyer?cat=civil" },
+  { icon: NAV_ICONS.corporate, label: "Corporate Law", path: "/find-lawyer?cat=corporate" },
 ];
 
 const LAWYER_CATEGORIES_KN = [
-  { icon: NAV_ICONS.family, label: "ವ್ಯಕ್ತಿ / ಕುಟುಂಬ", desc: "ವಿಚ್ಛೇದನ, ಪಾಲನೆ, ವಿವಾಹ, ದತ್ತು", path: "/find-lawyer?cat=family" },
-  { icon: NAV_ICONS.criminal, label: "ಕ್ರಿಮಿನಲ್ / ಆಸ್ತಿ", desc: "ಎಫ್‌ಐಆರ್, ಜಾಮೀನು, ಆಸ್ತಿ ವಿವಾದಗಳು", path: "/find-lawyer?cat=criminal" },
-  { icon: NAV_ICONS.civil, label: "ಸಿವಿಲ್ / ಸಾಲ ಪ್ರಕರಣ", desc: "ಸಿವಿಲ್ ದಾವೆಗಳು, ಸಾಲ ವಸೂಲಾತಿ, ಒಪ್ಪಂದಗಳು", path: "/find-lawyer?cat=civil" },
-  { icon: NAV_ICONS.corporate, label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು", desc: "ಕಂಪನಿ, ಜಿಎಸ್‌ಟಿ, ತೆರಿಗೆ, ನಿಯಮಾವಳಿ", path: "/find-lawyer?cat=corporate" },
+  { icon: NAV_ICONS.family, label: "ವ್ಯಕ್ತಿ / ಕುಟುಂಬ", path: "/find-lawyer?cat=family" },
+  { icon: NAV_ICONS.criminal, label: "ಕ್ರಿಮಿನಲ್ / ಆಸ್ತಿ", path: "/find-lawyer?cat=criminal" },
+  { icon: NAV_ICONS.civil, label: "ಸಿವಿಲ್ / ಸಾಲ ಪ್ರಕರಣ", path: "/find-lawyer?cat=civil" },
+  { icon: NAV_ICONS.corporate, label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು", path: "/find-lawyer?cat=corporate" },
 ];
 
 const LEGAL_ADVICE_EN = [

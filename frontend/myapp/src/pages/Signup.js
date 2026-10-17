@@ -320,23 +320,16 @@ const ADVOCATES_JSON = [
 const TEXTS = {
   en: {
     backHome: "Back to Home",
-    badge: "Official Legal Platform of Karnataka & India",
     title: "Create Your Account",
-    subtitle: "India's Most Trusted Legal Platform for Clients & Advocates",
     trustVerified: "Verified Advocates",
     trustSecure: "256-Bit SSL Secured",
     trustInstant: "Direct Consultations",
     trustCompliant: "BCI Compliant",
     step1: "STEP 1 · SELECT ACCOUNT TYPE",
     chooseRole: "Select Your Account Type",
-    chooseRoleSubtitle: "Choose whether you are seeking legal assistance or registering as a legal professional.",
     clientRoleTitle: "I'm a Client",
-    clientRoleSubtitle: "Seeking legal counsel, dispute resolution, or document assistance",
-    clientRoleBadge: "Clients & Public",
     clientPerks: ["Consult verified advocates", "Track case updates", "Legal advice & documents"],
     advocateRoleTitle: "I'm an Advocate",
-    advocateRoleSubtitle: "Bar council enrolled legal practitioner providing legal services",
-    advocateRoleBadge: "Legal Practitioners",
     advocatePerks: ["Direct client consultations", "Verified advocate badge", "Manage practice profile"],
     selected: "Selected",
     selectRole: "Select Role",
@@ -375,23 +368,16 @@ const TEXTS = {
   },
   kn: {
     backHome: "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ",
-    badge: "ಕರ್ನಾಟಕ ಮತ್ತು ಭಾರತದ ಅಧಿಕೃತ ಕಾನೂನು ವೇದಿಕೆ",
     title: "ನಿಮ್ಮ ಖಾತೆಯನ್ನು ರಚಿಸಿ",
-    subtitle: "ಗ್ರಾಹಕರು ಮತ್ತು ವಕೀಲರಿಗಾಗಿ ಭಾರತದ ಅತ್ಯಂತ ವಿಶ್ವಾಸಾರ್ಹ ಕಾನೂನು ವೇದಿಕೆ",
     trustVerified: "ಪರಿಶೀಲಿತ ವಕೀಲರು",
     trustSecure: "೨೫೬-ಬಿಟ್ ಭದ್ರತೆ",
     trustInstant: "ನೇರ ಸಮಾಲೋಚನೆ",
     trustCompliant: "ಬಾರ್ ಕೌನ್ಸಿಲ್ ನಿಯಮಬದ್ಧ",
     step1: "ಹಂತ ೧ · ಖಾತೆಯ ಪ್ರಕಾರವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
     chooseRole: "ಖಾತೆಯ ಪ್ರಕಾರವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
-    chooseRoleSubtitle: "ನೀವು ಕಾನೂನು ಸಲಹೆ ಪಡೆಯಲು ಬಯಸುತ್ತೀರಾ ಅಥವಾ ವಕೀಲರಾಗಿ ನೋಂದಾಯಿಸಿಕೊಳ್ಳಲು ಬಯಸುತ್ತೀರಾ ಆಯ್ಕೆಮಾಡಿ.",
     clientRoleTitle: "ನಾನು ಗ್ರಾಹಕ (Client)",
-    clientRoleSubtitle: "ಕಾನೂನು ಸಲಹೆ, ವ್ಯಾಜ್ಯ ಪರಿಹಾರ ಅಥವಾ ದಾಖಲೆಗಳ ಸಹಾಯ ಪಡೆಯಲು",
-    clientRoleBadge: "ಗ್ರಾಹಕರು ಮತ್ತು ಸಾರ್ವಜನಿಕರು",
     clientPerks: ["ಪರಿಶೀಲಿತ ವಕೀಲರೊಂದಿಗೆ ಸಮಾಲೋಚನೆ", "ಪ್ರಕರಣದ ಮಾಹಿತಿ ಟ್ರ್ಯಾಕಿಂಗ್", "ಕಾನೂನು ಸಲಹೆ ಮತ್ತು ದಾಖಲೆಗಳು"],
     advocateRoleTitle: "ನಾನು ವಕೀಲ (Advocate)",
-    advocateRoleSubtitle: "ಬಾರ್ ಕೌನ್ಸಿಲ್ ನೋಂದಾಯಿತ ಕಾನೂನು ವೃತ್ತಿಪರರು",
-    advocateRoleBadge: "ಕಾನೂನು ವೃತ್ತಿಪರರು",
     advocatePerks: ["ಗ್ರಾಹಕರಿಂದ ನೇರ ಸಮಾಲೋಚನೆ", "ಪರಿಶೀಲಿತ ವಕೀಲರ ಬ್ಯಾಡ್ಜ್", "ವೃತ್ತಿಪರ ಪ್ರೊಫೈಲ್ ನಿರ್ವಹಣೆ"],
     selected: "ಆಯ್ಕೆಯಾಗಿದೆ",
     selectRole: "ಆಯ್ಕೆಮಾಡಿ",
@@ -430,6 +416,110 @@ const TEXTS = {
   }
 };
 
+// ── Admin-Style Clean SVG Icons (Matching Admin Page rail system) ──
+export const ADMIN_ICONS = {
+  user: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  mail: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </svg>
+  ),
+  phone: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="2" width="14" height="20" rx="2" />
+      <line x1="12" y1="18" x2="12.01" y2="18" />
+    </svg>
+  ),
+  pin: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  ),
+  court: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 3L2 10h20L12 3z" />
+    </svg>
+  ),
+  scale: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM7 21h10M12 3v18M3 7h18" />
+    </svg>
+  ),
+  badge: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <line x1="7" y1="8" x2="17" y2="8" />
+      <line x1="7" y1="12" x2="13" y2="12" />
+      <circle cx="16" cy="14" r="2" />
+    </svg>
+  ),
+  calendar: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+  camera: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  ),
+  lock: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  ),
+  key: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="7.5" cy="15.5" r="5.5" />
+      <path d="m21 2-9.6 9.6" />
+      <path d="m15.5 7.5 3 3L22 7l-3-3" />
+    </svg>
+  ),
+  shield: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  ),
+  shieldCheck: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  ),
+  check: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  ),
+  arrowRight: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+  ),
+  arrowLeft: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+  ),
+  sparkle: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z" />
+    </svg>
+  ),
+};
+
 // ── Helpers ───────────────────────────────────────────────────
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidPhone(p) { return /^\d{10}$/.test(p.replace(/\s|-/g, "")); }
@@ -444,6 +534,21 @@ function maskPhone(p) {
   if (cleaned.length <= 4) return cleaned;
   const last4 = cleaned.slice(-4);
   return `******${last4}`;
+}
+
+function getInitials(name = "") {
+  const clean = name.replace(/^adv\.?\s*/i, "").trim();
+  if (!clean) return "AD";
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "AD";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function getAvatarColor(name = "") {
+  const palette = ["#2563eb", "#16a34a", "#7c3aed", "#dc2626", "#ea580c", "#0891b2", "#0f766e", "#9333ea"];
+  const sum = (name || "Advocate").split("").reduce((total, char) => total + char.charCodeAt(0), 0);
+  return palette[sum % palette.length];
 }
 
 function PwStrength({ pw }) {
@@ -582,15 +687,16 @@ function Toast({ toast }) {
 // ══════════════════════════════════════════════════════════════
 //  MAIN SIGNUP COMPONENT
 // ══════════════════════════════════════════════════════════════
-export default function Signup() {
+export default function Signup({ defaultTab = "" }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const roleParam = searchParams.get("role") || searchParams.get("tab") || "";
+  const roleParam = searchParams.get("role") || searchParams.get("tab") || defaultTab || "";
   const advocateIdParam = searchParams.get("advocateId") || "";
   const advocateNameParam = searchParams.get("advocateName") || "";
   const redirectParam = searchParams.get("redirect") || "";
 
-  const [tab,     setTab]     = useState(() => (roleParam === "advocate" ? "advocate" : "client"));
+  const [tab,     setTab]     = useState(() => (roleParam === "advocate" || defaultTab === "advocate" ? "advocate" : "client"));
+  const [activeStep, setActiveStep] = useState(1);
   const [view,    setView]    = useState("form");      // "form" | "success"
   const [toast,   setToast]   = useState(null);
   const isRoleSelectionView = roleParam === "";
@@ -682,6 +788,36 @@ export default function Signup() {
     city:"", legalIssue:"", agreeTerms: false,
   });
   const [clientErr, setClientErr] = useState({});
+  const [clientStep, setClientStep] = useState(1);
+
+  const isClientStep1Done = Boolean(client.fullName.trim() && isValidPhone(client.phone) && isValidEmail(client.email));
+  const isClientStep2Done = Boolean(client.password && client.password.length >= 6 && client.password === client.confirmPw && client.agreeTerms);
+
+  const validateClientStep1 = () => {
+    const e = {};
+    if (!client.fullName.trim()) e.fullName = isKn ? "ಪೂರ್ಣ ಹೆಸರು ಅಗತ್ಯವಿದೆ" : "Full name is required";
+    if (!client.phone.trim()) e.phone = isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Phone is required";
+    else if (!isValidPhone(client.phone)) e.phone = isKn ? "೧೦-ಅಂಕಿಯ ಮಾನ್ಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ" : "Enter valid 10-digit phone";
+    if (!client.email.trim()) e.email = isKn ? "ಇಮೇಲ್ ವಿಳಾಸ ಅಗತ್ಯವಿದೆ" : "Email is required";
+    else if (!isValidEmail(client.email)) e.email = isKn ? "ಮಾನ್ಯ ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿ" : "Invalid email format";
+
+    if (Object.keys(e).length > 0) {
+      setClientErr((prev) => ({ ...prev, ...e }));
+      showToast(isKn ? "ದಯವಿಟ್ಟು ಅಗತ್ಯವಿರುವ ವೈಯಕ್ತಿಕ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ" : "Please fill in required personal details", "error");
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextClientStep = () => {
+    if (validateClientStep1()) {
+      setClientStep(2);
+    }
+  };
+
+  const handlePrevClientStep = () => {
+    setClientStep(1);
+  };
 
   // ── Advocate form ─────────────────────────────────────────
   const [adv, setAdv] = useState({
@@ -915,50 +1051,140 @@ export default function Signup() {
   // ── Validate client ───────────────────────────────────────
   const validateClient = () => {
     const e = {};
-    if (!client.fullName.trim())      e.fullName  = "Full name is required";
-    if (!client.email.trim())          e.email     = "Email is required";
-    else if (!isValidEmail(client.email)) e.email  = "Invalid email format";
-    if (!client.phone.trim())          e.phone     = "Phone is required";
-    else if (!isValidPhone(client.phone)) e.phone  = "Enter valid 10-digit phone";
-    if (!client.password)              e.password  = "Password is required";
-    else if (client.password.length<6) e.password  = "Min 6 characters";
-    if (client.password !== client.confirmPw) e.confirmPw = "Passwords do not match";
-    if (!client.agreeTerms)            e.agreeTerms = "Please accept terms";
+    let firstErrStep = null;
+    if (!client.fullName.trim()) { e.fullName = isKn ? "ಪೂರ್ಣ ಹೆಸರು ಅಗತ್ಯವಿದೆ" : "Full name is required"; if (!firstErrStep) firstErrStep = 1; }
+    if (!client.phone.trim()) { e.phone = isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Phone is required"; if (!firstErrStep) firstErrStep = 1; }
+    else if (!isValidPhone(client.phone)) { e.phone = isKn ? "೧೦-ಅಂಕಿಯ ಮಾನ್ಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ" : "Enter valid 10-digit phone"; if (!firstErrStep) firstErrStep = 1; }
+    if (!client.email.trim()) { e.email = isKn ? "ಇಮೇಲ್ ವಿಳಾಸ ಅಗತ್ಯವಿದೆ" : "Email is required"; if (!firstErrStep) firstErrStep = 1; }
+    else if (!isValidEmail(client.email)) { e.email = isKn ? "ಮಾನ್ಯ ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿ" : "Invalid email format"; if (!firstErrStep) firstErrStep = 1; }
+
+    if (!client.password) { e.password = isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಅಗತ್ಯವಿದೆ" : "Password is required"; if (!firstErrStep) firstErrStep = 2; }
+    else if (client.password.length < 6) { e.password = isKn ? "ಕನಿಷ್ಠ ೬ ಅಕ್ಷರಗಳಿರಬೇಕು" : "Min 6 characters"; if (!firstErrStep) firstErrStep = 2; }
+    if (client.password !== client.confirmPw) { e.confirmPw = isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ" : "Passwords do not match"; if (!firstErrStep) firstErrStep = 2; }
+    if (!client.agreeTerms) { e.agreeTerms = isKn ? "ದಯವಿಟ್ಟು ನಿಯಮಗಳನ್ನು ಒಪ್ಪಿಕೊಳ್ಳಿ" : "Please accept terms"; if (!firstErrStep) firstErrStep = 2; }
+
     setClientErr(e);
+    if (firstErrStep) {
+      setClientStep(firstErrStep);
+      showToast(firstErrStep === 1 ? (isKn ? "ದಯವಿಟ್ಟು ವೈಯಕ್ತಿಕ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ" : "Please complete personal details") : (isKn ? "ದಯವಿಟ್ಟು ಭದ್ರತಾ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ" : "Please complete security details"), "error");
+      return false;
+    }
     return !Object.keys(e).length;
   };
 
   // ── Validate advocate ─────────────────────────────────────
   const validateAdvocate = () => {
     const e = {};
-    if (!adv.fullName.trim())      e.fullName  = "Full name is required";
-    if (!adv.email.trim())          e.email     = "Email is required";
-    else if (!isValidEmail(adv.email)) e.email  = "Invalid email format";
-    if (!adv.phone.trim())          e.phone     = "Phone is required";
-    else if (!isValidPhone(adv.phone)) e.phone  = "Enter valid 10-digit phone";
-    if (!adv.barId.trim())          e.barId     = "Bar enrollment number is required";
+    let firstErrStep = null;
+
+    if (!adv.fullName.trim()) { e.fullName = isKn ? "ವಕೀಲರ ಪೂರ್ಣ ಹೆಸರು ಅಗತ್ಯವಿದೆ" : "Full name is required"; if (!firstErrStep) firstErrStep = 1; }
+    if (!adv.email.trim()) { e.email = isKn ? "ಇಮೇಲ್ ವಿಳಾಸ ಅಗತ್ಯವಿದೆ" : "Email is required"; if (!firstErrStep) firstErrStep = 1; }
+    else if (!isValidEmail(adv.email)) { e.email = isKn ? "ಮಾನ್ಯ ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿ" : "Invalid email format"; if (!firstErrStep) firstErrStep = 1; }
+    if (!adv.phone.trim()) { e.phone = isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Phone is required"; if (!firstErrStep) firstErrStep = 1; }
+    else if (!isValidPhone(adv.phone)) { e.phone = isKn ? "೧೦-ಅಂಕಿಯ ಮಾನ್ಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ" : "Enter valid 10-digit phone"; if (!firstErrStep) firstErrStep = 1; }
+
+    if (!adv.barId.trim()) { e.barId = isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Bar enrollment number is required"; if (!firstErrStep) firstErrStep = 2; }
     
     const specsList = (adv.specialities && adv.specialities.length > 0)
       ? adv.specialities
       : (adv.speciality ? adv.speciality.split(/,\s*/).map(s => s.trim()).filter(Boolean) : []);
-    if (specsList.length === 0)     e.speciality = "Please select or add at least 1 practice area";
+    if (specsList.length === 0) { e.speciality = isKn ? "ದಯವಿಟ್ಟು ಕನಿಷ್ಠ ೧ ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Please select or add at least 1 practice area"; if (!firstErrStep) firstErrStep = 3; }
     
-    if (!adv.courtLevel)            e.courtLevel = "Select level of court";
+    if (!adv.courtLevel) { e.courtLevel = isKn ? "ನ್ಯಾಯಾಲಯದ ಮಟ್ಟವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select level of court"; if (!firstErrStep) firstErrStep = 4; }
     if (adv.courtLevel !== "Supreme Court" && adv.courtLevel !== "High Court" && !adv.district) {
-      e.district = "Select district";
+      e.district = isKn ? "ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select district";
+      if (!firstErrStep) firstErrStep = 4;
     }
     if ((adv.courtLevel === "Taluk / JMFC / Civil Court" || adv.courtLevel === "Revenue Court / Land Tribunal") && !adv.taluk) {
-      e.taluk = "Select taluk";
+      e.taluk = isKn ? "ತಾಲೂಕನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select taluk";
+      if (!firstErrStep) firstErrStep = 4;
     }
-    if (!adv.court)                 e.court      = "Target court is required";
-    if (!adv.city && !adv.taluk && !adv.district) e.city = "City or district is required";
-    if (!adv.avatarData)            e.avatarData  = "Profile image is required";
-    if (!adv.password)              e.password   = "Password is required";
-    else if (adv.password.length<6) e.password   = "Min 6 characters";
-    if (adv.password !== adv.confirmPw) e.confirmPw = "Passwords do not match";
-    if (!adv.agreeTerms)            e.agreeTerms = "Please accept terms";
+    if (!adv.court) { e.court = isKn ? "ಗುರಿ ನ್ಯಾಯಾಲಯ ಅಗತ್ಯವಿದೆ" : "Target court is required"; if (!firstErrStep) firstErrStep = 4; }
+    if (!adv.city && !adv.taluk && !adv.district) { e.city = isKn ? "ನಗರ ಅಥವಾ ಜಿಲ್ಲೆಯ ಹೆಸರು ಅಗತ್ಯವಿದೆ" : "City or district is required"; if (!firstErrStep) firstErrStep = 5; }
+    
+    // NOTE: Profile image (avatarData) is OPTIONAL per user request! Can be added later in Advocate Dashboard.
+    
+    if (!adv.password) { e.password = isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಅಗತ್ಯವಿದೆ" : "Password is required"; if (!firstErrStep) firstErrStep = 7; }
+    else if (adv.password.length < 6) { e.password = isKn ? "ಕನಿಷ್ಠ ೬ ಅಕ್ಷರಗಳಿರಬೇಕು" : "Min 6 characters"; if (!firstErrStep) firstErrStep = 7; }
+    if (adv.password !== adv.confirmPw) { e.confirmPw = isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ" : "Passwords do not match"; if (!firstErrStep) firstErrStep = 7; }
+    if (!adv.agreeTerms) { e.agreeTerms = isKn ? "ದಯವಿಟ್ಟು ನಿಯಮಗಳನ್ನು ಒಪ್ಪಿಕೊಳ್ಳಿ" : "Please accept terms"; if (!firstErrStep) firstErrStep = 7; }
+    
     setAdvErr(e);
+    if (firstErrStep) {
+      setActiveStep(firstErrStep);
+      showToast(isKn ? "ದಯವಿಟ್ಟು ಅಗತ್ಯವಿರುವ ಎಲ್ಲಾ ವಿವರಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ" : "Please complete all required fields", "error");
+    }
     return !Object.keys(e).length;
+  };
+
+  const validateCurrentStep = (stepNumber) => {
+    const e = {};
+    if (stepNumber === 1) {
+      if (!adv.fullName.trim()) e.fullName = isKn ? "ವಕೀಲರ ಪೂರ್ಣ ಹೆಸರು ಅಗತ್ಯವಿದೆ" : "Full name is required";
+      if (!adv.phone.trim()) e.phone = isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Phone is required";
+      else if (!isValidPhone(adv.phone)) e.phone = isKn ? "೧೦-ಅಂಕಿಯ ಮಾನ್ಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ" : "Enter valid 10-digit phone";
+      if (!adv.email.trim()) e.email = isKn ? "ಇಮೇಲ್ ವಿಳಾಸ ಅಗತ್ಯವಿದೆ" : "Email is required";
+      else if (!isValidEmail(adv.email)) e.email = isKn ? "ಮಾನ್ಯ ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿ" : "Invalid email format";
+    } else if (stepNumber === 2) {
+      if (!adv.barId.trim()) e.barId = isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Bar enrollment number is required";
+    } else if (stepNumber === 3) {
+      const specsList = (adv.specialities && adv.specialities.length > 0)
+        ? adv.specialities
+        : (adv.speciality ? adv.speciality.split(/,\s*/).map(s => s.trim()).filter(Boolean) : []);
+      if (specsList.length === 0) e.speciality = isKn ? "ದಯವಿಟ್ಟು ಕನಿಷ್ಠ ೧ ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Please select or add at least 1 practice area";
+    } else if (stepNumber === 4) {
+      if (!adv.courtLevel) e.courtLevel = isKn ? "ನ್ಯಾಯಾಲಯದ ಮಟ್ಟವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select level of court";
+      if (adv.courtLevel !== "Supreme Court" && adv.courtLevel !== "High Court" && !adv.district) {
+        e.district = isKn ? "ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select district";
+      }
+      if ((adv.courtLevel === "Taluk / JMFC / Civil Court" || adv.courtLevel === "Revenue Court / Land Tribunal") && !adv.taluk) {
+        e.taluk = isKn ? "ತಾಲೂಕನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select taluk";
+      }
+      if (!adv.court) e.court = isKn ? "ಗುರಿ ನ್ಯಾಯಾಲಯ ಅಗತ್ಯವಿದೆ" : "Target court is required";
+    } else if (stepNumber === 5) {
+      if (!adv.city && !adv.taluk && !adv.district) e.city = isKn ? "ನಗರ ಅಥವಾ ಸ್ಥಳದ ಹೆಸರು ಅಗತ್ಯವಿದೆ" : "City or location name is required";
+    } else if (stepNumber === 6) {
+      // Photo and bio are both optional!
+    } else if (stepNumber === 7) {
+      if (!adv.password) e.password = isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಅಗತ್ಯವಿದೆ" : "Password is required";
+      else if (adv.password.length < 6) e.password = isKn ? "ಕನಿಷ್ಠ ೬ ಅಕ್ಷರಗಳಿರಬೇಕು" : "Min 6 characters";
+      if (adv.password !== adv.confirmPw) e.confirmPw = isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ" : "Passwords do not match";
+      if (!adv.agreeTerms) e.agreeTerms = isKn ? "ದಯವಿಟ್ಟು ನಿಯಮಗಳನ್ನು ಒಪ್ಪಿಕೊಳ್ಳಿ" : "Please accept terms";
+    }
+
+    if (Object.keys(e).length > 0) {
+      setAdvErr(prev => ({ ...prev, ...e }));
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateCurrentStep(activeStep)) {
+      setActiveStep(prev => Math.min(prev + 1, 7));
+      const formTop = document.querySelector(".su-adv-wizard-content");
+      if (formTop) {
+        formTop.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      showToast(isKn ? "ಮುಂದುವರಿಯಲು ದಯವಿಟ್ಟು ಅಗತ್ಯವಿರುವ ಕ್ಷೇತ್ರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ" : "Please fill required fields before proceeding", "error");
+    }
+  };
+
+  const handlePrevStep = () => {
+    setActiveStep(prev => Math.max(prev - 1, 1));
+    const formTop = document.querySelector(".su-adv-wizard-content");
+    if (formTop) {
+      formTop.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleStepClick = (stepId) => {
+    setActiveStep(stepId);
+    const formTop = document.querySelector(".su-adv-wizard-content");
+    if (formTop) {
+      formTop.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const [showAdvChannelModal, setShowAdvChannelModal] = useState(false);
@@ -1174,6 +1400,90 @@ export default function Signup() {
       setLoading(false);
     }
   };
+
+  const advocateSteps = [
+    {
+      id: 1,
+      title: isKn ? "ವೈಯಕ್ತಿಕ ವಿವರಗಳು" : "Personal Information",
+      shortTitle: isKn ? "ವೈಯಕ್ತಿಕ ವಿವರ" : "Personal Info",
+      desc: isKn ? "ಹೆಸರು, ಮೊಬೈಲ್ ಮತ್ತು ಇಮೇಲ್" : "Name, Phone & Email",
+      guidance: isKn ? "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಅಧಿಕೃತ ಪೂರ್ಣ ಹೆಸರು, ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ಇಮೇಲ್ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ." : "Enter your full legal name, verified mobile number, and active email address.",
+      icon: ADMIN_ICONS.user,
+      isCompleted: Boolean(adv.fullName.trim() && isValidPhone(adv.phone) && isValidEmail(adv.email)),
+      hasError: Boolean(advErr.fullName || advErr.phone || advErr.email),
+      valuePreview: adv.fullName ? adv.fullName : "",
+    },
+    {
+      id: 2,
+      title: isKn ? "ವೃತ್ತಿಪರ ವಿವರಗಳು" : "Professional Details",
+      shortTitle: isKn ? "ವೃತ್ತಿ ವಿವರ" : "Professional",
+      desc: isKn ? "ಬಾರ್ ನೋಂದಣಿ ಮತ್ತು ಕೌನ್ಸಿಲ್" : "Bar Enrollment & Council",
+      guidance: isKn ? "ನಿಮ್ಮ ರಾಜ್ಯ ಬಾರ್ ಕೌನ್ಸಿಲ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ ಮತ್ತು ಸಂಬಂಧಿತ ಬಾರ್ ಕೌನ್ಸಿಲ್ ಆಯ್ಕೆಮಾಡಿ." : "Provide your State Bar Council enrollment number and governing Bar Council.",
+      icon: ADMIN_ICONS.badge,
+      isCompleted: Boolean(adv.barId.trim()),
+      hasError: Boolean(advErr.barId || advErr.barCouncil),
+      valuePreview: adv.barId ? adv.barId : "",
+    },
+    {
+      id: 3,
+      title: isKn ? "ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರಗಳು" : "Practice Areas",
+      shortTitle: isKn ? "ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರ" : "Practice Areas",
+      desc: isKn ? "ಪರಿಣತಿ ಮತ್ತು ಕಾನೂನು ಕ್ಷೇತ್ರಗಳು" : "Fields of Expertise",
+      guidance: isKn ? "ನಿಮ್ಮ ಪರಿಣತಿಯ ಕ್ಷೇತ್ರಗಳನ್ನು ಕೆಳಗಿನ ಪಟ್ಟಿಯಿಂದ ಆರಿಸಿ ಅಥವಾ ಕಸ್ಟಮ್ ಕ್ಷೇತ್ರ ಸೇರಿಸಿ." : "Select your primary legal domains or add custom specializations.",
+      icon: ADMIN_ICONS.scale,
+      isCompleted: Boolean((adv.specialities && adv.specialities.length > 0) || adv.speciality),
+      hasError: Boolean(advErr.speciality),
+      valuePreview: adv.specialities?.length ? `${adv.specialities.length} ${isKn ? "ಕ್ಷೇತ್ರಗಳು" : "Fields"}` : "",
+    },
+    {
+      id: 4,
+      title: isKn ? "ನ್ಯಾಯಾಲಯದ ವ್ಯಾಪ್ತಿ" : "Court Jurisdiction",
+      shortTitle: isKn ? "ನ್ಯಾಯಾಲಯ ವ್ಯಾಪ್ತಿ" : "Jurisdiction",
+      desc: isKn ? "ನ್ಯಾಯಾಲಯ ಮಟ್ಟ, ಜಿಲ್ಲೆ ಮತ್ತು ತಾಲೂಕು" : "Court Level, District & Bench",
+      guidance: isKn ? "ನ್ಯಾಯಾಲಯದ ಶ್ರೇಣಿ, ಜಿಲ್ಲೆ ಮತ್ತು ತಾಲೂಕನ್ನು ಆಯ್ಕೆಮಾಡಿ — ಗುರಿ ನ್ಯಾಯಾಲಯ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಹೊಂದಿಸಲಾಗುತ್ತದೆ." : "Choose your court hierarchy, district, and taluk to establish verified jurisdiction.",
+      icon: ADMIN_ICONS.court,
+      isCompleted: Boolean(adv.courtLevel && adv.court),
+      hasError: Boolean(advErr.courtLevel || advErr.district || advErr.taluk || advErr.court),
+      valuePreview: adv.courtLevel ? `${adv.courtLevel}` : "",
+    },
+    {
+      id: 5,
+      title: isKn ? "ಸ್ಥಳ ಮತ್ತು ಅನುಭವ" : "Location & Experience",
+      shortTitle: isKn ? "ಸ್ಥಳ & ಅನುಭವ" : "Location & Exp",
+      desc: isKn ? "ಮೂಲ ನಗರ ಮತ್ತು ವೃತ್ತಿ ಅನುಭವ" : "City & Practice Years",
+      guidance: isKn ? "ನಿಮ್ಮ ಮೂಲ ನಗರ ಮತ್ತು ಕಾನೂನು ವೃತ್ತಿಯಲ್ಲಿನ ಅನುಭವದ ವರ್ಷಗಳನ್ನು ನಮೂದಿಸಿ." : "Specify your base city/taluk and years of active legal practice.",
+      icon: ADMIN_ICONS.calendar,
+      isCompleted: Boolean((adv.city || adv.taluk || adv.district) && adv.experience),
+      hasError: Boolean(advErr.city || advErr.experience),
+      valuePreview: adv.city ? `${adv.city}` : "",
+    },
+    {
+      id: 6,
+      title: isKn ? "ಪರಿಚಯ ಮತ್ತು ಫೋಟೋ" : "Bio & Profile Photo",
+      shortTitle: isKn ? "ಪರಿಚಯ & ಫೋಟೋ" : "Bio & Photo",
+      desc: isKn ? "ಸಂಕ್ಷಿಪ್ತ ವಿವರಣೆ ಮತ್ತು ಪ್ರೊಫೈಲ್ ಚಿತ್ರ (ಐಚ್ಛಿಕ)" : "Bio & Avatar (Optional Photo)",
+      guidance: isKn ? "ಸಂಕ್ಷಿಪ್ತ ಪರಿಚಯವನ್ನು ಬರೆಯಿರಿ. ಪ್ರೊಫೈಲ್ ಫೋಟೋ ಐಚ್ಛಿಕವಾಗಿದೆ — ಫೋಟೋ ಇಲ್ಲದಿದ್ದರೆ ನಿಮ್ಮ ಆರಂಭಿಕ ಅಕ್ಷರಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತದೆ." : "Write a brief summary. Profile photo is optional — your initials avatar will be shown if not uploaded now.",
+      icon: ADMIN_ICONS.camera,
+      isCompleted: Boolean(adv.avatarData || adv.bio.trim()),
+      hasError: Boolean(advErr.avatarData || advErr.bio),
+      valuePreview: adv.avatarData ? (isKn ? "ಫೋಟೋ ಸೇರಿಸಲಾಗಿದೆ ✓" : "Photo Added ✓") : (adv.fullName ? getInitials(adv.fullName) : ""),
+    },
+    {
+      id: 7,
+      title: isKn ? "ಭದ್ರತೆ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್" : "Security & Credentials",
+      shortTitle: isKn ? "ಭದ್ರತೆ & ಲಾಗಿನ್" : "Security",
+      desc: isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಮತ್ತು ನಿಯಮಗಳ ಒಪ್ಪಿಗೆ" : "Password & Verification",
+      guidance: isKn ? "ಸುರಕ್ಷಿತ ಪಾಸ್‌ವರ್ಡ್ ಹೊಂದಿಸಿ ಮತ್ತು ಸೇವಾ ನಿಯಮಗಳನ್ನು ಒಪ್ಪಿಕೊಂಡು ನೋಂದಣಿಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ." : "Set a secure account password and accept platform guidelines to submit.",
+      icon: ADMIN_ICONS.shield,
+      isCompleted: Boolean(adv.password && adv.password.length >= 6 && adv.password === adv.confirmPw && adv.agreeTerms),
+      hasError: Boolean(advErr.password || advErr.confirmPw || advErr.agreeTerms),
+      valuePreview: (adv.password && adv.agreeTerms) ? (isKn ? "ಸಿದ್ಧವಾಗಿದೆ ✓" : "Ready ✓") : "",
+    },
+  ];
+
+  const currentStepObj = advocateSteps.find(s => s.id === activeStep) || advocateSteps[0];
+  const completedStepsCount = advocateSteps.filter(s => s.isCompleted).length;
+  const progressPercent = Math.round((completedStepsCount / 7) * 100);
 
   const goToLogin = () => {
     if (tab === "client") {
@@ -1404,7 +1714,7 @@ export default function Signup() {
         </div>
       )}
 
-      <div className="su-card">
+      <div className={`su-card ${roleParam === "advocate" && tab === "advocate" ? "su-card-advocate-wizard" : ""} ${isRoleSelectionView ? "su-card-role-select" : ""}`}>
         {/* Top Control Bar: Back link, Language switcher, Theme toggle */}
         <div className="su-top-bar">
           {showBackToSignup ? (
@@ -1448,9 +1758,6 @@ export default function Signup() {
 
         {/* Header */}
         <div className="su-header">
-          <div className="su-badge-pill">
-            <span className="su-badge-sparkle">✨</span> {t.badge}
-          </div>
 
           <div className="su-logo-wrap">
             <Link to="/" className="su-logo" title="Advocate Hub - Home">
@@ -1463,120 +1770,149 @@ export default function Signup() {
         </div>
 
         {/* ══ STEP 1: INTERACTIVE ROLE SELECTION DECK ══ */}
-        {isRoleSelectionView && <div className="su-role-section">
-          <div className="su-role-header">
-            <span className="su-role-step-pill">{t.step1}</span>
-            <h2 className="su-role-heading">{t.chooseRole}</h2>
-            <p className="su-role-subheading">{t.chooseRoleSubtitle}</p>
-          </div>
+        {isRoleSelectionView && (
+          <div className="su-role-section">
+            <div className="su-role-header">
+              <h2 className="su-role-heading">{t.chooseRole}</h2>
+              <p className="su-role-subheading">{t.chooseRoleSubtitle}</p>
+            </div>
 
-          <div className="su-role-grid">
-            {/* Client Card */}
-            <div
-              className={`su-role-card ${tab === "client" ? "active" : ""}`}
-              onClick={() => {
-                navigate("/client-register");
-              }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+            <div className="su-role-grid">
+              {/* 1. Client Card */}
+              <div
+                className={`su-role-card su-role-card-client ${tab === "client" ? "selected" : ""}`}
+                onClick={() => {
+                  setTab("client");
                   navigate("/client-register");
-                }
-              }}
-            >
-              <div className="su-role-card-top">
-                <div className="su-role-avatar-wrap su-role-client-avatar">
-                  <span className="su-role-emoji">👤</span>
-                </div>
-                <div className="su-role-badge-box">
-                  {tab === "client" ? (
-                    <span className="su-role-status active">
-                      <span className="su-status-dot">●</span> {t.selected}
-                    </span>
-                  ) : (
-                    <span className="su-role-status inactive">
-                      {t.selectRole} →
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="su-role-info">
-                <span className="su-role-category client">{t.clientRoleBadge}</span>
-                <h3 className="su-role-title">{t.clientRoleTitle}</h3>
-                <p className="su-role-desc">{t.clientRoleSubtitle}</p>
-              </div>
-
-              <div className="su-role-perks">
-                {t.clientPerks.map((perk, i) => (
-                  <span key={i} className="su-role-perk-item">
-                    <span className="su-perk-check">✓</span> {perk}
+                }}
+                onMouseEnter={() => setTab("client")}
+                role="button"
+                tabIndex={0}
+                aria-label={t.clientRoleTitle}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate("/client-register");
+                  }
+                }}
+              >
+                <div className="su-role-card-badge-row">
+                  <span className="su-role-pill-time">
+                    ⚡ {isKn ? "೧ ನಿಮಿಷ ನೋಂದಣಿ" : "1 Min Signup"}
                   </span>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Advocate Card */}
-            <div
-              className={`su-role-card ${tab === "advocate" ? "active" : ""}`}
-              onClick={() => {
-                navigate("/signup?role=advocate");
-              }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+                <div className="su-role-hero-row">
+                  <div className="su-role-icon-box client">
+                    {ADMIN_ICONS.user}
+                  </div>
+                  <div className="su-role-hero-meta">
+                    <h3 className="su-role-card-title">{t.clientRoleTitle}</h3>
+                  </div>
+                </div>
+
+
+                <div className="su-role-perks-list">
+                  {t.clientPerks.map((perk, i) => (
+                    <div key={i} className="su-role-perk-row">
+                      <span className="su-role-perk-bullet">{ADMIN_ICONS.check}</span>
+                      <span>{perk}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="su-role-card-footer">
+                  <button
+                    type="button"
+                    className="su-role-cta-btn su-role-cta-client"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate("/client-register");
+                    }}
+                  >
+                    <span>{isKn ? "ಗ್ರಾಹಕರಾಗಿ ಮುಂದುವರಿಯಿರಿ" : "Continue as Client"}</span>
+                    {ADMIN_ICONS.arrowRight}
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Advocate Card */}
+              <div
+                className={`su-role-card su-role-card-advocate ${tab === "advocate" ? "selected" : ""}`}
+                onClick={() => {
+                  setTab("advocate");
                   navigate("/signup?role=advocate");
-                }
-              }}
-            >
-              <div className="su-role-card-top">
-                <div className="su-role-avatar-wrap su-role-advocate-avatar">
-                  <span className="su-role-emoji">⚖️</span>
+                }}
+                onMouseEnter={() => setTab("advocate")}
+                role="button"
+                tabIndex={0}
+                aria-label={t.advocateRoleTitle}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate("/signup?role=advocate");
+                  }
+                }}
+              >
+
+                <div className="su-role-hero-row">
+                  <div className="su-role-icon-box advocate">
+                    {ADMIN_ICONS.court}
+                  </div>
+                  <div className="su-role-hero-meta">
+                    <h3 className="su-role-card-title">{t.advocateRoleTitle}</h3>
+                  </div>
                 </div>
-                <div className="su-role-badge-box">
-                  {tab === "advocate" ? (
-                    <span className="su-role-status active advocate">
-                      <span className="su-status-dot">●</span> {t.selected}
-                    </span>
-                  ) : (
-                    <span className="su-role-status inactive">
-                      {t.selectRole} →
-                    </span>
-                  )}
+
+
+                <div className="su-role-perks-list">
+                  {t.advocatePerks.map((perk, i) => (
+                    <div key={i} className="su-role-perk-row">
+                      <span className="su-role-perk-bullet">{ADMIN_ICONS.check}</span>
+                      <span>{perk}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="su-role-card-footer">
+                  <button
+                    type="button"
+                    className="su-role-cta-btn su-role-cta-advocate"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate("/signup?role=advocate");
+                    }}
+                  >
+                    <span>{isKn ? "ವಕೀಲರಾಗಿ ಮುಂದುವರಿಯಿರಿ" : "Continue as Advocate"}</span>
+                    {ADMIN_ICONS.arrowRight}
+                  </button>
                 </div>
               </div>
+            </div>
 
-              <div className="su-role-info">
-                <span className="su-role-category advocate">{t.advocateRoleBadge}</span>
-                <h3 className="su-role-title">{t.advocateRoleTitle}</h3>
-                <p className="su-role-desc">{t.advocateRoleSubtitle}</p>
-              </div>
-
-              <div className="su-role-perks">
-                {t.advocatePerks.map((perk, i) => (
-                  <span key={i} className="su-role-perk-item">
-                    <span className="su-perk-check">✓</span> {perk}
-                  </span>
-                ))}
+            {/* Quick Sign-In Redirect for Returning Users */}
+            <div className="su-role-login-redirect">
+              <span className="su-role-login-prompt">
+                {isKn ? "ಈಗಾಗಲೇ Advocate Hub ಖಾತೆ ಹೊಂದಿದ್ದೀರಾ?" : "Already registered on Advocate Hub?"}
+              </span>
+              <div className="su-role-login-links">
+                <Link to="/client-login" className="su-role-login-btn client">
+                  {ADMIN_ICONS.user}
+                  <span>{isKn ? "ಗ್ರಾಹಕರ ಲಾಗಿನ್ →" : "Client Sign In →"}</span>
+                </Link>
+                <Link to="/login" className="su-role-login-btn advocate">
+                  {ADMIN_ICONS.court}
+                  <span>{isKn ? "ವಕೀಲರ ಲಾಗಿನ್ →" : "Advocate Sign In →"}</span>
+                </Link>
               </div>
             </div>
           </div>
-
-          {/* Role Context Notification Banner */}
-          <div className={`su-role-guidance ${tab === "advocate" ? "advocate" : "client"}`}>
-            <span className="su-guidance-icon">{tab === "advocate" ? "💼" : "🔍"}</span>
-            <div className="su-guidance-content">
-              <strong>{tab === "client" ? (isKn ? "ಗ್ರಾಹಕರ ನೋಂದಣಿ:" : "Client Registration:") : (isKn ? "ವಕೀಲರ ಪ್ರವೇಶ:" : "Advocate Onboarding:")}</strong>{" "}
-              {tab === "client" ? t.clientBanner : t.advocateBanner}
-            </div>
-          </div>
-        </div>}
+        )}
 
         {/* ══ CLIENT FORM ══ */}
+        {/* ══ CLIENT FORM: 2-STEP TABBED FORM (PERSONAL DETAILS & SECURITY) ══ */}
         {roleParam === "client" && tab === "client" && (
-          <form className="su-form" onSubmit={handleSubmit} noValidate>
+          <form className="su-form su-client-wizard-form" onSubmit={handleSubmit} noValidate>
 
             {/* Target Advocate Direct Consultation Banner */}
             {targetAdvocate && (
@@ -1596,191 +1932,286 @@ export default function Signup() {
               </div>
             )}
 
-            {/* Step 1: Personal Information */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">1</span> {t.personalInfo}
+            {/* 2-Step Navigation Tabs Header */}
+            <div className="su-client-tabs-nav" role="tablist" aria-label="Client Registration Steps">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={clientStep === 1}
+                className={`su-client-tab-btn ${clientStep === 1 ? "active" : ""} ${isClientStep1Done ? "completed" : ""}`}
+                onClick={() => setClientStep(1)}
+              >
+                <div className="su-client-step-tab-indicator">
+                  {isClientStep1Done && clientStep !== 1 ? (
+                    <span className="su-client-step-check">{ADMIN_ICONS.check}</span>
+                  ) : (
+                    <span className="su-client-step-num">1</span>
+                  )}
+                </div>
+                <div className="su-client-tab-content">
+                  <div className="su-client-tab-title">
+                    <span className="su-client-tab-icon">{ADMIN_ICONS.user}</span>
+                    <span>1. {isKn ? "ವೈಯಕ್ತಿಕ ವಿವರಗಳು" : "Personal Details"}</span>
+                  </div>
+                  <div className="su-client-tab-sub">
+                    {isKn ? "ಹೆಸರು, ಮೊಬೈಲ್, ಇಮೇಲ್ & ಸ್ಥಳ" : "Name, Phone, Email & Location"}
+                  </div>
+                </div>
+                {isClientStep1Done && <span className="su-client-step-done-badge">{isKn ? "ಪೂರ್ಣ" : "Done"}</span>}
+              </button>
+
+              <div className="su-client-tab-connector" />
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={clientStep === 2}
+                className={`su-client-tab-btn ${clientStep === 2 ? "active" : ""} ${isClientStep2Done ? "completed" : ""}`}
+                onClick={() => {
+                  if (validateClientStep1()) {
+                    setClientStep(2);
+                  }
+                }}
+              >
+                <div className="su-client-step-tab-indicator">
+                  {isClientStep2Done ? (
+                    <span className="su-client-step-check">{ADMIN_ICONS.check}</span>
+                  ) : (
+                    <span className="su-client-step-num">2</span>
+                  )}
+                </div>
+                <div className="su-client-tab-content">
+                  <div className="su-client-tab-title">
+                    <span className="su-client-tab-icon">{ADMIN_ICONS.shield}</span>
+                    <span>2. {isKn ? "ಭದ್ರತೆ & ಲಾಗಿನ್" : "Security"}</span>
+                  </div>
+                  <div className="su-client-tab-sub">
+                    {isKn ? "ಪಾಸ್‌ವರ್ಡ್ & ನಿಯಮಗಳ ಒಪ್ಪಿಗೆ" : "Password & Account Terms"}
+                  </div>
+                </div>
+                {isClientStep2Done && <span className="su-client-step-done-badge">{isKn ? "ಪೂರ್ಣ" : "Done"}</span>}
+              </button>
             </div>
 
-            <div className="su-grid-2">
-              <Field label={t.clientFullName} required error={clientErr.fullName}>
-                <Input
-                  icon="👤"
-                  placeholder={isKn ? "ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರು" : "e.g. Ramesh Kumar"}
-                  value={client.fullName}
-                  onChange={(e) => setC("fullName", e.target.value)}
-                  error={clientErr.fullName}
-                  disabled={loading}
-                />
-              </Field>
+            {/* STEP 1: Personal Details */}
+            {clientStep === 1 && (
+              <div className="su-client-step-body su-fade-in">
+                <div className="su-form-section-title">
+                  <span className="su-client-tab-icon" style={{ marginRight: 6 }}>{ADMIN_ICONS.user}</span>
+                  1. {t.personalInfo}
+                </div>
 
-              <Field label={t.clientPhone} required error={clientErr.phone}>
-                <Input
-                  icon="📱"
-                  placeholder={isKn ? "೧೦-ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ" : "10-digit mobile number"}
-                  type="tel"
-                  value={client.phone}
-                  onChange={(e) => setC("phone", e.target.value)}
-                  error={clientErr.phone}
-                  disabled={loading}
-                  maxLength={10}
-                />
-              </Field>
-            </div>
+                <div className="su-grid-2">
+                  <Field label={t.clientFullName} required error={clientErr.fullName}>
+                    <Input
+                      icon={ADMIN_ICONS.user}
+                      placeholder={isKn ? "ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರು" : "e.g. Ramesh Kumar"}
+                      value={client.fullName}
+                      onChange={(e) => setC("fullName", e.target.value)}
+                      error={clientErr.fullName}
+                      disabled={loading}
+                    />
+                  </Field>
 
-            <Field label={t.clientEmail} required error={clientErr.email}>
-              <Input
-                icon="✉️"
-                type="email"
-                placeholder="your.email@example.com"
-                value={client.email}
-                onChange={(e) => setC("email", e.target.value)}
-                error={clientErr.email}
-                disabled={loading}
-                rightEl={client.email && isValidEmail(client.email) && <span className="su-valid">✓</span>}
-              />
-            </Field>
+                  <Field label={t.clientPhone} required error={clientErr.phone}>
+                    <Input
+                      icon={ADMIN_ICONS.phone}
+                      placeholder={isKn ? "೧೦-ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ" : "10-digit mobile number"}
+                      type="tel"
+                      value={client.phone}
+                      onChange={(e) => setC("phone", e.target.value)}
+                      error={clientErr.phone}
+                      disabled={loading}
+                      maxLength={10}
+                    />
+                  </Field>
+                </div>
 
-            {/* Step 2: Location & Legal Needs */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">2</span> {t.locationLegal}
-            </div>
+                <Field label={t.clientEmail} required error={clientErr.email}>
+                  <Input
+                    icon={ADMIN_ICONS.mail}
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={client.email}
+                    onChange={(e) => setC("email", e.target.value)}
+                    error={clientErr.email}
+                    disabled={loading}
+                    rightEl={client.email && isValidEmail(client.email) && <span className="su-valid">{ADMIN_ICONS.check}</span>}
+                  />
+                </Field>
 
-            <div className="su-grid-2">
-              <Field label={t.clientCity} error={clientErr.city}>
-                <Select
-                  icon="📍"
-                  value={client.city}
-                  onChange={(e) => setC("city", e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">{t.clientCitySelect}</option>
-                  {CITIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </Select>
-              </Field>
+                <div className="su-form-section-title" style={{ marginTop: 24 }}>
+                  <span className="su-client-tab-icon" style={{ marginRight: 6 }}>{ADMIN_ICONS.scale}</span>
+                  {t.locationLegal}
+                </div>
 
-              <Field label={t.clientLegalMatter} error={clientErr.legalIssue}>
-                <Select
-                  icon="⚖️"
-                  value={client.legalIssue}
-                  onChange={(e) => setC("legalIssue", e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">{t.clientLegalMatterSelect}</option>
-                  {PRACTICE_AREAS.map((a) => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
-
-            {/* Popular Legal Concerns Quick Pills */}
-            <div className="su-client-quick-tags">
-              <div className="su-quick-tag-label">{t.clientQuickTagsTitle}</div>
-              <div className="su-quick-tag-pills">
-                {POPULAR_LEGAL_ISSUES.map((issue) => (
-                  <button
-                    key={issue}
-                    type="button"
-                    className={`su-quick-tag-pill ${client.legalIssue === issue ? "active" : ""}`}
-                    onClick={() => setC("legalIssue", client.legalIssue === issue ? "" : issue)}
-                  >
-                    <span>⚖️ {issue}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Step 3: Security & Credentials */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">3</span> {t.security}
-            </div>
-
-            <div className="su-grid-2">
-              <Field label={t.password} required error={clientErr.password}>
-                <Input
-                  icon="🔒"
-                  type={showPw ? "text" : "password"}
-                  placeholder={isKn ? "ಕನಿಷ್ಠ ೬ ಅಕ್ಷರಗಳು" : "Min 6 characters"}
-                  value={client.password}
-                  onChange={(e) => setC("password", e.target.value)}
-                  error={clientErr.password}
-                  disabled={loading}
-                  rightEl={
-                    <button
-                      type="button"
-                      className="su-eye"
-                      onClick={() => setShowPw((p) => !p)}
+                <div className="su-grid-2">
+                  <Field label={t.clientCity} error={clientErr.city}>
+                    <Select
+                      icon={ADMIN_ICONS.pin}
+                      value={client.city}
+                      onChange={(e) => setC("city", e.target.value)}
+                      disabled={loading}
                     >
-                      {showPw ? "🙈" : "👁️"}
-                    </button>
-                  }
-                />
-                <PwStrength pw={client.password} />
-              </Field>
+                      <option value="">{t.clientCitySelect}</option>
+                      {CITIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </Select>
+                  </Field>
 
-              <Field label={t.confirmPassword} required error={clientErr.confirmPw}>
-                <Input
-                  icon="🔑"
-                  type={showCPw ? "text" : "password"}
-                  placeholder={isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಪುನರಾವರ್ತಿಸಿ" : "Re-enter password"}
-                  value={client.confirmPw}
-                  onChange={(e) => setC("confirmPw", e.target.value)}
-                  error={clientErr.confirmPw}
-                  disabled={loading}
-                  rightEl={
-                    client.confirmPw && client.password === client.confirmPw ? (
-                      <span className="su-valid">✓</span>
-                    ) : (
+                  <Field label={t.clientLegalMatter} error={clientErr.legalIssue}>
+                    <Select
+                      icon={ADMIN_ICONS.scale}
+                      value={client.legalIssue}
+                      onChange={(e) => setC("legalIssue", e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="">{t.clientLegalMatterSelect}</option>
+                      {PRACTICE_AREAS.map((a) => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+
+                {/* Popular Legal Concerns Quick Pills */}
+                <div className="su-client-quick-tags">
+                  <div className="su-quick-tag-label">{t.clientQuickTagsTitle}</div>
+                  <div className="su-quick-tag-pills">
+                    {POPULAR_LEGAL_ISSUES.map((issue) => (
                       <button
+                        key={issue}
                         type="button"
-                        className="su-eye"
-                        onClick={() => setShowCPw((p) => !p)}
+                        className={`su-quick-tag-pill ${client.legalIssue === issue ? "active" : ""}`}
+                        onClick={() => setC("legalIssue", client.legalIssue === issue ? "" : issue)}
                       >
-                        {showCPw ? "🙈" : "👁️"}
+                        <span>⚖️ {issue}</span>
                       </button>
-                    )
-                  }
-                />
-              </Field>
-            </div>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Client Instant Advantage Card */}
-            <div className="su-client-benefit-card">
-              <span className="su-client-benefit-icon">⚡</span>
-              <div className="su-client-benefit-body">
-                <div className="su-client-benefit-title">{t.clientInstantTitle}</div>
-                <div className="su-client-benefit-text">{t.clientInstantDesc}</div>
+                <div className="su-client-step-nav-actions">
+                  <div />
+                  <button
+                    type="button"
+                    className="su-client-btn-next"
+                    onClick={handleNextClientStep}
+                  >
+                    <span>{isKn ? "ಮುಂದೆ: ಭದ್ರತೆ (೨/೨)" : "Next: Security (2/2)"}</span>
+                    {ADMIN_ICONS.arrowRight}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
-            <label className="su-agree">
-              <input
-                type="checkbox"
-                checked={client.agreeTerms}
-                onChange={(e) => setC("agreeTerms", e.target.checked)}
-              />
-              <span>
-                {t.clientAgreeText}{" "}
-                <a href="/terms" target="_blank" rel="noreferrer">
-                  {t.termsOfService}
-                </a>{" "}
-                {t.andWord}{" "}
-                <a href="/privacy" target="_blank" rel="noreferrer">
-                  {t.privacyPolicy}
-                </a>
-              </span>
-            </label>
-            {clientErr.agreeTerms && <p className="su-field-err">⚠ {clientErr.agreeTerms}</p>}
+            {/* STEP 2: Security & Credentials */}
+            {clientStep === 2 && (
+              <div className="su-client-step-body su-fade-in">
+                <div className="su-form-section-title">
+                  <span className="su-client-tab-icon" style={{ marginRight: 6 }}>{ADMIN_ICONS.shield}</span>
+                  2. {t.security}
+                </div>
 
-            <button type="submit" className="su-btn-primary su-btn-lg" disabled={loading}>
-              {loading ? (
-                <><span className="su-spinner" /> {t.creatingAccount}</>
-              ) : (
-                <><span>✨</span> {t.createClientBtn} →</>
-              )}
-            </button>
+                <div className="su-grid-2">
+                  <Field label={t.password} required error={clientErr.password}>
+                    <Input
+                      icon={ADMIN_ICONS.lock}
+                      type={showPw ? "text" : "password"}
+                      placeholder={isKn ? "ಕನಿಷ್ಠ ೬ ಅಕ್ಷರಗಳು" : "Min 6 characters"}
+                      value={client.password}
+                      onChange={(e) => setC("password", e.target.value)}
+                      error={clientErr.password}
+                      disabled={loading}
+                      rightEl={
+                        <button
+                          type="button"
+                          className="su-eye"
+                          onClick={() => setShowPw((p) => !p)}
+                        >
+                          {showPw ? "🙈" : "👁️"}
+                        </button>
+                      }
+                    />
+                    <PwStrength pw={client.password} />
+                  </Field>
+
+                  <Field label={t.confirmPassword} required error={clientErr.confirmPw}>
+                    <Input
+                      icon={ADMIN_ICONS.key}
+                      type={showCPw ? "text" : "password"}
+                      placeholder={isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಪುನರಾವರ್ತಿಸಿ" : "Re-enter password"}
+                      value={client.confirmPw}
+                      onChange={(e) => setC("confirmPw", e.target.value)}
+                      error={clientErr.confirmPw}
+                      disabled={loading}
+                      rightEl={
+                        client.confirmPw && client.password === client.confirmPw ? (
+                          <span className="su-valid">{ADMIN_ICONS.check}</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="su-eye"
+                            onClick={() => setShowCPw((p) => !p)}
+                          >
+                            {showCPw ? "🙈" : "👁️"}
+                          </button>
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+
+                {/* Client Instant Advantage Card */}
+                <div className="su-client-benefit-card">
+                  <span className="su-client-benefit-icon">⚡</span>
+                  <div className="su-client-benefit-body">
+                    <div className="su-client-benefit-title">{t.clientInstantTitle}</div>
+                    <div className="su-client-benefit-text">{t.clientInstantDesc}</div>
+                  </div>
+                </div>
+
+                <label className="su-agree">
+                  <input
+                    type="checkbox"
+                    checked={client.agreeTerms}
+                    onChange={(e) => setC("agreeTerms", e.target.checked)}
+                  />
+                  <span>
+                    {t.clientAgreeText}{" "}
+                    <a href="/terms" target="_blank" rel="noreferrer">
+                      {t.termsOfService}
+                    </a>{" "}
+                    {t.andWord}{" "}
+                    <a href="/privacy" target="_blank" rel="noreferrer">
+                      {t.privacyPolicy}
+                    </a>
+                  </span>
+                </label>
+                {clientErr.agreeTerms && <p className="su-field-err">⚠ {clientErr.agreeTerms}</p>}
+
+                <div className="su-client-step-nav-actions">
+                  <button
+                    type="button"
+                    className="su-client-btn-prev"
+                    onClick={handlePrevClientStep}
+                    disabled={loading}
+                  >
+                    {ADMIN_ICONS.arrowLeft}
+                    <span>{isKn ? "ಹಿಂದಿನದು: ವೈಯಕ್ತಿಕ ವಿವರಗಳು" : "Previous: Personal Details"}</span>
+                  </button>
+
+                  <button type="submit" className="su-btn-primary su-client-btn-submit" disabled={loading}>
+                    {loading ? (
+                      <><span className="su-spinner" /> {t.creatingAccount}</>
+                    ) : (
+                      <>{ADMIN_ICONS.sparkle} <span>{t.createClientBtn}</span> {ADMIN_ICONS.arrowRight}</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <p className="su-login-link">
               {t.alreadyAccount}{" "}
@@ -1799,572 +2230,728 @@ export default function Signup() {
           </form>
         )}
 
-        {/* ══ ADVOCATE FORM ══ */}
+        {/* ══ ADVOCATE FORM: 7-STEP WIZARD WITH LEFT-SIDE STEPPER ══ */}
         {roleParam === "advocate" && tab === "advocate" && (
-          <form className="su-form" onSubmit={handleSubmit} noValidate>
-
-            {/* Demo fill from JSON */}
-            <div className="su-demo-section">
-              <button
-                type="button"
-                className="su-demo-toggle"
-                onClick={() => setShowDemoAdvocates((p) => !p)}
-              >
-                <span className="su-demo-toggle-left">
-                  <span>⚖️</span>
-                  <span>{showDemoAdvocates ? (isKn ? "ಮಾದರಿ ಪ್ರೊಫೈಲ್‌ಗಳನ್ನು ಮರೆಮಾಡಿ" : "Hide Sample Advocate Profiles") : (isKn ? "ಮಾದರಿ ಪ್ರೊಫೈಲ್‌ಗಳನ್ನು ಬಳಸಿ" : "Use Sample Advocate Profiles")}</span>
-                </span>
-                <span className="su-demo-toggle-badge">{showDemoAdvocates ? "▲ Close" : "▼ Auto-Fill"}</span>
-              </button>
-              {showDemoAdvocates && (
-                <div className="su-demo-list">
-                  <div className="su-demo-label" style={{ gridColumn: "1 / -1" }}>
-                    {isKn ? "ಫಾರ್ಮ್ ಅನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಭರ್ತಿ ಮಾಡಲು ಪ್ರೊಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ:" : "Select a profile to auto-fill the form:"}
-                  </div>
-                  {ADVOCATES_JSON.map((a) => (
-                    <AdvCard key={a.email} adv={a} onFill={fillAdvocate} />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Step 1: Personal Info */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">1</span> {t.personalInfo}
-            </div>
-
-            <div className="su-grid-2">
-              <Field label={t.fullName} required error={advErr.fullName}>
-                <Input
-                  icon="👤"
-                  placeholder={isKn ? "ವಕೀಲರ ಪೂರ್ಣ ಹೆಸರು" : "Adv. Full Name"}
-                  value={adv.fullName}
-                  onChange={(e) => setA("fullName", e.target.value)}
-                  error={advErr.fullName}
-                  disabled={loading}
-                />
-              </Field>
-
-              <Field label={t.phone} required error={advErr.phone}>
-                <Input
-                  icon="📱"
-                  placeholder={isKn ? "೧೦-ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ" : "10-digit mobile"}
-                  type="tel"
-                  value={adv.phone}
-                  onChange={(e) => setA("phone", e.target.value)}
-                  error={advErr.phone}
-                  disabled={loading}
-                  maxLength={10}
-                />
-              </Field>
-            </div>
-
-            <Field label={t.email} required error={advErr.email}>
-              <Input
-                icon="✉️"
-                type="email"
-                placeholder="advocate@email.com"
-                value={adv.email}
-                onChange={(e) => setA("email", e.target.value)}
-                error={advErr.email}
-                disabled={loading}
-                rightEl={adv.email && isValidEmail(adv.email) && <span className="su-valid">✓</span>}
-              />
-            </Field>
-
-            {/* Step 2: Bar Council & Credentials */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">2</span> {t.professionalDetails}
-            </div>
-
-            <div className="su-grid-2">
-              <Field
-                label={isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ" : "Bar Enrollment Number"}
-                required
-                error={advErr.barId}
-                hint={isKn ? "ಉದಾ: KAR/1234/2018" : "e.g. KAR/1234/2018 or BCI/KA/2016/4321"}
-              >
-                <Input
-                  icon="🪪"
-                  placeholder="e.g. KAR/1234/2018"
-                  value={adv.barId}
-                  onChange={(e) => setA("barId", e.target.value)}
-                  error={advErr.barId}
-                  disabled={loading}
-                />
-              </Field>
-
-              <Field label={isKn ? "ಬಾರ್ ಕೌನ್ಸಿಲ್" : "Bar Council"} error={advErr.barCouncil}>
-                <Select
-                  icon="🏛️"
-                  value={adv.barCouncil}
-                  onChange={(e) => setA("barCouncil", e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">{isKn ? "ಬಾರ್ ಕೌನ್ಸಿಲ್ ಆಯ್ಕೆಮಾಡಿ" : "Select bar council"}</option>
-                  {BAR_COUNCILS.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
-
-            {/* Step 3: Practice Areas & Specialization */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">3</span> {t.practiceAreas}
-            </div>
-
-            <div className="su-practice-box">
-              <div className="su-practice-header">
-                <label className="su-label" style={{ margin: 0 }}>
-                  {isKn ? "ಪರಿಣತಿ ಮತ್ತು ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರಗಳು" : "Practice Area & Fields of Expertise"} <span className="su-req">*</span>
-                </label>
-                {adv.specialities && adv.specialities.length > 0 && (
-                  <span className="su-target-court-verified">
-                    ✓ {adv.specialities.length} {adv.specialities.length === 1 ? (isKn ? "ಕ್ಷೇತ್ರ ಆಯ್ಕೆಯಾಗಿದೆ" : "field selected") : (isKn ? "ಕ್ಷೇತ್ರಗಳು ಆಯ್ಕೆಯಾಗಿವೆ" : "fields selected")}
+          <form className="su-form su-adv-wizard-form" onSubmit={handleSubmit} noValidate>
+            <div className="su-adv-wizard-layout">
+              {/* LEFT SIDE: 7 Steps Navigation Sidebar */}
+              <aside className="su-adv-sidebar-stepper" aria-label="Registration Steps">
+                <div className="su-adv-stepper-header">
+                  <span className="su-adv-badge-track">
+                    ⚖️ {isKn ? "ವಕೀಲರ ನೋಂದಣಿ" : "Advocate Onboarding"}
                   </span>
-                )}
-              </div>
+                  <h3 className="su-adv-stepper-title">
+                    {isKn ? "ನೋಂದಣಿ ಹಂತಗಳು" : "Registration Steps"}
+                  </h3>
 
-              {/* Selected practice areas displayed as interactive tags */}
-              {adv.specialities && adv.specialities.length > 0 ? (
-                <div className="su-practice-tags-wrap">
-                  {adv.specialities.map((item) => (
-                    <span key={item} className="su-practice-tag">
-                      <span>⚖️ {item}</span>
+                  <div className="su-adv-progress-box">
+                    <div className="su-adv-progress-meta">
+                      <span>{isKn ? `ಹಂತ ${activeStep} / ೭` : `Step ${activeStep} of 7`}</span>
+                      <strong>{progressPercent}% {isKn ? "ಪೂರ್ಣ" : "Done"}</strong>
+                    </div>
+                    <div className="su-adv-progress-track">
+                      <div
+                        className="su-adv-progress-fill"
+                        style={{ width: `${Math.max(10, progressPercent)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 7 Interactive Step Items */}
+                <div className="su-adv-stepper-list">
+                  {advocateSteps.map((step) => {
+                    const isActive = activeStep === step.id;
+                    return (
                       <button
+                        key={step.id}
                         type="button"
-                        className="su-practice-remove-btn"
-                        onClick={() => handleRemovePracticeArea(item)}
-                        title={`Remove ${item}`}
+                        className={`su-adv-step-item ${isActive ? "active" : ""} ${step.isCompleted ? "completed" : ""} ${step.hasError ? "has-error" : ""}`}
+                        onClick={() => handleStepClick(step.id)}
+                        aria-current={isActive ? "step" : undefined}
                       >
-                        ✕
+                        <div className="su-adv-step-indicator">
+                          {step.isCompleted && !isActive ? (
+                            <span className="su-adv-step-check">✓</span>
+                          ) : step.hasError ? (
+                            <span className="su-adv-step-err-icon">!</span>
+                          ) : (
+                            <span className="su-adv-step-num">{step.id}</span>
+                          )}
+                        </div>
+
+                        <div className="su-adv-step-text">
+                          <div className="su-adv-step-title-row">
+                            <span className="su-adv-step-icon">{step.icon}</span>
+                            <span className="su-adv-step-title">{step.id}. {step.title}</span>
+                          </div>
+                          <div className="su-adv-step-desc">
+                            {step.valuePreview ? (
+                              <span className="su-adv-step-preview">✓ {step.valuePreview}</span>
+                            ) : (
+                              step.desc
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="su-adv-step-status-pill">
+                          {isActive ? (
+                            <span className="su-step-pill-active">{isKn ? "ಪ್ರಸ್ತುತ" : "Active"}</span>
+                          ) : step.isCompleted ? (
+                            <span className="su-step-pill-done">{isKn ? "ಪೂರ್ಣ" : "Done"}</span>
+                          ) : (
+                            <span className="su-step-pill-arrow">→</span>
+                          )}
+                        </div>
                       </button>
+                    );
+                  })}
+                </div>
+
+                {/* Sidebar Trust Badges */}
+                <div className="su-adv-sidebar-trust">
+                  <div className="su-adv-trust-item">
+                    <span className="su-adv-trust-icon">{ADMIN_ICONS.court}</span>
+                    <span>{isKn ? "ಬಾರ್ ಕೌನ್ಸಿಲ್ ಮಾನ್ಯತೆ" : "Bar Council Compliant"}</span>
+                  </div>
+                  <div className="su-adv-trust-item">
+                    <span className="su-adv-trust-icon">{ADMIN_ICONS.shieldCheck}</span>
+                    <span>{isKn ? "೨೫೬-ಬಿಟ್ ಗೂಢಲಿಪೀಕರಣ" : "256-Bit SSL Encrypted"}</span>
+                  </div>
+                  <div className="su-adv-trust-item">
+                    <span className="su-adv-trust-icon">{ADMIN_ICONS.sparkle}</span>
+                    <span>{isKn ? "ತ್ವರಿತ ಒಟಿಪಿ ಪರಿಶೀಲನೆ" : "Instant OTP Verification"}</span>
+                  </div>
+                </div>
+              </aside>
+
+              {/* RIGHT SIDE: Active Step Form Content */}
+              <div className="su-adv-wizard-content">
+                {/* Step Header */}
+                <div className="su-adv-step-header">
+                  <div className="su-adv-step-badge-row">
+                    <span className="su-adv-step-pill-counter">
+                      {isKn ? `ಹಂತ ${activeStep} / ೭` : `STEP ${activeStep} OF 7`}
                     </span>
-                  ))}
+                    <span className="su-adv-step-percent-badge">
+                      {completedStepsCount}/7 {isKn ? "ಹಂತಗಳು ಪೂರ್ಣ" : "Steps Completed"} ({progressPercent}%)
+                    </span>
+                  </div>
+                  <h2 className="su-adv-step-heading">
+                    <span className="su-adv-heading-icon">{currentStepObj.icon}</span>
+                    {currentStepObj.id}. {currentStepObj.title}
+                  </h2>
+                  <p className="su-adv-step-subheading">
+                    {currentStepObj.guidance}
+                  </p>
                 </div>
-              ) : (
-                <div className="su-practice-empty">
-                  <span>ℹ️</span>
-                  <span>{isKn ? "ಇನ್ನೂ ಯಾವುದೇ ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಿಲ್ಲ. ಕೆಳಗಿನ ಪಟ್ಟಿಯಿಂದ ಆರಿಸಿ ಅಥವಾ ಕಸ್ಟಮ್ ಕ್ಷೇತ್ರ ಸೇರಿಸಿ." : "No practice areas selected yet. Pick from the list below or add a custom field."}</span>
-                </div>
-              )}
 
-              {/* Selector and Custom Add Row */}
-              <div className="su-practice-controls-row">
-                <Select
-                  icon="⚖️"
-                  value=""
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleTogglePracticeArea(e.target.value);
-                    }
-                  }}
-                  error={advErr.speciality}
-                  disabled={loading}
-                >
-                  <option value="">{isKn ? "+ ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರವನ್ನು ಸೇರಿಸಿ…" : "+ Choose Practice Area to add…"}</option>
-                  {PRACTICE_AREAS.filter((a) => !(adv.specialities || []).includes(a)).map((a) => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </Select>
-
-                <div className="su-custom-field-box">
-                  <input
-                    type="text"
-                    className="su-custom-input"
-                    placeholder={isKn ? "ಕಸ್ಟಮ್ ಪರಿಣತಿ (ಉದಾ. RERA, NCLT)" : "Or type custom expertise (e.g. RERA, NCLT)"}
-                    value={customArea}
-                    onChange={(e) => setCustomArea(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (customArea.trim()) {
-                          handleAddCustomPracticeArea(customArea);
-                          setCustomArea("");
-                        }
-                      }
-                    }}
-                    disabled={loading}
-                  />
+                {/* Quick Demo Fill Helper */}
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
                   <button
                     type="button"
-                    className="su-btn-add-field"
-                    onClick={() => {
-                      if (customArea.trim()) {
-                        handleAddCustomPracticeArea(customArea);
-                        setCustomArea("");
-                      }
-                    }}
-                    disabled={loading}
+                    className="su-demo-fill-btn"
+                    onClick={() => fillAdvocate(ADVOCATES_JSON[1])}
+                    title="Autofill sample advocate data for quick testing"
                   >
-                    + {isKn ? "ಸೇರಿಸಿ" : "Add Field"}
+                    ⚡ {isKn ? "ಮಾದರಿ ವಿವರಗಳನ್ನು ಸ್ವಯಂ-ಭರ್ತಿ ಮಾಡಿ" : "Autofill Sample Advocate"}
                   </button>
                 </div>
-              </div>
 
-              {advErr.speciality && <p className="su-field-err" style={{ marginTop: 8 }}>⚠ {advErr.speciality}</p>}
-            </div>
+                {/* Step Form Fields */}
+                <div className="su-adv-step-body">
+                  {/* STEP 1: Personal Information */}
+                  {activeStep === 1 && (
+                    <div className="su-step-section-fields su-fade-in">
+                      <div className="su-grid-2">
+                        <Field label={t.fullName} required error={advErr.fullName}>
+                          <Input
+                            icon={ADMIN_ICONS.user}
+                            placeholder={isKn ? "ವಕೀಲರ ಪೂರ್ಣ ಹೆಸರು" : "Adv. Full Name"}
+                            value={adv.fullName}
+                            onChange={(e) => setA("fullName", e.target.value)}
+                            error={advErr.fullName}
+                            disabled={loading}
+                          />
+                        </Field>
 
-            {/* Step 4: Court Hierarchy & Jurisdiction */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">4</span> {t.courtJurisdiction}
-            </div>
+                        <Field label={t.phone} required error={advErr.phone}>
+                          <Input
+                            icon={ADMIN_ICONS.phone}
+                            placeholder={isKn ? "೧೦-ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ" : "10-digit mobile"}
+                            type="tel"
+                            value={adv.phone}
+                            onChange={(e) => setA("phone", e.target.value)}
+                            error={advErr.phone}
+                            disabled={loading}
+                            maxLength={10}
+                          />
+                        </Field>
+                      </div>
 
-            <div className="su-court-box">
-              <div className="su-court-header">
-                <div className="su-court-header-left">
-                  <span className="su-court-header-icon">🏛️</span>
-                  <div>
-                    <div className="su-court-header-title">
-                      {isKn ? "ನ್ಯಾಯಾಲಯದ ಶ್ರೇಣಿ ಮತ್ತು ವ್ಯಾಪ್ತಿ" : "Court Hierarchy & Jurisdiction"}
+                      <Field label={t.email} required error={advErr.email}>
+                        <Input
+                          icon={ADMIN_ICONS.mail}
+                          type="email"
+                          placeholder="advocate@email.com"
+                          value={adv.email}
+                          onChange={(e) => setA("email", e.target.value)}
+                          error={advErr.email}
+                          disabled={loading}
+                          rightEl={adv.email && isValidEmail(adv.email) && <span className="su-valid">{ADMIN_ICONS.check}</span>}
+                        />
+                      </Field>
                     </div>
-                    <div className="su-court-header-sub">
-                      {isKn ? "ಕೆಳಗಿನ ಹಂತಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ — ಗುರಿ ನ್ಯಾಯಾಲಯವು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ನಿರ್ಧರಿಸಲ್ಪಡುತ್ತದೆ" : "Select the 3 levels below — Target Court is determined automatically"}
+                  )}
+
+                  {/* STEP 2: Professional Details */}
+                  {activeStep === 2 && (
+                    <div className="su-step-section-fields su-fade-in">
+                      <div className="su-grid-2">
+                        <Field
+                          label={isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ" : "Bar Enrollment Number"}
+                          required
+                          error={advErr.barId}
+                          hint={isKn ? "ಉದಾ: KAR/1234/2018" : "e.g. KAR/1234/2018 or BCI/KA/2016/4321"}
+                        >
+                          <Input
+                            icon={ADMIN_ICONS.badge}
+                            placeholder="e.g. KAR/1234/2018"
+                            value={adv.barId}
+                            onChange={(e) => setA("barId", e.target.value)}
+                            error={advErr.barId}
+                            disabled={loading}
+                          />
+                        </Field>
+
+                        <Field label={isKn ? "ಬಾರ್ ಕೌನ್ಸಿಲ್" : "Bar Council"} error={advErr.barCouncil}>
+                          <Select
+                            icon={ADMIN_ICONS.court}
+                            value={adv.barCouncil}
+                            onChange={(e) => setA("barCouncil", e.target.value)}
+                            disabled={loading}
+                          >
+                            <option value="">{isKn ? "ಬಾರ್ ಕೌನ್ಸಿಲ್ ಆಯ್ಕೆಮಾಡಿ" : "Select bar council"}</option>
+                            {BAR_COUNCILS.map((b) => (
+                              <option key={b} value={b}>{b}</option>
+                            ))}
+                          </Select>
+                        </Field>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <span className="su-court-badge">
-                  {isKn ? "೩ ಹಂತಗಳ ಪ್ರಕ್ರಿಯೆ" : "3 Dependent Steps"}
-                </span>
-              </div>
+                  )}
 
-              <div className="su-court-grid">
-                {/* 1st Section: Level of Court */}
-                <Field label={isKn ? "ಹಂತ ೧: ನ್ಯಾಯಾಲಯದ ಮಟ್ಟ" : "Step 1: Level of Court"} required error={advErr.courtLevel}>
-                  <Select
-                    icon="⚖️"
-                    value={adv.courtLevel}
-                    onChange={(e) => handleCourtLevelChange(e.target.value)}
-                    error={advErr.courtLevel}
-                    disabled={loading}
-                  >
-                    <option value="">{isKn ? "-- ನ್ಯಾಯಾಲಯದ ಮಟ್ಟ ಆಯ್ಕೆಮಾಡಿ --" : "-- Choose Court Level --"}</option>
-                    {COURT_LEVELS.map((lvl) => (
-                      <option key={lvl} value={lvl}>{lvl}</option>
-                    ))}
-                  </Select>
-                </Field>
+                  {/* STEP 3: Practice Areas & Specialization */}
+                  {activeStep === 3 && (
+                    <div className="su-step-section-fields su-fade-in">
+                      <div className="su-practice-box">
+                        <div className="su-practice-header">
+                          <label className="su-label" style={{ margin: 0 }}>
+                            {isKn ? "ಪರಿಣತಿ ಮತ್ತು ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರಗಳು" : "Practice Area & Fields of Expertise"} <span className="su-req">*</span>
+                          </label>
+                          {adv.specialities && adv.specialities.length > 0 && (
+                            <span className="su-target-court-verified">
+                              ✓ {adv.specialities.length} {adv.specialities.length === 1 ? (isKn ? "ಕ್ಷೇತ್ರ ಆಯ್ಕೆಯಾಗಿದೆ" : "field selected") : (isKn ? "ಕ್ಷೇತ್ರಗಳು ಆಯ್ಕೆಯಾಗಿವೆ" : "fields selected")}
+                            </span>
+                          )}
+                        </div>
 
-                {/* Conditional Branch for High Court / Supreme Court or District + Taluk */}
-                {adv.courtLevel === "High Court" ? (
-                  <div style={{ gridColumn: "span 2" }}>
-                    <Field label={isKn ? "ಹಂತ ೨: ಹೈಕೋರ್ಟ್ ಪೀಠ" : "Step 2: High Court Bench"} required>
-                      <Select
-                        icon="🏛️"
-                        value={adv.bench || HIGH_COURT_BENCHES[0]}
-                        onChange={(e) => handleBenchChange(e.target.value)}
-                        disabled={loading}
-                      >
-                        {HIGH_COURT_BENCHES.map((b) => (
-                          <option key={b} value={b}>{b}</option>
-                        ))}
-                      </Select>
-                    </Field>
-                  </div>
-                ) : adv.courtLevel === "Supreme Court" ? (
-                  <div style={{ gridColumn: "span 2" }}>
-                    <Field label={isKn ? "ಹಂತ ೨: ವ್ಯಾಪ್ತಿ ಮತ್ತು ಸ್ಥಳ" : "Step 2: Jurisdiction & Location"}>
-                      <Input
-                        icon="📍"
-                        value="Supreme Court of India (New Delhi)"
-                        readOnly
-                        disabled
-                        style={{ fontWeight: 600 }}
-                      />
-                    </Field>
-                  </div>
-                ) : (
-                  <>
-                    {/* 2nd Section: District */}
-                    <Field label={isKn ? "ಹಂತ ೨: ಜಿಲ್ಲೆ" : "Step 2: District"} required error={advErr.district}>
-                      <Select
-                        icon="🗺️"
-                        value={adv.district}
-                        onChange={(e) => handleDistrictChange(e.target.value)}
-                        error={advErr.district}
-                        disabled={loading}
-                      >
-                        <option value="">{isKn ? "-- ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ --" : "-- Select District --"}</option>
-                        {getDistricts().map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </Select>
-                    </Field>
+                        {adv.specialities && adv.specialities.length > 0 ? (
+                          <div className="su-practice-tags-wrap">
+                            {adv.specialities.map((item) => (
+                              <span key={item} className="su-practice-tag">
+                                <span>⚖️ {item}</span>
+                                <button
+                                  type="button"
+                                  className="su-practice-remove-btn"
+                                  onClick={() => handleRemovePracticeArea(item)}
+                                  title={`Remove ${item}`}
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="su-practice-empty">
+                            <span>ℹ️</span>
+                            <span>{isKn ? "ಇನ್ನೂ ಯಾವುದೇ ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಿಲ್ಲ. ಕೆಳಗಿನ ಪಟ್ಟಿಯಿಂದ ಆರಿಸಿ ಅಥವಾ ಕಸ್ಟಮ್ ಕ್ಷೇತ್ರ ಸೇರಿಸಿ." : "No practice areas selected yet. Pick from the list below or add a custom field."}</span>
+                          </div>
+                        )}
 
-                    {/* 3rd Section: Taluk (Dependent on District) */}
-                    <Field
-                      label={isKn ? "ಹಂತ ೩: ತಾಲೂಕು" : "Step 3: Taluk"}
-                      required={adv.courtLevel === "Taluk / JMFC / Civil Court" || adv.courtLevel === "Revenue Court / Land Tribunal"}
-                      error={advErr.taluk}
-                      hint={!adv.district ? (isKn ? "ಮೊದಲು ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Choose district first") : undefined}
-                    >
-                      <Select
-                        icon="📍"
-                        value={adv.taluk}
-                        onChange={(e) => handleTalukChange(e.target.value)}
-                        error={advErr.taluk}
-                        disabled={loading || !adv.district}
-                      >
-                        <option value="">
-                          {!adv.district ? (isKn ? "ಮೊದಲು ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ" : "Select District first") : (isKn ? "-- ತಾಲೂಕು ಆಯ್ಕೆಮಾಡಿ --" : "-- Select Taluk --")}
-                        </option>
-                        {getTaluksForDistrict(adv.district).map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </Select>
-                    </Field>
-                  </>
-                )}
-              </div>
+                        <div className="su-practice-controls-row">
+                          <Select
+                            icon={ADMIN_ICONS.scale}
+                            value=""
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                handleTogglePracticeArea(e.target.value);
+                              }
+                            }}
+                            error={advErr.speciality}
+                            disabled={loading}
+                          >
+                            <option value="">{isKn ? "+ ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರವನ್ನು ಸೇರಿಸಿ…" : "+ Choose Practice Area to add…"}</option>
+                            {PRACTICE_AREAS.filter((a) => !(adv.specialities || []).includes(a)).map((a) => (
+                              <option key={a} value={a}>{a}</option>
+                            ))}
+                          </Select>
 
-              {/* Target Court Output Banner — Only what was selected! */}
-              {adv.court ? (
-                <div className="su-target-court-card">
-                  <div className="su-target-court-top">
-                    <div className="su-target-court-tag">
-                      🎯 {isKn ? "ಗುರಿ ನ್ಯಾಯಾಲಯದ ವ್ಯಾಪ್ತಿ (ಲಿಂಕ್ ಮಾಡಲಾಗಿದೆ)" : "Target Court Jurisdiction (Selected & Linked)"}
+                          <div className="su-custom-field-box">
+                            <input
+                              type="text"
+                              className="su-custom-input"
+                              placeholder={isKn ? "ಕಸ್ಟಮ್ ಪರಿಣತಿ (ಉದಾ. RERA, NCLT)" : "Or type custom expertise (e.g. RERA, NCLT)"}
+                              value={customArea}
+                              onChange={(e) => setCustomArea(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  if (customArea.trim()) {
+                                    handleAddCustomPracticeArea(customArea);
+                                    setCustomArea("");
+                                  }
+                                }
+                              }}
+                              disabled={loading}
+                            />
+                            <button
+                              type="button"
+                              className="su-btn-add-field"
+                              onClick={() => {
+                                if (customArea.trim()) {
+                                  handleAddCustomPracticeArea(customArea);
+                                  setCustomArea("");
+                                }
+                              }}
+                              disabled={loading}
+                            >
+                              + {isKn ? "ಸೇರಿಸಿ" : "Add Field"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {advErr.speciality && <p className="su-field-err" style={{ marginTop: 8 }}>⚠ {advErr.speciality}</p>}
+                      </div>
                     </div>
-                    <span className="su-target-court-verified">
-                      ✓ {isKn ? "ದೃಢೀಕರಿಸಿದ ವ್ಯಾಪ್ತಿ" : "Verified Jurisdiction"}
-                    </span>
-                  </div>
+                  )}
 
-                  <div className="su-target-court-name">
-                    🏛️ {adv.court}
-                  </div>
+                  {/* STEP 4: Court Hierarchy & Jurisdiction */}
+                  {activeStep === 4 && (
+                    <div className="su-step-section-fields su-fade-in">
+                      <div className="su-court-box">
+                        <div className="su-court-header">
+                          <div className="su-court-header-left">
+                            <span className="su-court-header-icon">{ADMIN_ICONS.court}</span>
+                            <div>
+                              <div className="su-court-header-title">
+                                {isKn ? "ನ್ಯಾಯಾಲಯದ ಶ್ರೇಣಿ ಮತ್ತು ವ್ಯಾಪ್ತಿ" : "Court Hierarchy & Jurisdiction"}
+                              </div>
+                              <div className="su-court-header-sub">
+                                {isKn ? "ಕೆಳಗಿನ ಹಂತಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ — ಗುರಿ ನ್ಯಾಯಾಲಯವು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ನಿರ್ಧರಿಸಲ್ಪಡುತ್ತದೆ" : "Select the levels below — Target Court is determined automatically"}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="su-court-badge">
+                            {isKn ? "೩ ಹಂತಗಳ ಪ್ರಕ್ರಿಯೆ" : "3 Dependent Steps"}
+                          </span>
+                        </div>
 
-                  {/* Summary Chips: ONLY what is selected! */}
-                  <div className="su-target-court-chips">
-                    {adv.courtLevel && (
-                      <span className="su-court-chip-item">
-                        ⚖️ {isKn ? "ಮಟ್ಟ:" : "Level:"} <strong>{adv.courtLevel}</strong>
-                      </span>
-                    )}
-                    {adv.district && (
-                      <span className="su-court-chip-item">
-                        🗺️ {isKn ? "ಜಿಲ್ಲೆ:" : "District:"} <strong>{adv.district}</strong>
-                      </span>
-                    )}
-                    {adv.taluk && (
-                      <span className="su-court-chip-item">
-                        📍 {isKn ? "ತಾಲೂಕು:" : "Taluk:"} <strong>{adv.taluk}</strong>
-                      </span>
-                    )}
-                    {adv.city && (
-                      <span className="su-court-chip-item">
-                        🏙️ {isKn ? "ಮೂಲ ಸ್ಥಳ:" : "Base Location:"} <strong>{adv.city}</strong>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="su-target-court-empty">
-                  <span>👉</span>
-                  <span>{isKn ? "ಗುರಿ ನ್ಯಾಯಾಲಯದ ವ್ಯಾಪ್ತಿಯನ್ನು ಹೊಂದಿಸಲು ದಯವಿಟ್ಟು ಮೇಲೆ ನ್ಯಾಯಾಲಯದ ಮಟ್ಟ ಮತ್ತು ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ." : "Please choose Level of Court and District above to set the target court jurisdiction."}</span>
-                </div>
-              )}
+                        <div className="su-court-grid">
+                          <Field label={isKn ? "ಹಂತ ೧: ನ್ಯಾಯಾಲಯದ ಮಟ್ಟ" : "Step 1: Level of Court"} required error={advErr.courtLevel}>
+                            <Select
+                              icon={ADMIN_ICONS.scale}
+                              value={adv.courtLevel}
+                              onChange={(e) => handleCourtLevelChange(e.target.value)}
+                              error={advErr.courtLevel}
+                              disabled={loading}
+                            >
+                              <option value="">{isKn ? "-- ನ್ಯಾಯಾಲಯದ ಮಟ್ಟ ಆಯ್ಕೆಮಾಡಿ --" : "-- Choose Court Level --"}</option>
+                              {COURT_LEVELS.map((lvl) => (
+                                <option key={lvl} value={lvl}>{lvl}</option>
+                              ))}
+                            </Select>
+                          </Field>
 
-              {advErr.court && <p className="su-field-err" style={{ marginTop: 8 }}>⚠ {advErr.court}</p>}
-            </div>
+                          {adv.courtLevel === "High Court" ? (
+                            <div style={{ gridColumn: "span 2" }}>
+                              <Field label={isKn ? "ಹಂತ ೨: ಹೈಕೋರ್ಟ್ ಪೀಠ" : "Step 2: High Court Bench"} required>
+                                <Select
+                                  icon={ADMIN_ICONS.court}
+                                  value={adv.bench || HIGH_COURT_BENCHES[0]}
+                                  onChange={(e) => handleBenchChange(e.target.value)}
+                                  disabled={loading}
+                                >
+                                  {HIGH_COURT_BENCHES.map((b) => (
+                                    <option key={b} value={b}>{b}</option>
+                                  ))}
+                                </Select>
+                              </Field>
+                            </div>
+                          ) : adv.courtLevel === "Supreme Court" ? (
+                            <div style={{ gridColumn: "span 2" }}>
+                              <Field label={isKn ? "ಹಂತ ೨: ವ್ಯಾಪ್ತಿ ಮತ್ತು ಸ್ಥಳ" : "Step 2: Jurisdiction & Location"}>
+                                <Input
+                                  icon={ADMIN_ICONS.pin}
+                                  value="Supreme Court of India (New Delhi)"
+                                  readOnly
+                                  disabled
+                                  style={{ fontWeight: 600 }}
+                                />
+                              </Field>
+                            </div>
+                          ) : (
+                            <>
+                              <Field label={isKn ? "ಹಂತ ೨: ಜಿಲ್ಲೆ" : "Step 2: District"} required error={advErr.district}>
+                                <Select
+                                  icon={ADMIN_ICONS.pin}
+                                  value={adv.district}
+                                  onChange={(e) => handleDistrictChange(e.target.value)}
+                                  error={advErr.district}
+                                  disabled={loading}
+                                >
+                                  <option value="">{isKn ? "-- ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ --" : "-- Select District --"}</option>
+                                  {getDistricts().map((d) => (
+                                    <option key={d} value={d}>{d}</option>
+                                  ))}
+                                </Select>
+                              </Field>
 
-            {/* Step 5: Location & Experience */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">5</span> {t.locationLegal}
-            </div>
+                              <Field
+                                label={isKn ? "ಹಂತ ೩: ತಾಲೂಕು" : "Step 3: Taluk"}
+                                required={adv.courtLevel === "Taluk / JMFC / Civil Court" || adv.courtLevel === "Revenue Court / Land Tribunal"}
+                                error={advErr.taluk}
+                                hint={!adv.district ? (isKn ? "ಮೊದಲು ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Choose district first") : undefined}
+                              >
+                                <Select
+                                  icon={ADMIN_ICONS.pin}
+                                  value={adv.taluk}
+                                  onChange={(e) => handleTalukChange(e.target.value)}
+                                  error={advErr.taluk}
+                                  disabled={loading || !adv.district}
+                                >
+                                  <option value="">
+                                    {!adv.district ? (isKn ? "ಮೊದಲು ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ" : "Select District first") : (isKn ? "-- ತಾಲೂಕು ಆಯ್ಕೆಮಾಡಿ --" : "-- Select Taluk --")}
+                                  </option>
+                                  {getTaluksForDistrict(adv.district).map((t) => (
+                                    <option key={t} value={t}>{t}</option>
+                                  ))}
+                                </Select>
+                              </Field>
+                            </>
+                          )}
+                        </div>
 
-            <div className="su-grid-2">
-              <Field
-                label={isKn ? "ನಗರ / ಸ್ಥಳದ ಹೆಸರು" : "City / Location Name"}
-                required
-                error={advErr.city}
-                hint={isKn ? "ತಾಲೂಕು/ಜಿಲ್ಲೆಯಿಂದ ಸ್ವಯಂ-ಭರ್ತಿ ಅಥವಾ ಕಸ್ಟಮೈಸ್ ಮಾಡಿ" : "Auto-filled from Taluk/District or customize"}
-              >
-                <Input
-                  icon="📍"
-                  placeholder={isKn ? "ಉದಾ: ಗೋಕಾಕ, ಬೆಳಗಾವಿ" : "e.g. Gokak, Belagavi"}
-                  value={adv.city}
-                  onChange={(e) => setA("city", e.target.value)}
-                  error={advErr.city}
-                  disabled={loading}
-                />
-              </Field>
+                        {adv.court ? (
+                          <div className="su-target-court-card">
+                            <div className="su-target-court-top">
+                              <div className="su-target-court-tag">
+                                🎯 {isKn ? "ಗುರಿ ನ್ಯಾಯಾಲಯದ ವ್ಯಾಪ್ತಿ (ಲಿಂಕ್ ಮಾಡಲಾಗಿದೆ)" : "Target Court Jurisdiction (Selected & Linked)"}
+                              </div>
+                              <span className="su-target-court-verified">
+                                ✓ {isKn ? "ದೃಢೀಕರಿಸಿದ ವ್ಯಾಪ್ತಿ" : "Verified Jurisdiction"}
+                              </span>
+                            </div>
 
-              <Field label={isKn ? "ಅನುಭವದ ವರ್ಷಗಳು" : "Years of Experience"} error={advErr.experience}>
-                <Select
-                  icon="📅"
-                  value={adv.experience}
-                  onChange={(e) => setA("experience", e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">{isKn ? "ಅನುಭವವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select experience"}</option>
-                  {EXPERIENCE_YEARS.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
+                            <div className="su-target-court-name">
+                              🏛️ {adv.court}
+                            </div>
 
-            {/* Step 6: Bio & Profile Image */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">6</span> {t.bioPhoto}
-            </div>
+                            <div className="su-target-court-chips">
+                              {adv.courtLevel && (
+                                <span className="su-court-chip-item">
+                                  ⚖️ {isKn ? "ಮಟ್ಟ:" : "Level:"} <strong>{adv.courtLevel}</strong>
+                                </span>
+                              )}
+                              {adv.district && (
+                                <span className="su-court-chip-item">
+                                  🗺️ {isKn ? "ಜಿಲ್ಲೆ:" : "District:"} <strong>{adv.district}</strong>
+                                </span>
+                              )}
+                              {adv.taluk && (
+                                <span className="su-court-chip-item">
+                                  📍 {isKn ? "ತಾಲೂಕು:" : "Taluk:"} <strong>{adv.taluk}</strong>
+                                </span>
+                              )}
+                              {adv.city && (
+                                <span className="su-court-chip-item">
+                                  🏙️ {isKn ? "ಮೂಲ ಸ್ಥಳ:" : "Base Location:"} <strong>{adv.city}</strong>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="su-target-court-empty">
+                            <span>👉</span>
+                            <span>{isKn ? "ಗುರಿ ನ್ಯಾಯಾಲಯದ ವ್ಯಾಪ್ತಿಯನ್ನು ಹೊಂದಿಸಲು ದಯವಿಟ್ಟು ಮೇಲೆ ನ್ಯಾಯಾಲಯದ ಮಟ್ಟ ಮತ್ತು ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ." : "Please choose Level of Court and District above to set the target court jurisdiction."}</span>
+                          </div>
+                        )}
 
-            <Field
-              label={isKn ? "ಸಂಕ್ಷಿಪ್ತ ಪರಿಚಯ (Bio)" : "Short Bio"}
-              error={advErr.bio}
-              hint={isKn ? "ನಿಮ್ಮ ಪರಿಣತಿಯ ಬಗ್ಗೆ ಸಂಕ್ಷಿಪ್ತ ವಿವರಣೆ (ಗರಿಷ್ಠ ೩೦೦ ಅಕ್ಷರಗಳು)" : "A brief description about your expertise (max 300 chars)"}
-            >
-              <div className="su-textarea-wrap">
-                <textarea
-                  className="su-textarea"
-                  rows={3}
-                  maxLength={300}
-                  placeholder={isKn ? "ಉದಾ. ಕ್ರಿಮಿನಲ್ ಕಾನೂನಿನಲ್ಲಿ ೧೦+ ವರ್ಷಗಳ ಅನುಭವ, ಜಾಮೀನು ಅರ್ಜಿಗಳು ಮತ್ತು ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳಲ್ಲಿ ಪರಿಣತಿ…" : "e.g. 10+ years in criminal defense, specializing in bail matters and district courts…"}
-                  value={adv.bio}
-                  onChange={(e) => setA("bio", e.target.value)}
-                  disabled={loading}
-                />
-                <span className="su-char-count">{adv.bio.length}/300</span>
-              </div>
-            </Field>
+                        {advErr.court && <p className="su-field-err" style={{ marginTop: 8 }}>⚠ {advErr.court}</p>}
+                      </div>
+                    </div>
+                  )}
 
-            <Field
-              label={isKn ? "ಪ್ರೊಫೈಲ್ ಚಿತ್ರ" : "Profile Image"}
-              required
-              error={advErr.avatarData}
-              hint={isKn ? "೨ MB ವರೆಗಿನ ಸ್ಪಷ್ಟ JPG, PNG, ಅಥವಾ WEBP ಚಿತ್ರವನ್ನು ಬಳಸಿ" : "Use a clear JPG, PNG, or WEBP image up to 2 MB"}
-            >
-              <div className="su-avatar-upload-card">
-                <div className="su-avatar-thumb-box">
-                  {adv.avatarData ? (
-                    <img
-                      src={adv.avatarData}
-                      alt="Profile preview"
-                      className="su-avatar-thumb-img"
-                    />
-                  ) : (
-                    <span>👤</span>
+                  {/* STEP 5: Location & Experience */}
+                  {activeStep === 5 && (
+                    <div className="su-step-section-fields su-fade-in">
+                      <div className="su-grid-2">
+                        <Field
+                          label={isKn ? "ನಗರ / ಸ್ಥಳದ ಹೆಸರು" : "City / Location Name"}
+                          required
+                          error={advErr.city}
+                          hint={isKn ? "ತಾಲೂಕು/ಜಿಲ್ಲೆಯಿಂದ ಸ್ವಯಂ-ಭರ್ತಿ ಅಥವಾ ಕಸ್ಟಮೈಸ್ ಮಾಡಿ" : "Auto-filled from Taluk/District or customize"}
+                        >
+                          <Input
+                            icon={ADMIN_ICONS.pin}
+                            placeholder={isKn ? "ಉದಾ: ಗೋಕಾಕ, ಬೆಳಗಾವಿ" : "e.g. Gokak, Belagavi"}
+                            value={adv.city}
+                            onChange={(e) => setA("city", e.target.value)}
+                            error={advErr.city}
+                            disabled={loading}
+                          />
+                        </Field>
+
+                        <Field label={isKn ? "ಅನುಭವದ ವರ್ಷಗಳು" : "Years of Experience"} error={advErr.experience}>
+                          <Select
+                            icon={ADMIN_ICONS.calendar}
+                            value={adv.experience}
+                            onChange={(e) => setA("experience", e.target.value)}
+                            disabled={loading}
+                          >
+                            <option value="">{isKn ? "ಅನುಭವವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select experience"}</option>
+                            {EXPERIENCE_YEARS.map((y) => (
+                              <option key={y} value={y}>{y}</option>
+                            ))}
+                          </Select>
+                        </Field>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 6: Bio & Profile Photo (Photo is OPTIONAL, shows Initials when not uploaded!) */}
+                  {activeStep === 6 && (
+                    <div className="su-step-section-fields su-fade-in">
+                      <Field
+                        label={isKn ? "ಸಂಕ್ಷಿಪ್ತ ಪರಿಚಯ (Bio)" : "Short Bio"}
+                        error={advErr.bio}
+                        hint={isKn ? "ನಿಮ್ಮ ಪರಿಣತಿಯ ಬಗ್ಗೆ ಸಂಕ್ಷಿಪ್ತ ವಿವರಣೆ (ಗರಿಷ್ಠ ೩೦೦ ಅಕ್ಷರಗಳು)" : "A brief description about your expertise (max 300 chars)"}
+                      >
+                        <div className="su-textarea-wrap">
+                          <textarea
+                            className="su-textarea"
+                            rows={3}
+                            maxLength={300}
+                            placeholder={isKn ? "ಉದಾ. ಕ್ರಿಮಿನಲ್ ಕಾನೂನಿನಲ್ಲಿ ೧೦+ ವರ್ಷಗಳ ಅನುಭವ, ಜಾಮೀನು ಅರ್ಜಿಗಳು ಮತ್ತು ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳಲ್ಲಿ ಪರಿಣತಿ…" : "e.g. 10+ years in criminal defense, specializing in bail matters and district courts…"}
+                            value={adv.bio}
+                            onChange={(e) => setA("bio", e.target.value)}
+                            disabled={loading}
+                          />
+                          <span className="su-char-count">{adv.bio.length}/300</span>
+                        </div>
+                      </Field>
+
+                      <Field
+                        label={isKn ? "ಪ್ರೊಫೈಲ್ ಚಿತ್ರ (ಐಚ್ಛಿಕ)" : "Profile Image (Optional)"}
+                        error={advErr.avatarData}
+                        hint={isKn ? "ಚಿತ್ರ ಐಚ್ಛಿಕವಾಗಿದೆ. ಫೋಟೋ ಸೇರಿಸದಿದ್ದರೆ ನಿಮ್ಮ ಹೆಸರಿನ ಆರಂಭಿಕ ಅಕ್ಷರಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತದೆ. ನಂತರ ಅಡ್ವೊಕೇಟ್ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ನಲ್ಲಿ ಫೋಟೋ ಸೇರಿಸಬಹುದು." : "Photo is optional. If not uploaded now, your initials avatar will be shown, and you can add your photo anytime from the Advocate Dashboard."}
+                      >
+                        <div className="su-avatar-upload-card">
+                          <div
+                            className="su-avatar-thumb-box"
+                            style={{
+                              background: adv.avatarData ? "transparent" : getAvatarColor(adv.fullName || "Advocate"),
+                            }}
+                          >
+                            {adv.avatarData ? (
+                              <img
+                                src={adv.avatarData}
+                                alt="Profile preview"
+                                className="su-avatar-thumb-img"
+                              />
+                            ) : (
+                              <span className="su-avatar-initials-text">
+                                {getInitials(adv.fullName)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="su-avatar-upload-body">
+                            <div className="su-avatar-status-pill">
+                              {adv.avatarData ? (
+                                <span className="su-avatar-badge-success">✓ {isKn ? "ಫೋಟೋ ಸೇರಿಸಲಾಗಿದೆ" : "Photo Selected"}</span>
+                              ) : (
+                                <span className="su-avatar-badge-initials">
+                                  🔤 {isKn ? `ಆರಂಭಿಕ ಅಕ್ಷರಗಳು: "${getInitials(adv.fullName)}"` : `Initials Avatar: "${getInitials(adv.fullName)}"`}
+                                </span>
+                              )}
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp"
+                              className="su-avatar-input"
+                              onChange={handleAvatarChange}
+                              disabled={loading}
+                            />
+                            {adv.avatarData && (
+                              <button
+                                type="button"
+                                className="su-avatar-remove-btn"
+                                onClick={() => setA("avatarData", "")}
+                                disabled={loading}
+                              >
+                                ✕ {isKn ? "ಫೋಟೋ ತೆಗೆದುಹಾಕಿ (ಅಕ್ಷರಗಳನ್ನು ಬಳಸಿ)" : "Remove photo (Use initials)"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </Field>
+                    </div>
+                  )}
+
+                  {/* STEP 7: Security & Verification */}
+                  {activeStep === 7 && (
+                    <div className="su-step-section-fields su-fade-in">
+                      <div className="su-grid-2">
+                        <Field label={t.password} required error={advErr.password}>
+                          <Input
+                            icon={ADMIN_ICONS.lock}
+                            type={showPw ? "text" : "password"}
+                            placeholder={isKn ? "ಕನಿಷ್ಠ ೬ ಅಕ್ಷರಗಳು" : "Min 6 characters"}
+                            value={adv.password}
+                            onChange={(e) => setA("password", e.target.value)}
+                            error={advErr.password}
+                            disabled={loading}
+                            rightEl={
+                              <button
+                                type="button"
+                                className="su-eye"
+                                onClick={() => setShowPw((p) => !p)}
+                              >
+                                {showPw ? "🙈" : "👁️"}
+                              </button>
+                            }
+                          />
+                          <PwStrength pw={adv.password} />
+                        </Field>
+
+                        <Field label={t.confirmPassword} required error={advErr.confirmPw}>
+                          <Input
+                            icon={ADMIN_ICONS.key}
+                            type={showCPw ? "text" : "password"}
+                            placeholder={isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಪುನರಾವರ್ತಿಸಿ" : "Re-enter password"}
+                            value={adv.confirmPw}
+                            onChange={(e) => setA("confirmPw", e.target.value)}
+                            error={advErr.confirmPw}
+                            disabled={loading}
+                            rightEl={
+                              adv.confirmPw && adv.password === adv.confirmPw ? (
+                                <span className="su-valid">{ADMIN_ICONS.check}</span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="su-eye"
+                                  onClick={() => setShowCPw((p) => !p)}
+                                >
+                                  {showCPw ? "🙈" : "👁️"}
+                                </button>
+                              )
+                            }
+                          />
+                        </Field>
+                      </div>
+
+                      <div className="su-verify-card">
+                        <span className="su-verify-shield-icon">{ADMIN_ICONS.shieldCheck}</span>
+                        <div className="su-verify-body">
+                          <div className="su-verify-title">
+                            {isKn ? "ಪರಿಶೀಲನಾ ಪ್ರಕ್ರಿಯೆ" : "Verification Process"}
+                          </div>
+                          <div className="su-verify-text">
+                            {isKn
+                              ? "ನಿಮ್ಮ ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆಯನ್ನು ನಮ್ಮ ನಿರ್ವಾಹಕ ತಂಡವು ಪರಿಶೀಲಿಸುತ್ತದೆ. ಅನುಮೋದನೆಯ ನಂತರ ಗ್ರಾಹಕರು ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಬಹುದು ಮತ್ತು ಸಮಾಲೋಚನೆ ವಿನಂತಿಗಳನ್ನು ನೇರವಾಗಿ ಕಳುಹಿಸಬಹುದು."
+                              : "Your Bar enrollment number will be verified by our admin team. Once approved on the Admin page, clients can find you and send consultation requests directly."}
+                          </div>
+                        </div>
+                      </div>
+
+                      <label className="su-agree">
+                        <input
+                          type="checkbox"
+                          checked={adv.agreeTerms}
+                          onChange={(e) => setA("agreeTerms", e.target.checked)}
+                        />
+                        <span>
+                          {isKn ? "ನಾನು ಸೇವಾ ನಿಯಮಗಳು, ಗೌಪ್ಯತಾ ನೀತಿ ಮತ್ತು ವಕೀಲರ ಮಾರ್ಗಸೂಚಿಗಳನ್ನು ಒಪ್ಪುತ್ತೇನೆ: " : "I agree to the "}
+                          <a href="/terms" target="_blank" rel="noreferrer">
+                            {isKn ? "ಸೇವಾ ನಿಯಮಗಳು" : "Terms of Service"}
+                          </a>
+                          ,{" "}
+                          <a href="/privacy" target="_blank" rel="noreferrer">
+                            {isKn ? "ಗೌಪ್ಯತಾ ನೀತಿ" : "Privacy Policy"}
+                          </a>{" "}
+                          {isKn ? "ಮತ್ತು " : "and "}
+                          <a href="/advocate-terms" target="_blank" rel="noreferrer">
+                            {isKn ? "ವಕೀಲರ ಮಾರ್ಗಸೂಚಿಗಳು" : "Advocate Guidelines"}
+                          </a>
+                        </span>
+                      </label>
+                      {advErr.agreeTerms && <p className="su-field-err">⚠ {advErr.agreeTerms}</p>}
+                    </div>
                   )}
                 </div>
-                <div className="su-avatar-upload-body">
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="su-avatar-input"
-                    onChange={handleAvatarChange}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </Field>
 
-            {/* Step 7: Security & Verification */}
-            <div className="su-form-section-title">
-              <span className="su-section-num">7</span> {t.security}
-            </div>
-
-            <div className="su-grid-2">
-              <Field label={t.password} required error={advErr.password}>
-                <Input
-                  icon="🔒"
-                  type={showPw ? "text" : "password"}
-                  placeholder={isKn ? "ಕನಿಷ್ಠ ೬ ಅಕ್ಷರಗಳು" : "Min 6 characters"}
-                  value={adv.password}
-                  onChange={(e) => setA("password", e.target.value)}
-                  error={advErr.password}
-                  disabled={loading}
-                  rightEl={
+                {/* Navigation Actions Bar */}
+                <div className="su-adv-nav-actions">
+                  {activeStep > 1 ? (
                     <button
                       type="button"
-                      className="su-eye"
-                      onClick={() => setShowPw((p) => !p)}
+                      className="su-btn-prev"
+                      onClick={handlePrevStep}
+                      disabled={loading}
                     >
-                      {showPw ? "🙈" : "👁️"}
+                      {ADMIN_ICONS.arrowLeft}
+                      <span>{isKn ? "ಹಿಂದಿನ ಹಂತ" : "Previous Step"}</span>
                     </button>
-                  }
-                />
-                <PwStrength pw={adv.password} />
-              </Field>
+                  ) : (
+                    <div />
+                  )}
 
-              <Field label={t.confirmPassword} required error={advErr.confirmPw}>
-                <Input
-                  icon="🔑"
-                  type={showCPw ? "text" : "password"}
-                  placeholder={isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಪುನರಾವರ್ತಿಸಿ" : "Re-enter password"}
-                  value={adv.confirmPw}
-                  onChange={(e) => setA("confirmPw", e.target.value)}
-                  error={advErr.confirmPw}
-                  disabled={loading}
-                  rightEl={
-                    adv.confirmPw && adv.password === adv.confirmPw ? (
-                      <span className="su-valid">✓</span>
-                    ) : (
+                  <div className="su-adv-nav-right">
+                    {activeStep < 7 ? (
                       <button
                         type="button"
-                        className="su-eye"
-                        onClick={() => setShowCPw((p) => !p)}
+                        className="su-btn-next"
+                        onClick={handleNextStep}
+                        disabled={loading}
                       >
-                        {showCPw ? "🙈" : "👁️"}
+                        <span>{isKn ? "ಮುಂದಿನ ಹಂತ" : "Next Step"} ({activeStep + 1}/7)</span>
+                        {ADMIN_ICONS.arrowRight}
                       </button>
-                    )
-                  }
-                />
-              </Field>
-            </div>
+                    ) : (
+                      <button
+                        type="submit"
+                        className="su-btn-advocate su-btn-submit"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <><span className="su-spinner" /> {t.registering}</>
+                        ) : (
+                          <>{ADMIN_ICONS.sparkle} <span>{t.createAdvocateBtn}</span> {ADMIN_ICONS.arrowRight}</>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-            {/* Advocate verification note */}
-            <div className="su-verify-card">
-              <span className="su-verify-shield-icon">🛡️</span>
-              <div className="su-verify-body">
-                <div className="su-verify-title">
-                  {isKn ? "ಪರಿಶೀಲನಾ ಪ್ರಕ್ರಿಯೆ" : "Verification Process"}
-                </div>
-                <div className="su-verify-text">
-                  {isKn
-                    ? "ನಿಮ್ಮ ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆಯನ್ನು ನಮ್ಮ ನಿರ್ವಾಹಕ ತಂಡವು ಪರಿಶೀಲಿಸುತ್ತದೆ. ಅನುಮೋದನೆಯ ನಂತರ ಗ್ರಾಹಕರು ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಬಹುದು ಮತ್ತು ಸಮಾಲೋಚನೆ ವಿನಂತಿಗಳನ್ನು ನೇರವಾಗಿ ಕಳುಹಿಸಬಹುದು."
-                    : "Your Bar enrollment number will be verified by our admin team. Once approved on the Admin page, clients can find you and send consultation requests directly."}
-                </div>
+                <p className="su-login-link" style={{ marginTop: 24 }}>
+                  {t.alreadyAdvocate}{" "}
+                  <Link to="/login">
+                    {t.signInHere} →
+                  </Link>
+                </p>
               </div>
             </div>
-
-            <label className="su-agree">
-              <input
-                type="checkbox"
-                checked={adv.agreeTerms}
-                onChange={(e) => setA("agreeTerms", e.target.checked)}
-              />
-              <span>
-                {isKn ? "ನಾನು ಸೇವಾ ನಿಯಮಗಳು, ಗೌಪ್ಯತಾ ನೀತಿ ಮತ್ತು ವಕೀಲರ ಮಾರ್ಗಸೂಚಿಗಳನ್ನು ಒಪ್ಪುತ್ತೇನೆ: " : "I agree to the "}
-                <a href="/terms" target="_blank" rel="noreferrer">
-                  {isKn ? "ಸೇವಾ ನಿಯಮಗಳು" : "Terms of Service"}
-                </a>
-                ,{" "}
-                <a href="/privacy" target="_blank" rel="noreferrer">
-                  {isKn ? "ಗೌಪ್ಯತಾ ನೀತಿ" : "Privacy Policy"}
-                </a>{" "}
-                {isKn ? "ಮತ್ತು " : "and "}
-                <a href="/advocate-terms" target="_blank" rel="noreferrer">
-                  {isKn ? "ವಕೀಲರ ಮಾರ್ಗಸೂಚಿಗಳು" : "Advocate Guidelines"}
-                </a>
-              </span>
-            </label>
-            {advErr.agreeTerms && <p className="su-field-err">⚠ {advErr.agreeTerms}</p>}
-
-            <button type="submit" className="su-btn-advocate su-btn-lg" disabled={loading}>
-              {loading ? (
-                <><span className="su-spinner" /> {t.registering}</>
-              ) : (
-                <><span>⚖️</span> {t.createAdvocateBtn} →</>
-              )}
-            </button>
-
-            <p className="su-login-link">
-              {t.alreadyAdvocate}{" "}
-              <Link to="/login">
-                {t.signInHere} →
-              </Link>
-            </p>
           </form>
         )}
       </div>
