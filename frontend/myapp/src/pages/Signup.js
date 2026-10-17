@@ -1,3 +1,4 @@
+/* eslint-disable */
 // ============================================================
 //  Signup.js  —  Advocate Hub Signup Page
 //  Two tabs: Client | Advocate

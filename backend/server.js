@@ -44,6 +44,7 @@ const PAYMENTS_FILE = path.join(DATA_DIR, "payments.json");
 const CLARITY_FILE = path.join(DATA_DIR, "clarityguide.json");
 const DOCUMENTS_PURCHASE_FILE_COMMA = path.join(DATA_DIR, "documentspurchase,json");
 const DOCUMENTS_PURCHASE_FILE_DOT = path.join(DATA_DIR, "documentspurchase.json");
+const MESSAGES_FILE = path.join(DATA_DIR, "messages.json");
 const MAX_BODY = 5 * 1024 * 1024; // 5 MB (base64 avatars)
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:3000,http://localhost:3001")
@@ -188,6 +189,16 @@ function loadPayments() {
   return defaultPayments;
 }
 function savePayments(list) { saveCollection("payments", PAYMENTS_FILE, list); }
+function loadMessages() {
+  const stored = dataStore.getCollection("messages");
+  if (stored) return stored;
+  const list = readJson(MESSAGES_FILE, null);
+  if (Array.isArray(list)) return list;
+  const defaultMessages = [];
+  writeJson(MESSAGES_FILE, defaultMessages);
+  return defaultMessages;
+}
+function saveMessages(list) { saveCollection("messages", MESSAGES_FILE, list); }
 function loadClarityGuide() {
   return loadCollection("clarity_guide", CLARITY_FILE);
 }
@@ -1493,6 +1504,124 @@ async function route(request, response) {
     if (remaining.length === payments.length) throw new HttpError(404, "Payment record not found");
     savePayments(remaining);
     return send(request, response, 200, { ok: true });
+  }
+
+  // Live Chat Messages (Real-Time Chit-Chat Stored in backend messages.json)
+  if (method === "GET" && p === "/api/messages") {
+    const list = loadMessages();
+    const advId = url.searchParams.get("advocateId");
+    const cliId = url.searchParams.get("clientId");
+    const key = url.searchParams.get("key");
+    const since = url.searchParams.get("since");
+
+    let filtered = list;
+    if (key) {
+      filtered = filtered.filter((m) => m.key === key);
+    } else if (advId && cliId) {
+      filtered = filtered.filter((m) =>
+        (Number(m.advocateId) === Number(advId) && Number(m.clientId) === Number(cliId)) ||
+        m.key === `chat_${cliId}_${advId}`
+      );
+    } else if (advId) {
+      filtered = filtered.filter((m) => Number(m.advocateId) === Number(advId));
+    } else if (cliId) {
+      filtered = filtered.filter((m) => Number(m.clientId) === Number(cliId));
+    }
+
+    if (since) {
+      const sinceTime = isNaN(Number(since)) ? new Date(since).getTime() : Number(since);
+      if (!isNaN(sinceTime)) {
+        filtered = filtered.filter((m) => new Date(m.t).getTime() > sinceTime);
+      }
+    }
+
+    filtered.sort((a, b) => new Date(a.t).getTime() - new Date(b.t).getTime());
+    return send(request, response, 200, filtered);
+  }
+
+  if (method === "GET" && p === "/api/messages/conversations") {
+    const advId = url.searchParams.get("advocateId");
+    const cliId = url.searchParams.get("clientId");
+    const messages = loadMessages();
+    let filtered = messages;
+    if (advId) filtered = filtered.filter((m) => Number(m.advocateId) === Number(advId));
+    if (cliId) filtered = filtered.filter((m) => Number(m.clientId) === Number(cliId));
+
+    const convMap = {};
+    for (const msg of filtered) {
+      const k = msg.key || `chat_${msg.clientId}_${msg.advocateId}`;
+      if (!convMap[k]) {
+        convMap[k] = {
+          key: k,
+          clientId: msg.clientId,
+          advocateId: msg.advocateId,
+          clientName: msg.clientName,
+          clientAvatar: msg.clientAvatar,
+          advocateName: msg.advocateName,
+          advocateAvatar: msg.advocateAvatar,
+          lastMsg: msg,
+          count: 0,
+        };
+      }
+      convMap[k].count++;
+      if (new Date(msg.t).getTime() >= new Date(convMap[k].lastMsg.t).getTime()) {
+        convMap[k].lastMsg = msg;
+        if (msg.clientName) convMap[k].clientName = msg.clientName;
+        if (msg.clientAvatar) convMap[k].clientAvatar = msg.clientAvatar;
+        if (msg.advocateName) convMap[k].advocateName = msg.advocateName;
+        if (msg.advocateAvatar) convMap[k].advocateAvatar = msg.advocateAvatar;
+      }
+    }
+    return send(request, response, 200, Object.values(convMap));
+  }
+
+  if (method === "POST" && p === "/api/messages") {
+    const body = await readBody(request);
+    if (!body || (!body.text && !body.attachment)) {
+      throw new HttpError(400, "Message text or attachment is required");
+    }
+    const cliId = Number(body.clientId) || body.clientId;
+    const advId = Number(body.advocateId) || body.advocateId;
+    if (!cliId || !advId) {
+      throw new HttpError(400, "clientId and advocateId are required");
+    }
+
+    const messages = loadMessages();
+    const newMsg = {
+      id: String(body.id || ("msg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7))),
+      key: String(body.key || `chat_${cliId}_${advId}`),
+      clientId: cliId,
+      advocateId: advId,
+      from: body.from === "advocate" ? "advocate" : "client",
+      text: String(body.text || "").trim(),
+      clientName: body.clientName || "",
+      clientAvatar: body.clientAvatar || "",
+      advocateName: body.advocateName || "",
+      advocateAvatar: body.advocateAvatar || "",
+      attachment: body.attachment || null,
+      replyTo: body.replyTo || null,
+      t: body.t || new Date().toISOString(),
+    };
+
+    messages.push(newMsg);
+    saveMessages(messages);
+    return send(request, response, 201, newMsg);
+  }
+
+  if (method === "DELETE" && p === "/api/messages") {
+    const id = url.searchParams.get("id");
+    const key = url.searchParams.get("key");
+    const messages = loadMessages();
+    let remaining = messages;
+    if (id) {
+      remaining = messages.filter((m) => String(m.id) !== String(id));
+    } else if (key) {
+      remaining = messages.filter((m) => m.key !== key);
+    } else {
+      throw new HttpError(400, "Missing id or key to delete");
+    }
+    saveMessages(remaining);
+    return send(request, response, 200, { ok: true, deleted: messages.length - remaining.length });
   }
 
   // Admin-only writes

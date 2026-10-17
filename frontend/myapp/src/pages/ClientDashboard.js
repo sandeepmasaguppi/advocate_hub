@@ -9,13 +9,6 @@ const CLIENT_OBJ_KEY = "law4u_client";
 const CLIENT_TOKEN_KEY = "law4u_client_token";
 const LANG_KEY = "law4u_language";
 
-const AVATAR_PRESETS = [
-  "/uploads/chetan.png",
-  "/uploads/karna.png",
-  "/uploads/anand.png",
-  "/uploads/kiran.png",
-  "/uploads/deep-p.png",
-];
 
 const PAY_I18N = {
   en: {
@@ -487,8 +480,20 @@ export default function ClientDashboard() {
     if (!selected) return;
     const key = `chat_${clientId}_${selected.id}`;
     const raw = localStorage.getItem(key);
-    setMessages(raw ? JSON.parse(raw) : []);
-  }, [selected, clientId]);
+    if (raw) {
+      try { setMessages(JSON.parse(raw)); } catch {}
+    }
+    // Fetch live messages from backend messages.json
+    api(`/api/messages?clientId=${clientId}&advocateId=${selected.id}`)
+      .then((serverMsgs) => {
+        if (Array.isArray(serverMsgs) && serverMsgs.length > 0) {
+          localStorage.setItem(key, JSON.stringify(serverMsgs));
+          setMessages(serverMsgs);
+          scrollToBottom("smooth");
+        }
+      })
+      .catch(() => {});
+  }, [selected, clientId, scrollToBottom]);
 
   // Real-time listener for advocate messages across tabs / BroadcastChannel / intervals with WhatsApp audio chime & popup toast
   useEffect(() => {
@@ -602,9 +607,10 @@ export default function ClientDashboard() {
     window.addEventListener("law4u_chat_updated", handleChatUpdated);
     window.addEventListener("storage", handleStorage);
 
-    // 4. Guaranteed 1000ms polling heartbeat interval
+    // 4. Guaranteed 1000ms polling heartbeat interval (both localStorage and live server messages.json)
     let lastMsgCount = -1;
     let lastAdvId = 0;
+    let isPollingServer = false;
     const interval = setInterval(() => {
       const curSel = selectedRef.current;
       if (curSel && curSel.id) {
@@ -622,6 +628,36 @@ export default function ClientDashboard() {
             }
           }
         } catch {}
+
+        // Second-to-second live sync from server backend messages.json
+        if (clientId && !isPollingServer) {
+          isPollingServer = true;
+          api(`/api/messages?clientId=${clientId}&advocateId=${curSel.id}`)
+            .then((serverMsgs) => {
+              if (Array.isArray(serverMsgs)) {
+                const raw = localStorage.getItem(k);
+                const localCount = raw ? JSON.parse(raw).length : 0;
+                if (serverMsgs.length > localCount) {
+                  localStorage.setItem(k, JSON.stringify(serverMsgs));
+                  setMessages(serverMsgs);
+                  setMessagesVersion(v => v + 1);
+                  scrollToBottom("smooth");
+
+                  const latest = serverMsgs[serverMsgs.length - 1];
+                  if (latest && latest.from === "advocate") {
+                    const msgTime = new Date(latest.t).getTime();
+                    if (msgTime > lastAlertedTimeRef.current) {
+                      triggerAdvocateNotification(latest);
+                    }
+                  }
+                }
+              }
+            })
+            .catch(() => {})
+            .finally(() => {
+              isPollingServer = false;
+            });
+        }
       }
       try {
         const notifRaw = localStorage.getItem(`law4u_notify_client_${clientId}`);
@@ -724,6 +760,25 @@ export default function ClientDashboard() {
     setPendingAttachment(null);
     setShowEmojiPicker(false);
     setReplyingTo(null);
+
+    // Persist message to backend server messages.json
+    api("/api/messages", {
+      method: "POST",
+      body: {
+        clientId,
+        advocateId: selected.id,
+        key,
+        from: "client",
+        text: textToSend,
+        attachment: pendingAttachment ? { ...pendingAttachment } : null,
+        replyTo: newMsgObj.replyTo,
+        clientName: clientObj?.name || (clientId ? `Client #${clientId}` : "Client"),
+        clientAvatar: clientAvatar || "",
+        advocateName: selected?.name || "Advocate",
+        advocateAvatar: selected?.avatar || "",
+        t: newMsgObj.t,
+      },
+    }).catch((err) => console.warn("Failed to persist client message to server:", err));
 
     // Sync with law4u_requests so advocate dashboard updates immediately
     try {

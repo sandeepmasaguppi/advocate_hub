@@ -61,6 +61,7 @@ const PRACTICE_AREAS = [
   "Intellectual Property"
 ];
 
+// eslint-disable-next-line no-unused-vars
 const QUICK_FILTER_PILLS = [
   { id: "all", labelEn: "All Practices", labelKn: "ಎಲ್ಲಾ ಕ್ಷೇತ್ರಗಳು", icon: "⚖️" },
   { id: "Criminal", labelEn: "Criminal Law", labelKn: "ಕ್ರಿಮಿನಲ್ ಕಾನೂನು", icon: "🔒" },

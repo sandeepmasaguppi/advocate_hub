@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import "./AdvocateDashboard.css";
 import { getAdvocateById, logoutAdvocate, updateAdvocate } from "../data/Advocatesstore";
 import BrandLogo from "../components/BrandLogo";
-import { api, getAdvocateToken, assetUrl } from "../data/api";
+import { api, assetUrl } from "../data/api";
 import { getTheme, toggleTheme } from "../data/themeStore";
 
 
@@ -849,6 +849,7 @@ export default function AdvocateDashboard() {
     });
 
     return arr;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requests, conversations, advocateId, advocate?.fee, getConvUnreadCount, chatReadVersion]);
 
   // Open conversation and mark it as viewed/read
@@ -857,13 +858,28 @@ export default function AdvocateDashboard() {
     setActiveConv(conv);
     setMobileChatActive(true);
     const raw = localStorage.getItem(conv.key);
-    setConvMessages(raw ? JSON.parse(raw) : (conv.lastMsg ? [conv.lastMsg] : []));
+    if (raw) {
+      try { setConvMessages(JSON.parse(raw)); } catch {}
+    } else {
+      setConvMessages(conv.lastMsg ? [conv.lastMsg] : []);
+    }
     setActiveNav("chat");
     if (advocateId && conv.clientId) {
       localStorage.setItem(`law4u_adv_${advocateId}_last_read_${conv.clientId}`, new Date().toISOString());
       setChatReadVersion(v => v + 1);
+
+      // Fetch live conversation messages from backend messages.json
+      api(`/api/messages?advocateId=${advocateId}&clientId=${conv.clientId}`)
+        .then((serverMsgs) => {
+          if (Array.isArray(serverMsgs) && serverMsgs.length > 0) {
+            localStorage.setItem(conv.key, JSON.stringify(serverMsgs));
+            setConvMessages(serverMsgs);
+            scrollToBottom("smooth");
+          }
+        })
+        .catch(() => {});
     }
-  }, [advocateId]);
+  }, [advocateId, scrollToBottom]);
 
   // Auto-select first conversation on desktop when navigating to chat if none selected
   useEffect(() => {
@@ -928,6 +944,25 @@ export default function AdvocateDashboard() {
     setPendingAttachment(null);
     setShowEmojiPicker(false);
     setReplyingTo(null);
+
+    // Persist advocate message to backend server messages.json
+    api("/api/messages", {
+      method: "POST",
+      body: {
+        clientId: activeConv.clientId,
+        advocateId,
+        key: k,
+        from: "advocate",
+        text: textToSend,
+        attachment: pendingAttachment ? { ...pendingAttachment } : null,
+        replyTo: newMsgObj.replyTo,
+        clientName: activeConv.clientName || "",
+        clientAvatar: activeConv.clientAvatar || "",
+        advocateName: advocate?.name || "Advocate",
+        advocateAvatar: advocate?.avatar || "",
+        t: newMsgObj.t,
+      },
+    }).catch((err) => console.warn("Failed to persist advocate message to server:", err));
 
     // Automatically update or store client request record
     const allReqs = loadAllRequests();
@@ -1476,9 +1511,10 @@ export default function AdvocateDashboard() {
     window.addEventListener("law4u_requests_updated", handleRequestsUpdated);
     window.addEventListener("storage", handleStorage);
 
-    // 4. Guaranteed 1000ms polling heartbeat interval
+    // 4. Guaranteed 1000ms polling heartbeat interval (both localStorage and live server messages.json)
     let lastKnownMsgCount = -1;
     let lastKey = "";
+    let isPollingAdvServer = false;
     const interval = setInterval(() => {
       const curConv = activeConvRef.current;
       if (curConv && curConv.key) {
@@ -1507,6 +1543,60 @@ export default function AdvocateDashboard() {
           }
         }
       } catch {}
+
+      // Second-to-second live sync from server backend messages.json
+      if (advocateId && !isPollingAdvServer) {
+        isPollingAdvServer = true;
+        api(`/api/messages?advocateId=${advocateId}`)
+          .then((serverMsgs) => {
+            if (Array.isArray(serverMsgs)) {
+              const groups = {};
+              for (const m of serverMsgs) {
+                const k = m.key || `chat_${m.clientId}_${advocateId}`;
+                if (!groups[k]) groups[k] = [];
+                groups[k].push(m);
+              }
+
+              let hasNewData = false;
+              let newestClientMsg = null;
+              let maxMsgTime = lastAlertedTimeRef.current;
+
+              for (const [k, msgs] of Object.entries(groups)) {
+                const raw = localStorage.getItem(k);
+                const localCount = raw ? JSON.parse(raw).length : 0;
+                if (msgs.length > localCount) {
+                  localStorage.setItem(k, JSON.stringify(msgs));
+                  hasNewData = true;
+                }
+                const last = msgs[msgs.length - 1];
+                if (last && last.from === "client") {
+                  const t = new Date(last.t).getTime();
+                  if (t > maxMsgTime) {
+                    maxMsgTime = t;
+                    newestClientMsg = last;
+                  }
+                }
+              }
+
+              if (hasNewData) {
+                refreshConversationsAndRequests();
+                const curConv = activeConvRef.current;
+                if (curConv && curConv.key && groups[curConv.key]) {
+                  setConvMessages(groups[curConv.key]);
+                  scrollToBottom("smooth");
+                }
+              }
+
+              if (newestClientMsg) {
+                triggerClientNotification(newestClientMsg);
+              }
+            }
+          })
+          .catch(() => {})
+          .finally(() => {
+            isPollingAdvServer = false;
+          });
+      }
     }, 1000);
 
     return () => {

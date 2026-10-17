@@ -9,6 +9,7 @@ const COLLECTIONS = {
   clarity_guide: "clarityguide.json",
   document_purchases: "documentspurchase.json",
   admin_notifications: "admin_notifications.json",
+  messages: "messages.json",
 };
 
 let client = null;
