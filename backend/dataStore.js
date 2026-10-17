@@ -10,6 +10,7 @@ const COLLECTIONS = {
   document_purchases: "documentspurchase.json",
   admin_notifications: "admin_notifications.json",
   messages: "messages.json",
+  conversations: "conversations.json",
 };
 
 let client = null;

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getAdvocates, loadAdvocates, getAdvocateRatingSummary, submitAdvocateRating } from "../data/Advocatesstore";
 import { assetUrl, api } from "../data/api";
 import { getTheme, setTheme as setGlobalTheme } from "../data/themeStore";
+import { initSocket, joinConversation, emitSendMessage, emitEditMessage, emitDeleteForEveryone, emitDeleteForMe, emitForwardMessage } from "../data/socket";
 import "./ClientDashboard.css";
 const SESSION_KEY = "law4u_client_id";
 const CLIENT_OBJ_KEY = "law4u_client";
@@ -244,6 +245,26 @@ export default function ClientDashboard() {
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
   const [incomingToast, setIncomingToast] = useState(null);
+
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
+  const [forwardMessageData, setForwardMessageData] = useState(null);
+  const [forwardRecipients, setForwardRecipients] = useState([]);
+  const [forwardSearchQuery, setForwardSearchQuery] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteMessageData, setDeleteMessageData] = useState(null);
+  const longPressTimerRef = useRef(null);
+
+  const handleTouchStart = (idx) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setActiveMenuMsgIndex(idx);
+    }, 500);
+  };
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
 
   const selectedRef = useRef(selected);
   const messagesEndRef = useRef(null);
@@ -736,6 +757,124 @@ export default function ClientDashboard() {
     };
   }, [clientId, advocates, scrollToBottom]);
 
+  // Socket.IO Real-Time Messaging & Message Actions (Receive, Edit, Delete, Forward)
+  useEffect(() => {
+    if (!clientId) return;
+    const socket = initSocket({ role: "client", id: clientId });
+    if (selected?.id) {
+      joinConversation(`chat_${clientId}_${selected.id}`);
+    }
+
+    const handleReceiveMessage = (msg) => {
+      if (!msg) return;
+      if (Number(msg.clientId) !== Number(clientId)) return;
+
+      const k = msg.key || `chat_${clientId}_${msg.advocateId}`;
+      const raw = localStorage.getItem(k);
+      const currentList = raw ? JSON.parse(raw) : [];
+
+      if (!currentList.some((m) => String(m.id) === String(msg.id) || (m.t === msg.t && m.text === msg.text))) {
+        const nextList = [...currentList, msg];
+        localStorage.setItem(k, JSON.stringify(nextList));
+        setMessagesVersion((v) => v + 1);
+
+        const curSel = selectedRef.current;
+        if (curSel && Number(curSel.id) === Number(msg.advocateId)) {
+          setMessages(nextList);
+          scrollToBottom("smooth");
+        }
+        if (msg.from === "advocate") {
+          playWhatsAppNotificationSound();
+          if (!curSel || Number(curSel.id) !== Number(msg.advocateId)) {
+            setIncomingToast({
+              advocateId: msg.advocateId,
+              advocateName: msg.advocateName || "Advocate",
+              advocateAvatar: msg.advocateAvatar || "",
+              text: msg.text || (msg.attachment ? "📎 Attachment" : "New message"),
+              t: msg.t || new Date().toISOString(),
+            });
+          }
+        }
+      }
+    };
+
+    const handleMessageEdited = (data) => {
+      if (!data || !data.messageId) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          String(m.id) === String(data.messageId)
+            ? { ...m, text: data.text, isEdited: true, editedAt: data.editedAt }
+            : m
+        )
+      );
+      const curSel = selectedRef.current;
+      if (curSel) {
+        const k = `chat_${clientId}_${curSel.id}`;
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const list = JSON.parse(raw);
+          const next = list.map((m) =>
+            String(m.id) === String(data.messageId)
+              ? { ...m, text: data.text, isEdited: true, editedAt: data.editedAt }
+              : m
+          );
+          localStorage.setItem(k, JSON.stringify(next));
+        }
+      }
+    };
+
+    const handleMessageDeleted = (data) => {
+      if (!data || !data.messageId) return;
+      setMessages((prev) =>
+        prev.map((m) =>
+          String(m.id) === String(data.messageId)
+            ? {
+                ...m,
+                isDeleted: true,
+                deletedForEveryone: true,
+                text: "",
+                attachment: null,
+                deletedAt: data.deletedAt,
+                deletedBy: data.deletedBy,
+              }
+            : m
+        )
+      );
+      const curSel = selectedRef.current;
+      if (curSel) {
+        const k = `chat_${clientId}_${curSel.id}`;
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const list = JSON.parse(raw);
+          const next = list.map((m) =>
+            String(m.id) === String(data.messageId)
+              ? {
+                  ...m,
+                  isDeleted: true,
+                  deletedForEveryone: true,
+                  text: "",
+                  attachment: null,
+                  deletedAt: data.deletedAt,
+                  deletedBy: data.deletedBy,
+                }
+              : m
+          );
+          localStorage.setItem(k, JSON.stringify(next));
+        }
+      }
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+    socket.on("message_edited", handleMessageEdited);
+    socket.on("message_deleted", handleMessageDeleted);
+
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+      socket.off("message_edited", handleMessageEdited);
+      socket.off("message_deleted", handleMessageDeleted);
+    };
+  }, [clientId, selected?.id, scrollToBottom]);
+
   // Emoji & File attachment states for Client chat
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [pendingAttachment, setPendingAttachment] = useState(null);
@@ -815,23 +954,29 @@ export default function ClientDashboard() {
     setShowEmojiPicker(false);
     setReplyingTo(null);
 
-    // Persist message to backend server messages.json
+    const msgPayload = {
+      id: newMsgObj.id || `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      clientId,
+      advocateId: selected.id,
+      key,
+      from: "client",
+      text: textToSend,
+      attachment: pendingAttachment ? { ...pendingAttachment } : null,
+      replyTo: newMsgObj.replyTo,
+      clientName: clientObj?.name || (clientId ? `Client #${clientId}` : "Client"),
+      clientAvatar: clientAvatar || "",
+      advocateName: selected?.name || "Advocate",
+      advocateAvatar: selected?.avatar || "",
+      t: newMsgObj.t,
+    };
+
+    // Real-Time Delivery via Socket.IO
+    emitSendMessage(msgPayload);
+
+    // Persist message to backend server messages.json & MongoDB
     api("/api/messages", {
       method: "POST",
-      body: {
-        clientId,
-        advocateId: selected.id,
-        key,
-        from: "client",
-        text: textToSend,
-        attachment: pendingAttachment ? { ...pendingAttachment } : null,
-        replyTo: newMsgObj.replyTo,
-        clientName: clientObj?.name || (clientId ? `Client #${clientId}` : "Client"),
-        clientAvatar: clientAvatar || "",
-        advocateName: selected?.name || "Advocate",
-        advocateAvatar: selected?.avatar || "",
-        t: newMsgObj.t,
-      },
+      body: msgPayload,
     }).catch((err) => console.warn("Failed to persist client message to server:", err));
 
     // Sync with law4u_requests so advocate dashboard updates immediately
@@ -931,110 +1076,241 @@ export default function ClientDashboard() {
     navigate('/client-dashboard', { replace: true });
   };
 
-  // Delete message (WhatsApp style: "🚫 This message was deleted")
-  const handleDeleteChatMessage = (msgIndex) => {
-    if (!selected) return;
+  // Delete for everyone (WhatsApp style tombstone: "🚫 This message was deleted")
+  const handleDeleteForEveryone = async (msg) => {
+    if (!msg || !selected) return;
     const key = `chat_${clientId}_${selected.id}`;
-    const raw = localStorage.getItem(key);
-    if (!raw) return;
-    const msgs = JSON.parse(raw);
-    if (!msgs[msgIndex]) return;
+    const deletedAt = new Date().toISOString();
 
-    msgs[msgIndex] = {
-      ...msgs[msgIndex],
-      isDeleted: true,
-      text: "",
-      attachment: null,
-      deletedAt: new Date().toISOString(),
-      deletedBy: "client"
-    };
+    const updated = messages.map((m) =>
+      String(m.id) === String(msg.id)
+        ? {
+            ...m,
+            isDeleted: true,
+            deletedForEveryone: true,
+            text: "",
+            attachment: null,
+            deletedAt,
+            deletedBy: "client",
+          }
+        : m
+    );
 
-    localStorage.setItem(key, JSON.stringify(msgs));
-    setMessages(msgs);
+    setMessages(updated);
+    localStorage.setItem(key, JSON.stringify(updated));
+    setDeleteDialogOpen(false);
+    setDeleteMessageData(null);
+    setActiveMenuMsgIndex(null);
 
-    // Update law4u_requests if this was the last message
+    // Socket.IO real-time emission
+    emitDeleteForEveryone({ messageId: msg.id, role: "client", userId: clientId });
+
+    // REST persistence to MongoDB
     try {
-      const allReqsRaw = localStorage.getItem("law4u_requests");
-      if (allReqsRaw) {
-        const allReqs = JSON.parse(allReqsRaw);
-        const advReqs = allReqs[selected.id] || [];
-        const mIdx = advReqs.findIndex(r => String(r.clientId || r.id) === String(clientId));
-        if (mIdx >= 0) {
-          const lastM = msgs[msgs.length - 1];
-          advReqs[mIdx].lastMessage = lastM?.isDeleted ? "🚫 This message was deleted" : (lastM?.text || "");
-          allReqs[selected.id] = advReqs;
-          localStorage.setItem("law4u_requests", JSON.stringify(allReqs));
-        }
-      }
-    } catch {}
+      await api("/api/messages/delete-for-everyone", {
+        method: "POST",
+        body: { messageId: msg.id, role: "client", userId: clientId },
+      });
+    } catch (err) {
+      console.warn("Failed to delete for everyone on server:", err);
+    }
 
+    // Broadcast across tabs
     try {
       const channel = new BroadcastChannel("law4u_chat_channel");
       channel.postMessage({
-        type: "CHAT_UPDATED",
-        clientId,
-        advocateId: selected.id,
-        key
+        type: "MESSAGE_DELETED",
+        messageId: msg.id,
+        key,
+        isDeleted: true,
+        deletedForEveryone: true,
+        deletedAt,
+        deletedBy: "client",
       });
+      channel.postMessage({ type: "CHAT_UPDATED", clientId, advocateId: selected.id, key });
       channel.close();
-    } catch (bcErr) {}
+    } catch {}
 
     window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
     window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key, clientId, advocateId: selected.id } }));
   };
 
-  // Edit message (adds "Edited" tag and updates text)
-  const handleSaveEditChatMessage = (msgIndex, newText) => {
-    if (!selected || !newText.trim()) return;
+  // Delete for me (hides message for currently logged-in user only)
+  const handleDeleteForMe = async (msg) => {
+    if (!msg || !selected) return;
     const key = `chat_${clientId}_${selected.id}`;
-    const raw = localStorage.getItem(key);
-    if (!raw) return;
-    const msgs = JSON.parse(raw);
-    if (!msgs[msgIndex]) return;
+    const userTag = `client_${clientId}`;
 
-    msgs[msgIndex] = {
-      ...msgs[msgIndex],
-      text: newText.trim(),
-      isEdited: true,
-      editedAt: new Date().toISOString()
-    };
+    const updated = messages.filter((m) => String(m.id) !== String(msg.id));
+    setMessages(updated);
+    localStorage.setItem(key, JSON.stringify(updated));
+    setDeleteDialogOpen(false);
+    setDeleteMessageData(null);
+    setActiveMenuMsgIndex(null);
 
-    localStorage.setItem(key, JSON.stringify(msgs));
-    setMessages(msgs);
+    // Socket.IO & REST persistence
+    emitDeleteForMe({ messageId: msg.id, userIdentifier: userTag });
+    try {
+      await api("/api/messages/delete-for-me", {
+        method: "POST",
+        body: { messageId: msg.id, userIdentifier: userTag },
+      });
+    } catch (err) {
+      console.warn("Failed to delete for me on server:", err);
+    }
+  };
+
+  // Edit message (adds "Edited" tag, updates text and syncs real-time)
+  const handleSaveEditChatMessage = async (msgIndex, newText) => {
+    if (!selected || !newText.trim()) return;
+    const msg = messages[msgIndex];
+    if (!msg) return;
+    const key = `chat_${clientId}_${selected.id}`;
+    const trimmed = newText.trim();
+    const editedAt = new Date().toISOString();
+
+    const updated = messages.map((m, idx) =>
+      idx === msgIndex ? { ...m, text: trimmed, isEdited: true, editedAt } : m
+    );
+
+    localStorage.setItem(key, JSON.stringify(updated));
+    setMessages(updated);
     setEditingMsgIndex(null);
     setEditingMsgText("");
 
-    // Update law4u_requests if this was the last message
+    // Socket.IO real-time emission
+    emitEditMessage({ messageId: msg.id, newText: trimmed, key });
+
+    // REST persistence to MongoDB
     try {
-      const allReqsRaw = localStorage.getItem("law4u_requests");
-      if (allReqsRaw) {
-        const allReqs = JSON.parse(allReqsRaw);
-        const advReqs = allReqs[selected.id] || [];
-        const mIdx = advReqs.findIndex(r => String(r.clientId || r.id) === String(clientId));
-        if (mIdx >= 0) {
-          const lastM = msgs[msgs.length - 1];
-          advReqs[mIdx].lastMessage = lastM?.isDeleted ? "🚫 This message was deleted" : (lastM?.text || "");
-          allReqs[selected.id] = advReqs;
-          localStorage.setItem("law4u_requests", JSON.stringify(allReqs));
-        }
-      }
-    } catch {}
+      await api("/api/messages/edit", {
+        method: "PUT",
+        body: { messageId: msg.id, text: trimmed, newText: trimmed, key, role: "client", userId: clientId },
+      });
+    } catch (err) {
+      console.warn("Failed to save edited message on server:", err);
+    }
 
     try {
       const channel = new BroadcastChannel("law4u_chat_channel");
       channel.postMessage({
-        type: "CHAT_UPDATED",
-        clientId,
-        advocateId: selected.id,
-        key
+        type: "MESSAGE_EDITED",
+        messageId: msg.id,
+        key,
+        text: trimmed,
+        isEdited: true,
+        editedAt,
       });
+      channel.postMessage({ type: "CHAT_UPDATED", clientId, advocateId: selected.id, key });
       channel.close();
-    } catch (bcErr) {}
+    } catch {}
 
     window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
     window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key, clientId, advocateId: selected.id } }));
+  };
+
+  // Forward message to selected advocates
+  const handleOpenForwardModal = (msg) => {
+    setForwardMessageData(msg);
+    setForwardRecipients([]);
+    setForwardSearchQuery("");
+    setForwardModalOpen(true);
+    setActiveMenuMsgIndex(null);
+  };
+
+  const handleExecuteForward = async () => {
+    if (!forwardMessageData || forwardRecipients.length === 0) return;
+    const origText = forwardMessageData.text || "";
+    const origAttachment = forwardMessageData.attachment || null;
+
+    const destinations = forwardRecipients.map((advId) => {
+      const adv = advocates.find((a) => Number(a.id) === Number(advId));
+      return {
+        clientId,
+        advocateId: advId,
+        key: `chat_${clientId}_${advId}`,
+        clientName: clientObj?.name || (clientId ? `Client #${clientId}` : "Client"),
+        clientAvatar: clientAvatar || "",
+        advocateName: adv?.name || "Advocate",
+        advocateAvatar: adv?.avatar || "",
+      };
+    });
+
+    setForwardModalOpen(false);
+
+    // Optimistically update conversations
+    destinations.forEach((dest) => {
+      const k = dest.key;
+      const raw = localStorage.getItem(k);
+      const list = raw ? JSON.parse(raw) : [];
+      const newFwd = {
+        id: "msg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        key: k,
+        clientId: dest.clientId,
+        advocateId: dest.advocateId,
+        from: "client",
+        text: origText,
+        attachment: origAttachment,
+        forwarded: true,
+        isEdited: false,
+        isDeleted: false,
+        deletedForEveryone: false,
+        deletedFor: [],
+        t: new Date().toISOString(),
+        clientName: dest.clientName,
+        clientAvatar: dest.clientAvatar,
+        advocateName: dest.advocateName,
+        advocateAvatar: dest.advocateAvatar,
+      };
+      list.push(newFwd);
+      localStorage.setItem(k, JSON.stringify(list));
+
+      if (selected && Number(selected.id) === Number(dest.advocateId)) {
+        setMessages(list);
+        scrollToBottom("smooth");
+      }
+    });
+
+    // Real-Time Socket.IO emission
+    emitForwardMessage({
+      originalText: origText,
+      attachment: origAttachment,
+      destinations,
+      from: "client",
+    });
+
+    // REST persistence to MongoDB
+    try {
+      await api("/api/messages/forward", {
+        method: "POST",
+        body: {
+          originalText: origText,
+          attachment: origAttachment,
+          destinations,
+          from: "client",
+        },
+      });
+    } catch (err) {
+      console.warn("Failed to persist forwarded message on server:", err);
+    }
+  };
+
+  // Click on quoted reply to navigate and highlight original message
+  const handleScrollToOriginalMessage = (replyTo) => {
+    if (!replyTo) return;
+    const targetIndex = messages.findIndex(
+      (m) => (replyTo.id && String(m.id) === String(replyTo.id)) || (m.text && m.text === replyTo.text)
+    );
+    if (targetIndex !== -1) {
+      const targetEl = document.getElementById(`msg-bubble-${targetIndex}`);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        targetEl.classList.add("wa-quote-highlight");
+        setTimeout(() => {
+          targetEl.classList.remove("wa-quote-highlight");
+        }, 2000);
+      }
+    }
   };
 
   // Copy message text to clipboard
@@ -1910,14 +2186,24 @@ export default function ClientDashboard() {
               return (
                 <div key={i} className={`wa-message-wrapper ${isClient ? "outgoing" : "incoming"} ${isDeleted ? "is-deleted-wrapper" : ""} ${isMenuActive ? "wa-msg-row-active" : ""}`}>
                   <div
+                    id={`msg-bubble-${i}`}
                     className={`wa-bubble-container ${isDeleted ? "wa-bubble-deleted" : ""} ${isMenuActive ? "wa-bubble-focused" : ""}`}
                     onClick={() => {
                       if (!isDeleted && !isEditingThis) {
                         setActiveMenuMsgIndex(prev => prev === i ? null : i);
                       }
                     }}
+                    onTouchStart={() => handleTouchStart(i)}
+                    onTouchEnd={handleTouchEnd}
+                    onTouchCancel={handleTouchEnd}
                     style={{ cursor: (!isDeleted && !isEditingThis) ? "pointer" : "default" }}
                   >
+                    {/* Forwarded Tag */}
+                    {!isDeleted && m.forwarded && (
+                      <div className="wa-forwarded-badge">
+                        <span>↪</span> <span>Forwarded</span>
+                      </div>
+                    )}
                     
                     {/* WhatsApp 3-Dots Action Menu Trigger & Dropdown */}
                     {!isDeleted && !isEditingThis && (
@@ -1955,8 +2241,21 @@ export default function ClientDashboard() {
                               <span>Reply</span>
                             </button>
 
+                            {/* Forward option */}
+                            <button
+                              type="button"
+                              className="wa-bubble-menu-item"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenForwardModal(m);
+                              }}
+                            >
+                              <span className="wa-bubble-menu-icon">↪️</span>
+                              <span>Forward</span>
+                            </button>
+
                             {/* Edit option - ONLY FOR CLIENT'S OWN SENT MESSAGES */}
-                            {isClient && m.text && (
+                            {isClient && m.text && !m.isDeleted && (
                               <button
                                 type="button"
                                 className="wa-bubble-menu-item"
@@ -1973,7 +2272,7 @@ export default function ClientDashboard() {
                             )}
 
                             {/* Copy option */}
-                            {m.text && (
+                            {m.text && !m.isDeleted && (
                               <button
                                 type="button"
                                 className="wa-bubble-menu-item"
@@ -1987,16 +2286,15 @@ export default function ClientDashboard() {
                               </button>
                             )}
 
-                            {/* Delete option */}
+                            {/* Delete option - opens WhatsApp Delete Dialog */}
                             <button
                               type="button"
                               className="wa-bubble-menu-item wa-bubble-menu-item-delete"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActiveMenuMsgIndex(null);
-                                if (window.confirm ? window.confirm("Are you sure you want to delete this message for everyone?") : true) {
-                                  handleDeleteChatMessage(i);
-                                }
+                                setDeleteMessageData(m);
+                                setDeleteDialogOpen(true);
                               }}
                             >
                               <span className="wa-bubble-menu-icon">🗑️</span>
@@ -2007,13 +2305,21 @@ export default function ClientDashboard() {
                       </div>
                     )}
 
-                    {/* Quoted Reply Block (Message to Message) */}
+                    {/* Quoted Reply Block (Click to Scroll to Original) */}
                     {!isDeleted && m.replyTo && (
-                      <div className={`wa-bubble-quote ${isClient ? "quote-outgoing" : "quote-incoming"}`}>
+                      <div
+                        className={`wa-bubble-quote ${isClient ? "quote-outgoing" : "quote-incoming"}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleScrollToOriginalMessage(m.replyTo);
+                        }}
+                        style={{ cursor: "pointer" }}
+                        title="Click to jump to original message"
+                      >
                         <div className="wa-quote-border" />
                         <div className="wa-quote-content">
                           <div className="wa-quote-sender">{m.replyTo.sender}</div>
-                          <div className="wa-quote-text">{m.replyTo.text}</div>
+                          <div className="wa-quote-text">{m.replyTo.text || "Original message"}</div>
                         </div>
                       </div>
                     )}
@@ -2396,6 +2702,151 @@ export default function ClientDashboard() {
                   {pt.cancelBtn}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Forward Modal */}
+      {forwardModalOpen && forwardMessageData && (
+        <div className="wa-modal-backdrop" onClick={() => setForwardModalOpen(false)}>
+          <div className="wa-modal-window" onClick={(e) => e.stopPropagation()}>
+            <div className="wa-modal-header">
+              <h3 className="wa-modal-title">Forward message to...</h3>
+              <button
+                type="button"
+                className="wa-modal-close-btn"
+                onClick={() => setForwardModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="wa-modal-search">
+              <input
+                type="text"
+                placeholder="Search advocates to forward to..."
+                value={forwardSearchQuery}
+                onChange={(e) => setForwardSearchQuery(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="wa-modal-preview-box">
+              <strong>Preview: </strong>
+              <span>
+                {forwardMessageData.text ||
+                  (forwardMessageData.attachment ? `[Attachment: ${forwardMessageData.attachment.fileName}]` : "Forwarded message")}
+              </span>
+            </div>
+
+            <div className="wa-modal-contact-list">
+              {advocates
+                .filter(
+                  (a) =>
+                    !forwardSearchQuery ||
+                    a.name.toLowerCase().includes(forwardSearchQuery.toLowerCase()) ||
+                    (a.speciality && a.speciality.toLowerCase().includes(forwardSearchQuery.toLowerCase()))
+                )
+                .map((a) => {
+                  const isChecked = forwardRecipients.includes(a.id);
+                  return (
+                    <div
+                      key={a.id}
+                      className="wa-modal-contact-row"
+                      onClick={() => {
+                        setForwardRecipients((prev) =>
+                          prev.includes(a.id) ? prev.filter((id) => id !== a.id) : [...prev, a.id]
+                        );
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        className="wa-modal-checkbox"
+                        checked={isChecked}
+                        onChange={() => {}}
+                      />
+                      {a.avatar ? (
+                        <img
+                          src={assetUrl ? assetUrl(a.avatar) : a.avatar}
+                          alt={a.name}
+                          className="wa-modal-contact-avatar"
+                        />
+                      ) : (
+                        <div className="wa-modal-contact-avatar-fallback">{(a.name || "A").charAt(0)}</div>
+                      )}
+                      <div className="wa-modal-contact-info">
+                        <div className="wa-modal-contact-name">{a.name}</div>
+                        <div className="wa-modal-contact-sub">{a.speciality || a.city || "Advocate"}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <div className="wa-modal-footer">
+              <button
+                type="button"
+                className="wa-modal-btn-cancel"
+                onClick={() => setForwardModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="wa-modal-btn-primary"
+                disabled={forwardRecipients.length === 0}
+                onClick={handleExecuteForward}
+              >
+                Forward ({forwardRecipients.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Delete Options Modal */}
+      {deleteDialogOpen && deleteMessageData && (
+        <div className="wa-modal-backdrop" onClick={() => setDeleteDialogOpen(false)}>
+          <div className="wa-modal-window" style={{ maxWidth: "380px" }} onClick={(e) => e.stopPropagation()}>
+            <div className="wa-modal-header">
+              <h3 className="wa-modal-title">Delete message?</h3>
+              <button
+                type="button"
+                className="wa-modal-close-btn"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ padding: "8px 0" }}>
+              {deleteMessageData.from === "client" && !deleteMessageData.isDeleted && (
+                <button
+                  type="button"
+                  className="wa-delete-option-btn danger"
+                  onClick={() => handleDeleteForEveryone(deleteMessageData)}
+                >
+                  <span>🗑️</span>
+                  <span>Delete for everyone</span>
+                </button>
+              )}
+              <button
+                type="button"
+                className="wa-delete-option-btn"
+                onClick={() => handleDeleteForMe(deleteMessageData)}
+              >
+                <span>👁️‍🗨️</span>
+                <span>Delete for me</span>
+              </button>
+              <button
+                type="button"
+                className="wa-delete-option-btn"
+                style={{ borderBottom: "none" }}
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                <span>✕</span>
+                <span>Cancel</span>
+              </button>
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "mongodb": "^7.7.0",
-    "nodemailer": "^10.0.14"
+    "nodemailer": "^10.0.14",
+    "socket.io": "^4.8.1"
   }
 }

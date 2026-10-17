@@ -1,2 +1,66 @@
-[]
-
+[
+  {
+    "id": "msg_1792253568457_guyoz",
+    "key": "chat_11_89",
+    "clientId": 11,
+    "advocateId": 89,
+    "from": "client",
+    "text": "hi",
+    "clientName": "Sandeep",
+    "clientAvatar": "",
+    "advocateName": "Chetan V Chandaragi",
+    "advocateAvatar": "/uploads/chetan-v-chandaragi-89.jpg",
+    "attachment": null,
+    "replyTo": null,
+    "t": "2026-10-17T16:12:48.449Z"
+  },
+  {
+    "id": "msg_1792253585845_nbh6f",
+    "key": "chat_11_89",
+    "clientId": 11,
+    "advocateId": 89,
+    "from": "advocate",
+    "text": "hi",
+    "clientName": "Sandeep",
+    "clientAvatar": "",
+    "advocateName": "Chetan V Chandaragi",
+    "advocateAvatar": "/uploads/chetan-v-chandaragi-89.jpg",
+    "attachment": null,
+    "replyTo": null,
+    "t": "2026-10-17T16:13:05.837Z"
+  },
+  {
+    "id": "msg_1792254398577_8hxvz",
+    "key": "chat_11_89",
+    "clientId": 11,
+    "advocateId": 89,
+    "from": "advocate",
+    "text": "hi",
+    "clientName": "Sandeep",
+    "clientAvatar": "",
+    "advocateName": "Chetan V Chandaragi",
+    "advocateAvatar": "/uploads/chetan-v-chandaragi-89.jpg",
+    "attachment": null,
+    "replyTo": null,
+    "t": "2026-10-17T16:26:38.569Z"
+  },
+  {
+    "id": "msg_1792254408816_mg5oi",
+    "key": "chat_11_89",
+    "clientId": 11,
+    "advocateId": 89,
+    "from": "advocate",
+    "text": "no",
+    "clientName": "Sandeep",
+    "clientAvatar": "",
+    "advocateName": "Chetan V Chandaragi",
+    "advocateAvatar": "/uploads/chetan-v-chandaragi-89.jpg",
+    "attachment": null,
+    "replyTo": {
+      "text": "hi",
+      "sender": "You",
+      "from": "advocate"
+    },
+    "t": "2026-10-17T16:26:48.808Z"
+  }
+]

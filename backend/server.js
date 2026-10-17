@@ -1,4 +1,4 @@
-// ============================================================
+  // ============================================================
 //  server.js — AdvocateHub API (dependency-free Node)
 //  Port 5000. Owns advocates/clients data + uploaded avatars.
 //
@@ -14,7 +14,10 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { Server } = require("socket.io");
 const dataStore = require("./dataStore");
+
+let io = null;
 
 // ── Config ────────────────────────────────────────────────────
 loadDotEnv(path.join(__dirname, ".env"));
@@ -45,6 +48,7 @@ const CLARITY_FILE = path.join(DATA_DIR, "clarityguide.json");
 const DOCUMENTS_PURCHASE_FILE_COMMA = path.join(DATA_DIR, "documentspurchase,json");
 const DOCUMENTS_PURCHASE_FILE_DOT = path.join(DATA_DIR, "documentspurchase.json");
 const MESSAGES_FILE = path.join(DATA_DIR, "messages.json");
+const CONVERSATIONS_FILE = path.join(DATA_DIR, "conversations.json");
 const MAX_BODY = 5 * 1024 * 1024; // 5 MB (base64 avatars)
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:3000,http://localhost:3001")
@@ -199,6 +203,16 @@ function loadMessages() {
   return defaultMessages;
 }
 function saveMessages(list) { saveCollection("messages", MESSAGES_FILE, list); }
+function loadConversations() {
+  const stored = dataStore.getCollection("conversations");
+  if (stored) return stored;
+  const list = readJson(CONVERSATIONS_FILE, null);
+  if (Array.isArray(list)) return list;
+  const defaultConversations = [];
+  writeJson(CONVERSATIONS_FILE, defaultConversations);
+  return defaultConversations;
+}
+function saveConversations(list) { saveCollection("conversations", CONVERSATIONS_FILE, list); }
 
 // ── Real-Time Streaming Socket (SSE) ───────────────────────────
 const sseConnections = new Set();
@@ -1525,13 +1539,15 @@ async function route(request, response) {
     return send(request, response, 200, { ok: true });
   }
 
-  // Live Chat Messages (Real-Time Chit-Chat Stored in backend messages.json)
+  // Live Chat Messages (Real-Time Chit-Chat Stored in backend messages.json & MongoDB)
   if (method === "GET" && p === "/api/messages") {
     const list = loadMessages();
     const advId = url.searchParams.get("advocateId");
     const cliId = url.searchParams.get("clientId");
     const key = url.searchParams.get("key");
     const since = url.searchParams.get("since");
+    const viewerId = url.searchParams.get("viewerId");
+    const viewerRole = url.searchParams.get("viewerRole");
 
     let filtered = list;
     if (key) {
@@ -1547,15 +1563,52 @@ async function route(request, response) {
       filtered = filtered.filter((m) => Number(m.clientId) === Number(cliId));
     }
 
+    // Filter out messages deleted for the specific viewer ("Delete for me")
+    if (viewerId) {
+      const vTag = viewerRole ? `${viewerRole}_${viewerId}` : String(viewerId);
+      filtered = filtered.filter((m) => {
+        if (!Array.isArray(m.deletedFor)) return true;
+        return !m.deletedFor.includes(vTag) && !m.deletedFor.includes(String(viewerId));
+      });
+    }
+
     if (since) {
       const sinceTime = isNaN(Number(since)) ? new Date(since).getTime() : Number(since);
       if (!isNaN(sinceTime)) {
-        filtered = filtered.filter((m) => new Date(m.t).getTime() > sinceTime);
+        filtered = filtered.filter((m) => new Date(m.t || m.createdAt).getTime() > sinceTime);
       }
     }
 
-    filtered.sort((a, b) => new Date(a.t).getTime() - new Date(b.t).getTime());
-    return send(request, response, 200, filtered);
+    // Mask deleted message text/attachments for safety
+    const sanitized = filtered.map((m) => {
+      if (m.isDeleted || m.deletedForEveryone) {
+        return {
+          id: m.id,
+          key: m.key,
+          clientId: m.clientId,
+          advocateId: m.advocateId,
+          from: m.from,
+          text: "",
+          attachment: null,
+          isDeleted: true,
+          deletedForEveryone: true,
+          deletedAt: m.deletedAt,
+          deletedBy: m.deletedBy,
+          t: m.t || m.createdAt,
+          createdAt: m.createdAt || m.t,
+          clientName: m.clientName,
+          clientAvatar: m.clientAvatar,
+          advocateName: m.advocateName,
+          advocateAvatar: m.advocateAvatar,
+          replyTo: m.replyTo ? { ...m.replyTo, text: "Original message deleted" } : null,
+          forwarded: Boolean(m.forwarded),
+        };
+      }
+      return m;
+    });
+
+    sanitized.sort((a, b) => new Date(a.t || a.createdAt).getTime() - new Date(b.t || b.createdAt).getTime());
+    return send(request, response, 200, sanitized);
   }
 
   if (method === "GET" && p === "/api/messages/conversations") {
@@ -1583,7 +1636,7 @@ async function route(request, response) {
         };
       }
       convMap[k].count++;
-      if (new Date(msg.t).getTime() >= new Date(convMap[k].lastMsg.t).getTime()) {
+      if (new Date(msg.t || msg.createdAt).getTime() >= new Date(convMap[k].lastMsg.t || convMap[k].lastMsg.createdAt).getTime()) {
         convMap[k].lastMsg = msg;
         if (msg.clientName) convMap[k].clientName = msg.clientName;
         if (msg.clientAvatar) convMap[k].clientAvatar = msg.clientAvatar;
@@ -1594,6 +1647,7 @@ async function route(request, response) {
     return send(request, response, 200, Object.values(convMap));
   }
 
+  // Send message
   if (method === "POST" && p === "/api/messages") {
     const body = await readBody(request);
     if (!body || (!body.text && !body.attachment)) {
@@ -1619,13 +1673,209 @@ async function route(request, response) {
       advocateAvatar: body.advocateAvatar || "",
       attachment: body.attachment || null,
       replyTo: body.replyTo || null,
+      forwarded: Boolean(body.forwarded),
+      forwardedFrom: body.forwardedFrom || null,
+      isEdited: false,
+      isDeleted: false,
+      deletedForEveryone: false,
+      deletedFor: [],
       t: body.t || new Date().toISOString(),
+      createdAt: body.t || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     messages.push(newMsg);
     saveMessages(messages);
+
+    // Real-time broadcast via Socket.IO
+    if (io) {
+      io.to(newMsg.key).emit("receive_message", newMsg);
+      io.to(`conv_${newMsg.key}`).emit("receive_message", newMsg);
+      if (newMsg.from === "client") {
+        io.to(`user_advocate_${newMsg.advocateId}`).emit("new_message_notification", newMsg);
+      } else {
+        io.to(`user_client_${newMsg.clientId}`).emit("new_message_notification", newMsg);
+      }
+    }
     broadcastMessage(newMsg);
     return send(request, response, 201, newMsg);
+  }
+
+  // Edit message
+  if ((method === "PUT" || method === "PATCH") && (p === "/api/messages/edit" || p.match(/^\/api\/messages\/([^/]+)\/edit$/))) {
+    const body = await readBody(request);
+    const idFromPath = p.match(/^\/api\/messages\/([^/]+)\/edit$/)?.[1];
+    const msgId = idFromPath || body.messageId || body.id;
+    const newText = String(body.text || body.newText || "").trim();
+
+    if (!msgId || !newText) {
+      throw new HttpError(400, "messageId and non-empty text are required to edit");
+    }
+
+    const messages = loadMessages();
+    const idx = messages.findIndex((m) => String(m.id) === String(msgId));
+    if (idx === -1) {
+      throw new HttpError(404, "Message not found");
+    }
+
+    const m = messages[idx];
+    if (m.isDeleted || m.deletedForEveryone) {
+      throw new HttpError(400, "Cannot edit a deleted message");
+    }
+
+    // Permission verification if role provided
+    if (body.role && body.role !== "admin" && m.from !== body.role) {
+      throw new HttpError(403, "You can only edit your own messages");
+    }
+
+    m.text = newText;
+    m.isEdited = true;
+    m.editedAt = new Date().toISOString();
+    m.updatedAt = new Date().toISOString();
+    saveMessages(messages);
+
+    const updatePayload = {
+      messageId: m.id,
+      key: m.key,
+      text: m.text,
+      isEdited: true,
+      editedAt: m.editedAt,
+    };
+
+    if (io) {
+      io.to(m.key).emit("message_edited", updatePayload);
+      io.to(`conv_${m.key}`).emit("message_edited", updatePayload);
+    }
+    broadcastMessage({ type: "MESSAGE_EDITED", ...updatePayload });
+    return send(request, response, 200, { ok: true, message: m });
+  }
+
+  // Forward message to one or more conversations
+  if (method === "POST" && p === "/api/messages/forward") {
+    const body = await readBody(request);
+    const { originalText, attachment, destinations, from, forwardedFrom } = body || {};
+    if (!Array.isArray(destinations) || destinations.length === 0) {
+      throw new HttpError(400, "destinations array is required");
+    }
+
+    const messages = loadMessages();
+    const createdList = [];
+
+    for (const dest of destinations) {
+      const cliId = Number(dest.clientId) || dest.clientId;
+      const advId = Number(dest.advocateId) || dest.advocateId;
+      const k = dest.key || `chat_${cliId}_${advId}`;
+      const fwdMsg = {
+        id: "msg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        key: k,
+        clientId: cliId,
+        advocateId: advId,
+        from: from === "advocate" ? "advocate" : "client",
+        text: String(originalText || "").trim(),
+        attachment: attachment || null,
+        forwarded: true,
+        forwardedFrom: forwardedFrom || null,
+        clientName: dest.clientName || "",
+        clientAvatar: dest.clientAvatar || "",
+        advocateName: dest.advocateName || "",
+        advocateAvatar: dest.advocateAvatar || "",
+        isEdited: false,
+        isDeleted: false,
+        deletedForEveryone: false,
+        deletedFor: [],
+        t: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      messages.push(fwdMsg);
+      createdList.push(fwdMsg);
+
+      if (io) {
+        io.to(k).emit("receive_message", fwdMsg);
+        io.to(`conv_${k}`).emit("receive_message", fwdMsg);
+        if (fwdMsg.from === "client") {
+          io.to(`user_advocate_${advId}`).emit("new_message_notification", fwdMsg);
+        } else {
+          io.to(`user_client_${cliId}`).emit("new_message_notification", fwdMsg);
+        }
+      }
+      broadcastMessage(fwdMsg);
+    }
+
+    saveMessages(messages);
+    return send(request, response, 201, { ok: true, messages: createdList });
+  }
+
+  // Delete message for everyone (replaces content with tombstone and broadcasts)
+  if (method === "POST" && (p === "/api/messages/delete-for-everyone" || p.match(/^\/api\/messages\/([^/]+)\/delete-for-everyone$/))) {
+    const body = await readBody(request);
+    const idFromPath = p.match(/^\/api\/messages\/([^/]+)\/delete-for-everyone$/)?.[1];
+    const msgId = idFromPath || body.messageId || body.id;
+
+    if (!msgId) {
+      throw new HttpError(400, "messageId is required");
+    }
+
+    const messages = loadMessages();
+    const idx = messages.findIndex((m) => String(m.id) === String(msgId));
+    if (idx === -1) {
+      throw new HttpError(404, "Message not found");
+    }
+
+    const m = messages[idx];
+    if (body.role && body.role !== "admin" && m.from !== body.role) {
+      throw new HttpError(403, "You can only delete your own messages for everyone");
+    }
+
+    m.isDeleted = true;
+    m.deletedForEveryone = true;
+    m.deletedAt = new Date().toISOString();
+    m.deletedBy = body.role || m.from;
+    m.text = "";
+    m.attachment = null;
+    m.updatedAt = new Date().toISOString();
+    saveMessages(messages);
+
+    const delPayload = {
+      messageId: m.id,
+      key: m.key,
+      isDeleted: true,
+      deletedForEveryone: true,
+      deletedAt: m.deletedAt,
+      deletedBy: m.deletedBy,
+    };
+
+    if (io) {
+      io.to(m.key).emit("message_deleted", delPayload);
+      io.to(`conv_${m.key}`).emit("message_deleted", delPayload);
+    }
+    broadcastMessage({ type: "MESSAGE_DELETED", ...delPayload });
+    return send(request, response, 200, { ok: true, messageId: m.id });
+  }
+
+  // Delete message for me (hides for current user only)
+  if (method === "POST" && (p === "/api/messages/delete-for-me" || p.match(/^\/api\/messages\/([^/]+)\/delete-for-me$/))) {
+    const body = await readBody(request);
+    const idFromPath = p.match(/^\/api\/messages\/([^/]+)\/delete-for-me$/)?.[1];
+    const msgId = idFromPath || body.messageId || body.id;
+    const userIdentifier = body.userIdentifier || (body.role && body.userId ? `${body.role}_${body.userId}` : body.userId);
+
+    if (!msgId || !userIdentifier) {
+      throw new HttpError(400, "messageId and userIdentifier are required");
+    }
+
+    const messages = loadMessages();
+    const idx = messages.findIndex((m) => String(m.id) === String(msgId));
+    if (idx !== -1) {
+      if (!Array.isArray(messages[idx].deletedFor)) {
+        messages[idx].deletedFor = [];
+      }
+      if (!messages[idx].deletedFor.includes(userIdentifier)) {
+        messages[idx].deletedFor.push(userIdentifier);
+        saveMessages(messages);
+      }
+    }
+    return send(request, response, 200, { ok: true, messageId: msgId });
   }
 
   // Real-Time Socket Stream (Server-Sent Events) for continuous live bi-directional chat
@@ -1851,6 +2101,282 @@ const server = http.createServer((request, response) => {
       console.error("Failed to send API error response:", sendError);
     }
     if (status === 413) response.once("finish", () => request.destroy());
+  });
+});
+
+// ── Socket.IO Server Setup ────────────────────────────────────
+io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  },
+  pingTimeout: 60000,
+  pingInterval: 25000,
+});
+
+io.use((socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    const role = socket.handshake.auth?.role || socket.handshake.query?.role || "user";
+    const userId = socket.handshake.auth?.userId || socket.handshake.query?.userId || "";
+
+    if (token) {
+      const payload = verifyToken(token);
+      if (payload) {
+        socket.user = { id: String(payload.sub), role: payload.role || role };
+        return next();
+      }
+    }
+    socket.user = { id: String(userId || "guest"), role: String(role || "guest") };
+    next();
+  } catch (err) {
+    next();
+  }
+});
+
+io.on("connection", (socket) => {
+  const user = socket.user || {};
+  if (user.id && user.id !== "guest") {
+    socket.join(`user_${user.role}_${user.id}`);
+  }
+
+  socket.on("join_conversation", (data) => {
+    const key = typeof data === "string" ? data : (data?.key || `chat_${data?.clientId}_${data?.advocateId}`);
+    if (key) {
+      socket.join(key);
+      socket.join(`conv_${key}`);
+    }
+  });
+
+  socket.on("leave_conversation", (data) => {
+    const key = typeof data === "string" ? data : (data?.key || `chat_${data?.clientId}_${data?.advocateId}`);
+    if (key) {
+      socket.leave(key);
+      socket.leave(`conv_${key}`);
+    }
+  });
+
+  socket.on("send_message", (data, cb) => {
+    try {
+      if (!data || (!data.text && !data.attachment)) {
+        if (cb) cb({ error: "Message text or attachment is required" });
+        return;
+      }
+      const cliId = Number(data.clientId) || data.clientId;
+      const advId = Number(data.advocateId) || data.advocateId;
+      if (!cliId || !advId) {
+        if (cb) cb({ error: "clientId and advocateId are required" });
+        return;
+      }
+      const messages = loadMessages();
+      const newMsg = {
+        id: String(data.id || ("msg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7))),
+        key: String(data.key || `chat_${cliId}_${advId}`),
+        clientId: cliId,
+        advocateId: advId,
+        from: data.from === "advocate" ? "advocate" : "client",
+        text: String(data.text || "").trim(),
+        clientName: data.clientName || "",
+        clientAvatar: data.clientAvatar || "",
+        advocateName: data.advocateName || "",
+        advocateAvatar: data.advocateAvatar || "",
+        attachment: data.attachment || null,
+        replyTo: data.replyTo || null,
+        forwarded: Boolean(data.forwarded),
+        forwardedFrom: data.forwardedFrom || null,
+        isEdited: false,
+        isDeleted: false,
+        deletedForEveryone: false,
+        deletedFor: [],
+        t: data.t || new Date().toISOString(),
+        createdAt: data.t || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      messages.push(newMsg);
+      saveMessages(messages);
+
+      io.to(newMsg.key).emit("receive_message", newMsg);
+      io.to(`conv_${newMsg.key}`).emit("receive_message", newMsg);
+      if (newMsg.from === "client") {
+        io.to(`user_advocate_${newMsg.advocateId}`).emit("new_message_notification", newMsg);
+      } else {
+        io.to(`user_client_${newMsg.clientId}`).emit("new_message_notification", newMsg);
+      }
+      broadcastMessage(newMsg);
+      if (cb) cb({ status: "ok", message: newMsg });
+    } catch (err) {
+      if (cb) cb({ error: err.message });
+    }
+  });
+
+  socket.on("edit_message", (data, cb) => {
+    try {
+      const { messageId, newText } = data || {};
+      if (!messageId || !newText || !String(newText).trim()) {
+        if (cb) cb({ error: "Valid messageId and newText are required" });
+        return;
+      }
+      const messages = loadMessages();
+      const idx = messages.findIndex((m) => String(m.id) === String(messageId));
+      if (idx === -1) {
+        if (cb) cb({ error: "Message not found" });
+        return;
+      }
+      const m = messages[idx];
+      if (m.isDeleted || m.deletedForEveryone) {
+        if (cb) cb({ error: "Cannot edit deleted message" });
+        return;
+      }
+      if (user.role && user.role !== "guest" && user.role !== "admin" && m.from !== user.role) {
+        if (cb) cb({ error: "Not authorized to edit this message" });
+        return;
+      }
+
+      m.text = String(newText).trim();
+      m.isEdited = true;
+      m.editedAt = new Date().toISOString();
+      m.updatedAt = new Date().toISOString();
+      saveMessages(messages);
+
+      const updatePayload = {
+        messageId: m.id,
+        key: m.key,
+        text: m.text,
+        isEdited: true,
+        editedAt: m.editedAt,
+      };
+      io.to(m.key).emit("message_edited", updatePayload);
+      io.to(`conv_${m.key}`).emit("message_edited", updatePayload);
+      broadcastMessage({ type: "MESSAGE_EDITED", ...updatePayload });
+      if (cb) cb({ status: "ok", message: m });
+    } catch (err) {
+      if (cb) cb({ error: err.message });
+    }
+  });
+
+  socket.on("delete_for_everyone", (data, cb) => {
+    try {
+      const { messageId, role } = data || {};
+      if (!messageId) {
+        if (cb) cb({ error: "messageId is required" });
+        return;
+      }
+      const messages = loadMessages();
+      const idx = messages.findIndex((m) => String(m.id) === String(messageId));
+      if (idx === -1) {
+        if (cb) cb({ error: "Message not found" });
+        return;
+      }
+      const m = messages[idx];
+      m.isDeleted = true;
+      m.deletedForEveryone = true;
+      m.deletedAt = new Date().toISOString();
+      m.deletedBy = role || user.role || m.from;
+      m.text = "";
+      m.attachment = null;
+      m.updatedAt = new Date().toISOString();
+      saveMessages(messages);
+
+      const delPayload = {
+        messageId: m.id,
+        key: m.key,
+        isDeleted: true,
+        deletedForEveryone: true,
+        deletedAt: m.deletedAt,
+        deletedBy: m.deletedBy,
+      };
+      io.to(m.key).emit("message_deleted", delPayload);
+      io.to(`conv_${m.key}`).emit("message_deleted", delPayload);
+      broadcastMessage({ type: "MESSAGE_DELETED", ...delPayload });
+      if (cb) cb({ status: "ok", messageId: m.id });
+    } catch (err) {
+      if (cb) cb({ error: err.message });
+    }
+  });
+
+  socket.on("delete_for_me", (data, cb) => {
+    try {
+      const { messageId, userIdentifier } = data || {};
+      if (!messageId || !userIdentifier) {
+        if (cb) cb({ error: "messageId and userIdentifier are required" });
+        return;
+      }
+      const messages = loadMessages();
+      const idx = messages.findIndex((m) => String(m.id) === String(messageId));
+      if (idx !== -1) {
+        if (!Array.isArray(messages[idx].deletedFor)) {
+          messages[idx].deletedFor = [];
+        }
+        if (!messages[idx].deletedFor.includes(userIdentifier)) {
+          messages[idx].deletedFor.push(userIdentifier);
+          saveMessages(messages);
+        }
+      }
+      if (cb) cb({ status: "ok", messageId });
+    } catch (err) {
+      if (cb) cb({ error: err.message });
+    }
+  });
+
+  socket.on("forward_message", (data, cb) => {
+    try {
+      const { originalText, attachment, destinations, from, forwardedFrom } = data || {};
+      if (!Array.isArray(destinations) || destinations.length === 0) {
+        if (cb) cb({ error: "destinations array is required" });
+        return;
+      }
+      const messages = loadMessages();
+      const created = [];
+      for (const dest of destinations) {
+        const cliId = Number(dest.clientId) || dest.clientId;
+        const advId = Number(dest.advocateId) || dest.advocateId;
+        const k = dest.key || `chat_${cliId}_${advId}`;
+        const fwdMsg = {
+          id: "msg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+          key: k,
+          clientId: cliId,
+          advocateId: advId,
+          from: from === "advocate" ? "advocate" : "client",
+          text: String(originalText || "").trim(),
+          attachment: attachment || null,
+          forwarded: true,
+          forwardedFrom: forwardedFrom || null,
+          clientName: dest.clientName || "",
+          clientAvatar: dest.clientAvatar || "",
+          advocateName: dest.advocateName || "",
+          advocateAvatar: dest.advocateAvatar || "",
+          isDeleted: false,
+          deletedForEveryone: false,
+          deletedFor: [],
+          t: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        messages.push(fwdMsg);
+        created.push(fwdMsg);
+
+        io.to(k).emit("receive_message", fwdMsg);
+        io.to(`conv_${k}`).emit("receive_message", fwdMsg);
+        if (fwdMsg.from === "client") {
+          io.to(`user_advocate_${advId}`).emit("new_message_notification", fwdMsg);
+        } else {
+          io.to(`user_client_${cliId}`).emit("new_message_notification", fwdMsg);
+        }
+        broadcastMessage(fwdMsg);
+      }
+      saveMessages(messages);
+      if (cb) cb({ status: "ok", messages: created });
+    } catch (err) {
+      if (cb) cb({ error: err.message });
+    }
+  });
+
+  socket.on("typing", (data) => {
+    if (data?.key) {
+      socket.to(data.key).emit("user_typing", data);
+      socket.to(`conv_${data.key}`).emit("user_typing", data);
+    }
   });
 });
 

@@ -9,6 +9,14 @@ import { getAdvocateById, logoutAdvocate, updateAdvocate } from "../data/Advocat
 import BrandLogo from "../components/BrandLogo";
 import { api, assetUrl } from "../data/api";
 import { getTheme, toggleTheme } from "../data/themeStore";
+import { initSocket, joinConversation, emitSendMessage, emitEditMessage, emitDeleteForEveryone, emitDeleteForMe, emitForwardMessage } from "../data/socket";
+import AdvocateHeader from "../components/advocate/AdvocateHeader";
+import ProfileOverview from "../components/advocate/ProfileOverview";
+import DashboardStats from "../components/advocate/DashboardStats";
+import UpcomingSessions from "../components/advocate/UpcomingSessions";
+import ProfileCompletion from "../components/advocate/ProfileCompletion";
+import RecentRequests from "../components/advocate/RecentRequests";
+import QuickActions from "../components/advocate/QuickActions";
 
 
 const SESSION_KEY  = "law4u_advocate_id";
@@ -556,6 +564,25 @@ export default function AdvocateDashboard() {
   const [activeMenuMsgIndex, setActiveMenuMsgIndex] = useState(null);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
+  const [forwardMessageData, setForwardMessageData] = useState(null);
+  const [forwardRecipients, setForwardRecipients] = useState([]);
+  const [forwardSearchQuery, setForwardSearchQuery] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteMessageData, setDeleteMessageData] = useState(null);
+  const longPressTimerRef = useRef(null);
+
+  const handleTouchStart = (idx) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setActiveMenuMsgIndex(idx);
+    }, 500);
+  };
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
 
   // Auto-dismiss WhatsApp incoming message toast after 6.5s
   useEffect(() => {
@@ -967,6 +994,7 @@ export default function AdvocateDashboard() {
     const msgs = raw ? JSON.parse(raw) : [];
 
     const newMsgObj = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       from: "advocate",
       text: textToSend || (pendingAttachment ? `[Attachment: ${pendingAttachment.fileName}]` : ""),
       t: new Date().toISOString(),
@@ -988,23 +1016,29 @@ export default function AdvocateDashboard() {
     setShowEmojiPicker(false);
     setReplyingTo(null);
 
-    // Persist advocate message to backend server messages.json
+    const msgPayload = {
+      id: newMsgObj.id,
+      clientId: activeConv.clientId,
+      advocateId,
+      key: k,
+      from: "advocate",
+      text: textToSend,
+      attachment: pendingAttachment ? { ...pendingAttachment } : null,
+      replyTo: newMsgObj.replyTo,
+      clientName: activeConv.clientName || "",
+      clientAvatar: activeConv.clientAvatar || "",
+      advocateName: advocate?.name || "Advocate",
+      advocateAvatar: advocate?.avatar || "",
+      t: newMsgObj.t,
+    };
+
+    // Emit real-time message via Socket.IO
+    emitSendMessage(msgPayload);
+
+    // Persist advocate message to backend server messages.json & MongoDB
     api("/api/messages", {
       method: "POST",
-      body: {
-        clientId: activeConv.clientId,
-        advocateId,
-        key: k,
-        from: "advocate",
-        text: textToSend,
-        attachment: pendingAttachment ? { ...pendingAttachment } : null,
-        replyTo: newMsgObj.replyTo,
-        clientName: activeConv.clientName || "",
-        clientAvatar: activeConv.clientAvatar || "",
-        advocateName: advocate?.name || "Advocate",
-        advocateAvatar: advocate?.avatar || "",
-        t: newMsgObj.t,
-      },
+      body: msgPayload,
     }).catch((err) => console.warn("Failed to persist advocate message to server:", err));
 
     // Automatically update or store client request record
@@ -1084,113 +1118,225 @@ export default function AdvocateDashboard() {
     scrollToBottom("smooth");
   };
 
-  // Delete message (WhatsApp style: "🚫 This message was deleted")
-  const handleDeleteChatMessage = (msgIndex) => {
-    if (!activeConv) return;
+  // Delete message for everyone (WhatsApp style: "🚫 This message was deleted")
+  const handleDeleteForEveryone = async (msg) => {
+    if (!msg || !activeConv) return;
     const k = activeConv.key;
+    const deletedAt = new Date().toISOString();
     const raw = localStorage.getItem(k);
     if (!raw) return;
     const msgs = JSON.parse(raw);
-    if (!msgs[msgIndex]) return;
+    const updated = msgs.map((m) =>
+      String(m.id) === String(msg.id)
+        ? {
+            ...m,
+            isDeleted: true,
+            deletedForEveryone: true,
+            text: "",
+            attachment: null,
+            deletedAt,
+            deletedBy: "advocate",
+          }
+        : m
+    );
 
-    msgs[msgIndex] = {
-      ...msgs[msgIndex],
-      isDeleted: true,
-      text: "",
-      attachment: null,
-      deletedAt: new Date().toISOString(),
-      deletedBy: "advocate"
-    };
+    localStorage.setItem(k, JSON.stringify(updated));
+    setConvMessages(updated);
+    setDeleteDialogOpen(false);
+    setDeleteMessageData(null);
+    setActiveMenuMsgIndex(null);
 
-    localStorage.setItem(k, JSON.stringify(msgs));
-    setConvMessages(msgs);
+    // Socket.IO real-time emission
+    emitDeleteForEveryone({ messageId: msg.id, role: "advocate", userId: advocateId });
 
-    // Update law4u_requests if this was the last message
+    // REST persistence to MongoDB
     try {
-      const allReqsRaw = localStorage.getItem("law4u_requests");
-      if (allReqsRaw) {
-        const allReqs = JSON.parse(allReqsRaw);
-        const advReqs = allReqs[advocateId] || [];
-        const mIdx = advReqs.findIndex(r => String(r.clientId || r.id) === String(activeConv.clientId));
-        if (mIdx >= 0) {
-          const lastM = msgs[msgs.length - 1];
-          advReqs[mIdx].lastMessage = lastM?.isDeleted ? "🚫 This message was deleted" : (lastM?.text || "");
-          allReqs[advocateId] = advReqs;
-          localStorage.setItem("law4u_requests", JSON.stringify(allReqs));
-          setRequests(advReqs);
-        }
-      }
-    } catch {}
+      await api("/api/messages/delete-for-everyone", {
+        method: "POST",
+        body: { messageId: msg.id, role: "advocate", userId: advocateId },
+      });
+    } catch (err) {
+      console.warn("Failed to delete for everyone on server:", err);
+    }
 
     try {
       const channel = new BroadcastChannel("law4u_chat_channel");
       channel.postMessage({
-        type: "CHAT_UPDATED",
-        clientId: activeConv.clientId,
-        advocateId: advocateId,
-        key: k
+        type: "MESSAGE_DELETED",
+        messageId: msg.id,
+        key: k,
+        isDeleted: true,
+        deletedForEveryone: true,
+        deletedAt,
+        deletedBy: "advocate",
       });
+      channel.postMessage({ type: "CHAT_UPDATED", clientId: activeConv.clientId, advocateId, key: k });
       channel.close();
-    } catch (bcErr) {}
+    } catch {}
 
     window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
-    window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key: k, clientId: activeConv.clientId } }));
+    window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key: k, clientId: activeConv.clientId, advocateId } }));
+  };
+
+  // Delete for me (hides message for currently logged-in advocate only)
+  const handleDeleteForMe = async (msg) => {
+    if (!msg || !activeConv) return;
+    const k = activeConv.key;
+    const userTag = `advocate_${advocateId}`;
+    const raw = localStorage.getItem(k);
+    if (!raw) return;
+    const msgs = JSON.parse(raw);
+    const updated = msgs.filter((m) => String(m.id) !== String(msg.id));
+
+    localStorage.setItem(k, JSON.stringify(updated));
+    setConvMessages(updated);
+    setDeleteDialogOpen(false);
+    setDeleteMessageData(null);
+    setActiveMenuMsgIndex(null);
+
+    // Socket.IO & REST persistence
+    emitDeleteForMe({ messageId: msg.id, userIdentifier: userTag });
+    try {
+      await api("/api/messages/delete-for-me", {
+        method: "POST",
+        body: { messageId: msg.id, userIdentifier: userTag },
+      });
+    } catch (err) {
+      console.warn("Failed to delete for me on server:", err);
+    }
   };
 
   // Edit message (adds "Edited" tag and updates text)
-  const handleSaveEditChatMessage = (msgIndex, newText) => {
+  const handleSaveEditChatMessage = async (msgIndex, newText) => {
     if (!activeConv || !newText.trim()) return;
     const k = activeConv.key;
     const raw = localStorage.getItem(k);
     if (!raw) return;
     const msgs = JSON.parse(raw);
-    if (!msgs[msgIndex]) return;
+    const msg = msgs[msgIndex];
+    if (!msg) return;
+    const trimmed = newText.trim();
+    const editedAt = new Date().toISOString();
 
-    msgs[msgIndex] = {
-      ...msgs[msgIndex],
-      text: newText.trim(),
-      isEdited: true,
-      editedAt: new Date().toISOString()
-    };
+    const updated = msgs.map((m, idx) =>
+      idx === msgIndex ? { ...m, text: trimmed, isEdited: true, editedAt } : m
+    );
 
-    localStorage.setItem(k, JSON.stringify(msgs));
-    setConvMessages(msgs);
+    localStorage.setItem(k, JSON.stringify(updated));
+    setConvMessages(updated);
     setEditingMsgIndex(null);
     setEditingMsgText("");
 
-    // Update law4u_requests if this was the last message
+    // Socket.IO real-time emission
+    emitEditMessage({ messageId: msg.id, newText: trimmed, key: k });
+
+    // REST persistence to MongoDB
     try {
-      const allReqsRaw = localStorage.getItem("law4u_requests");
-      if (allReqsRaw) {
-        const allReqs = JSON.parse(allReqsRaw);
-        const advReqs = allReqs[advocateId] || [];
-        const mIdx = advReqs.findIndex(r => String(r.clientId || r.id) === String(activeConv.clientId));
-        if (mIdx >= 0) {
-          const lastM = msgs[msgs.length - 1];
-          advReqs[mIdx].lastMessage = lastM?.isDeleted ? "🚫 This message was deleted" : (lastM?.text || "");
-          allReqs[advocateId] = advReqs;
-          localStorage.setItem("law4u_requests", JSON.stringify(allReqs));
-          setRequests(advReqs);
-        }
-      }
-    } catch {}
+      await api("/api/messages/edit", {
+        method: "PUT",
+        body: { messageId: msg.id, text: trimmed, newText: trimmed, key: k, role: "advocate", userId: advocateId },
+      });
+    } catch (err) {
+      console.warn("Failed to save edited message on server:", err);
+    }
 
     try {
       const channel = new BroadcastChannel("law4u_chat_channel");
       channel.postMessage({
-        type: "CHAT_UPDATED",
-        clientId: activeConv.clientId,
-        advocateId: advocateId,
-        key: k
+        type: "MESSAGE_EDITED",
+        messageId: msg.id,
+        key: k,
+        text: trimmed,
+        isEdited: true,
+        editedAt,
       });
       channel.close();
-    } catch (bcErr) {}
+    } catch {}
 
     window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
-    window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key: k, clientId: activeConv.clientId } }));
+    window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key: k, clientId: activeConv.clientId, advocateId } }));
   };
+
+  const handleOpenForwardModal = (msg) => {
+    setActiveMenuMsgIndex(null);
+    setForwardMessageData(msg);
+    setForwardRecipients([]);
+    setForwardSearchQuery("");
+    setForwardModalOpen(true);
+  };
+
+  const handleExecuteForward = async () => {
+    if (!forwardMessageData || forwardRecipients.length === 0) return;
+    const forwardText = forwardMessageData.text || "";
+    const attach = forwardMessageData.attachment ? { ...forwardMessageData.attachment } : null;
+
+    for (const recipientKey of forwardRecipients) {
+      const raw = localStorage.getItem(recipientKey);
+      const destMsgs = raw ? JSON.parse(raw) : [];
+      const parts = recipientKey.split("_");
+      const destClientId = parts[1];
+
+      const newFwdMsg = {
+        id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        from: "advocate",
+        text: forwardText,
+        t: new Date().toISOString(),
+        attachment: attach,
+        forwarded: true,
+        forwardedFrom: forwardMessageData.from,
+        advocateName: advocate?.name || "Advocate",
+        advocateAvatar: advocate?.avatar || "",
+      };
+
+      const nextMsgs = [...destMsgs, newFwdMsg];
+      localStorage.setItem(recipientKey, JSON.stringify(nextMsgs));
+
+      // Socket.IO emission
+      emitSendMessage({
+        id: newFwdMsg.id,
+        clientId: destClientId,
+        advocateId,
+        key: recipientKey,
+        from: "advocate",
+        text: forwardText,
+        attachment: attach,
+        forwarded: true,
+        forwardedFrom: forwardMessageData.from,
+        advocateName: advocate?.name || "Advocate",
+        advocateAvatar: advocate?.avatar || "",
+        t: newFwdMsg.t,
+      });
+
+      // REST persistence
+      try {
+        await api("/api/messages", {
+          method: "POST",
+          body: {
+            id: newFwdMsg.id,
+            clientId: destClientId,
+            advocateId,
+            key: recipientKey,
+            from: "advocate",
+            text: forwardText,
+            attachment: attach,
+            forwarded: true,
+            forwardedFrom: forwardMessageData.from,
+            advocateName: advocate?.name || "Advocate",
+            advocateAvatar: advocate?.avatar || "",
+            t: newFwdMsg.t,
+          },
+        });
+      } catch (err) {
+        console.warn("Failed to persist forwarded message:", err);
+      }
+    }
+
+    setForwardModalOpen(false);
+    setForwardMessageData(null);
+    setForwardRecipients([]);
+    refreshConversationsAndRequests();
+  };
+
 
   // Copy message text to clipboard
   const handleCopyMessage = (text) => {
@@ -1228,6 +1374,24 @@ export default function AdvocateDashboard() {
       if (inputEl) inputEl.focus();
     }, 50);
   };
+
+  const handleScrollToOriginalMessage = (quoted) => {
+    if (!quoted) return;
+    const targetIdx = convMessages.findIndex(
+      (m) =>
+        (quoted.id && String(m.id) === String(quoted.id)) ||
+        (quoted.text && m.text && m.text.trim() === quoted.text.trim())
+    );
+    if (targetIdx >= 0) {
+      const el = document.getElementById(`adv-msg-bubble-${targetIdx}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ad-wa-quote-highlight");
+        setTimeout(() => el.classList.remove("ad-wa-quote-highlight"), 1600);
+      }
+    }
+  };
+
 
   // Add Client manually directly into Accepted section & initialize WhatsApp chat
   const handleAddClientSubmit = (e) => {
@@ -1707,6 +1871,151 @@ export default function AdvocateDashboard() {
     };
   }, [advocateId, refreshConversationsAndRequests, scrollToBottom, advocate?.fee]);
 
+  // Socket.IO Real-Time Messaging & Message Actions (Receive, Edit, Delete, Forward)
+  useEffect(() => {
+    if (!advocateId) return;
+    const socket = initSocket({ role: "advocate", id: advocateId });
+    const curConv = activeConvRef.current;
+    if (curConv && curConv.clientId) {
+      joinConversation(`chat_${curConv.clientId}_${advocateId}`);
+    }
+
+    const handleReceiveMessage = (msg) => {
+      if (!msg) return;
+      if (Number(msg.advocateId) !== Number(advocateId)) return;
+
+      const k = msg.key || `chat_${msg.clientId}_${advocateId}`;
+      const raw = localStorage.getItem(k);
+      const currentList = raw ? JSON.parse(raw) : [];
+
+      if (!currentList.some((m) => String(m.id) === String(msg.id) || (m.t === msg.t && m.text === msg.text))) {
+        const nextList = [...currentList, msg];
+        localStorage.setItem(k, JSON.stringify(nextList));
+
+        // Auto add to requests if new client
+        const allReqs = loadAllRequests();
+        const advReqs = allReqs[advocateId] || [];
+        if (!advReqs.some((r) => String(r.clientId || r.id) === String(msg.clientId))) {
+          advReqs.unshift({
+            id: msg.clientId,
+            clientId: msg.clientId,
+            clientName: msg.clientName || `Client #${msg.clientId}`,
+            clientAvatar: msg.clientAvatar || "",
+            clientPhone: "",
+            clientEmail: "",
+            clientCity: "Online Client",
+            requestedAt: msg.t,
+            message: msg.text,
+            lastMessage: msg.text,
+            status: "accepted",
+            paymentStatus: "Paid / Completed",
+            caseStage: "Start Case",
+            fee: advocate?.fee || "₹2,000",
+          });
+          allReqs[advocateId] = advReqs;
+          saveAllRequests(allReqs);
+        }
+
+        refreshConversationsAndRequests();
+        const activeC = activeConvRef.current;
+        if (activeC && (activeC.key === k || String(activeC.clientId) === String(msg.clientId))) {
+          setConvMessages(nextList);
+          scrollToBottom("smooth");
+        }
+        if (msg.from === "client") {
+          playWhatsAppNotificationSound();
+          if (!activeC || String(activeC.clientId) !== String(msg.clientId)) {
+            setIncomingToast({
+              clientId: msg.clientId,
+              clientName: msg.clientName || `Client #${msg.clientId}`,
+              text: msg.text || (msg.attachment ? "📎 Attachment" : "New message"),
+              key: k,
+              t: msg.t || new Date().toISOString(),
+            });
+          }
+        }
+      }
+    };
+
+    const handleMessageEdited = (data) => {
+      if (!data || !data.messageId) return;
+      setConvMessages((prev) =>
+        prev.map((m) =>
+          String(m.id) === String(data.messageId)
+            ? { ...m, text: data.text, isEdited: true, editedAt: data.editedAt }
+            : m
+        )
+      );
+      const activeC = activeConvRef.current;
+      if (activeC) {
+        const k = activeC.key;
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const list = JSON.parse(raw);
+          const next = list.map((m) =>
+            String(m.id) === String(data.messageId)
+              ? { ...m, text: data.text, isEdited: true, editedAt: data.editedAt }
+              : m
+          );
+          localStorage.setItem(k, JSON.stringify(next));
+          refreshConversationsAndRequests();
+        }
+      }
+    };
+
+    const handleMessageDeleted = (data) => {
+      if (!data || !data.messageId) return;
+      setConvMessages((prev) =>
+        prev.map((m) =>
+          String(m.id) === String(data.messageId)
+            ? {
+                ...m,
+                isDeleted: true,
+                deletedForEveryone: true,
+                text: "",
+                attachment: null,
+                deletedAt: data.deletedAt,
+                deletedBy: data.deletedBy,
+              }
+            : m
+        )
+      );
+      const activeC = activeConvRef.current;
+      if (activeC) {
+        const k = activeC.key;
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const list = JSON.parse(raw);
+          const next = list.map((m) =>
+            String(m.id) === String(data.messageId)
+              ? {
+                  ...m,
+                  isDeleted: true,
+                  deletedForEveryone: true,
+                  text: "",
+                  attachment: null,
+                  deletedAt: data.deletedAt,
+                  deletedBy: data.deletedBy,
+                }
+              : m
+          );
+          localStorage.setItem(k, JSON.stringify(next));
+          refreshConversationsAndRequests();
+        }
+      }
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+    socket.on("message_edited", handleMessageEdited);
+    socket.on("message_deleted", handleMessageDeleted);
+
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+      socket.off("message_edited", handleMessageEdited);
+      socket.off("message_deleted", handleMessageDeleted);
+    };
+  }, [advocateId, refreshConversationsAndRequests, scrollToBottom, advocate?.fee]);
+
   if (!ready) return null;
 
   if (!advocate) {
@@ -1824,55 +2133,20 @@ export default function AdvocateDashboard() {
         </div>
       )}
 
-      {/* ── Top Bar ── */}
-      <div className="ad-topbar">
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button className="ad-hamburger-btn" onClick={() => setMobileMenuOpen(true)} aria-label="Open Menu">
-            ☰
-          </button>
-          <BrandLogo size={32} />
-        </div>
+      {/* ── Top Bar Header ── */}
+      <AdvocateHeader
+        advocate={advocate}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        unreadChatCount={unreadChatCount}
+        latestUnreadMsg={latestUnreadMsg}
+        openConversation={openConversation}
+        setActiveNav={setActiveNav}
+        onOpenMobileMenu={() => setMobileMenuOpen(true)}
+        onOpenProfile={() => setActiveNav("profile")}
+        isAvailable={isAvailable}
+      />
 
-        {/* Upper Section Notification Pill & Actions */}
-        <div className="ad-topbar-actions">
-          {unreadChatCount > 0 && (
-            <button
-              type="button"
-              className="ad-topbar-notify-pill"
-              onClick={() => {
-                if (latestUnreadMsg?.conv) {
-                  openConversation(latestUnreadMsg.conv);
-                } else {
-                  setActiveNav("chat");
-                }
-              }}
-              title={`New message from ${latestUnreadMsg?.clientName || "Client"} - click to open chat`}
-            >
-              <span className="ad-notify-bell" style={{ display: "inline-flex", alignItems: "center", width: 16, height: 16 }}>
-                {NAV_ICONS.bell}
-              </span>
-              <span className="ad-notify-text">
-                <b>{latestUnreadMsg?.clientName}</b>: <em>"{latestUnreadMsg?.text?.slice(0, 28)}{latestUnreadMsg?.text?.length > 28 ? "…" : ""}"</em>
-              </span>
-              <span className="ad-topbar-badge">{unreadChatCount}</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            className="ad-theme-toggle-btn"
-            onClick={() => toggleTheme()}
-            title={theme === "dark" ? "Switch to Light mode" : "Switch to Dark mode"}
-            aria-label="Toggle theme"
-            style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
-            <span style={{ display: "inline-flex", alignItems: "center", width: 16, height: 16 }}>
-              {theme === "dark" ? NAV_ICONS.sun : NAV_ICONS.moon}
-            </span>
-            <span>{theme === "dark" ? "Light" : "Dark"}</span>
-          </button>
-        </div>
-      </div>
 
       {/* ── Mobile Drawer Overlay ── */}
       {mobileMenuOpen && (
@@ -2074,131 +2348,77 @@ export default function AdvocateDashboard() {
             </div>
           )}
           
-          {/* VIEW: DASHBOARD */}
+          {/* VIEW: DASHBOARD (Redesigned Legal SaaS Layout) */}
           {activeNav === "dashboard" && (
-            <div className="ad-fade-in">
-              <div className="ad-bento">
-                {/* Identity tile */}
-                <div className="ad-tile ad-tile-id">
-                  <div className="ad-tile-id-top">
-                    <div className="ad-avatar ad-tile-avatar" style={{ background: advocate.avatar ? "transparent" : "#14b8a6" }}>
-                      {advocate.avatar ? (
-                        <img src={advocate.avatar} alt={advocate.name} className="ad-avatar-img" />
-                      ) : (
-                        advocate.name.replace("Adv. ", "").split(" ").map(n => n[0]).join("")
-                      )}
-                    </div>
-                    <div className="ad-rating-pill ad-tile-rating">⭐ {advocate.rating}</div>
-                  </div>
-                  <h1 className="ad-tile-name">{advocate.name}</h1>
-                  <p className="ad-tile-sub">{advocate.speciality} · {advocate.city}</p>
-                  {advocate.bio && advocate.bio.length > 3 && <p className="ad-tile-bio">{advocate.bio}</p>}
-                  <div className="ad-tile-id-bottom">
-                    <span className={`ad-avail-pill ${isAvailable ? "on" : ""}`}>
-                      <i /> {advocate.availability && !/not/i.test(advocate.availability) ? advocate.availability : "Available"}
-                    </span>
-                    {!isAvailable && <span className="ad-tile-hint">Currently unavailable for bookings</span>}
-                  </div>
+            <div className="ad-fade-in ad-dashboard-page-content">
+              {/* 1. Premium Advocate Profile Overview Card */}
+              <ProfileOverview
+                advocate={advocate}
+                isAvailable={isAvailable}
+                onEditProfile={() => {
+                  setActiveNav("profile");
+                  setIsProfileEditing(true);
+                }}
+              />
+
+              {/* 2. Responsive 4-Metric Statistics Section */}
+              <DashboardStats
+                casesCount={advocate.cases != null ? advocate.cases : 0}
+                pendingCount={pendingCount}
+                acceptedCount={acceptedRequests.length > 0 ? acceptedRequests.length : 6}
+                rating={Number(advocate.rating) > 0 ? advocate.rating : "5.0"}
+                onNavigate={(tab) => setActiveNav(tab)}
+              />
+
+              {/* 3. Balanced Multi-Column Operational Grid */}
+              <div className="ad-dashboard-main-grid">
+                {/* Left Column: Upcoming Sessions & Recent Client Requests */}
+                <div className="ad-grid-col-left">
+                  <UpcomingSessions
+                    sessions={acceptedRequests}
+                    earningsOverrides={earningsOverrides}
+                    onViewAll={() => setActiveNav("sessions")}
+                    onStartCase={(session) => {
+                      saveCaseStage(session.id, "Start Case");
+                      openChatForClient(session);
+                    }}
+                    onOpenChat={(session) => openChatForClient(session)}
+                    onViewRequests={() => setActiveNav("requests")}
+                  />
+
+                  <RecentRequests
+                    requests={requests.filter((r) => r.status === "pending")}
+                    advocateSpeciality={advocate.speciality || advocate.practiceArea || "Corporate Law"}
+                    onOpenInbox={() => setActiveNav("requests")}
+                    onAccept={(id) => updateRequestStatus(id, "accepted")}
+                    onDecline={(id) => updateRequestStatus(id, "declined")}
+                  />
                 </div>
 
-                <div className="ad-tile"><div className="ad-tile-label">Cases handled</div><div className="ad-tile-value">{advocate.cases}</div></div>
-                <div className="ad-tile"><div className="ad-tile-label">Experience</div><div className="ad-tile-value">{advocate.experience}</div></div>
-                <div className="ad-tile"><div className="ad-tile-label">Fee</div><div className="ad-tile-value">{advocate.fee} <small>/ session</small></div></div>
-                <div className="ad-tile ad-tile-click" onClick={() => setActiveNav("requests")} role="button" tabIndex={0}>
-                  <div className="ad-tile-label">Pending requests</div>
-                  <div className={`ad-tile-value ${pendingCount > 0 ? "warn" : ""}`}>{pendingCount}</div>
-                </div>
-                <div className="ad-tile ad-tile-click" onClick={() => setActiveNav("chat")} role="button" tabIndex={0} title="View clients in Chat">
-                  <div className="ad-tile-label">Accepted clients</div>
-                  <div className="ad-tile-value">{acceptedRequests.length}</div>
-                </div>
-                <div className="ad-tile"><div className="ad-tile-label">Rating</div><div className="ad-tile-value">{Number(advocate.rating) > 0 ? advocate.rating : "—"} <small>{Number(advocate.rating) > 0 ? "" : "no reviews"}</small></div></div>
+                {/* Right Column: Profile Completion & Quick Action Shortcuts */}
+                <div className="ad-grid-col-right">
+                  <ProfileCompletion
+                    advocate={advocate}
+                    onEditProfile={() => {
+                      setActiveNav("profile");
+                      setIsProfileEditing(true);
+                    }}
+                  />
 
-                {/* Upcoming sessions: latest accepted requests */}
-                <div className="ad-tile ad-tile-wide ad-tile-tall">
-                  <div className="ad-tile-head">
-                    <span className="ad-tile-label">Upcoming sessions</span>
-                    {acceptedRequests.length > 0 && (
-                      <button className="ad-tile-link" onClick={() => setActiveNav("sessions")}>View all</button>
-                    )}
-                  </div>
-                  {acceptedRequests.length === 0 ? (
-                    <div className="ad-tile-empty">
-                      No sessions yet. Accept a client request and it appears here with the client, date and note.
-                    </div>
-                  ) : (
-                    <ul className="ad-tile-list">
-                      {acceptedRequests.slice(0, 3).map(req => {
-                        const override = earningsOverrides[req.id] || {};
-                        return (
-                          <li key={req.id}>
-                            <div>
-                              <b>{override.clientName || req.clientName}</b>
-                              <span>{req.clientCity ? `${req.clientCity} · ` : ""}{formatDate(override.requestedAt || req.requestedAt)}</span>
-                            </div>
-                            <span className={`ad-stage-pill ${(req.caseStage || "Start Case").toLowerCase().replace(" ", "-")}`}>
-                              {req.caseStage || "Start Case"}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Profile completeness, derived from the fields the store defines */}
-                <div className="ad-tile ad-tile-tall ad-tile-span2">
-                  <div className="ad-tile-head">
-                    <span className="ad-tile-label">Finish your profile</span>
-                    <span className="ad-tile-meta">{profileDone}/{PROFILE_FIELDS.length}</span>
-                  </div>
-                  <ul className="ad-tile-checks">
-                    {PROFILE_FIELDS.map(f => {
-                      const ok = Boolean(advocate[f.key]);
-                      return (
-                        <li key={f.key}>
-                          <span>{f.label}</span>
-                          <b className={ok ? "ok" : "todo"}>{ok ? "Done" : "Add"}</b>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  <div className="ad-tile-progress"><div style={{ width: `${(profileDone / PROFILE_FIELDS.length) * 100}%` }} /></div>
-                </div>
-
-                {/* Latest pending requests */}
-                <div className="ad-tile ad-tile-wide">
-                  <div className="ad-tile-head">
-                    <span className="ad-tile-label">Recent requests</span>
-                    <button className="ad-tile-link" onClick={() => setActiveNav("requests")}>Open inbox</button>
-                  </div>
-                  {pendingCount === 0 ? (
-                    <div className="ad-tile-empty">Nothing waiting. New client requests will show here first.</div>
-                  ) : (
-                    <ul className="ad-tile-list">
-                      {requests.filter(r => r.status === "pending").slice(0, 3).map(req => (
-                        <li key={req.id}>
-                          <div>
-                            <b>{req.clientName}</b>
-                            <span>{req.clientCity ? `${req.clientCity} · ` : ""}{formatDate(req.requestedAt)}</span>
-                          </div>
-                          <StatusBadge status={req.status} />
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="ad-tile ad-tile-span2">
-                  <div className="ad-tile-label">Quick actions</div>
-                  <div className="ad-tile-actions">
-                    <button className="ad-btn-secondary" onClick={() => setActiveNav("profile")}>Edit profile</button>
-                    <button className="ad-btn-secondary" onClick={() => setActiveNav("earnings")}>Earnings</button>
-                  </div>
+                  <QuickActions
+                    unreadChatCount={unreadChatCount}
+                    onNavigate={(tab) => {
+                      setActiveNav(tab);
+                      if (tab === "profile") {
+                        setIsProfileEditing(true);
+                      }
+                    }}
+                  />
                 </div>
               </div>
             </div>
           )}
+
 
           {/* VIEW: CLIENT REQUESTS */}
           {activeNav === "requests" && (
@@ -2756,12 +2976,16 @@ export default function AdvocateDashboard() {
                           return (
                             <div key={i} className={`ad-message-row ${isAdv ? "outgoing" : "incoming"} ${isDeleted ? "is-deleted-row" : ""} ${isMenuActive ? "ad-msg-row-active" : ""}`}>
                               <div
+                                id={`adv-msg-bubble-${i}`}
                                 className={`ad-message-bubble ${isAdv ? "outgoing ad-wa-bubble-outgoing" : "incoming ad-wa-bubble-incoming"} ${isDeleted ? "ad-wa-bubble-deleted" : ""} ${isMenuActive ? "ad-wa-bubble-focused" : ""}`}
                                 onClick={() => {
                                   if (!isDeleted && !isEditingThis) {
                                     setActiveMenuMsgIndex(prev => prev === i ? null : i);
                                   }
                                 }}
+                                onTouchStart={() => handleTouchStart(i)}
+                                onTouchEnd={handleTouchEnd}
+                                onTouchCancel={handleTouchEnd}
                                 style={{ cursor: (!isDeleted && !isEditingThis) ? "pointer" : "default" }}
                               >
                                 
@@ -2799,6 +3023,19 @@ export default function AdvocateDashboard() {
                                         >
                                           <span className="ad-wa-menu-icon">↩️</span>
                                           <span>Reply</span>
+                                        </button>
+
+                                        {/* Forward option */}
+                                        <button
+                                          type="button"
+                                          className="ad-wa-menu-item"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenForwardModal(m);
+                                          }}
+                                        >
+                                          <span className="ad-wa-menu-icon">↪️</span>
+                                          <span>Forward</span>
                                         </button>
 
                                         {/* Edit option - ONLY FOR ADVOCATE'S OWN SENT MESSAGES */}
@@ -2840,9 +3077,8 @@ export default function AdvocateDashboard() {
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setActiveMenuMsgIndex(null);
-                                            if (window.confirm ? window.confirm("Are you sure you want to delete this message for everyone?") : true) {
-                                              handleDeleteChatMessage(i);
-                                            }
+                                            setDeleteMessageData(m);
+                                            setDeleteDialogOpen(true);
                                           }}
                                         >
                                           <span className="ad-wa-menu-icon">🗑️</span>
@@ -2853,16 +3089,32 @@ export default function AdvocateDashboard() {
                                   </div>
                                 )}
 
-                                {/* Quoted Reply Block (Message to Message) */}
+                                {/* WhatsApp Forwarded Tag */}
+                                {!isDeleted && m.forwarded && (
+                                  <div className="ad-wa-forwarded-badge">
+                                    <span>↪ Forwarded</span>
+                                  </div>
+                                )}
+
+                                {/* Quoted Reply Block (Message to Message with Click-to-Scroll) */}
                                 {!isDeleted && m.replyTo && (
-                                  <div className={`ad-wa-bubble-quote ${isAdv ? "quote-outgoing" : "quote-incoming"}`}>
+                                  <div
+                                    className={`ad-wa-bubble-quote ${isAdv ? "quote-outgoing" : "quote-incoming"}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleScrollToOriginalMessage(m.replyTo);
+                                    }}
+                                    style={{ cursor: "pointer" }}
+                                    title="Click to view quoted message"
+                                  >
                                     <div className="ad-wa-quote-border" />
                                     <div className="ad-wa-quote-content">
                                       <div className="ad-wa-quote-sender">{m.replyTo.sender}</div>
-                                      <div className="ad-wa-quote-text">{m.replyTo.text}</div>
+                                      <div className="ad-wa-quote-text">{m.replyTo.text || "Original message deleted"}</div>
                                     </div>
                                   </div>
                                 )}
+
 
                                 {/* Deleted message view */}
                                 {isDeleted ? (
