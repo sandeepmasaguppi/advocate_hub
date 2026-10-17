@@ -502,7 +502,8 @@
 @media (min-width: 992px) {
   .lw-mobile-profile-details,
   .lw-mobile-auth-links,
-  .lw-mobile-only {
+  .lw-mobile-only,
+  .lw-mobile-only-menu {
     display: none !important;
   }
 }
@@ -1153,7 +1154,7 @@
     max-height: calc(100vh - 60px);
     max-height: calc(100dvh - 60px);
     overflow-y: auto;
-    padding: 16px clamp(16px, 3.5vw, 28px) 32px;
+    padding: 16px clamp(16px, 3.5vw, 28px) 48px;
     background: var(--lw-surface);
     border-bottom: 3px solid var(--lw-brass-500);
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
@@ -1186,6 +1187,51 @@
   .lw-nav-link:hover,
   .lw-nav-link.active {
     background: var(--lw-brass-100);
+  }
+
+  /* Find A Lawyer responsive menu toggling */
+  .lw-desktop-only-menu {
+    display: none !important;
+  }
+
+  .lw-mobile-only-menu {
+    display: block !important;
+  }
+
+  /* Menus open inline inside drawer (accordion style) so items below push down smoothly */
+  .lw-dropdown-single-panel {
+    position: static !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 6px 0 12px !important;
+    padding: 10px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+    animation: none !important;
+    box-sizing: border-box !important;
+  }
+
+  .lw-dropdown-single-panel::before {
+    display: none !important;
+  }
+
+  .lw-dropdown-single-card {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .lw-dropdown-single-card:hover,
+  .lw-dropdown-single-card:focus-visible,
+  .lw-dropdown-single-card:active {
+    transform: none !important;
+  }
+
+  .lw-dropdown-single-label {
+    white-space: normal !important;
+    word-break: break-word !important;
   }
 
   /* Menus open inline inside the drawer */

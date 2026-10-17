@@ -142,6 +142,11 @@ const NAV_ICONS = {
       <circle cx="12" cy="7" r="4" />
     </svg>
   ),
+  talk: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  ),
 };
 
 const LAWYER_CATEGORIES_EN = [
@@ -156,6 +161,24 @@ const LAWYER_CATEGORIES_KN = [
   { icon: NAV_ICONS.criminal, label: "ಕ್ರಿಮಿನಲ್ / ಆಸ್ತಿ", path: "/find-lawyer?cat=criminal" },
   { icon: NAV_ICONS.civil, label: "ಸಿವಿಲ್ / ಸಾಲ ಪ್ರಕರಣ", path: "/find-lawyer?cat=civil" },
   { icon: NAV_ICONS.corporate, label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು", path: "/find-lawyer?cat=corporate" },
+];
+
+const LAWYER_ITEMS_EN = [
+  { icon: NAV_ICONS.family, label: "Person / Family", path: "/find-lawyer?cat=family" },
+  { icon: NAV_ICONS.criminal, label: "Criminal / Property", path: "/find-lawyer?cat=criminal" },
+  { icon: NAV_ICONS.civil, label: "Civil / Debt Matter", path: "/find-lawyer?cat=civil" },
+  { icon: NAV_ICONS.corporate, label: "Corporate Law", path: "/find-lawyer?cat=corporate" },
+  { icon: NAV_ICONS.navLawyer, label: "View All Lawyers", path: "/find-lawyer" },
+  { icon: NAV_ICONS.talk, label: "Talk to a Lawyer Now", path: "/talk-to-advocate" },
+];
+
+const LAWYER_ITEMS_KN = [
+  { icon: NAV_ICONS.family, label: "ವ್ಯಕ್ತಿ / ಕುಟುಂಬ", path: "/find-lawyer?cat=family" },
+  { icon: NAV_ICONS.criminal, label: "ಕ್ರಿಮಿನಲ್ / ಆಸ್ತಿ", path: "/find-lawyer?cat=criminal" },
+  { icon: NAV_ICONS.civil, label: "ಸಿವಿಲ್ / ಸಾಲ ಪ್ರಕರಣ", path: "/find-lawyer?cat=civil" },
+  { icon: NAV_ICONS.corporate, label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು", path: "/find-lawyer?cat=corporate" },
+  { icon: NAV_ICONS.navLawyer, label: "ಎಲ್ಲಾ ವಕೀಲರನ್ನು ನೋಡಿ", path: "/find-lawyer" },
+  { icon: NAV_ICONS.talk, label: "ಈಗಲೇ ವಕೀಲರೊಂದಿಗೆ ಮಾತನಾಡಿ", path: "/talk-to-advocate" },
 ];
 
 const LEGAL_ADVICE_EN = [
@@ -184,9 +207,9 @@ const ABOUT_KN = [
   { icon: NAV_ICONS.partners, label: "ಪಾಲುದಾರರು", path: "/Partners" },
 ];
 
-function Dropdown({ items, onClose }) {
+function Dropdown({ items, onClose, className = "" }) {
   return (
-    <div className="lw-dropdown-single-panel" onClick={(e) => e.stopPropagation()}>
+    <div className={`lw-dropdown-single-panel ${className}`.trim()} onClick={(e) => e.stopPropagation()}>
       <div className="lw-dropdown-single-list">
         {items.map((item) => (
           <Link key={item.label} to={item.path} className="lw-dropdown-single-card" onClick={onClose}>
@@ -200,27 +223,12 @@ function Dropdown({ items, onClose }) {
   );
 }
 
-function LawyerMegaMenu({ onClose, isKn }) {
+function LawyerMegaMenu({ onClose, isKn, className = "" }) {
   const navigate = useNavigate();
   const categories = isKn ? LAWYER_CATEGORIES_KN : LAWYER_CATEGORIES_EN;
 
   return (
-    <div className="lw-mega-menu" onClick={(e) => e.stopPropagation()}>
-      <div className="lw-mega-header">
-        <div className="lw-mega-title-wrap">
-          <span className="lw-mega-title-badge">{NAV_ICONS.navLawyer}</span>
-          <div className="lw-mega-title-content">
-            <div className="lw-mega-title">
-              {isKn ? "ವಿಭಾಗವಾರು ವಕೀಲರನ್ನು ಹುಡುಕಿ" : "Find A Lawyer By Category"}
-            </div>
-            <div className="lw-mega-subtitle">
-              {isKn
-                ? "ಸೂಕ್ತ ವಕೀಲರನ್ನು ಹುಡುಕಲು ನಿಮ್ಮ ಕಾನೂನು ಪ್ರಕರಣದ ಪ್ರಕಾರವನ್ನು ಆಯ್ಕೆಮಾಡಿ"
-                : "Choose your legal matter type to find the right advocate"}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className={`lw-mega-menu ${className}`.trim()} onClick={(e) => e.stopPropagation()}>
       <div className="lw-mega-grid">
         {categories.map((cat) => (
           <Link key={cat.label} to={cat.path} className="lw-mega-card" onClick={onClose}>
@@ -426,6 +434,7 @@ export default function Navbar() {
   }
 
   const isKn = lang === "kn";
+  const lawyerDropdownItems = isKn ? LAWYER_ITEMS_KN : LAWYER_ITEMS_EN;
   const legalAdviceItems = isKn ? LEGAL_ADVICE_KN : LEGAL_ADVICE_EN;
   const aboutItems = isKn ? ABOUT_KN : ABOUT_EN;
 
@@ -504,7 +513,12 @@ export default function Navbar() {
               <span>{isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ" : "Find A Lawyer"}</span>
               <span className="lw-nav-chevron">{NAV_ICONS.chevronDown}</span>
             </button>
-            {openMenu === "lawyer" && <LawyerMegaMenu onClose={handleLinkClick} isKn={isKn} />}
+            {openMenu === "lawyer" && (
+              <>
+                <LawyerMegaMenu onClose={handleLinkClick} isKn={isKn} className="lw-desktop-only-menu" />
+                <Dropdown items={lawyerDropdownItems} onClose={handleLinkClick} className="lw-mobile-only-menu" />
+              </>
+            )}
           </div>
 
           {/* Legal Advice */}
