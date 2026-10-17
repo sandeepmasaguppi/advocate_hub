@@ -602,8 +602,27 @@ export default function AdvocateDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [profileForm, setProfileForm] = useState(null);
   const [isProfileEditing, setIsProfileEditing] = useState(false);
-  const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
+
+  const activeConvRef = useRef(activeConv);
+  const activeNavRef = useRef(activeNav);
+  const advocateIdRef = useRef(advocateId);
+  const lastAlertedTimeRef = useRef(0);
+  const chatEndRef = useRef(null);
+
+  useEffect(() => { activeConvRef.current = activeConv; }, [activeConv]);
+  useEffect(() => { activeNavRef.current = activeNav; }, [activeNav]);
+  useEffect(() => { advocateIdRef.current = advocateId; }, [advocateId]);
+
+  const scrollToBottom = useCallback((behavior = "smooth") => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior, block: "nearest" });
+    }
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom("smooth");
+  }, [convMessages.length, activeConv?.clientId, scrollToBottom]);
 
   // Initialize profile form when advocate loads or changes
   useEffect(() => {
@@ -645,148 +664,79 @@ export default function AdvocateDashboard() {
     }
   }, [ready, advocate, navigate]);
 
-  useEffect(() => {
+  // Synchronously reload requests and earnings overrides
+  const reloadRequestsAndEarnings = useCallback(() => {
     if (!advocateId) return;
-    const refresh = () => {
-      const all = loadAllRequests();
-      const list = all[advocateId] || [];
-      list.sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt));
-      setRequests(list);
+    const all = loadAllRequests();
+    const list = all[advocateId] || [];
+    list.sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt));
+    setRequests(list);
 
-      const allOverrides = loadEarningsOverrides();
-      setEarningsOverrides(allOverrides[advocateId] || {});
-    };
-    refresh();
-    window.addEventListener("focus", refresh);
-    return () => window.removeEventListener("focus", refresh);
+    const allOverrides = loadEarningsOverrides();
+    setEarningsOverrides(allOverrides[advocateId] || {});
   }, [advocateId]);
 
-  // Load conversations for chat view: scan localStorage for keys chat_{clientId}_{advocateId}
-  useEffect(() => {
+  // Master real-time scan: scans requests + all chat_{clientId}_{advocateId} keys and updates state synchronously
+  const refreshConversationsAndRequests = useCallback(() => {
     if (!advocateId) return;
-    const buildList = () => {
-      const list = [];
-      try {
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (!k || !k.startsWith("chat_")) continue;
-          const parts = k.split("_");
-          if (parts.length !== 3) continue;
-          const clientId = Number(parts[1]);
-          const advId = Number(parts[2]);
-          if (advId !== Number(advocateId)) continue;
-          const raw = localStorage.getItem(k);
-          const msgs = raw ? JSON.parse(raw) : [];
-          const last = msgs.length ? msgs[msgs.length - 1] : null;
-          const clientName = msgs.find(m => m.clientName)?.clientName || null;
-          // detect last admin reply timestamp (if any) to give priority
-          let adminReplyAt = null;
-          for (let j = msgs.length - 1; j >= 0; j--) {
-            if (msgs[j] && msgs[j].from === "admin") { adminReplyAt = msgs[j].t; break; }
+    reloadRequestsAndEarnings();
+
+    const list = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith("chat_")) continue;
+        const parts = k.split("_");
+        if (parts.length !== 3) continue;
+        const clientId = Number(parts[1]);
+        const advId = Number(parts[2]);
+        if (advId !== Number(advocateId)) continue;
+        const raw = localStorage.getItem(k);
+        const msgs = raw ? JSON.parse(raw) : [];
+        const last = msgs.length ? msgs[msgs.length - 1] : null;
+        const clientName = msgs.find((m) => m && m.clientName)?.clientName || null;
+        let adminReplyAt = null;
+        for (let j = msgs.length - 1; j >= 0; j--) {
+          if (msgs[j] && msgs[j].from === "admin") {
+            adminReplyAt = msgs[j].t;
+            break;
           }
-          list.push({ clientId, key: k, lastMsg: last, clientName, adminReplyAt });
         }
-      } catch (e) { /* ignore */ }
-      return list;
-    };
-
-    const resolveNamesAndSet = async () => {
-      let list = buildList();
-      // prioritize conversations with admin replies, then by last message time desc
-      const convCompare = (a, b) => {
-        const aa = a.adminReplyAt ? new Date(a.adminReplyAt).getTime() : 0;
-        const bb = b.adminReplyAt ? new Date(b.adminReplyAt).getTime() : 0;
-        if (aa !== bb) return bb - aa; // more recent admin reply first
-        const ta = a.lastMsg ? new Date(a.lastMsg.t).getTime() : 0;
-        const tb = b.lastMsg ? new Date(b.lastMsg.t).getTime() : 0;
-        return tb - ta;
-      };
-      list.sort(convCompare);
-
-      // for any entry missing clientName, try fetching minimal public info from backend
-      const missing = list.filter(l => !l.clientName);
-      const token = getAdvocateToken();
-      if (missing.length && token) {
-        await Promise.all(missing.map(async (m) => {
-          try {
-            const c = await api(`/api/clients/${m.clientId}`, { token });
-            if (c && c.name) m.clientName = c.name;
-          } catch (err) { /* ignore fetch errors */ }
-        }));
+        list.push({ clientId, key: k, lastMsg: last, clientName: clientName || `Client ${clientId}`, adminReplyAt });
       }
+    } catch (e) { /* ignore */ }
 
-      // fallback to generic label if still missing
-      list = list.map(l => ({ ...l, clientName: l.clientName || `Client ${l.clientId}` }));
-      setConversations(list);
+    const convCompare = (a, b) => {
+      const aa = a.adminReplyAt ? new Date(a.adminReplyAt).getTime() : 0;
+      const bb = b.adminReplyAt ? new Date(b.adminReplyAt).getTime() : 0;
+      if (aa !== bb) return bb - aa;
+      const ta = a.lastMsg ? new Date(a.lastMsg.t).getTime() : 0;
+      const tb = b.lastMsg ? new Date(b.lastMsg.t).getTime() : 0;
+      return tb - ta;
     };
+    list.sort(convCompare);
+    setConversations(list);
+    setChatReadVersion((v) => v + 1);
 
-    resolveNamesAndSet();
-  }, [advocateId]);
-
-  // Update conversations when localStorage changes in another tab (client sends message)
-  useEffect(() => {
-    const handler = (e) => {
-      if (!e.key || !e.key.startsWith("chat_")) return;
-      // trigger re-scan
+    // If active conversation is currently open, reload its messages synchronously
+    const curConv = activeConvRef.current;
+    if (curConv && curConv.key) {
       try {
-        // rebuild list and attempt to resolve missing names when the storage key changes
-        const rebuild = () => {
-          const list = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (!k || !k.startsWith("chat_")) continue;
-            const parts = k.split("_");
-            if (parts.length !== 3) continue;
-            const clientId = Number(parts[1]);
-            const advId = Number(parts[2]);
-            if (advId !== Number(advocateId)) continue;
-            const raw = localStorage.getItem(k);
-            const msgs = raw ? JSON.parse(raw) : [];
-              const last = msgs.length ? msgs[msgs.length - 1] : null;
-              const clientName = msgs.find(m => m.clientName)?.clientName || null;
-              let adminReplyAt = null;
-              for (let j = msgs.length - 1; j >= 0; j--) {
-                if (msgs[j] && msgs[j].from === "admin") { adminReplyAt = msgs[j].t; break; }
-              }
-              list.push({ clientId, key: k, lastMsg: last, clientName, adminReplyAt });
-          }
-          const convCompare = (a, b) => {
-            const aa = a.adminReplyAt ? new Date(a.adminReplyAt).getTime() : 0;
-            const bb = b.adminReplyAt ? new Date(b.adminReplyAt).getTime() : 0;
-            if (aa !== bb) return bb - aa;
-            const ta = a.lastMsg ? new Date(a.lastMsg.t).getTime() : 0;
-            const tb = b.lastMsg ? new Date(b.lastMsg.t).getTime() : 0;
-            return tb - ta;
-          };
-          list.sort(convCompare);
-          return list;
-        };
+        const raw = localStorage.getItem(curConv.key);
+        if (raw) {
+          setConvMessages(JSON.parse(raw));
+        }
+      } catch (e) {}
+    }
+  }, [advocateId, reloadRequestsAndEarnings]);
 
-        const list = rebuild();
-        const token = getAdvocateToken();
-        // try resolving names for the changed/added key
-        (async () => {
-          const missing = list.filter(l => !l.clientName);
-          if (missing.length && token) {
-            await Promise.all(missing.map(async (m) => {
-              try {
-                const c = await api(`/api/clients/${m.clientId}`, { token });
-                if (c && c.name) m.clientName = c.name;
-              } catch (err) { /* ignore */ }
-            }));
-          }
-          setConversations(list.map(l => ({ ...l, clientName: l.clientName || `Client ${l.clientId}` })));
-          // if active conv updated key, refresh messages
-          if (e.key === (activeConv && activeConv.key)) {
-            const raw = localStorage.getItem(activeConv.key);
-            setConvMessages(raw ? JSON.parse(raw) : []);
-          }
-        })();
-      } catch (err) { /* ignore */ }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, [advocateId, activeConv]);
+  // Initial load on mount and window focus
+  useEffect(() => {
+    if (!advocateId) return;
+    refreshConversationsAndRequests();
+    window.addEventListener("focus", refreshConversationsAndRequests);
+    return () => window.removeEventListener("focus", refreshConversationsAndRequests);
+  }, [advocateId, refreshConversationsAndRequests]);
 
   // Helper to determine unread messages in a conversation
   const getConvUnreadCount = useCallback((convKey, cid) => {
@@ -914,6 +864,13 @@ export default function AdvocateDashboard() {
     }
   }, [advocateId]);
 
+  // Auto-select first conversation on desktop when navigating to chat if none selected
+  useEffect(() => {
+    if (activeNav === "chat" && !activeConv && !mobileChatActive && mergedConversations.length > 0 && typeof window !== "undefined" && window.innerWidth >= 992) {
+      openConversation(mergedConversations[0]);
+    }
+  }, [activeNav, activeConv, mobileChatActive, mergedConversations, openConversation]);
+
   // Open chat tab for a specific client record
   const openChatForClient = (req) => {
     const cid = req.clientId || req.id;
@@ -1017,6 +974,27 @@ export default function AdvocateDashboard() {
       };
       localStorage.setItem("law4u_latest_advocate_message", JSON.stringify(notifPayload));
       localStorage.setItem(`law4u_notify_client_${activeConv.clientId}`, JSON.stringify(notifPayload));
+      try {
+        const channel = new BroadcastChannel("law4u_chat_channel");
+        channel.postMessage({
+          type: "ADVOCATE_MESSAGE",
+          clientId: activeConv.clientId,
+          advocateId: advocateId,
+          advocateName: notifPayload.advocateName,
+          advocateAvatar: notifPayload.advocateAvatar,
+          text: newMsgObj.text,
+          t: newMsgObj.t,
+          replyTo: newMsgObj.replyTo,
+          attachment: newMsgObj.attachment
+        });
+        channel.postMessage({
+          type: "CHAT_UPDATED",
+          clientId: activeConv.clientId,
+          advocateId: advocateId,
+          key: k
+        });
+        channel.close();
+      } catch (bcErr) {}
       window.dispatchEvent(new CustomEvent("law4u_advocate_message_sent", { detail: notifPayload }));
       window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key: k, clientId: activeConv.clientId, advocateId } }));
       window.dispatchEvent(new Event("storage"));
@@ -1024,6 +1002,7 @@ export default function AdvocateDashboard() {
 
     // Notify other components & tabs
     window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
+    scrollToBottom("smooth");
   };
 
   // Delete message (WhatsApp style: "🚫 This message was deleted")
@@ -1063,6 +1042,17 @@ export default function AdvocateDashboard() {
         }
       }
     } catch {}
+
+    try {
+      const channel = new BroadcastChannel("law4u_chat_channel");
+      channel.postMessage({
+        type: "CHAT_UPDATED",
+        clientId: activeConv.clientId,
+        advocateId: advocateId,
+        key: k
+      });
+      channel.close();
+    } catch (bcErr) {}
 
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
@@ -1106,6 +1096,17 @@ export default function AdvocateDashboard() {
         }
       }
     } catch {}
+
+    try {
+      const channel = new BroadcastChannel("law4u_chat_channel");
+      channel.postMessage({
+        type: "CHAT_UPDATED",
+        clientId: activeConv.clientId,
+        advocateId: advocateId,
+        key: k
+      });
+      channel.close();
+    } catch (bcErr) {}
 
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
@@ -1373,38 +1374,63 @@ export default function AdvocateDashboard() {
     }
   }, [activeNav, activeConv, advocateId, convMessages.length]);
 
-  // Real-time listener for client messages across tabs / intervals with WhatsApp audio chime & popup toast
+  // Real-time listener for client messages across tabs / BroadcastChannel / window events with WhatsApp audio chime & popup toast
   useEffect(() => {
-    let lastAlertedTime = 0;
+    if (!advocateId) return;
 
     const triggerClientNotification = (payload) => {
       if (!payload) return;
       const msgTime = payload.t ? new Date(payload.t).getTime() : Date.now();
-      if (msgTime <= lastAlertedTime) return;
-      lastAlertedTime = msgTime;
+      if (msgTime <= lastAlertedTimeRef.current) return;
+      lastAlertedTimeRef.current = msgTime;
 
-      setChatReadVersion(v => v + 1);
+      // Synchronously refresh conversation list and requests so left panel is immediate
+      refreshConversationsAndRequests();
 
-      // If advocate currently has this exact conversation open in chat, auto-mark read and sync
-      if (activeNav === "chat" && activeConv && String(activeConv.clientId) === String(payload.clientId)) {
-        if (advocateId) {
-          localStorage.setItem(`law4u_adv_${advocateId}_last_read_${payload.clientId}`, new Date().toISOString());
+      const curActiveConv = activeConvRef.current;
+      const curActiveNav = activeNavRef.current;
+      const isCurrentChatOpen = (curActiveNav === "chat" && curActiveConv && (String(curActiveConv.clientId) === String(payload.clientId) || Number(curActiveConv.clientId) === Number(payload.clientId)));
+
+      if (isCurrentChatOpen) {
+        if (advocateIdRef.current) {
+          localStorage.setItem(`law4u_adv_${advocateIdRef.current}_last_read_${payload.clientId}`, new Date().toISOString());
         }
-        const raw = localStorage.getItem(`chat_${payload.clientId}_${advocateId}`);
-        if (raw) setConvMessages(JSON.parse(raw));
+        const raw = localStorage.getItem(`chat_${payload.clientId}_${advocateIdRef.current}`);
+        if (raw) {
+          setConvMessages(JSON.parse(raw));
+        }
+        playWhatsAppNotificationSound();
+        scrollToBottom("smooth");
       } else {
-        // Advocate is on another screen, tab or conversation: play WhatsApp chime and show popup notification!
+        // Advocate is on another screen, tab, or viewing another client: play WhatsApp chime and show popup notification toast
         playWhatsAppNotificationSound();
         setIncomingToast({
           clientId: payload.clientId,
           clientName: payload.clientName || `Client #${payload.clientId}`,
           text: payload.text || "New message",
-          key: `chat_${payload.clientId}_${advocateId}`,
+          key: `chat_${payload.clientId}_${advocateIdRef.current}`,
           t: payload.t || new Date().toISOString()
         });
       }
+      setChatReadVersion((v) => v + 1);
     };
 
+    // 1. Zero-latency BroadcastChannel
+    let channel = null;
+    try {
+      channel = new BroadcastChannel("law4u_chat_channel");
+      channel.onmessage = (event) => {
+        const data = event.data;
+        if (!data) return;
+        if (data.type === "CLIENT_MESSAGE" && (Number(data.advocateId) === Number(advocateId) || !data.advocateId)) {
+          triggerClientNotification(data);
+        } else if (data.type === "REQUESTS_UPDATED" || data.type === "CHAT_UPDATED") {
+          refreshConversationsAndRequests();
+        }
+      };
+    } catch (e) {}
+
+    // 2. Custom window events
     const handleClientMsgSent = (e) => {
       const detail = e?.detail;
       if (detail && (!detail.advocateId || Number(detail.advocateId) === Number(advocateId))) {
@@ -1412,16 +1438,27 @@ export default function AdvocateDashboard() {
       }
     };
 
+    const handleChatUpdated = (e) => {
+      const detail = e?.detail;
+      refreshConversationsAndRequests();
+      const curActiveConv = activeConvRef.current;
+      if (curActiveConv && (detail?.key === curActiveConv.key || String(detail?.clientId) === String(curActiveConv.clientId))) {
+        try {
+          const raw = localStorage.getItem(curActiveConv.key);
+          if (raw) setConvMessages(JSON.parse(raw));
+        } catch {}
+      }
+    };
+
+    const handleRequestsUpdated = () => {
+      refreshConversationsAndRequests();
+    };
+
+    // 3. Storage events (cross-tab / storage updates)
     const handleStorage = (e) => {
-      if (!e?.key) return;
-      if (e.key.startsWith("chat_") || e.key.startsWith("law4u_")) {
-        setChatReadVersion(v => v + 1);
-        if (activeConv && e.key === activeConv.key) {
-          try {
-            const raw = localStorage.getItem(activeConv.key);
-            if (raw) setConvMessages(JSON.parse(raw));
-          } catch {}
-        }
+      if (!e) return;
+      if (!e.key || e.key.startsWith("chat_") || e.key.startsWith("law4u_")) {
+        refreshConversationsAndRequests();
       }
       if (e.key === `law4u_notify_adv_${advocateId}` || e.key === "law4u_latest_client_message") {
         try {
@@ -1433,32 +1470,53 @@ export default function AdvocateDashboard() {
       }
     };
 
-    const handleChatUpdated = (e) => {
-      const detail = e?.detail;
-      setChatReadVersion(v => v + 1);
-      if (activeConv && (detail?.key === activeConv.key || String(detail?.clientId) === String(activeConv.clientId))) {
-        try {
-          const raw = localStorage.getItem(activeConv.key);
-          if (raw) setConvMessages(JSON.parse(raw));
-        } catch {}
-      }
-    };
-
     window.addEventListener("law4u_client_message_sent", handleClientMsgSent);
     window.addEventListener("law4u_chat_updated", handleChatUpdated);
+    window.addEventListener("law4u_requests_updated", handleRequestsUpdated);
     window.addEventListener("storage", handleStorage);
 
+    // 4. Guaranteed 1000ms polling heartbeat interval
+    let lastKnownMsgCount = -1;
+    let lastKey = "";
     const interval = setInterval(() => {
-      setChatReadVersion(v => v + 1);
-    }, 2500);
+      const curConv = activeConvRef.current;
+      if (curConv && curConv.key) {
+        try {
+          const raw = localStorage.getItem(curConv.key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (curConv.key !== lastKey || parsed.length !== lastKnownMsgCount) {
+              lastKey = curConv.key;
+              lastKnownMsgCount = parsed.length;
+              setConvMessages(parsed);
+              refreshConversationsAndRequests();
+            }
+          }
+        } catch {}
+      }
+      try {
+        const notifRaw = localStorage.getItem(`law4u_notify_adv_${advocateId}`);
+        if (notifRaw) {
+          const payload = JSON.parse(notifRaw);
+          if (payload && payload.t) {
+            const time = new Date(payload.t).getTime();
+            if (time > lastAlertedTimeRef.current) {
+              triggerClientNotification(payload);
+            }
+          }
+        }
+      } catch {}
+    }, 1000);
 
     return () => {
+      if (channel) channel.close();
       window.removeEventListener("law4u_client_message_sent", handleClientMsgSent);
       window.removeEventListener("law4u_chat_updated", handleChatUpdated);
+      window.removeEventListener("law4u_requests_updated", handleRequestsUpdated);
       window.removeEventListener("storage", handleStorage);
       clearInterval(interval);
     };
-  }, [advocateId, activeNav, activeConv]);
+  }, [advocateId, refreshConversationsAndRequests, scrollToBottom]);
 
   if (!ready) return null;
 
@@ -2728,6 +2786,7 @@ export default function AdvocateDashboard() {
                           }}
                         />
                       )}
+                      <div ref={chatEndRef} style={{ height: "1px", width: "100%", clear: "both" }} />
                     </div>
 
                     {/* Pending Attachment Preview Banner */}

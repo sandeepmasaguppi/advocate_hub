@@ -1,15 +1,16 @@
 // ============================================================
 //  Partners.js — Advocates Hub "Institutional Partnerships"
 //  Features:
-//    • Full Black & White (Dark & Light) Theme Architecture
-//    • Real-Time Synchronization with ThemeStore & LanguageStore
-//    • Bilingual English / Kannada Support
+//    • Executive "Slate & Teal" UI Architecture (matching Admin Console)
+//    • 100% Stroke-Based SVG Icons System (No raw emojis)
+//    • Full Dual-Theme Support (Dark & Light Theme) with ThemeStore Sync
+//    • Bilingual English / Kannada Real-Time Synchronization
 //    • 6 Strategic Partnership Tracks with Perks & Badges
 //    • Verified Institutional Alliances Showcase
-//    • Value Proposition & Strategic Advantages
-//    • 4 Working One-Tap Action Cards (Call, WhatsApp, Email, Office)
+//    • Strategic Value Proposition with Radial Glow Cards
+//    • Dedicated Executive Liaison Desk (Sandeep Masaguppi) with 6 Interactive Channels
 //    • Interactive Partnership Proposal Form with Validation & Store Sync
-//    • Interactive Partnership FAQ Accordion
+//    • Smooth FAQ Accordion with Rotating SVG Chevrons
 //    • Statutory Bar Council & Privacy Compliance Guarantee
 // ============================================================
 
@@ -20,11 +21,207 @@ import { getTheme } from "../data/themeStore";
 import sandeepImg from "../images/sandeep.jpeg";
 import "./Partners.css";
 
+// ── EXECUTIVE SVG ICON LIBRARY (24x24 stroke-based, matching Adminpage) ──
+const PARTNER_ICONS = {
+  handshake: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m11 17 2 2a1 1 0 0 0 1.42 0l4.24-4.24a1 1 0 0 0 0-1.42L16 11.5" />
+      <path d="m8.5 14.5-2.2 2.2a1 1 0 0 1-1.42 0L2.7 14.5a1 1 0 0 1 0-1.42L7.5 8.3" />
+      <path d="m15.5 8.5 2.2-2.2a1 1 0 0 1 1.42 0l2.18 2.18a1 1 0 0 1 0 1.42L16.5 14.7" />
+      <path d="M7 11.5 11.5 7l3 3-4.5 4.5" />
+    </svg>
+  ),
+  scales: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="M7 21h10" />
+      <path d="M12 3v18" />
+      <path d="M3 7h18" />
+    </svg>
+  ),
+  court: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 21h18" />
+      <path d="M5 21V10" />
+      <path d="M9 21V10" />
+      <path d="M15 21V10" />
+      <path d="M19 21V10" />
+      <path d="m2 7 10-4 10 4v2H2Z" />
+    </svg>
+  ),
+  enterprise: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+      <path d="M9 22v-4h6v4" />
+      <path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01" />
+    </svg>
+  ),
+  academic: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+      <path d="M6 12v5c3 3 9 3 12 0v-5" />
+    </svg>
+  ),
+  code: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+      <line x1="14" y1="4" x2="10" y2="20" />
+    </svg>
+  ),
+  heart: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+    </svg>
+  ),
+  reach: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+    </svg>
+  ),
+  shieldCheck: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  ),
+  dashboard: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="9" rx="1" />
+      <rect x="14" y="3" width="7" height="5" rx="1" />
+      <rect x="14" y="12" width="7" height="9" rx="1" />
+      <rect x="3" y="16" width="7" height="5" rx="1" />
+    </svg>
+  ),
+  briefcase: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  ),
+  chart: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+      <line x1="2" y1="20" x2="22" y2="20" />
+    </svg>
+  ),
+  lock: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      <circle cx="12" cy="16" r="1.5" />
+    </svg>
+  ),
+  phone: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  ),
+  whatsapp: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  ),
+  mail: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  ),
+  inbox: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  ),
+  instagram: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  ),
+  mapPin: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  ),
+  check: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  chevronDown: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  ),
+  arrowRight: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  ),
+  user: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  building: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+      <path d="M6 12H4a2 2 0 0 0-2 2v8h4" />
+      <path d="M18 9h2a2 2 0 0 1 2 2v11h-4" />
+      <path d="M10 6h4" />
+      <path d="M10 10h4" />
+      <path d="M10 14h4" />
+      <path d="M10 18h4" />
+    </svg>
+  ),
+  quote: (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+    </svg>
+  ),
+  helpCircle: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7" />
+      <path d="M12 17h.01" />
+    </svg>
+  ),
+  send: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+  ),
+  verified: (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2 9.19 3.84 5.92 3.39 4.19 6.27 1.22 7.84 1.78 11.2 0 14.12l2.36 2.42.06 3.38 3.32.74 1.84 2.83 3.19-.99 2.87 1.83 2.87-1.83 3.19.99 1.84-2.83 3.32-.74.06-3.38 2.36-2.42-1.78-2.92.56-3.36-2.97-1.57-1.73-2.88-3.27.45L12 2zm-1.25 14.34-4.09-4.09 1.41-1.41 2.68 2.68 6.09-6.09 1.41 1.41-7.5 7.5z" />
+    </svg>
+  ),
+  sparkle: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+    </svg>
+  )
+};
+
 // ── PARTNERSHIP TRACKS / CATEGORIES ──
 const PARTNER_VERTICALS = [
   {
     id: "law-firms",
-    icon: "⚖️",
+    iconKey: "scales",
+    color: "#2563eb",
     titleEn: "Law Firms & Chambers",
     titleKn: "ಕಾನೂನು ಸಂಸ್ಥೆಗಳು & ಚೇಂಬರ್ಸ್",
     descEn:
@@ -46,7 +243,8 @@ const PARTNER_VERTICALS = [
   },
   {
     id: "bar-associations",
-    icon: "🏛️",
+    iconKey: "court",
+    color: "#0f766e",
     titleEn: "Bar Associations & Councils",
     titleKn: "ಬಾರ್ ಅಸೋಸಿಯೇಷನ್‌ಗಳು & ಕೌನ್ಸಿಲ್‌ಗಳು",
     descEn:
@@ -68,7 +266,8 @@ const PARTNER_VERTICALS = [
   },
   {
     id: "corporates",
-    icon: "🏢",
+    iconKey: "enterprise",
+    color: "#d97706",
     titleEn: "Enterprises & In-House Counsel",
     titleKn: "ಕಾರ್ಪೊರೇಟ್‌ಗಳು & ಇನ್‌ಹೌಸ್ ಲೀಗಲ್",
     descEn:
@@ -90,7 +289,8 @@ const PARTNER_VERTICALS = [
   },
   {
     id: "academia",
-    icon: "🎓",
+    iconKey: "academic",
+    color: "#7c3aed",
     titleEn: "Law Universities & Clinics",
     titleKn: "ಕಾನೂನು ವಿಶ್ವವಿದ್ಯಾಲಯಗಳು",
     descEn:
@@ -112,7 +312,8 @@ const PARTNER_VERTICALS = [
   },
   {
     id: "legaltech",
-    icon: "💻",
+    iconKey: "code",
+    color: "#0891b2",
     titleEn: "LegalTech & Enterprise APIs",
     titleKn: "ಲೀಗಲ್‌ಟೆಕ್ & ಸಾಫ್ಟ್‌ವೇರ್ ಎಪಿಐ",
     descEn:
@@ -134,7 +335,8 @@ const PARTNER_VERTICALS = [
   },
   {
     id: "ngos",
-    icon: "🤝",
+    iconKey: "heart",
+    color: "#e11d48",
     titleEn: "NGOs & Legal Aid Societies",
     titleKn: "ಎನ್‌ಜಿಒ & ಸಾರ್ವಜನಿಕ ಕಾನೂನು ನೆರವು",
     descEn:
@@ -223,42 +425,48 @@ const ALLIANCE_BODIES = [
 // ── PARTNERSHIP VALUE PROPOSITIONS ──
 const ALLIANCE_BENEFITS = [
   {
-    icon: "🚀",
+    iconKey: "reach",
+    color: "#2563eb",
     titleEn: "Expanded Litigant Reach",
     titleKn: "ಹೆಚ್ಚಿದ ಗ್ರಾಹಕರ ಸಂಪರ್ಕ",
     descEn:
       "Connect your empanelled advocates with thousands of active monthly litigants seeking verified legal representation across Karnataka."
   },
   {
-    icon: "🛡️",
+    iconKey: "shieldCheck",
+    color: "#0f766e",
     titleEn: "Tamper-Proof Verification",
     titleKn: "ಪರಿಶೀಲಿತ ಅಧಿಕೃತ ಮುದ್ರೆ",
     descEn:
       "Every associated advocate undergoes manual verification of State Bar Council enrollment numbers and active Certificate of Practice (COP)."
   },
   {
-    icon: "⚡",
+    iconKey: "dashboard",
+    color: "#d97706",
     titleEn: "Institutional Dashboard",
     titleKn: "ಸಾಂಸ್ಥಿಕ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
     descEn:
       "Manage all associate advocates, assign incoming corporate briefs, track client appointments, and monitor compliance in one place."
   },
   {
-    icon: "💼",
+    iconKey: "briefcase",
+    color: "#7c3aed",
     titleEn: "Dedicated Alliance Manager",
     titleKn: "ಮೀಸಲಾದ ಸಂಬಂಧ ವ್ಯವಸ್ಥಾಪಕರು",
     descEn:
       "Direct access to our executive partnerships leadership for priority onboarding, customized SLA workflows, and institutional billing."
   },
   {
-    icon: "📊",
+    iconKey: "chart",
+    color: "#0891b2",
     titleEn: "Quarterly Analytics & Insights",
     titleKn: "ಪಾರದರ್ಶಕ ವರದಿಗಾರಿಕೆ",
     descEn:
       "Comprehensive institutional reporting on consultation volumes, turnaround times, and client satisfaction metrics for governing committees."
   },
   {
-    icon: "🔒",
+    iconKey: "lock",
+    color: "#10b981",
     titleEn: "256-Bit Cryptographic Security",
     titleKn: "ಗರಿಷ್ಠ ದರ್ಜೆಯ ಡೇಟಾ ಭದ್ರತೆ",
     descEn:
@@ -315,7 +523,13 @@ export default function Partners() {
   const [theme, setTheme] = useState(getTheme);
 
   // Language state synchronized with global language selector
-  const [lang, setLang] = useState(() => localStorage.getItem("law4u_lang") || "en");
+  const [lang, setLang] = useState(() => {
+    try {
+      return localStorage.getItem("law4u_home_lang") || localStorage.getItem("law4u_lang") || "en";
+    } catch {
+      return "en";
+    }
+  });
   const isKn = lang === "kn";
 
   // Form state & error tracking
@@ -339,18 +553,25 @@ export default function Partners() {
   // Synchronize theme & language listeners
   useEffect(() => {
     const handleTheme = (e) => {
-      setTheme(e.detail || getTheme());
+      setTheme(e?.detail || getTheme());
     };
     const handleLang = (e) => {
-      setLang(e.detail || localStorage.getItem("law4u_lang") || "en");
+      if (e?.detail) setLang(e.detail);
+      else {
+        try {
+          setLang(localStorage.getItem("law4u_home_lang") || localStorage.getItem("law4u_lang") || "en");
+        } catch {}
+      }
     };
 
     window.addEventListener("law4u_theme_change", handleTheme);
     window.addEventListener("law4u_lang_change", handleLang);
+    window.addEventListener("storage", handleLang);
 
     return () => {
       window.removeEventListener("law4u_theme_change", handleTheme);
       window.removeEventListener("law4u_lang_change", handleLang);
+      window.removeEventListener("storage", handleLang);
     };
   }, []);
 
@@ -384,7 +605,7 @@ export default function Partners() {
       e.type = isKn ? "ಪಾಲುದಾರಿಕೆಯ ವಿಭಾಗವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Please select a partnership category";
     }
     if (!form.city.trim()) {
-      e.city = isKn ? "ನಗರ ಅಥವಾ ಜಿಲ್ಲೆಯನ್ನು ನಮೂದಿಸಿ" : "Headquarter city/state is required";
+      e.city = isKn ? "ನಗರ ಅಥವಾ ಜಿಲ್ಲೆಯನ್ನು ನಮೂದಿಸಿ" : "Headquarter city/district is required";
     }
 
     setErr(e);
@@ -448,12 +669,12 @@ export default function Partners() {
   };
 
   return (
-    <div className={`pt-page ${theme === "dark" ? "pt-dark" : "pt-light"}`}>
+    <div className={`pt-page ${theme === "dark" ? "pt-dark theme-dark" : "pt-light theme-light"}`} data-theme={theme}>
       {/* ── HERO SECTION ─────────────────────────────────── */}
       <section className="pt-hero">
         <div className="pt-hero-inner">
           <div className="pt-hero-badge">
-            <span className="pt-badge-icon">🤝</span>
+            <span className="pt-badge-icon">{PARTNER_ICONS.handshake}</span>
             <span>
               {isKn
                 ? "ಸಾಂಸ್ಥಿಕ ಪಾಲುದಾರಿಕೆಗಳು & ವ್ಯೂಹಾತ್ಮಕ ಮೈತ್ರಿ"
@@ -486,14 +707,16 @@ export default function Partners() {
               className="pt-btn-primary pt-hero-btn"
               onClick={() => scrollToSection("pt-proposal-form")}
             >
-              <span>{isKn ? "ಪ್ರಸ್ತಾವನೆ ಸಲ್ಲಿಸಿ ↓" : "Submit Partnership Proposal ↓"}</span>
+              <span>{isKn ? "ಪ್ರಸ್ತಾವನೆ ಸಲ್ಲಿಸಿ" : "Submit Partnership Proposal"}</span>
+              <span className="pt-btn-arrow">{PARTNER_ICONS.arrowRight}</span>
             </button>
             <button
               type="button"
               className="pt-btn-secondary pt-hero-btn"
               onClick={() => scrollToSection("pt-executive-desk")}
             >
-              <span>{isKn ? "ನೇರ ಸಂಪರ್ಕ ವಿವರ 📞" : "Direct Executive Desk 📞"}</span>
+              <span className="pt-btn-sec-icon">{PARTNER_ICONS.phone}</span>
+              <span>{isKn ? "ನೇರ ಸಂಪರ್ಕ ವಿವರ" : "Direct Executive Desk"}</span>
             </button>
           </div>
 
@@ -535,9 +758,12 @@ export default function Partners() {
         {/* SECTION 1: Partnership Verticals */}
         <section className="pt-section" id="pt-programs">
           <div className="pt-section-header">
-            <span className="pt-subheading">
-              {isKn ? "ಪಾಲುದಾರಿಕೆ ವಿಭಾಗಗಳು" : "COLLABORATION TRACKS"}
-            </span>
+            <div className="pt-subheading-pill">
+              <span className="pt-subheading-icon">{PARTNER_ICONS.briefcase}</span>
+              <span className="pt-subheading">
+                {isKn ? "ಪಾಲುದಾರಿಕೆ ವಿಭಾಗಗಳು" : "COLLABORATION TRACKS"}
+              </span>
+            </div>
             <h2 className="pt-section-title">
               {isKn ? "ನಾವು ಯಾರೊಂದಿಗೆ ಪಾಲುದಾರಿಕೆ ಹೊಂದುತ್ತೇವೆ?" : "Who We Partner With"}
             </h2>
@@ -550,10 +776,28 @@ export default function Partners() {
 
           <div className="pt-verticals-grid">
             {PARTNER_VERTICALS.map((v) => (
-              <div key={v.id} className="pt-vertical-card">
+              <div key={v.id} className="pt-vertical-card" style={{ "--v-accent": v.color }}>
                 <div className="pt-card-top">
-                  <span className="pt-vertical-icon">{v.icon}</span>
-                  <span className="pt-vertical-badge">{isKn ? v.badgeKn : v.badgeEn}</span>
+                  <div
+                    className="pt-vertical-icon-box"
+                    style={{
+                      color: v.color,
+                      backgroundColor: `${v.color}15`,
+                      borderColor: `${v.color}35`,
+                    }}
+                  >
+                    {PARTNER_ICONS[v.iconKey]}
+                  </div>
+                  <span
+                    className="pt-vertical-badge"
+                    style={{
+                      color: v.color,
+                      backgroundColor: `${v.color}12`,
+                      borderColor: `${v.color}30`,
+                    }}
+                  >
+                    {isKn ? v.badgeKn : v.badgeEn}
+                  </span>
                 </div>
                 <h3 className="pt-vertical-title">{isKn ? v.titleKn : v.titleEn}</h3>
                 <p className="pt-vertical-desc">{isKn ? v.descKn : v.descEn}</p>
@@ -563,7 +807,7 @@ export default function Partners() {
                 <ul className="pt-perks-list">
                   {(isKn ? v.perksKn : v.perksEn).map((p, idx) => (
                     <li key={idx}>
-                      <span className="pt-perk-check">✓</span>
+                      <span className="pt-perk-check-badge">{PARTNER_ICONS.check}</span>
                       <span>{p}</span>
                     </li>
                   ))}
@@ -576,9 +820,12 @@ export default function Partners() {
         {/* SECTION 2: Institutional Alliances Showcase */}
         <section className="pt-section pt-alliances-section">
           <div className="pt-section-header">
-            <span className="pt-subheading">
-              {isKn ? "ವಿಶ್ವಾಸಾರ್ಹ ಮೈತ್ರಿಕೂಟಗಳು" : "ESTABLISHED ALLIANCES"}
-            </span>
+            <div className="pt-subheading-pill">
+              <span className="pt-subheading-icon">{PARTNER_ICONS.court}</span>
+              <span className="pt-subheading">
+                {isKn ? "ವಿಶ್ವಾಸಾರ್ಹ ಮೈತ್ರಿಕೂಟಗಳು" : "ESTABLISHED ALLIANCES"}
+              </span>
+            </div>
             <h2 className="pt-section-title">
               {isKn ? "ನಮ್ಮ ಪ್ರಮುಖ ಸಾಂಸ್ಥಿಕ ಪಾಲುದಾರರು" : "Institutional Network & Alliances"}
             </h2>
@@ -598,7 +845,10 @@ export default function Partners() {
                   </div>
                   <div className="pt-alliance-meta">
                     <span className="pt-alliance-type">{body.type}</span>
-                    <span className="pt-alliance-est">{body.established}</span>
+                    <span className="pt-alliance-est">
+                      <span className="pt-alliance-verified-icon">{PARTNER_ICONS.verified}</span>
+                      {body.established}
+                    </span>
                   </div>
                 </div>
                 <div className="pt-alliance-name">{isKn ? body.nameKn : body.nameEn}</div>
@@ -608,12 +858,15 @@ export default function Partners() {
           </div>
         </section>
 
-        {/* SECTION 3: Strategic Value & Benefits */}
+        {/* SECTION 3: Strategic Value & Benefits (Admin Stat Card Style) */}
         <section className="pt-section">
           <div className="pt-section-header">
-            <span className="pt-subheading">
-              {isKn ? "ಪಾಲುದಾರಿಕೆಯ ಅನುಕೂಲಗಳು" : "STRATEGIC VALUE"}
-            </span>
+            <div className="pt-subheading-pill">
+              <span className="pt-subheading-icon">{PARTNER_ICONS.sparkle}</span>
+              <span className="pt-subheading">
+                {isKn ? "ಪಾಲುದಾರಿಕೆಯ ಅನುಕೂಲಗಳು" : "STRATEGIC VALUE"}
+              </span>
+            </div>
             <h2 className="pt-section-title">
               {isKn ? "ನಮ್ಮೊಂದಿಗೆ ಪಾಲುದಾರಿಕೆ ಏಕೆ?" : "Why Partner With Advocates Hub?"}
             </h2>
@@ -626,8 +879,24 @@ export default function Partners() {
 
           <div className="pt-benefits-grid">
             {ALLIANCE_BENEFITS.map((b, idx) => (
-              <div key={idx} className="pt-benefit-card">
-                <div className="pt-benefit-icon-wrap">{b.icon}</div>
+              <div
+                key={idx}
+                className="pt-benefit-card"
+                style={{
+                  "--b-tone": b.color,
+                  "--b-tone-soft": `${b.color}15`,
+                }}
+              >
+                <div
+                  className="pt-benefit-icon-wrap"
+                  style={{
+                    color: b.color,
+                    backgroundColor: `${b.color}14`,
+                    borderColor: `${b.color}30`,
+                  }}
+                >
+                  {PARTNER_ICONS[b.iconKey]}
+                </div>
                 <h4 className="pt-benefit-title">{isKn ? b.titleKn : b.titleEn}</h4>
                 <p className="pt-benefit-desc">{isKn ? b.descKn : b.descEn}</p>
               </div>
@@ -638,9 +907,12 @@ export default function Partners() {
         {/* SECTION 4: Strategic Partnerships Desk (Executive Spotlight) */}
         <section className="pt-section pt-executive-section" id="pt-executive-desk">
           <div className="pt-section-header">
-            <span className="pt-subheading">
-              {isKn ? "ಕಾರ್ಯನಿರ್ವಾಹಕ ಸಂಪರ್ಕ & ನಾಯಕತ್ವ" : "EXECUTIVE LIAISON & ALLIANCES"}
-            </span>
+            <div className="pt-subheading-pill">
+              <span className="pt-subheading-icon">{PARTNER_ICONS.user}</span>
+              <span className="pt-subheading">
+                {isKn ? "ಕಾರ್ಯನಿರ್ವಾಹಕ ಸಂಪರ್ಕ & ನಾಯಕತ್ವ" : "EXECUTIVE LIAISON & ALLIANCES"}
+              </span>
+            </div>
             <h2 className="pt-section-title">
               {isKn ? "ಕಾರ್ಯತಂತ್ರದ ಪಾಲುದಾರಿಕೆ ವಿಭಾಗ" : "Strategic Partnerships & Bar Alliances Desk"}
             </h2>
@@ -657,7 +929,7 @@ export default function Partners() {
               {/* Prestige Header Badge Bar */}
               <div className="pt-exec-badge-bar">
                 <div className="pt-exec-badge-left">
-                  <span className="pt-exec-badge-seal">⚖️</span>
+                  <span className="pt-exec-badge-seal">{PARTNER_ICONS.scales}</span>
                   <span className="pt-exec-badge-title">
                     {isKn
                       ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ • ಕಾರ್ಯತಂತ್ರದ ಪಾಲುದಾರಿಕೆ ವಿಭಾಗ"
@@ -665,7 +937,8 @@ export default function Partners() {
                   </span>
                 </div>
                 <span className="pt-exec-active-chip">
-                  🛡️ {isKn ? "ಪರಿಶೀಲಿತ ನಾಯಕತ್ವ" : "Verified Leadership"}
+                  <span className="pt-chip-svg">{PARTNER_ICONS.shieldCheck}</span>
+                  <span>{isKn ? "ಪರಿಶೀಲಿತ ನಾಯಕತ್ವ" : "Verified Leadership"}</span>
                 </span>
               </div>
 
@@ -677,12 +950,16 @@ export default function Partners() {
                     alt="Sandeep Masaguppi"
                     className="pt-exec-photo"
                   />
+                  <div className="pt-exec-online-badge" title="Active Liaison">
+                    {PARTNER_ICONS.verified}
+                  </div>
                 </div>
 
                 <div className="pt-exec-identity">
                   <div className="pt-exec-meta">
+                    <span className="pt-exec-loc-icon">{PARTNER_ICONS.mapPin}</span>
                     <span className="pt-exec-loc">
-                      📍 {isKn ? "ಬೆಂಗಳೂರು & ಗೋಕಾಕ, ಕರ್ನಾಟಕ" : "Bengaluru & Gokak, Karnataka"}
+                      {isKn ? "ಬೆಂಗಳೂರು & ಗೋಕಾಕ, ಕರ್ನಾಟಕ" : "Bengaluru & Gokak, Karnataka"}
                     </span>
                   </div>
                   <h3 className="pt-exec-name">Sandeep Masaguppi</h3>
@@ -700,7 +977,8 @@ export default function Partners() {
               {/* Mandate & Focus Box */}
               <div className="pt-exec-work-box">
                 <div className="pt-exec-work-label">
-                  <span>💼</span> {isKn ? "ಪಾಲುದಾರಿಕೆ ಜವಾಬ್ದಾರಿ & ವ್ಯಾಪ್ತಿ" : "Partnership Mandate & Focus"}
+                  <span className="pt-exec-box-icon">{PARTNER_ICONS.briefcase}</span>
+                  <span>{isKn ? "ಪಾಲುದಾರಿಕೆ ಜವಾಬ್ದಾರಿ & ವ್ಯಾಪ್ತಿ" : "Partnership Mandate & Focus"}</span>
                 </div>
                 <p className="pt-exec-work-text">
                   {isKn
@@ -711,7 +989,7 @@ export default function Partners() {
 
               {/* Executive Quote */}
               <div className="pt-exec-quote-box">
-                <span className="pt-exec-quote-mark">“</span>
+                <span className="pt-exec-quote-mark">{PARTNER_ICONS.quote}</span>
                 <p className="pt-exec-quote-text">
                   {isKn
                     ? "ಕಾನೂನು ಸೇವೆ ಕೇವಲ ಮಹಾನಗರಗಳಿಗೆ ಸೀಮಿತವಾಗಬಾರದು. ಕರ್ನಾಟಕದ ಪ್ರತಿಯೊಂದು ಜಿಲ್ಲೆ, ತಾಲೂಕುಗಳಿಗೂ ಅತ್ಯುನ್ನತ ವಕೀಲರನ್ನು ತಲುಪಿಸುವುದೇ ನಮ್ಮ ಗುರಿ."
@@ -724,7 +1002,8 @@ export default function Partners() {
             <div className="pt-exec-col-right">
               <div className="pt-exec-actions-wrap">
                 <h4 className="pt-exec-actions-heading">
-                  <span>📞</span> {isKn ? "ನೇರ ಸಂಪರ್ಕ & ಅಧಿಕೃತ ಮಾರ್ಗಗಳು" : "Direct Channels & Executive Contact"}
+                  <span className="pt-exec-heading-icon">{PARTNER_ICONS.phone}</span>
+                  <span>{isKn ? "ನೇರ ಸಂಪರ್ಕ & ಅಧಿಕೃತ ಮಾರ್ಗಗಳು" : "Direct Channels & Executive Contact"}</span>
                 </h4>
                 <p className="pt-exec-actions-sub">
                   {isKn
@@ -735,7 +1014,7 @@ export default function Partners() {
                 <div className="pt-exec-channels-grid">
                   {/* Phone Call */}
                   <a href="tel:+919108717353" className="pt-exec-channel phone">
-                    <div className="pt-channel-icon">📞</div>
+                    <div className="pt-channel-icon-badge phone">{PARTNER_ICONS.phone}</div>
                     <div className="pt-channel-info">
                       <span className="pt-channel-label">{isKn ? "ದೂರವಾಣಿ ಸಂಖ್ಯೆ" : "Direct Phone Line"}</span>
                       <strong className="pt-channel-val">+91 91087 17353</strong>
@@ -743,7 +1022,10 @@ export default function Partners() {
                         {isKn ? "ಸೋಮ–ಶನಿ, ಬೆಳಿಗ್ಗೆ 9 - ಸಂಜೆ 7:30" : "Mon–Sat, 9:00 AM – 7:30 PM IST"}
                       </span>
                     </div>
-                    <span className="pt-channel-arrow">{isKn ? "ಕರೆ ಮಾಡಿ →" : "Call Now →"}</span>
+                    <span className="pt-channel-arrow">
+                      <span>{isKn ? "ಕರೆ ಮಾಡಿ" : "Call Now"}</span>
+                      <span className="pt-arrow-svg">{PARTNER_ICONS.arrowRight}</span>
+                    </span>
                   </a>
 
                   {/* WhatsApp */}
@@ -753,7 +1035,7 @@ export default function Partners() {
                     rel="noopener noreferrer"
                     className="pt-exec-channel whatsapp"
                   >
-                    <div className="pt-channel-icon">💬</div>
+                    <div className="pt-channel-icon-badge whatsapp">{PARTNER_ICONS.whatsapp}</div>
                     <div className="pt-channel-info">
                       <span className="pt-channel-label">{isKn ? "ಅಧಿಕೃತ ವಾಟ್ಸಾಪ್" : "Official WhatsApp"}</span>
                       <strong className="pt-channel-val">+91 91087 17353</strong>
@@ -761,7 +1043,10 @@ export default function Partners() {
                         {isKn ? "ತ್ವರಿತ ಸಾಂಸ್ಥಿಕ ಚಾಟ್" : "Instant partnership inquiries"}
                       </span>
                     </div>
-                    <span className="pt-channel-arrow">{isKn ? "ಸಂದೇಶ ಕಳುಹಿಸಿ →" : "Chat on WhatsApp →"}</span>
+                    <span className="pt-channel-arrow">
+                      <span>{isKn ? "ಸಂದೇಶ ಕಳುಹಿಸಿ" : "Chat on WhatsApp"}</span>
+                      <span className="pt-arrow-svg">{PARTNER_ICONS.arrowRight}</span>
+                    </span>
                   </a>
 
                   {/* Direct Executive Email */}
@@ -769,7 +1054,7 @@ export default function Partners() {
                     href="mailto:sandeeprmasaguppi@gmail.com?subject=Strategic%20Partnership%20Inquiry%20-%20Advocates%20Hub"
                     className="pt-exec-channel email"
                   >
-                    <div className="pt-channel-icon">✉️</div>
+                    <div className="pt-channel-icon-badge email">{PARTNER_ICONS.mail}</div>
                     <div className="pt-channel-info">
                       <span className="pt-channel-label">{isKn ? "ನೇರ ಕಾರ್ಯನಿರ್ವಾಹಕ ಇಮೇಲ್" : "Direct Executive Email"}</span>
                       <strong className="pt-channel-val">sandeeprmasaguppi@gmail.com</strong>
@@ -777,15 +1062,18 @@ export default function Partners() {
                         {isKn ? "4 ಗಂಟೆಗಳಲ್ಲಿ ಪರಿಶೀಲನೆ" : "Reviewed within 4 business hours"}
                       </span>
                     </div>
-                    <span className="pt-channel-arrow">{isKn ? "ಇಮೇಲ್ ಕಳುಹಿಸಿ →" : "Send Email →"}</span>
+                    <span className="pt-channel-arrow">
+                      <span>{isKn ? "ಇಮೇಲ್ ಕಳುಹಿಸಿ" : "Send Email"}</span>
+                      <span className="pt-arrow-svg">{PARTNER_ICONS.arrowRight}</span>
+                    </span>
                   </a>
 
                   {/* Company Official Email */}
                   <a
                     href="mailto:advocatehub.in@gmail.com?subject=Strategic%20Partnership%20Inquiry%20-%20Advocates%20Hub"
-                    className="pt-exec-channel email"
+                    className="pt-exec-channel company-email"
                   >
-                    <div className="pt-channel-icon">📫</div>
+                    <div className="pt-channel-icon-badge company">{PARTNER_ICONS.inbox}</div>
                     <div className="pt-channel-info">
                       <span className="pt-channel-label">{isKn ? "ಕಂಪನಿ ಅಧಿಕೃತ ಇಮೇಲ್" : "Official Company Email"}</span>
                       <strong className="pt-channel-val">advocatehub.in@gmail.com</strong>
@@ -793,7 +1081,10 @@ export default function Partners() {
                         {isKn ? "ಸಾಂಸ್ಥಿಕ ಡೆಸ್ಕ್ ಇನ್‌ಬಾಕ್ಸ್" : "Institutional Desk Inbox"}
                       </span>
                     </div>
-                    <span className="pt-channel-arrow">{isKn ? "ಇಮೇಲ್ ಕಳುಹಿಸಿ →" : "Send Email →"}</span>
+                    <span className="pt-channel-arrow">
+                      <span>{isKn ? "ಇಮೇಲ್ ಕಳುಹಿಸಿ" : "Send Email"}</span>
+                      <span className="pt-arrow-svg">{PARTNER_ICONS.arrowRight}</span>
+                    </span>
                   </a>
 
                   {/* Official Instagram */}
@@ -803,7 +1094,7 @@ export default function Partners() {
                     rel="noopener noreferrer"
                     className="pt-exec-channel instagram"
                   >
-                    <div className="pt-channel-icon">📸</div>
+                    <div className="pt-channel-icon-badge instagram">{PARTNER_ICONS.instagram}</div>
                     <div className="pt-channel-info">
                       <span className="pt-channel-label">{isKn ? "ಅಧಿಕೃತ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್" : "Official Instagram"}</span>
                       <strong className="pt-channel-val">@advocate__hub</strong>
@@ -811,7 +1102,10 @@ export default function Partners() {
                         {isKn ? "ಅಧಿಕೃತ ಅಪ್‌ಡೇಟ್‌ಗಳು ಮತ್ತು ಪ್ರಕಟಣೆಗಳು" : "Official updates & bar network news"}
                       </span>
                     </div>
-                    <span className="pt-channel-arrow">{isKn ? "ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ನೋಡಿ →" : "Follow on IG →"}</span>
+                    <span className="pt-channel-arrow">
+                      <span>{isKn ? "ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ನೋಡಿ" : "Follow on IG"}</span>
+                      <span className="pt-arrow-svg">{PARTNER_ICONS.arrowRight}</span>
+                    </span>
                   </a>
 
                   {/* Location / Chambers */}
@@ -821,7 +1115,7 @@ export default function Partners() {
                     rel="noopener noreferrer"
                     className="pt-exec-channel office"
                   >
-                    <div className="pt-channel-icon">📍</div>
+                    <div className="pt-channel-icon-badge office">{PARTNER_ICONS.mapPin}</div>
                     <div className="pt-channel-info">
                       <span className="pt-channel-label">{isKn ? "ಪ್ರಧಾನ ಕಚೇರಿ" : "Executive Chambers"}</span>
                       <strong className="pt-channel-val">Bengaluru & Gokak, Karnataka</strong>
@@ -829,14 +1123,17 @@ export default function Partners() {
                         {isKn ? "ಹೈಕೋರ್ಟ್ & ಜಿಲ್ಲಾ ಬಾರ್ ಸಂಪರ್ಕ" : "High Court & District Bar Liaison"}
                       </span>
                     </div>
-                    <span className="pt-channel-arrow">{isKn ? "ವಿಳಾಸ ವಿವರ →" : "View on Map →"}</span>
+                    <span className="pt-channel-arrow">
+                      <span>{isKn ? "ವಿಳಾಸ ವಿವರ" : "View on Map"}</span>
+                      <span className="pt-arrow-svg">{PARTNER_ICONS.arrowRight}</span>
+                    </span>
                   </a>
                 </div>
               </div>
 
               {/* Statutory Privilege Guarantee */}
               <div className="pt-exec-trust-footer">
-                <span className="pt-trust-shield">🛡️</span>
+                <span className="pt-trust-shield">{PARTNER_ICONS.shieldCheck}</span>
                 <span className="pt-trust-text">
                   {isKn
                     ? "1961ರ ವಕೀಲರ ಕಾಯ್ದೆ, ಬಾರ್ ಕೌನ್ಸಿಲ್ ಆಫ್ ಇಂಡಿಯಾ ನೈತಿಕ ಮಾನದಂಡಗಳು ಮತ್ತು ಶಾಸನಬದ್ಧ ವಕೀಲ-ಕ್ಲೈಂಟ್ ಗೌಪ್ಯತೆಯಿಂದ ಕಟ್ಟುನಿಟ್ಟಾಗಿ ರಕ್ಷಿಸಲ್ಪಟ್ಟಿದೆ."
@@ -850,9 +1147,12 @@ export default function Partners() {
         {/* SECTION 5: Official Application (Proposal Form + Advocate Onboarding) */}
         <section className="pt-section" id="pt-proposal-form">
           <div className="pt-section-header">
-            <span className="pt-subheading">
-              {isKn ? "ಅರ್ಜಿ ನಮೂನೆ" : "OFFICIAL APPLICATION"}
-            </span>
+            <div className="pt-subheading-pill">
+              <span className="pt-subheading-icon">{PARTNER_ICONS.send}</span>
+              <span className="pt-subheading">
+                {isKn ? "ಅರ್ಜಿ ನಮೂನೆ" : "OFFICIAL APPLICATION"}
+              </span>
+            </div>
             <h2 className="pt-section-title">
               {isKn ? "ಸಾಂಸ್ಥಿಕ ಪಾಲುದಾರಿಕೆಗೆ ಪ್ರಸ್ತಾವನೆ ಸಲ್ಲಿಸಿ" : "Submit Partnership Proposal"}
             </h2>
@@ -867,9 +1167,10 @@ export default function Partners() {
             {/* Left Column: Interactive Form */}
             <div className="pt-form-card">
               <div className="pt-form-header">
-                <span className="pt-form-badge">
-                  {isKn ? "ಅರ್ಜಿ ನಮೂನೆ" : "OFFICIAL APPLICATION"}
-                </span>
+                <div className="pt-form-badge">
+                  <span className="pt-badge-svg">{PARTNER_ICONS.send}</span>
+                  <span>{isKn ? "ಅರ್ಜಿ ನಮೂನೆ" : "OFFICIAL APPLICATION"}</span>
+                </div>
                 <h3 className="pt-form-main-title">
                   {isKn ? "ಸಾಂಸ್ಥಿಕ ವಿವರಗಳು" : "Institutional Application Form"}
                 </h3>
@@ -882,7 +1183,7 @@ export default function Partners() {
 
               {sentData ? (
                 <div className="pt-success-box">
-                  <div className="pt-success-icon">✅</div>
+                  <div className="pt-success-icon-wrap">{PARTNER_ICONS.shieldCheck}</div>
                   <h4 className="pt-success-title">
                     {isKn ? "ಪ್ರಸ್ತಾವನೆ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಕೆಯಾಗಿದೆ!" : "Proposal Successfully Submitted!"}
                   </h4>
@@ -904,7 +1205,8 @@ export default function Partners() {
                       rel="noopener noreferrer"
                       className="pt-btn-whatsapp"
                     >
-                      <span>💬 {isKn ? "ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ತಕ್ಷಣ ಚರ್ಚಿಸಿ" : "Connect on WhatsApp Now"}</span>
+                      <span className="pt-btn-icon">{PARTNER_ICONS.whatsapp}</span>
+                      <span>{isKn ? "ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ತಕ್ಷಣ ಚರ್ಚಿಸಿ" : "Connect on WhatsApp Now"}</span>
                     </a>
                     <button
                       type="button"
@@ -922,15 +1224,18 @@ export default function Partners() {
                     <label className="pt-label">
                       {isKn ? "ಸಂಸ್ಥೆ / ಚೇಂಬರ್ ಹೆಸರು *" : "Organization / Law Firm Name *"}
                     </label>
-                    <input
-                      type="text"
-                      className={`pt-input ${err.orgName ? "pt-input-err" : ""}`}
-                      placeholder={isKn ? "ಉದಾ: ಮೈಸೂರು ಬಾರ್ ಅಸೋಸಿಯೇಷನ್" : "e.g., Lex Veritas Law Chambers"}
-                      value={form.orgName}
-                      onChange={(e) => setF("orgName", e.target.value)}
-                      disabled={sending}
-                      autoComplete="organization"
-                    />
+                    <div className="pt-input-wrap">
+                      <span className="pt-input-icon">{PARTNER_ICONS.building}</span>
+                      <input
+                        type="text"
+                        className={`pt-input ${err.orgName ? "pt-input-err" : ""}`}
+                        placeholder={isKn ? "ಉದಾ: ಮೈಸೂರು ಬಾರ್ ಅಸೋಸಿಯೇಷನ್" : "e.g., Lex Veritas Law Chambers"}
+                        value={form.orgName}
+                        onChange={(e) => setF("orgName", e.target.value)}
+                        disabled={sending}
+                        autoComplete="organization"
+                      />
+                    </div>
                     {err.orgName && <div className="pt-err-text">⚠ {err.orgName}</div>}
                   </div>
 
@@ -940,15 +1245,18 @@ export default function Partners() {
                       <label className="pt-label">
                         {isKn ? "ಅಧಿಕೃತ ಪ್ರತಿನಿಧಿ ಹೆಸರು *" : "Contact Person Name *"}
                       </label>
-                      <input
-                        type="text"
-                        className={`pt-input ${err.contactName ? "pt-input-err" : ""}`}
-                        placeholder={isKn ? "ಉದಾ: ರಮೇಶ್ ಕುಮಾರ್" : "e.g., Adv. Rajesh Hegde"}
-                        value={form.contactName}
-                        onChange={(e) => setF("contactName", e.target.value)}
-                        disabled={sending}
-                        autoComplete="name"
-                      />
+                      <div className="pt-input-wrap">
+                        <span className="pt-input-icon">{PARTNER_ICONS.user}</span>
+                        <input
+                          type="text"
+                          className={`pt-input ${err.contactName ? "pt-input-err" : ""}`}
+                          placeholder={isKn ? "ಉದಾ: ರಮೇಶ್ ಕುಮಾರ್" : "e.g., Adv. Rajesh Hegde"}
+                          value={form.contactName}
+                          onChange={(e) => setF("contactName", e.target.value)}
+                          disabled={sending}
+                          autoComplete="name"
+                        />
+                      </div>
                       {err.contactName && <div className="pt-err-text">⚠ {err.contactName}</div>}
                     </div>
 
@@ -956,16 +1264,19 @@ export default function Partners() {
                       <label className="pt-label">
                         {isKn ? "ದೂರವಾಣಿ / ವಾಟ್ಸಾಪ್ ಸಂಖ್ಯೆ *" : "Official Phone / WhatsApp *"}
                       </label>
-                      <input
-                        type="tel"
-                        inputMode="tel"
-                        className={`pt-input ${err.phone ? "pt-input-err" : ""}`}
-                        placeholder="+91 98765 43210"
-                        value={form.phone}
-                        onChange={(e) => setF("phone", e.target.value)}
-                        disabled={sending}
-                        autoComplete="tel"
-                      />
+                      <div className="pt-input-wrap">
+                        <span className="pt-input-icon">{PARTNER_ICONS.phone}</span>
+                        <input
+                          type="tel"
+                          inputMode="tel"
+                          className={`pt-input ${err.phone ? "pt-input-err" : ""}`}
+                          placeholder="+91 98765 43210"
+                          value={form.phone}
+                          onChange={(e) => setF("phone", e.target.value)}
+                          disabled={sending}
+                          autoComplete="tel"
+                        />
+                      </div>
                       {err.phone && <div className="pt-err-text">⚠ {err.phone}</div>}
                     </div>
                   </div>
@@ -976,32 +1287,38 @@ export default function Partners() {
                       <label className="pt-label">
                         {isKn ? "ಅಧಿಕೃತ ಇಮೇಲ್ ವಿಳಾಸ *" : "Official Work Email *"}
                       </label>
-                      <input
-                        type="email"
-                        inputMode="email"
-                        className={`pt-input ${err.email ? "pt-input-err" : ""}`}
-                        placeholder="alliances@organization.in"
-                        value={form.email}
-                        onChange={(e) => setF("email", e.target.value)}
-                        disabled={sending}
-                        autoComplete="email"
-                      />
+                      <div className="pt-input-wrap">
+                        <span className="pt-input-icon">{PARTNER_ICONS.mail}</span>
+                        <input
+                          type="email"
+                          inputMode="email"
+                          className={`pt-input ${err.email ? "pt-input-err" : ""}`}
+                          placeholder="alliances@organization.in"
+                          value={form.email}
+                          onChange={(e) => setF("email", e.target.value)}
+                          disabled={sending}
+                          autoComplete="email"
+                        />
+                      </div>
                       {err.email && <div className="pt-err-text">⚠ {err.email}</div>}
                     </div>
 
                     <div className="pt-field-group">
                       <label className="pt-label">
-                        {isKn ? "ಪ್ರಧಾನ ಕಚೇರಿ / ನಗರ *" : "City / District *" }
+                        {isKn ? "ಪ್ರಧಾನ ಕಚೇರಿ / ನಗರ *" : "City / District *"}
                       </label>
-                      <input
-                        type="text"
-                        className={`pt-input ${err.city ? "pt-input-err" : ""}`}
-                        placeholder={isKn ? "ಉದಾ: ಬೆಂಗಳೂರು / ಧಾರವಾಡ" : "e.g., Bengaluru, Karnataka"}
-                        value={form.city}
-                        onChange={(e) => setF("city", e.target.value)}
-                        disabled={sending}
-                        autoComplete="address-level2"
-                      />
+                      <div className="pt-input-wrap">
+                        <span className="pt-input-icon">{PARTNER_ICONS.mapPin}</span>
+                        <input
+                          type="text"
+                          className={`pt-input ${err.city ? "pt-input-err" : ""}`}
+                          placeholder={isKn ? "ಉದಾ: ಬೆಂಗಳೂರು / ಧಾರವಾಡ" : "e.g., Bengaluru, Karnataka"}
+                          value={form.city}
+                          onChange={(e) => setF("city", e.target.value)}
+                          disabled={sending}
+                          autoComplete="address-level2"
+                        />
+                      </div>
                       {err.city && <div className="pt-err-text">⚠ {err.city}</div>}
                     </div>
                   </div>
@@ -1012,35 +1329,38 @@ export default function Partners() {
                       <label className="pt-label">
                         {isKn ? "ಪಾಲುದಾರಿಕೆ ವಿಭಾಗ *" : "Partnership Category *"}
                       </label>
-                      <select
-                        className={`pt-select ${err.type ? "pt-input-err" : ""}`}
-                        value={form.type}
-                        onChange={(e) => setF("type", e.target.value)}
-                        disabled={sending}
-                      >
-                        <option value="">{isKn ? "ವಿಭಾಗವನ್ನು ಆರಿಸಿ…" : "Select category…"}</option>
-                        <option value="Law Firm / Chamber">
-                          {isKn ? "ಕಾನೂನು ಸಂಸ್ಥೆ / ಚೇಂಬರ್ (Law Firm)" : "Law Firm / Chamber"}
-                        </option>
-                        <option value="Bar Association / Council">
-                          {isKn ? "ಬಾರ್ ಅಸೋಸಿಯೇಷನ್ / ಕೌನ್ಸಿಲ್ (Bar Body)" : "Bar Association / Council"}
-                        </option>
-                        <option value="Corporate / Enterprise">
-                          {isKn ? "ಕಾರ್ಪೊರೇಟ್ / ಉದ್ಯಮ (Enterprise)" : "Corporate / Enterprise"}
-                        </option>
-                        <option value="University / Law School">
-                          {isKn ? "ಕಾನೂನು ವಿಶ್ವವಿದ್ಯಾಲಯ (Academic)" : "University / Law School"}
-                        </option>
-                        <option value="LegalTech / API Partner">
-                          {isKn ? "ಲೀಗಲ್‌ಟೆಕ್ / ಸಾಫ್ಟ್‌ವೇರ್ ಎಪಿಐ" : "LegalTech / API Partner"}
-                        </option>
-                        <option value="NGO / Legal Aid Society">
-                          {isKn ? "ಎನ್‌ಜಿಒ / ಉಚಿತ ಕಾನೂನು ನೆರವು" : "NGO / Legal Aid Society"}
-                        </option>
-                        <option value="Other Institutional">
-                          {isKn ? "ಇತರ ಸಾಂಸ್ಥಿಕ" : "Other Institutional"}
-                        </option>
-                      </select>
+                      <div className="pt-select-wrap">
+                        <select
+                          className={`pt-select ${err.type ? "pt-input-err" : ""}`}
+                          value={form.type}
+                          onChange={(e) => setF("type", e.target.value)}
+                          disabled={sending}
+                        >
+                          <option value="">{isKn ? "ವಿಭಾಗವನ್ನು ಆರಿಸಿ…" : "Select category…"}</option>
+                          <option value="Law Firm / Chamber">
+                            {isKn ? "ಕಾನೂನು ಸಂಸ್ಥೆ / ಚೇಂಬರ್ (Law Firm)" : "Law Firm / Chamber"}
+                          </option>
+                          <option value="Bar Association / Council">
+                            {isKn ? "ಬಾರ್ ಅಸೋಸಿಯೇಷನ್ / ಕೌನ್ಸಿಲ್ (Bar Body)" : "Bar Association / Council"}
+                          </option>
+                          <option value="Corporate / Enterprise">
+                            {isKn ? "ಕಾರ್ಪೊರೇಟ್ / ಉದ್ಯಮ (Enterprise)" : "Corporate / Enterprise"}
+                          </option>
+                          <option value="University / Law School">
+                            {isKn ? "ಕಾನೂನು ವಿಶ್ವವಿದ್ಯಾಲಯ (Academic)" : "University / Law School"}
+                          </option>
+                          <option value="LegalTech / API Partner">
+                            {isKn ? "ಲೀಗಲ್‌ಟೆಕ್ / ಸಾಫ್ಟ್‌ವೇರ್ ಎಪಿಐ" : "LegalTech / API Partner"}
+                          </option>
+                          <option value="NGO / Legal Aid Society">
+                            {isKn ? "ಎನ್‌ಜಿಒ / ಉಚಿತ ಕಾನೂನು ನೆರವು" : "NGO / Legal Aid Society"}
+                          </option>
+                          <option value="Other Institutional">
+                            {isKn ? "ಇತರ ಸಾಂಸ್ಥಿಕ" : "Other Institutional"}
+                          </option>
+                        </select>
+                        <span className="pt-select-arrow">{PARTNER_ICONS.chevronDown}</span>
+                      </div>
                       {err.type && <div className="pt-err-text">⚠ {err.type}</div>}
                     </div>
 
@@ -1048,18 +1368,21 @@ export default function Partners() {
                       <label className="pt-label">
                         {isKn ? "ವಕೀಲರ ಅಥವಾ ತಂಡದ ಸಂಖ್ಯೆ" : "Advocate Roster / Team Size"}
                       </label>
-                      <select
-                        className="pt-select"
-                        value={form.rosterSize}
-                        onChange={(e) => setF("rosterSize", e.target.value)}
-                        disabled={sending}
-                      >
-                        <option value="">{isKn ? "ಆಯ್ಕೆಮಾಡಿ (ಐಚ್ಛಿಕ)" : "Select size (optional)"}</option>
-                        <option value="1-10 Advocates">1 – 10 Advocates</option>
-                        <option value="11-50 Advocates">11 – 50 Advocates</option>
-                        <option value="51-200 Advocates">51 – 200 Advocates</option>
-                        <option value="200+ Advocates">200+ Advocates / Members</option>
-                      </select>
+                      <div className="pt-select-wrap">
+                        <select
+                          className="pt-select"
+                          value={form.rosterSize}
+                          onChange={(e) => setF("rosterSize", e.target.value)}
+                          disabled={sending}
+                        >
+                          <option value="">{isKn ? "ಆಯ್ಕೆಮಾಡಿ (ಐಚ್ಛಿಕ)" : "Select size (optional)"}</option>
+                          <option value="1-10 Advocates">1 – 10 Advocates</option>
+                          <option value="11-50 Advocates">11 – 50 Advocates</option>
+                          <option value="51-200 Advocates">51 – 200 Advocates</option>
+                          <option value="200+ Advocates">200+ Advocates / Members</option>
+                        </select>
+                        <span className="pt-select-arrow">{PARTNER_ICONS.chevronDown}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1090,15 +1413,20 @@ export default function Partners() {
                         <span>{isKn ? "ಪ್ರಸ್ತಾವನೆ ಸಲ್ಲಿಕೆಯಾಗುತ್ತಿದೆ…" : "Submitting Proposal…"}</span>
                       </span>
                     ) : (
-                      <span>{isKn ? "ಪ್ರಸ್ತಾವನೆ ಸಲ್ಲಿಸಿ →" : "Submit Partnership Proposal →"}</span>
+                      <span className="pt-btn-content">
+                        <span>{isKn ? "ಪ್ರಸ್ತಾವನೆ ಸಲ್ಲಿಸಿ" : "Submit Partnership Proposal"}</span>
+                        <span className="pt-btn-icon">{PARTNER_ICONS.arrowRight}</span>
+                      </span>
                     )}
                   </button>
 
                   <div className="pt-form-privacy-note">
-                    🔒{" "}
-                    {isKn
-                      ? "ಎಲ್ಲಾ ಪ್ರಸ್ತಾವನೆಗಳನ್ನು ಭಾರತೀಯ ಸಾಕ್ಷ್ಯ ಕಾಯ್ದೆಯನ್ವಯ ಕಟ್ಟುನಿಟ್ಟಾದ ಗೌಪ್ಯತೆಯಲ್ಲಿ ಇರಿಸಲಾಗುತ್ತದೆ."
-                      : "All submissions are confidential, encrypted, and governed by non-disclosure legal standards."}
+                    <span className="pt-lock-icon">{PARTNER_ICONS.lock}</span>
+                    <span>
+                      {isKn
+                        ? "ಎಲ್ಲಾ ಪ್ರಸ್ತಾವನೆಗಳನ್ನು ಭಾರತೀಯ ಸಾಕ್ಷ್ಯ ಕಾಯ್ದೆಯನ್ವಯ ಕಟ್ಟುನಿಟ್ಟಾದ ಗೌಪ್ಯತೆಯಲ್ಲಿ ಇರಿಸಲಾಗುತ್ತದೆ."
+                        : "All submissions are confidential, encrypted, and governed by non-disclosure legal standards."}
+                    </span>
                   </div>
                 </form>
               )}
@@ -1108,7 +1436,7 @@ export default function Partners() {
             <div className="pt-sidebar-column">
               {/* Individual Advocate Callout Box */}
               <div className="pt-individual-card">
-                <div className="pt-indiv-icon">⚖️</div>
+                <div className="pt-indiv-icon-box">{PARTNER_ICONS.scales}</div>
                 <h4 className="pt-indiv-title">
                   {isKn ? "ನೀವು ವೈಯಕ್ತಿಕ ವಕೀಲರೇ?" : "Are You An Individual Practicing Advocate?"}
                 </h4>
@@ -1118,13 +1446,14 @@ export default function Partners() {
                     : "Individual advocates looking to verify credentials and receive direct client consultations can sign up individually for free."}
                 </p>
                 <Link to="/signup" className="pt-btn-outline">
-                  {isKn ? "ವಕೀಲರ ನೋಂದಣಿ (ಉಚಿತ) →" : "Advocate Free Registration →"}
+                  <span>{isKn ? "ವಕೀಲರ ನೋಂದಣಿ (ಉಚಿತ)" : "Advocate Free Registration"}</span>
+                  <span className="pt-btn-arrow">{PARTNER_ICONS.arrowRight}</span>
                 </Link>
               </div>
 
               {/* Statutory Guarantee Badge */}
               <div className="pt-compliance-badge">
-                <div className="pt-comp-shield">🛡️</div>
+                <div className="pt-comp-shield-box">{PARTNER_ICONS.shieldCheck}</div>
                 <div className="pt-comp-text">
                   <strong>
                     {isKn ? "ಶಾಸನಬದ್ಧ ಅನುಸರಣೆ ಖಾತರಿ" : "Statutory Bar Council Compliance"}
@@ -1140,12 +1469,15 @@ export default function Partners() {
           </div>
         </section>
 
-        {/* SECTION 5: Institutional FAQ Accordion */}
+        {/* SECTION 6: Institutional FAQ Accordion */}
         <section className="pt-section pt-faq-section">
           <div className="pt-section-header">
-            <span className="pt-subheading">
-              {isKn ? "ಪದೇ ಪದೇ ಕೇಳಲಾಗುವ ಪ್ರಶ್ನೆಗಳು" : "COMMON INQUIRIES"}
-            </span>
+            <div className="pt-subheading-pill">
+              <span className="pt-subheading-icon">{PARTNER_ICONS.helpCircle}</span>
+              <span className="pt-subheading">
+                {isKn ? "ಪದೇ ಪದೇ ಕೇಳಲಾಗುವ ಪ್ರಶ್ನೆಗಳು" : "COMMON INQUIRIES"}
+              </span>
+            </div>
             <h2 className="pt-section-title">
               {isKn ? "ಪಾಲುದಾರಿಕೆ ಕುರಿತು ಪ್ರಶ್ನೋತ್ತರಗಳು" : "Frequently Asked Questions"}
             </h2>
@@ -1163,15 +1495,20 @@ export default function Partners() {
                 <div
                   key={idx}
                   className={`pt-faq-item ${isOpen ? "pt-faq-item-open" : ""}`}
-                  onClick={() => setActiveFaq(isOpen ? null : idx)}
                 >
                   <button
                     type="button"
                     className="pt-faq-question"
+                    onClick={() => setActiveFaq(isOpen ? null : idx)}
                     aria-expanded={isOpen}
                   >
-                    <span>{isKn ? faq.qKn : faq.qEn}</span>
-                    <span className="pt-faq-arrow">{isOpen ? "▲" : "▼"}</span>
+                    <span className="pt-faq-q-text">
+                      <span className="pt-faq-q-icon">{PARTNER_ICONS.helpCircle}</span>
+                      <span>{isKn ? faq.qKn : faq.qEn}</span>
+                    </span>
+                    <span className={`pt-faq-chevron ${isOpen ? "is-open" : ""}`}>
+                      {PARTNER_ICONS.chevronDown}
+                    </span>
                   </button>
                   {isOpen && (
                     <div className="pt-faq-answer">

@@ -249,8 +249,25 @@ export default function ClientDashboard() {
   const [editingMsgText, setEditingMsgText] = useState("");
   const [activeMenuMsgIndex, setActiveMenuMsgIndex] = useState(null);
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const [replyingTo, setReplyingTo] = useState(null);
   const [incomingToast, setIncomingToast] = useState(null);
+
+  const selectedRef = useRef(selected);
+  const messagesEndRef = useRef(null);
+  const lastAlertedTimeRef = useRef(0);
+
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
+
+  const scrollToBottom = useCallback((behavior = "smooth") => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior, block: "nearest" });
+    }
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom("smooth");
+  }, [messages.length, selected?.id, scrollToBottom]);
 
   // Auto-dismiss WhatsApp incoming message toast after 6.5s
   useEffect(() => {
@@ -324,6 +341,18 @@ export default function ClientDashboard() {
     if (!advId) return false;
     const cid = clientId || "guest";
     if (localStorage.getItem(`law4u_client_paid_${cid}_adv_${advId}`) === "true") return true;
+
+    // Check if there are already messages exchanged with this advocate
+    try {
+      const existing = localStorage.getItem(`chat_${cid}_${advId}`);
+      if (existing) {
+        const msgs = JSON.parse(existing);
+        if (Array.isArray(msgs) && msgs.length > 0) {
+          localStorage.setItem(`law4u_client_paid_${cid}_adv_${advId}`, "true");
+          return true;
+        }
+      }
+    } catch {}
 
     // Also verify from local/server consultation payments list
     try {
@@ -460,25 +489,27 @@ export default function ClientDashboard() {
     setMessages(raw ? JSON.parse(raw) : []);
   }, [selected, clientId]);
 
-  // Real-time listener for advocate messages across tabs / intervals with WhatsApp audio chime & popup toast
+  // Real-time listener for advocate messages across tabs / BroadcastChannel / intervals with WhatsApp audio chime & popup toast
   useEffect(() => {
-    let lastAlertedTime = 0;
-
     const triggerAdvocateNotification = (payload) => {
       if (!payload) return;
       const msgTime = payload.t ? new Date(payload.t).getTime() : Date.now();
-      if (msgTime <= lastAlertedTime) return;
-      lastAlertedTime = msgTime;
+      if (msgTime <= lastAlertedTimeRef.current) return;
+      lastAlertedTimeRef.current = msgTime;
 
       setMessagesVersion(v => v + 1);
 
       // Play WhatsApp notification chime
       playWhatsAppNotificationSound();
 
+      const curSel = selectedRef.current;
       // If client currently has this advocate's chat open, refresh messages immediately
-      if (selected && Number(selected.id) === Number(payload.advocateId)) {
+      if (curSel && Number(curSel.id) === Number(payload.advocateId)) {
         const raw = localStorage.getItem(`chat_${clientId}_${payload.advocateId}`);
-        if (raw) setMessages(JSON.parse(raw));
+        if (raw) {
+          setMessages(JSON.parse(raw));
+          scrollToBottom("smooth");
+        }
       } else {
         // Client is viewing another advocate or list: show popup toast banner!
         const advMatch = advocates.find(a => Number(a.id) === Number(payload.advocateId));
@@ -492,6 +523,30 @@ export default function ClientDashboard() {
       }
     };
 
+    // 1. Zero-latency BroadcastChannel
+    let channel = null;
+    try {
+      channel = new BroadcastChannel("law4u_chat_channel");
+      channel.onmessage = (event) => {
+        const data = event.data;
+        if (!data) return;
+        if (data.type === "ADVOCATE_MESSAGE" && (Number(data.clientId) === Number(clientId) || !data.clientId)) {
+          triggerAdvocateNotification(data);
+        } else if (data.type === "CHAT_UPDATED" && (Number(data.clientId) === Number(clientId))) {
+          const curSel = selectedRef.current;
+          if (curSel && Number(curSel.id) === Number(data.advocateId)) {
+            const raw = localStorage.getItem(`chat_${clientId}_${data.advocateId}`);
+            if (raw) {
+              setMessages(JSON.parse(raw));
+              scrollToBottom("smooth");
+            }
+          }
+          setMessagesVersion(v => v + 1);
+        }
+      };
+    } catch (e) {}
+
+    // 2. Custom window events
     const handleAdvocateMsgSent = (e) => {
       const detail = e?.detail;
       if (detail && (!detail.clientId || String(detail.clientId) === String(clientId))) {
@@ -499,8 +554,24 @@ export default function ClientDashboard() {
       }
     };
 
+    const handleChatUpdated = (e) => {
+      const detail = e?.detail;
+      setMessagesVersion(v => v + 1);
+      const curSel = selectedRef.current;
+      if (curSel && (detail?.key === `chat_${clientId}_${curSel.id}` || String(detail?.advocateId) === String(curSel.id))) {
+        try {
+          const raw = localStorage.getItem(`chat_${clientId}_${curSel.id}`);
+          if (raw) {
+            setMessages(JSON.parse(raw));
+            scrollToBottom("smooth");
+          }
+        } catch {}
+      }
+    };
+
+    // 3. Storage events
     const handleStorage = (e) => {
-      if (!e?.key) return;
+      if (!e) return;
       if (e.key === `law4u_notify_client_${clientId}` || e.key === "law4u_latest_advocate_message") {
         try {
           const payload = JSON.parse(e.newValue);
@@ -508,35 +579,21 @@ export default function ClientDashboard() {
             triggerAdvocateNotification(payload);
           }
         } catch {}
-      } else if (e.key.startsWith(`chat_${clientId}_`)) {
+      } else if (!e.key || e.key.startsWith(`chat_${clientId}_`)) {
         setMessagesVersion(v => v + 1);
-        try {
-          const raw = localStorage.getItem(e.key);
-          const msgs = raw ? JSON.parse(raw) : [];
-          const lastM = msgs[msgs.length - 1];
-          if (lastM && (lastM.from === "advocate" || lastM.from === "admin")) {
-            const advId = Number(e.key.split("_")[2]);
-            triggerAdvocateNotification({
-              clientId,
-              advocateId: advId,
-              text: lastM.text,
-              t: lastM.t
-            });
-          } else if (selected && e.key === `chat_${clientId}_${selected.id}`) {
-            setMessages(msgs);
+        const curSel = selectedRef.current;
+        if (curSel) {
+          const currentKey = `chat_${clientId}_${curSel.id}`;
+          if (!e.key || e.key === currentKey) {
+            try {
+              const raw = localStorage.getItem(currentKey);
+              if (raw) {
+                setMessages(JSON.parse(raw));
+                scrollToBottom("smooth");
+              }
+            } catch {}
           }
-        } catch {}
-      }
-    };
-
-    const handleChatUpdated = (e) => {
-      const detail = e?.detail;
-      setMessagesVersion(v => v + 1);
-      if (selected && detail?.key === `chat_${clientId}_${selected.id}`) {
-        try {
-          const raw = localStorage.getItem(detail.key);
-          if (raw) setMessages(JSON.parse(raw));
-        } catch {}
+        }
       }
     };
 
@@ -544,12 +601,49 @@ export default function ClientDashboard() {
     window.addEventListener("law4u_chat_updated", handleChatUpdated);
     window.addEventListener("storage", handleStorage);
 
+    // 4. Guaranteed 1000ms polling heartbeat interval
+    let lastMsgCount = -1;
+    let lastAdvId = 0;
+    const interval = setInterval(() => {
+      const curSel = selectedRef.current;
+      if (curSel && curSel.id) {
+        const k = `chat_${clientId}_${curSel.id}`;
+        try {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (curSel.id !== lastAdvId || parsed.length !== lastMsgCount) {
+              lastAdvId = curSel.id;
+              lastMsgCount = parsed.length;
+              setMessages(parsed);
+              setMessagesVersion(v => v + 1);
+              scrollToBottom("smooth");
+            }
+          }
+        } catch {}
+      }
+      try {
+        const notifRaw = localStorage.getItem(`law4u_notify_client_${clientId}`);
+        if (notifRaw) {
+          const payload = JSON.parse(notifRaw);
+          if (payload && payload.t) {
+            const time = new Date(payload.t).getTime();
+            if (time > lastAlertedTimeRef.current) {
+              triggerClientNotification(payload);
+            }
+          }
+        }
+      } catch {}
+    }, 1000);
+
     return () => {
+      if (channel) channel.close();
       window.removeEventListener("law4u_advocate_message_sent", handleAdvocateMsgSent);
       window.removeEventListener("law4u_chat_updated", handleChatUpdated);
       window.removeEventListener("storage", handleStorage);
+      clearInterval(interval);
     };
-  }, [clientId, selected, advocates]);
+  }, [clientId, advocates, scrollToBottom]);
 
   // Emoji & File attachment states for Client chat
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -682,10 +776,40 @@ export default function ClientDashboard() {
       };
       localStorage.setItem("law4u_latest_client_message", JSON.stringify(notifPayload));
       localStorage.setItem(`law4u_notify_adv_${selected.id}`, JSON.stringify(notifPayload));
+
+      try {
+        const channel = new BroadcastChannel("law4u_chat_channel");
+        channel.postMessage({
+          type: "CLIENT_MESSAGE",
+          clientId,
+          advocateId: selected.id,
+          clientName: notifPayload.clientName,
+          clientAvatar: notifPayload.clientAvatar,
+          text: textToSend,
+          t: newMsgObj.t,
+          replyTo: newMsgObj.replyTo,
+          attachment: newMsgObj.attachment
+        });
+        channel.postMessage({
+          type: "CHAT_UPDATED",
+          clientId,
+          advocateId: selected.id,
+          key
+        });
+        channel.postMessage({
+          type: "REQUESTS_UPDATED",
+          advocateId: selected.id
+        });
+        channel.close();
+      } catch (bcErr) {}
+
       window.dispatchEvent(new CustomEvent("law4u_client_message_sent", { detail: notifPayload }));
+      window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key, clientId, advocateId: selected.id } }));
       window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
       window.dispatchEvent(new Event("storage"));
     } catch (e) { /* ignore */ }
+
+    scrollToBottom("smooth");
 
     // Remember this advocate as active chat
     if (clientId && selected) {
@@ -734,6 +858,17 @@ export default function ClientDashboard() {
       }
     } catch {}
 
+    try {
+      const channel = new BroadcastChannel("law4u_chat_channel");
+      channel.postMessage({
+        type: "CHAT_UPDATED",
+        clientId,
+        advocateId: selected.id,
+        key
+      });
+      channel.close();
+    } catch (bcErr) {}
+
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
     window.dispatchEvent(new CustomEvent("law4u_chat_updated", { detail: { key, clientId, advocateId: selected.id } }));
@@ -775,6 +910,17 @@ export default function ClientDashboard() {
         }
       }
     } catch {}
+
+    try {
+      const channel = new BroadcastChannel("law4u_chat_channel");
+      channel.postMessage({
+        type: "CHAT_UPDATED",
+        clientId,
+        advocateId: selected.id,
+        key
+      });
+      channel.close();
+    } catch (bcErr) {}
 
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new CustomEvent("law4u_requests_updated"));
@@ -1870,6 +2016,7 @@ export default function ClientDashboard() {
               }}
             />
           )}
+          <div ref={messagesEndRef} style={{ height: "1px", width: "100%", clear: "both" }} />
         </div>
 
         {/* Pending Attachment Preview Banner */}
