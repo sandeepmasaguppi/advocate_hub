@@ -1406,8 +1406,6 @@ export default function Signup({ defaultTab = "" }) {
       id: 1,
       title: isKn ? "ವೈಯಕ್ತಿಕ ವಿವರಗಳು" : "Personal Information",
       shortTitle: isKn ? "ವೈಯಕ್ತಿಕ ವಿವರ" : "Personal Info",
-      desc: isKn ? "ಹೆಸರು, ಮೊಬೈಲ್ ಮತ್ತು ಇಮೇಲ್" : "Name, Phone & Email",
-      guidance: isKn ? "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಅಧಿಕೃತ ಪೂರ್ಣ ಹೆಸರು, ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು ಇಮೇಲ್ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ." : "Enter your full legal name, verified mobile number, and active email address.",
       icon: ADMIN_ICONS.user,
       isCompleted: Boolean(adv.fullName.trim() && isValidPhone(adv.phone) && isValidEmail(adv.email)),
       hasError: Boolean(advErr.fullName || advErr.phone || advErr.email),
@@ -1417,8 +1415,6 @@ export default function Signup({ defaultTab = "" }) {
       id: 2,
       title: isKn ? "ವೃತ್ತಿಪರ ವಿವರಗಳು" : "Professional Details",
       shortTitle: isKn ? "ವೃತ್ತಿ ವಿವರ" : "Professional",
-      desc: isKn ? "ಬಾರ್ ನೋಂದಣಿ ಮತ್ತು ಕೌನ್ಸಿಲ್" : "Bar Enrollment & Council",
-      guidance: isKn ? "ನಿಮ್ಮ ರಾಜ್ಯ ಬಾರ್ ಕೌನ್ಸಿಲ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ ಮತ್ತು ಸಂಬಂಧಿತ ಬಾರ್ ಕೌನ್ಸಿಲ್ ಆಯ್ಕೆಮಾಡಿ." : "Provide your State Bar Council enrollment number and governing Bar Council.",
       icon: ADMIN_ICONS.badge,
       isCompleted: Boolean(adv.barId.trim()),
       hasError: Boolean(advErr.barId || advErr.barCouncil),
@@ -1428,8 +1424,6 @@ export default function Signup({ defaultTab = "" }) {
       id: 3,
       title: isKn ? "ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರಗಳು" : "Practice Areas",
       shortTitle: isKn ? "ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರ" : "Practice Areas",
-      desc: isKn ? "ಪರಿಣತಿ ಮತ್ತು ಕಾನೂನು ಕ್ಷೇತ್ರಗಳು" : "Fields of Expertise",
-      guidance: isKn ? "ನಿಮ್ಮ ಪರಿಣತಿಯ ಕ್ಷೇತ್ರಗಳನ್ನು ಕೆಳಗಿನ ಪಟ್ಟಿಯಿಂದ ಆರಿಸಿ ಅಥವಾ ಕಸ್ಟಮ್ ಕ್ಷೇತ್ರ ಸೇರಿಸಿ." : "Select your primary legal domains or add custom specializations.",
       icon: ADMIN_ICONS.scale,
       isCompleted: Boolean((adv.specialities && adv.specialities.length > 0) || adv.speciality),
       hasError: Boolean(advErr.speciality),
@@ -1439,8 +1433,6 @@ export default function Signup({ defaultTab = "" }) {
       id: 4,
       title: isKn ? "ನ್ಯಾಯಾಲಯದ ವ್ಯಾಪ್ತಿ" : "Court Jurisdiction",
       shortTitle: isKn ? "ನ್ಯಾಯಾಲಯ ವ್ಯಾಪ್ತಿ" : "Jurisdiction",
-      desc: isKn ? "ನ್ಯಾಯಾಲಯ ಮಟ್ಟ, ಜಿಲ್ಲೆ ಮತ್ತು ತಾಲೂಕು" : "Court Level, District & Bench",
-      guidance: isKn ? "ನ್ಯಾಯಾಲಯದ ಶ್ರೇಣಿ, ಜಿಲ್ಲೆ ಮತ್ತು ತಾಲೂಕನ್ನು ಆಯ್ಕೆಮಾಡಿ — ಗುರಿ ನ್ಯಾಯಾಲಯ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಹೊಂದಿಸಲಾಗುತ್ತದೆ." : "Choose your court hierarchy, district, and taluk to establish verified jurisdiction.",
       icon: ADMIN_ICONS.court,
       isCompleted: Boolean(adv.courtLevel && adv.court),
       hasError: Boolean(advErr.courtLevel || advErr.district || advErr.taluk || advErr.court),
@@ -1450,8 +1442,6 @@ export default function Signup({ defaultTab = "" }) {
       id: 5,
       title: isKn ? "ಸ್ಥಳ ಮತ್ತು ಅನುಭವ" : "Location & Experience",
       shortTitle: isKn ? "ಸ್ಥಳ & ಅನುಭವ" : "Location & Exp",
-      desc: isKn ? "ಮೂಲ ನಗರ ಮತ್ತು ವೃತ್ತಿ ಅನುಭವ" : "City & Practice Years",
-      guidance: isKn ? "ನಿಮ್ಮ ಮೂಲ ನಗರ ಮತ್ತು ಕಾನೂನು ವೃತ್ತಿಯಲ್ಲಿನ ಅನುಭವದ ವರ್ಷಗಳನ್ನು ನಮೂದಿಸಿ." : "Specify your base city/taluk and years of active legal practice.",
       icon: ADMIN_ICONS.calendar,
       isCompleted: Boolean((adv.city || adv.taluk || adv.district) && adv.experience),
       hasError: Boolean(advErr.city || advErr.experience),
@@ -1461,8 +1451,6 @@ export default function Signup({ defaultTab = "" }) {
       id: 6,
       title: isKn ? "ಪರಿಚಯ ಮತ್ತು ಫೋಟೋ" : "Bio & Profile Photo",
       shortTitle: isKn ? "ಪರಿಚಯ & ಫೋಟೋ" : "Bio & Photo",
-      desc: isKn ? "ಸಂಕ್ಷಿಪ್ತ ವಿವರಣೆ ಮತ್ತು ಪ್ರೊಫೈಲ್ ಚಿತ್ರ (ಐಚ್ಛಿಕ)" : "Bio & Avatar (Optional Photo)",
-      guidance: isKn ? "ಸಂಕ್ಷಿಪ್ತ ಪರಿಚಯವನ್ನು ಬರೆಯಿರಿ. ಪ್ರೊಫೈಲ್ ಫೋಟೋ ಐಚ್ಛಿಕವಾಗಿದೆ — ಫೋಟೋ ಇಲ್ಲದಿದ್ದರೆ ನಿಮ್ಮ ಆರಂಭಿಕ ಅಕ್ಷರಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತದೆ." : "Write a brief summary. Profile photo is optional — your initials avatar will be shown if not uploaded now.",
       icon: ADMIN_ICONS.camera,
       isCompleted: Boolean(adv.avatarData || adv.bio.trim()),
       hasError: Boolean(advErr.avatarData || advErr.bio),
@@ -1472,8 +1460,6 @@ export default function Signup({ defaultTab = "" }) {
       id: 7,
       title: isKn ? "ಭದ್ರತೆ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್" : "Security & Credentials",
       shortTitle: isKn ? "ಭದ್ರತೆ & ಲಾಗಿನ್" : "Security",
-      desc: isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಮತ್ತು ನಿಯಮಗಳ ಒಪ್ಪಿಗೆ" : "Password & Verification",
-      guidance: isKn ? "ಸುರಕ್ಷಿತ ಪಾಸ್‌ವರ್ಡ್ ಹೊಂದಿಸಿ ಮತ್ತು ಸೇವಾ ನಿಯಮಗಳನ್ನು ಒಪ್ಪಿಕೊಂಡು ನೋಂದಣಿಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ." : "Set a secure account password and accept platform guidelines to submit.",
       icon: ADMIN_ICONS.shield,
       isCompleted: Boolean(adv.password && adv.password.length >= 6 && adv.password === adv.confirmPw && adv.agreeTerms),
       hasError: Boolean(advErr.password || advErr.confirmPw || advErr.agreeTerms),
@@ -1719,7 +1705,7 @@ export default function Signup({ defaultTab = "" }) {
         <div className="su-top-bar">
           {showBackToSignup ? (
             <Link to="/signup" className="su-back-link" style={{ marginRight: "auto" }}>
-              <span className="su-back-arrow">←</span> Back to Sign Up Page
+              <span className="su-back-arrow">←</span> Back page
             </Link>
           ) : (
             <Link to="/" className="su-back-link" style={{ marginRight: "auto" }}>
@@ -2237,9 +2223,7 @@ export default function Signup({ defaultTab = "" }) {
               {/* LEFT SIDE: 7 Steps Navigation Sidebar */}
               <aside className="su-adv-sidebar-stepper" aria-label="Registration Steps">
                 <div className="su-adv-stepper-header">
-                  <span className="su-adv-badge-track">
-                    ⚖️ {isKn ? "ವಕೀಲರ ನೋಂದಣಿ" : "Advocate Onboarding"}
-                  </span>
+                  
                   <h3 className="su-adv-stepper-title">
                     {isKn ? "ನೋಂದಣಿ ಹಂತಗಳು" : "Registration Steps"}
                   </h3>
@@ -2344,18 +2328,6 @@ export default function Signup({ defaultTab = "" }) {
                   <p className="su-adv-step-subheading">
                     {currentStepObj.guidance}
                   </p>
-                </div>
-
-                {/* Quick Demo Fill Helper */}
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <button
-                    type="button"
-                    className="su-demo-fill-btn"
-                    onClick={() => fillAdvocate(ADVOCATES_JSON[1])}
-                    title="Autofill sample advocate data for quick testing"
-                  >
-                    ⚡ {isKn ? "ಮಾದರಿ ವಿವರಗಳನ್ನು ಸ್ವಯಂ-ಭರ್ತಿ ಮಾಡಿ" : "Autofill Sample Advocate"}
-                  </button>
                 </div>
 
                 {/* Step Form Fields */}
@@ -2547,9 +2519,6 @@ export default function Signup({ defaultTab = "" }) {
                               <div className="su-court-header-title">
                                 {isKn ? "ನ್ಯಾಯಾಲಯದ ಶ್ರೇಣಿ ಮತ್ತು ವ್ಯಾಪ್ತಿ" : "Court Hierarchy & Jurisdiction"}
                               </div>
-                              <div className="su-court-header-sub">
-                                {isKn ? "ಕೆಳಗಿನ ಹಂತಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ — ಗುರಿ ನ್ಯಾಯಾಲಯವು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ನಿರ್ಧರಿಸಲ್ಪಡುತ್ತದೆ" : "Select the levels below — Target Court is determined automatically"}
-                              </div>
                             </div>
                           </div>
                           <span className="su-court-badge">
@@ -2682,8 +2651,6 @@ export default function Signup({ defaultTab = "" }) {
                           </div>
                         ) : (
                           <div className="su-target-court-empty">
-                            <span>👉</span>
-                            <span>{isKn ? "ಗುರಿ ನ್ಯಾಯಾಲಯದ ವ್ಯಾಪ್ತಿಯನ್ನು ಹೊಂದಿಸಲು ದಯವಿಟ್ಟು ಮೇಲೆ ನ್ಯಾಯಾಲಯದ ಮಟ್ಟ ಮತ್ತು ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ." : "Please choose Level of Court and District above to set the target court jurisdiction."}</span>
                           </div>
                         )}
 
@@ -2867,11 +2834,7 @@ export default function Signup({ defaultTab = "" }) {
                           <div className="su-verify-title">
                             {isKn ? "ಪರಿಶೀಲನಾ ಪ್ರಕ್ರಿಯೆ" : "Verification Process"}
                           </div>
-                          <div className="su-verify-text">
-                            {isKn
-                              ? "ನಿಮ್ಮ ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆಯನ್ನು ನಮ್ಮ ನಿರ್ವಾಹಕ ತಂಡವು ಪರಿಶೀಲಿಸುತ್ತದೆ. ಅನುಮೋದನೆಯ ನಂತರ ಗ್ರಾಹಕರು ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಬಹುದು ಮತ್ತು ಸಮಾಲೋಚನೆ ವಿನಂತಿಗಳನ್ನು ನೇರವಾಗಿ ಕಳುಹಿಸಬಹುದು."
-                              : "Your Bar enrollment number will be verified by our admin team. Once approved on the Admin page, clients can find you and send consultation requests directly."}
-                          </div>
+
                         </div>
                       </div>
 

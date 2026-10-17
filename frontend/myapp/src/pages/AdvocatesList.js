@@ -501,11 +501,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
               ? "ಪರಿಶೀಲಿತ ಹಿರಿಯ ಮತ್ತು ತಜ್ಞ ವಕೀಲರನ್ನು ಹುಡುಕಿ"
               : "Find & Consult Verified Advocates"}
           </h1>
-          <p className="fl-hero-subtitle">
-            {isKn
-              ? "ನ್ಯಾಯ • ನಂಬಿಕೆ • ಕಾನೂನು — ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ, ಕರ್ನಾಟಕ ಹೈಕೋರ್ಟ್ ಮತ್ತು ಇತರ ನ್ಯಾಯಮಂಡಳಿಗಳ ಪರಿಣಿತ ವಕೀಲರನ್ನು ಸಂಪರ್ಕಿಸಿ. ಕಾನೂನು ಸಲಹೆ ಪಡೆಯಿರಿ ಅಥವಾ ಚಾಟ್ ಮಾಡಿ."
-              : "Find and connect with experienced lawyers for your legal needs. Get legal advice or chat with lawyers from District Courts, the Karnataka High Court, and other tribunals."}
-          </p>
         </div>
       </section>
 
@@ -549,23 +544,7 @@ export default function AdvocatesList({ lang: propLang } = {}) {
             </button>
           </div>
 
-          {/* Quick Practice Filter Pills */}
-          <div className="fl-pills-row">
-            {QUICK_FILTER_PILLS.map((pill) => (
-              <button
-                key={pill.id}
-                type="button"
-                className={`fl-pill-btn ${activeChip === pill.id ? "active" : ""}`}
-                onClick={() => {
-                  setActiveChip(pill.id);
-                  setVisibleCount(9);
-                }}
-              >
-                <span>{pill.icon}</span>
-                <span>{isKn ? pill.labelKn : pill.labelEn}</span>
-              </button>
-            ))}
-          </div>
+          
         </div>
       </section>
 
