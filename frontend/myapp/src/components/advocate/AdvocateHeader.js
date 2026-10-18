@@ -39,7 +39,6 @@ export default function AdvocateHeader({
   isAvailable = true,
 }) {
   const displayName = advocate?.name || "Adv. Chetan V Chandaragi";
-  const displaySpec = advocate?.speciality || advocate?.practiceArea || "Corporate Law";
 
   // Compute clean initials
   const initials = displayName

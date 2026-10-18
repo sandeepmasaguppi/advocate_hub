@@ -5,6 +5,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . ./
 ENV NODE_OPTIONS=--openssl-legacy-provider
+ENV CI=false
 RUN npm run build
 
 FROM node:22-alpine

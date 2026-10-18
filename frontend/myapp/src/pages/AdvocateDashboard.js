@@ -6,10 +6,9 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdvocateDashboard.css";
 import { getAdvocateById, logoutAdvocate, updateAdvocate } from "../data/Advocatesstore";
-import BrandLogo from "../components/BrandLogo";
 import { api, assetUrl } from "../data/api";
 import { getTheme, toggleTheme } from "../data/themeStore";
-import { initSocket, joinConversation, emitSendMessage, emitEditMessage, emitDeleteForEveryone, emitDeleteForMe, emitForwardMessage } from "../data/socket";
+import { initSocket, joinConversation, emitSendMessage, emitEditMessage, emitDeleteForEveryone, emitDeleteForMe } from "../data/socket";
 import AdvocateHeader from "../components/advocate/AdvocateHeader";
 import ProfileOverview from "../components/advocate/ProfileOverview";
 import DashboardStats from "../components/advocate/DashboardStats";
@@ -70,15 +69,6 @@ function useStoredFlag(key, initial) {
   const toggle = useCallback(() => setValue((v) => !v), []);
   return [value, toggle];
 }
-
-// Profile fields the store defines that clients actually see; used for the completeness tile.
-const PROFILE_FIELDS = [
-  { key: "avatar",    label: "Profile photo" },
-  { key: "bio",       label: "Bio" },
-  { key: "barId",     label: "Bar Council ID" },
-  { key: "court",     label: "Court" },
-  { key: "languages", label: "Languages" },
-];
 
 // Clean SVG icons matching Admin Page rail design system
 const NAV_ICONS = {
@@ -2032,7 +2022,6 @@ export default function AdvocateDashboard() {
 
   // Dashboard-tile helpers. Available by default unless explicitly marked unavailable.
   const isAvailable = !advocate.availability || (/available/i.test(advocate.availability) && !/not/i.test(advocate.availability));
-  const profileDone = PROFILE_FIELDS.filter(f => Boolean(advocate[f.key])).length;
 
   const filterOptions = [
     { key: "all", label: "All Requests", icon: "📋" },
