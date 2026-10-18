@@ -107,7 +107,9 @@ function App() {
         <Route path="/advocate-dashboard" element={<AdvocateDashboard />} />
         <Route path="/download" element={<div style={{padding: "100px"}}>Download Apps Page Content</div>} />
       </Routes>
-      <Chatbot />
+      <ErrorBoundary resetKey="global_chatbot">
+        <Chatbot />
+      </ErrorBoundary>
     </div>
   );
 }

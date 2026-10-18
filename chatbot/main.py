@@ -124,6 +124,15 @@ async def chat(request: Request, body: Optional[ChatRequest] = None):
             }
         )
 
+    if len(message) > 2000:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "text": "Message is too long. Please keep your question under 2000 characters.",
+                "type": "text",
+            }
+        )
+
     try:
         result = get_response(message, lang=lang)
         return JSONResponse(status_code=200, content=result)

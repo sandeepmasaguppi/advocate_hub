@@ -3801,6 +3801,144 @@ export default function AdvocateDashboard() {
             </div>
           )}
 
+          {/* WhatsApp Forward Modal */}
+          {forwardModalOpen && forwardMessageData && (
+            <div className="wa-modal-backdrop" onClick={() => setForwardModalOpen(false)}>
+              <div className="wa-modal-window" onClick={(e) => e.stopPropagation()}>
+                <div className="wa-modal-header">
+                  <h3 className="wa-modal-title">Forward message to...</h3>
+                  <button
+                    type="button"
+                    className="wa-modal-close-btn"
+                    onClick={() => setForwardModalOpen(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="wa-modal-search">
+                  <input
+                    type="text"
+                    placeholder="Search clients to forward to..."
+                    value={forwardSearchQuery}
+                    onChange={(e) => setForwardSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="wa-modal-preview-box">
+                  <strong>Preview: </strong>
+                  <span>
+                    {forwardMessageData.text ||
+                      (forwardMessageData.attachment ? `[Attachment: ${forwardMessageData.attachment.fileName}]` : "Forwarded message")}
+                  </span>
+                </div>
+
+                <div className="wa-modal-contact-list">
+                  {mergedConversations
+                    .filter(
+                      (c) =>
+                        !forwardSearchQuery ||
+                        (c.clientName && c.clientName.toLowerCase().includes(forwardSearchQuery.toLowerCase()))
+                    )
+                    .map((c) => {
+                      const isChecked = forwardRecipients.includes(c.key);
+                      return (
+                        <div
+                          key={c.key}
+                          className="wa-modal-contact-row"
+                          onClick={() => {
+                            setForwardRecipients((prev) =>
+                              prev.includes(c.key) ? prev.filter((k) => k !== c.key) : [...prev, c.key]
+                            );
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            className="wa-modal-checkbox"
+                            checked={isChecked}
+                            onChange={() => {}}
+                          />
+                          <div className="wa-modal-contact-avatar-fallback">
+                            {getClientInitials(c.clientName, c.clientId)}
+                          </div>
+                          <div className="wa-modal-contact-info">
+                            <div className="wa-modal-contact-name">{c.clientName}</div>
+                            <div className="wa-modal-contact-sub">{c.clientPhone || c.clientCity || "Client"}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                <div className="wa-modal-footer">
+                  <button
+                    type="button"
+                    className="wa-modal-btn-cancel"
+                    onClick={() => setForwardModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="wa-modal-btn-primary"
+                    disabled={forwardRecipients.length === 0}
+                    onClick={handleExecuteForward}
+                  >
+                    Forward ({forwardRecipients.length})
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* WhatsApp Delete Options Modal */}
+          {deleteDialogOpen && deleteMessageData && (
+            <div className="wa-modal-backdrop" onClick={() => setDeleteDialogOpen(false)}>
+              <div className="wa-modal-window" style={{ maxWidth: "380px" }} onClick={(e) => e.stopPropagation()}>
+                <div className="wa-modal-header">
+                  <h3 className="wa-modal-title">Delete message?</h3>
+                  <button
+                    type="button"
+                    className="wa-modal-close-btn"
+                    onClick={() => setDeleteDialogOpen(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div style={{ padding: "8px 0" }}>
+                  {deleteMessageData.from === "advocate" && !deleteMessageData.isDeleted && (
+                    <button
+                      type="button"
+                      className="wa-delete-option-btn danger"
+                      onClick={() => handleDeleteForEveryone(deleteMessageData)}
+                    >
+                      <span>🗑️</span>
+                      <span>Delete for everyone</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="wa-delete-option-btn"
+                    onClick={() => handleDeleteForMe(deleteMessageData)}
+                  >
+                    <span>👁️‍🗨️</span>
+                    <span>Delete for me</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="wa-delete-option-btn"
+                    style={{ borderBottom: "none" }}
+                    onClick={() => setDeleteDialogOpen(false)}
+                  >
+                    <span>✕</span>
+                    <span>Cancel</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
     </div>

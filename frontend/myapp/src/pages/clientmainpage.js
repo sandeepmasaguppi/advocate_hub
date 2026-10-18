@@ -4,7 +4,7 @@
 //  and One-Click Advocate Setup.
 // ============================================================
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
 import defaultClarityData from "../data/clarityguide.json";
@@ -538,14 +538,71 @@ export default function ClientMainPage() {
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiIsListening, setAiIsListening] = useState(false);
+  const [aiSilenceSecondsLeft, setAiSilenceSecondsLeft] = useState(null);
+  const [aiVoiceConverting, setAiVoiceConverting] = useState(false);
   const aiBottomRef = useRef(null);
   const aiRecognitionRef = useRef(null);
+  const aiSilenceTimerRef = useRef(null);
+  const aiCountdownIntervalRef = useRef(null);
+  const aiVoiceTranscriptRef = useRef("");
+  const aiTextBeforeVoiceRef = useRef("");
 
   useEffect(() => {
     if (activeView === "ai-assistant") {
       aiBottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [aiMessages, aiLoading, activeView]);
+
+  // Clean up AI speech timers on unmount
+  useEffect(() => {
+    return () => {
+      if (aiSilenceTimerRef.current) clearTimeout(aiSilenceTimerRef.current);
+      if (aiCountdownIntervalRef.current) clearInterval(aiCountdownIntervalRef.current);
+      if (aiRecognitionRef.current) {
+        try {
+          aiRecognitionRef.current.onresult = null;
+          aiRecognitionRef.current.abort();
+        } catch {}
+      }
+    };
+  }, []);
+
+  const aiFinalizeVoiceInput = useCallback(() => {
+    if (aiSilenceTimerRef.current) {
+      clearTimeout(aiSilenceTimerRef.current);
+      aiSilenceTimerRef.current = null;
+    }
+    if (aiCountdownIntervalRef.current) {
+      clearInterval(aiCountdownIntervalRef.current);
+      aiCountdownIntervalRef.current = null;
+    }
+    setAiSilenceSecondsLeft(null);
+
+    const recognized = (aiVoiceTranscriptRef.current || "").trim();
+    if (recognized) {
+      const base = aiTextBeforeVoiceRef.current || "";
+      const combined = base ? `${base} ${recognized}` : recognized;
+      setAiInput(combined);
+      setAiVoiceConverting(true);
+      setTimeout(() => setAiVoiceConverting(false), 2000);
+    }
+    aiVoiceTranscriptRef.current = "";
+
+    if (aiRecognitionRef.current) {
+      try {
+        aiRecognitionRef.current.onresult = null;
+        aiRecognitionRef.current.onerror = null;
+        aiRecognitionRef.current.onend = null;
+        aiRecognitionRef.current.stop();
+      } catch {}
+      aiRecognitionRef.current = null;
+    }
+    setAiIsListening(false);
+  }, []);
+
+  const stopAiListening = useCallback(() => {
+    aiFinalizeVoiceInput();
+  }, [aiFinalizeVoiceInput]);
 
   const startAiListening = () => {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -554,35 +611,121 @@ export default function ClientMainPage() {
       return;
     }
     try {
+      if (aiSilenceTimerRef.current) {
+        clearTimeout(aiSilenceTimerRef.current);
+        aiSilenceTimerRef.current = null;
+      }
+      if (aiCountdownIntervalRef.current) {
+        clearInterval(aiCountdownIntervalRef.current);
+        aiCountdownIntervalRef.current = null;
+      }
+      setAiSilenceSecondsLeft(null);
+
+      if (aiRecognitionRef.current) {
+        try {
+          aiRecognitionRef.current.onresult = null;
+          aiRecognitionRef.current.onerror = null;
+          aiRecognitionRef.current.onend = null;
+          aiRecognitionRef.current.abort();
+        } catch {}
+        aiRecognitionRef.current = null;
+      }
+
+      aiTextBeforeVoiceRef.current = aiInput.trim();
+      aiVoiceTranscriptRef.current = "";
+
       const rec = new SpeechRec();
-      rec.continuous = false;
+      rec.continuous = true;
       rec.interimResults = true;
       rec.lang = lang === "kn" ? "kn-IN" : "en-IN";
-      rec.onstart = () => setAiIsListening(true);
-      rec.onresult = (e) => {
-        let tr = "";
-        for (let i = e.resultIndex; i < e.results.length; ++i) {
-          tr += e.results[i][0].transcript;
-        }
-        if (tr) setAiInput(tr);
+
+      rec.onstart = () => {
+        setAiIsListening(true);
+        setAiVoiceConverting(false);
+        setAiSilenceSecondsLeft(null);
       };
-      rec.onerror = () => setAiIsListening(false);
-      rec.onend = () => setAiIsListening(false);
+
+      const resetAiSilenceTimer = () => {
+        if (aiSilenceTimerRef.current) clearTimeout(aiSilenceTimerRef.current);
+        if (aiCountdownIntervalRef.current) clearInterval(aiCountdownIntervalRef.current);
+
+        setAiSilenceSecondsLeft(3);
+        let secondsRemaining = 3;
+
+        aiCountdownIntervalRef.current = setInterval(() => {
+          secondsRemaining -= 1;
+          if (secondsRemaining > 0) {
+            setAiSilenceSecondsLeft(secondsRemaining);
+          } else {
+            if (aiCountdownIntervalRef.current) {
+              clearInterval(aiCountdownIntervalRef.current);
+              aiCountdownIntervalRef.current = null;
+            }
+          }
+        }, 1000);
+
+        // Exactly 3 seconds after speech stops -> convert voice to text
+        aiSilenceTimerRef.current = setTimeout(() => {
+          aiFinalizeVoiceInput();
+        }, 3000);
+      };
+
+      rec.onresult = (e) => {
+        let finalStr = "";
+        let interimStr = "";
+        for (let i = 0; i < e.results.length; i++) {
+          const piece = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalStr += piece + " ";
+          else interimStr += piece;
+        }
+        const accumulated = (finalStr + interimStr).trim();
+        if (accumulated) {
+          aiVoiceTranscriptRef.current = accumulated;
+          // Do NOT continuously flash input while talking. Wait 3s after speech stops!
+          resetAiSilenceTimer();
+        }
+      };
+
+      rec.onspeechend = () => {
+        resetAiSilenceTimer();
+      };
+
+      rec.onerror = () => {
+        setAiIsListening(false);
+        if (aiSilenceTimerRef.current) {
+          clearTimeout(aiSilenceTimerRef.current);
+          aiSilenceTimerRef.current = null;
+        }
+        if (aiCountdownIntervalRef.current) {
+          clearInterval(aiCountdownIntervalRef.current);
+          aiCountdownIntervalRef.current = null;
+        }
+        setAiSilenceSecondsLeft(null);
+      };
+
+      rec.onend = () => {
+        if (aiSilenceTimerRef.current) {
+          // Timer will convert when 3s finish
+        } else if (aiVoiceTranscriptRef.current) {
+          aiFinalizeVoiceInput();
+        } else {
+          setAiIsListening(false);
+          setAiSilenceSecondsLeft(null);
+        }
+      };
+
       rec.start();
       aiRecognitionRef.current = rec;
     } catch {
       setAiIsListening(false);
+      setAiSilenceSecondsLeft(null);
     }
-  };
-
-  const stopAiListening = () => {
-    if (aiRecognitionRef.current) {
-      try { aiRecognitionRef.current.stop(); } catch {}
-    }
-    setAiIsListening(false);
   };
 
   const handleSendAiMessage = async (customQuery) => {
+    if (aiIsListening && aiVoiceTranscriptRef.current) {
+      aiFinalizeVoiceInput();
+    }
     const query = (customQuery || aiInput).trim();
     if (!query || aiLoading) return;
     if (aiIsListening) stopAiListening();
@@ -1656,6 +1799,32 @@ export default function ClientMainPage() {
                 <div ref={aiBottomRef} />
               </div>
 
+              {/* Voice Active In-place Indicator (When user speaks, 3s countdown after silence) */}
+              {aiIsListening && (
+                <div className="cmp-ai-voice-banner">
+                  <div className="cmp-ai-voice-banner-left">
+                    <span className="cmp-ai-voice-dot" />
+                    <span className="cmp-ai-voice-status">
+                      {aiSilenceSecondsLeft !== null
+                        ? (lang === "kn"
+                            ? `🎙️ ಮಾತನಾಡುವುದು ನಿಂತಿದೆ — ${aiSilenceSecondsLeft} ಸೆಕೆಂಡುಗಳಲ್ಲಿ ಪಠ್ಯವಾಗುತ್ತದೆ...`
+                            : `🎙️ Speech paused — converting to text in ${aiSilenceSecondsLeft}s...`)
+                        : (lang === "kn"
+                            ? "🎙️ ಆಲಿಸಲಾಗುತ್ತಿದೆ... ಮಾತನಾಡಿ (ನಿಲ್ಲಿಸಿದ 3 ಸೆಕೆಂಡ್ ನಂತರ ಪಠ್ಯವಾಗುತ್ತದೆ)"
+                            : "🎙️ Listening... Speak naturally (converts 3s after you stop talking)")}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="cmp-ai-voice-convert-btn"
+                    onClick={stopAiListening}
+                    title="Convert now"
+                  >
+                    {lang === "kn" ? "ಈಗಲೇ ಪರಿವರ್ತಿಸಿ ✓" : "Convert Now ✓"}
+                  </button>
+                </div>
+              )}
+
               {/* Input Bar */}
               <div className="cmp-ai-input-bar">
                 <button
@@ -1669,8 +1838,16 @@ export default function ClientMainPage() {
 
                 <input
                   type="text"
-                  className="cmp-ai-input"
-                  placeholder={aiIsListening ? t.aiListening : t.aiInputPlaceholder}
+                  className={`cmp-ai-input ${aiIsListening ? "cmp-ai-input-listening" : ""}`}
+                  placeholder={
+                    aiIsListening
+                      ? (aiSilenceSecondsLeft !== null
+                          ? (lang === "kn" ? `🎙️ ಧ್ವನಿ ಪರಿವರ್ತನೆ ${aiSilenceSecondsLeft} ಸೆಕೆಂಡುಗಳಲ್ಲಿ...` : `🎙️ Converting voice in ${aiSilenceSecondsLeft}s...`)
+                          : (lang === "kn" ? "🎙️ ಆಲಿಸಲಾಗುತ್ತಿದೆ... ಕನ್ನಡದಲ್ಲಿ ಮಾತನಾಡಿ..." : "🎙️ Listening... Speak naturally now..."))
+                      : aiVoiceConverting
+                        ? (lang === "kn" ? "✓ ಧ್ವನಿ ಪಠ್ಯವಾಗಿ ಪರಿವರ್ತಿಸಲಾಗಿದೆ!" : "✓ Voice converted to text!")
+                        : t.aiInputPlaceholder
+                  }
                   value={aiInput}
                   onChange={(e) => setAiInput(e.target.value)}
                   onKeyDown={(e) => {

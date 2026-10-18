@@ -586,21 +586,129 @@ def get_response(message, lang="en"):
     query = clean(raw)
     user_is_kn = is_kannada(raw) or (lang == "kn")
 
-    # 1. Greetings (English & Kannada)
-    greet_words = [
-        "hello", "hi", "hey", "namaste", "namaskara", "namaskar", "good morning",
-        "good afternoon", "good evening", "hii", "helo",
-        "ನಮಸ್ಕಾರ", "ಹಲೋ", "ಹಾಯ್", "ಶುಭೋದಯ", "ಶುಭ ಸಂಜೆ"
-    ]
-    if any(g == query or query.startswith(g + " ") for g in greet_words):
+    # 1. Simple and Natural Chat Responses (Intent-Based Handler)
+    # Examples requested:
+    # User: "Hi" -> "Hello! 👋 How can I assist you today?"
+    # User: "Hello" -> "Hello! Welcome to AdvocateHub. How can I help you?"
+    # User: "Hey" -> "Hey there! 😊 What can I help you with?"
+    # User: "Good morning" -> "Good morning! Welcome to AdvocateHub. How may I assist you?"
+    # User: "Thank you" -> "You’re welcome! 😊 I’m happy to help."
+    # User: "Bye" -> "Goodbye! Have a great day. Feel free to chat with us anytime."
+
+    # "Hi" / "Hii" / "Hi there"
+    if query in ["hi", "hii", "hi there", "hi bot", "hi!"] or query.startswith("hi ") or query.startswith("hii ") or query == "ಹಾಯ್":
+        if user_is_kn:
+            return {"text": "ಹಲೋ! 👋 ನಾನು ನಿಮಗೆ ಇಂದು ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?", "type": "text"}
+        return {"text": "Hello! 👋 How can I assist you today?", "type": "text"}
+
+    # "Hello" / "Hello there" / "Hello AdvocateHub"
+    if query in ["hello", "hello there", "hello advocatehub", "hello bot", "hello!", "helo"] or query.startswith("hello ") or query == "ಹಲೋ":
+        if user_is_kn:
+            return {"text": "ಹಲೋ! AdvocateHub ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?", "type": "text"}
+        return {"text": "Hello! Welcome to AdvocateHub. How can I help you?", "type": "text"}
+
+    # "Hey" / "Hey there"
+    if query in ["hey", "hey there", "heyy", "hey bot", "hey!"] or query.startswith("hey ") or query == "ಹೇ":
+        if user_is_kn:
+            return {"text": "ಹೇ! 😊 ನಾನು ನಿಮಗೆ ಯಾವ ವಿಷಯದಲ್ಲಿ ಸಹಾಯ ಮಾಡಲಿ?", "type": "text"}
+        return {"text": "Hey there! 😊 What can I help you with?", "type": "text"}
+
+    # "Good morning"
+    if "good morning" in query or query in ["morning", "shubhodaya", "ಶುಭೋದಯ"]:
+        if user_is_kn:
+            return {"text": "ಶುಭೋದಯ! AdvocateHub ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?", "type": "text"}
+        return {"text": "Good morning! Welcome to AdvocateHub. How may I assist you?", "type": "text"}
+
+    # "Good afternoon"
+    if "good afternoon" in query:
+        if user_is_kn:
+            return {"text": "ಶುಭ ಮಧ್ಯಾಹ್ನ! AdvocateHub ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?", "type": "text"}
+        return {"text": "Good afternoon! Welcome to AdvocateHub. How may I assist you?", "type": "text"}
+
+    # "Good evening"
+    if "good evening" in query or query in ["shubha sanje", "ಶುಭ ಸಂಜೆ"]:
+        if user_is_kn:
+            return {"text": "ಶುಭ ಸಂಜೆ! AdvocateHub ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?", "type": "text"}
+        return {"text": "Good evening! Welcome to AdvocateHub. How may I assist you?", "type": "text"}
+
+    # "Thank you" / "Thanks"
+    if any(th in query for th in ["thank you", "thanks", "thank u", "thx", "appreciate it", "dhanyavad", "ಧನ್ಯವಾದ"]):
+        if user_is_kn:
+            return {"text": "ನಿಮಗೆ ಸ್ವಾಗತ! 😊 ಸಹಾಯ ಮಾಡಲು ನನಗೆ ಸಂತೋಷವಾಗಿದೆ.", "type": "text"}
+        return {"text": "You’re welcome! 😊 I’m happy to help.", "type": "text"}
+
+    # "Bye" / "Goodbye"
+    if any(b in query for b in ["bye", "goodbye", "bye bye", "see you", "cya", "ವಿದಾಯ"]):
+        if user_is_kn:
+            return {"text": "ವಿದಾಯ! ನಿಮ್ಮ ದಿನ ಶುಭವಾಗಿರಲಿ. ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ನಮ್ಮೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಲು ಮುಕ್ತವಾಗಿರಿ.", "type": "text"}
+        return {"text": "Goodbye! Have a great day. Feel free to chat with us anytime.", "type": "text"}
+
+    # How are you
+    if any(h in query for h in ["how are you", "how r u", "how do you do", "ಹೇಗಿದ್ದೀರಾ"]):
+        if user_is_kn:
+            return {"text": "👋 ನಾನು ಉತ್ತಮವಾಗಿದ್ದೇನೆ, ವಿಚಾರಿಸಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು! ಇಂದು ನಾನು ನಿಮಗೆ ಯಾವ ಕಾನೂನು ವಿಷಯದಲ್ಲಿ ಸಹಾಯ ಮಾಡಲಿ?", "type": "text"}
+        return {"text": "👋 I'm doing great, thank you for asking! How are you doing today? What legal question or service can I help you with?", "type": "text"}
+
+    # AdvocateHub-Specific Platform Guidance
+    # A) Finding Advocates
+    if any(w in query for w in ["how to find advocate", "how to find lawyer", "how to search advocate", "how to search lawyer", "find advocate", "find lawyer"]):
         if user_is_kn:
             return {
-                "text": "👋 ನಮಸ್ಕಾರ! ನಾನು **AdvocateHub AI ಸಹಾಯಕ**.\n\nನಾನು ನಿಮಗೆ ಈ ಕೆಳಗಿನವುಗಳಲ್ಲಿ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ:\n• 🔍 **ವಕೀಲರ ಹುಡುಕಾಟ:** ಹೆಸರು, ಊರು (Gokak, Belagavi ಇತ್ಯಾದಿ) ಅಥವಾ ಕ್ಷೇತ್ರದ ಪ್ರಕಾರ\n• ⚖️ **ಕಾನೂನು ಮಾರ್ಗದರ್ಶಿ (Clarity Guide):** ಅಪಘಾತ, ವಿಚ್ಛೇದನ, ಆಸ್ತಿ ವಿವಾದ, ಚೆಕ್ ಬೌನ್ಸ್ ಇತ್ಯಾದಿ ಪ್ರಶ್ನೆಗಳು\n• 🧭 **ಪುಟಗಳ ಭೇಟಿ:** Bare Acts, Legal Documents, Ask Question ಇತ್ಯಾದಿ\n• 🎙️ **ಧ್ವನಿ ಸಂದೇಶ:** ಕನ್ನಡ ಅಥವಾ ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ ಮಾತನಾಡಿ ಕೇಳಬಹುದು!\n\nನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
+                "text": "🔍 **ವಕೀಲರನ್ನು ಹುಡುಕುವುದು ಹೇಗೆ:**\n\n1. **ಹೆಸರು ಅಥವಾ ಊರಿನ ಮೂಲಕ ಹುಡುಕಿ:** ವಕೀಲರ ಹೆಸರು (ಉದಾ: Adv. Chetan V Chandaragi) ಅಥವಾ ಊರು (ಉದಾ: Gokak, Belagavi, Bengaluru) ಟೈಪ್ ಮಾಡಿ.\n2. **ವಿಭಾಗದ ಪ್ರಕಾರ ಹುಡುಕಿ:** ಕ್ರಿಮಿನಲ್, ಸಿವಿಲ್, ಆಸ್ತಿ, ಅಥವಾ ಕೌಟುಂಬಿಕ ಕಾನೂನು ಎಂದು ಕೇಳಿ.\n3. **ವಕೀಲರ ಪಟ್ಟಿ:** ಮೇಲಿನ ಮೆನುವಿನಲ್ಲಿರುವ **'Find Lawyer'** ಕ್ಲಿಕ್ ಮಾಡಿ ಎಲ್ಲಾ ಪರಿಶೀಲಿತ ವಕೀಲರನ್ನು ನೋಡಿ.",
                 "type": "text",
+                "navigate": "/find-lawyer"
             }
         return {
-            "text": "👋 Hello! I'm the **AdvocateHub AI Assistant**.\n\nI can help you:\n• 🔍 **Find advocates live:** Search by name, city (e.g. Gokak, Belagavi), or legal speciality\n• ⚖️ **Legal Clarity Guide:** Ask questions about road accidents, bail, divorce, property disputes, cheque bounce, etc.\n• 🧭 **Navigate:** Instantly open Bare Acts, Legal Documents, Ask Question, or profiles\n• 🎙️ **Voice to Text:** Speak in either English or Kannada!\n\nWhat can I help you with today?",
+            "text": "🔍 **How to Find an Advocate on AdvocateHub:**\n\n1. **Search by Name or City:** Type any advocate name (e.g. Adv. Chetan V Chandaragi) or city (e.g. Gokak, Belagavi, Bengaluru).\n2. **Search by Specialization:** Ask for specialists in Criminal Law, Family Law, Property Law, or Corporate Law.\n3. **Browse Directory:** Click **'Find Lawyer'** in the top navigation bar to explore our complete directory of verified advocates.",
             "type": "text",
+            "navigate": "/find-lawyer"
+        }
+
+    # B) Understanding Advocate Profiles
+    if any(w in query for w in ["advocate profile", "profile details", "understanding profile", "what is on profile"]):
+        return {
+            "text": "📋 **Understanding Advocate Profiles:**\n\nEvery advocate profile on AdvocateHub provides:\n• **Bar Council Verification:** Verified Bar Council ID and enrollment status.\n• **Experience & Courts:** Years of practice and court jurisdictions (High Court, District Courts).\n• **Specializations:** Primary legal domains handled.\n• **Transparent Fees:** Consultation fees clearly stated per session.\n• **Direct Consultation:** 'Chat Now' button to connect directly in real-time.",
+            "type": "text"
+        }
+
+    # C) Navigating Client Portal
+    if any(w in query for w in ["client portal", "client dashboard", "client page"]):
+        return {
+            "text": "📱 **Client Portal & Dashboard:**\n\nIn the Client Portal, you can:\n• Track active legal cases and consultation appointments.\n• Communicate directly with your advocate via real-time WhatsApp-style chat.\n• View booking chits, consultation history, and case stages.\n\nAccess it anytime after logging in via **Client Login**.",
+            "type": "text",
+            "navigate": "/client-dashboard"
+        }
+
+    # D) How to Request a Consultation
+    if any(w in query for w in ["how to request consultation", "how to book consultation", "book consultation", "how to consult advocate", "consultation process"]):
+        return {
+            "text": "💬 **How to Request a Consultation:**\n\n1. Open the **'Find Lawyer'** page or browse advocate profiles.\n2. Click the **'Chat Now'** or **'Book Consultation'** button on the chosen advocate's card.\n3. Complete the quick consultation chit activation.\n4. Your private conversation will open immediately in the Client Portal for bi-directional real-time messaging!",
+            "type": "text",
+            "navigate": "/find-lawyer"
+        }
+
+    # E) Navigating Advocate Dashboard
+    if any(w in query for w in ["advocate dashboard", "advocate portal"]):
+        return {
+            "text": "⚖️ **Advocate Dashboard:**\n\nThe Advocate Dashboard allows advocates to:\n• Review and accept incoming client requests.\n• Conduct real-time bi-directional chats with confirmed clients.\n• Update case progress stages (e.g. Consultation, Drafting, Court Hearing).\n• Track consultation fees, earnings, and availability.",
+            "type": "text",
+            "navigate": "/advocate-dashboard"
+        }
+
+    # F) How to Contact an Advocate
+    if any(w in query for w in ["how to contact advocate", "contact advocate", "reach advocate", "message advocate"]):
+        return {
+            "text": "📞 **How to Contact an Advocate:**\n\n• **Direct Real-Time Chat:** Click **'Chat Now'** on any advocate's profile to open a secure direct consultation.\n• **Profile Details:** View their office location, court jurisdiction, and availability.\n• **Support Assistance:** If you need help connecting, visit our **Contact Us** page.",
+            "type": "text",
+            "navigate": "/find-lawyer"
+        }
+
+    # G) Existing Help & Support Pages
+    if any(w in query for w in ["support", "help page", "contact page", "where is help"]):
+        return {
+            "text": "🤝 **AdvocateHub Help & Legal Resources:**\n\n• **Legal Clarity Guide:** Common legal situations and applicable laws (/clarity-guide).\n• **Bare Acts Library:** Indian statutory acts and codes (/legal-advice/bare-acts).\n• **Legal Documents:** Standard legal drafts and templates (/legal-advice/documents).\n• **Contact Us:** Reach out to the AdvocateHub team for platform assistance (/contact).",
+            "type": "text",
+            "navigate": "/contact"
         }
 
     # 2. PRIORITY: Direct Advocate Name Search
@@ -748,7 +856,8 @@ def get_response(message, lang="en"):
                 f"👤 **Accused / Responsible Party:** {acc}\n\n"
                 f"📝 **Who Can File Complaint / Case:** {who}\n\n"
                 f"👨‍⚖️ **Recommended Advocate:** {rec}\n\n"
-                f"📁 **Category:** {cat}"
+                f"📁 **Category:** {cat}\n\n"
+                f"💡 *Note: AdvocateHub provides general legal information. For advice specific to your case, please consult a qualified advocate.*"
             )
 
         resp_dict = {

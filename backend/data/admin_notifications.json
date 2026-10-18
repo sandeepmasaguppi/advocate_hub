@@ -13,7 +13,7 @@
     },
     "timestamp": "2026-10-17T05:28:06.147Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-18319d3b880sm13853396c88.10 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1792159187683_h3mylp",
@@ -29,7 +29,7 @@
     },
     "timestamp": "2026-10-16T13:59:47.683Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-360820a02b8sm18504671eec.17 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1792133189175_o73tqb",
@@ -45,7 +45,7 @@
     },
     "timestamp": "2026-10-16T06:46:29.175Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-3607bc950f9sm18594669eec.0 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1792132931185_9qlbx1",
@@ -61,7 +61,7 @@
     },
     "timestamp": "2026-10-16T06:42:11.185Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-360813b684dsm16716110eec.10 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1792131445098_pymify",
@@ -77,7 +77,7 @@
     },
     "timestamp": "2026-10-16T06:17:25.098Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-36083283478sm16006929eec.29 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1792131355073_udj0du",
@@ -93,7 +93,7 @@
     },
     "timestamp": "2026-10-16T06:15:55.073Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-1831919fc14sm19705216c88.6 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1792131201398_fodzwd",
@@ -109,7 +109,7 @@
     },
     "timestamp": "2026-10-16T06:13:21.398Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-1831c2e7bf4sm13555009c88.20 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1792131162542_ld9v4e",
@@ -125,7 +125,7 @@
     },
     "timestamp": "2026-10-16T06:12:42.542Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-1831acba710sm20777571c88.13 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1791515101590_u7taal",
@@ -159,7 +159,7 @@
     },
     "timestamp": "2026-10-09T03:03:57.531Z",
     "delivered": false,
-    "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-360813b6ca5sm16209137eec.9 - gsmtp"
+    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
   },
   {
     "id": "NOTIF_1791428207970_mxx6nt",

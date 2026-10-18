@@ -1975,6 +1975,69 @@
   100% { opacity: 1; transform: scale(1.2); }
 }
 
+/* AI Voice Banner & States */
+.cmp-ai-voice-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: #15803d;
+  animation: cmpFadeUp 0.2s ease;
+}
+
+.cmp-ai-voice-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.cmp-ai-voice-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+  animation: cmpPulseRed 1.2s infinite;
+}
+
+.cmp-ai-voice-status {
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmp-ai-voice-convert-btn {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.cmp-ai-voice-convert-btn:hover {
+  background: #15803d;
+  transform: scale(1.03);
+}
+
+.cmp-ai-input.cmp-ai-input-listening::placeholder {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
 .cmp-ai-input-bar {
   display: flex;
   align-items: center;

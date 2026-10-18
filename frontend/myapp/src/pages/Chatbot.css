@@ -252,6 +252,19 @@
   justify-content: space-between;
   flex-shrink:     0;
   color:           #ffffff;
+  cursor:          grab;
+  user-select:     none;
+  -webkit-user-select: none;
+  touch-action:    none;
+}
+.cb-header:active,
+.cb-window.cb-window-dragging .cb-header {
+  cursor: grabbing !important;
+}
+.cb-window.cb-window-dragging {
+  user-select: none !important;
+  transition: none !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4) !important;
 }
 
 .cb-header-left {
@@ -716,6 +729,84 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Voice Active In-place Indicator Banner ──────────────────── */
+.cb-voice-banner {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             8px;
+  padding:         7px 12px;
+  background:      #f0fdf4;
+  border-top:      1px solid #bbf7d0;
+  border-bottom:   1px solid #bbf7d0;
+  font-size:       11.5px;
+  color:           #15803d;
+  flex-shrink:     0;
+  animation:       cb-toast-in 0.2s ease;
+  z-index:         15;
+}
+
+.cb-voice-banner-left {
+  display:     flex;
+  align-items: center;
+  gap:         7px;
+  min-width:   0;
+  flex:        1;
+}
+
+.cb-voice-pulse-dot {
+  width:         8px;
+  height:        8px;
+  border-radius: 50%;
+  background:    #ef4444;
+  flex-shrink:   0;
+  animation:     cb-pulse-glow 1.2s infinite ease-in-out;
+}
+@keyframes cb-pulse-glow {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50%      { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px rgba(239, 68, 68, 0.7); }
+}
+
+.cb-voice-status-text {
+  font-weight: 600;
+  line-height: 1.3;
+  overflow:    hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cb-voice-banner-convert-btn {
+  background:    #16a34a;
+  color:         #ffffff;
+  border:        none;
+  border-radius: 6px;
+  padding:       3px 8px;
+  font-size:     10.5px;
+  font-weight:   700;
+  cursor:        pointer;
+  flex-shrink:   0;
+  font-family:   var(--cb-font);
+  transition:    background 0.15s ease, transform 0.1s ease;
+}
+.cb-voice-banner-convert-btn:hover {
+  background: #15803d;
+  transform:  scale(1.03);
+}
+
+/* Dark mode for voice banner */
+[data-theme="dark"] .cb-voice-banner,
+.theme-dark .cb-voice-banner,
+.ad-dark .cb-voice-banner {
+  background:    #132e22;
+  border-color:  #1e4a36;
+  color:         #86efac;
+}
+[data-theme="dark"] .cb-voice-banner-convert-btn,
+.theme-dark .cb-voice-banner-convert-btn,
+.ad-dark .cb-voice-banner-convert-btn {
+  background: #15803d;
+}
+
 /* ── Input Area ────────────────────────────────────────────── */
 .cb-input-area {
   display:        flex;
@@ -828,4 +919,110 @@
   flex-shrink: 0;
   background:  #f8fafc;
   border-top:  1px solid #f1f5f9;
+}
+
+/* ── Error Banner & Retry State ────────────────────────────── */
+.cb-error-banner {
+  margin:          8px 12px;
+  padding:         8px 12px;
+  background:      #fef2f2;
+  border:          1px solid #fecaca;
+  border-radius:   10px;
+  color:           #b91c1c;
+  font-size:       12px;
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             8px;
+  animation:       cb-label-in 0.2s ease;
+}
+
+.cb-retry-btn {
+  background:      #ef4444;
+  color:           #ffffff;
+  border:          none;
+  border-radius:   6px;
+  padding:         4px 10px;
+  font-size:       11.5px;
+  font-weight:     700;
+  cursor:          pointer;
+  transition:      background 0.15s ease;
+}
+.cb-retry-btn:hover {
+  background:      #dc2626;
+}
+
+/* ── Dark Mode Theme System ────────────────────────────────── */
+[data-theme="dark"] .cb-window,
+.theme-dark .cb-window,
+.ad-dark .cb-window {
+  --cb-bg:            #0f172a;
+  --cb-bot-bg:        #1e293b;
+  --cb-bot-border:    #334155;
+  --cb-text:          #f8fafc;
+  --cb-text-muted:    #94a3b8;
+  --cb-border:        #1e293b;
+  --cb-shadow:        0 20px 48px rgba(0, 0, 0, 0.6);
+  background:         #0f172a !important;
+  color:              #f8fafc !important;
+  border-color:       #334155 !important;
+}
+
+[data-theme="dark"] .cb-messages,
+.theme-dark .cb-messages,
+.ad-dark .cb-messages {
+  background: #0b1120 !important;
+}
+
+[data-theme="dark"] .cb-bubble.bot-bubble,
+.theme-dark .cb-bubble.bot-bubble,
+.ad-dark .cb-bubble.bot-bubble {
+  background:   #1e293b !important;
+  border-color: #334155 !important;
+  color:        #f1f5f9 !important;
+}
+
+[data-theme="dark"] .cb-bubble.user-bubble,
+.theme-dark .cb-bubble.user-bubble,
+.ad-dark .cb-bubble.user-bubble {
+  background: #065f54 !important;
+  color:      #ffffff !important;
+}
+
+[data-theme="dark"] .cb-input-area,
+.theme-dark .cb-input-area,
+.ad-dark .cb-input-area {
+  background:   #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .cb-input,
+.theme-dark .cb-input,
+.ad-dark .cb-input {
+  background:   #1e293b !important;
+  border-color: #334155 !important;
+  color:        #f8fafc !important;
+}
+
+[data-theme="dark"] .cb-quick-actions,
+.theme-dark .cb-quick-actions,
+.ad-dark .cb-quick-actions {
+  background:   #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .cb-quick-chip,
+.theme-dark .cb-quick-chip,
+.ad-dark .cb-quick-chip {
+  background:   #1e293b !important;
+  border-color: #334155 !important;
+  color:        #cbd5e1 !important;
+}
+
+[data-theme="dark"] .cb-footer,
+.theme-dark .cb-footer,
+.ad-dark .cb-footer {
+  background:   #0f172a !important;
+  border-color: #1e293b !important;
+  color:        #64748b !important;
 }

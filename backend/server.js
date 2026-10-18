@@ -885,30 +885,33 @@ async function route(request, response) {
 
   if (method === "GET" && p === "/api/health") return send(request, response, 200, { ok: true });
 
-  if (method === "POST" && p === "/api/chat" && process.env.CHATBOT_URL) {
-    const body = await readBody(request);
-    let chatbotResponse;
-    try {
-      chatbotResponse = await fetch(`${process.env.CHATBOT_URL.replace(/\/+$/, "")}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    } catch (error) {
-      console.error("Chatbot service request failed:", error.message);
-      return send(request, response, 503, {
-        error: "Chatbot service is unavailable",
-        text: "The chatbot is temporarily unavailable. Please try again shortly.",
-        type: "text",
-      });
+  if (method === "POST" && p === "/api/chat") {
+    const chatbotUrl = process.env.CHATBOT_URL;
+    if (chatbotUrl) {
+      try {
+        const body = await readBody(request);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3500);
+        const chatbotResponse = await fetch(`${chatbotUrl.replace(/\/+$/, "")}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (chatbotResponse.ok) {
+          const responseText = await chatbotResponse.text();
+          response.writeHead(chatbotResponse.status, {
+            "Content-Type": chatbotResponse.headers.get("content-type") || "application/json",
+            ...corsHeaders(request),
+          });
+          response.end(responseText);
+          return;
+        }
+      } catch (error) {
+        console.warn("External Chatbot service unreachable, falling back to internal engine:", error.message);
+      }
     }
-    const responseText = await chatbotResponse.text();
-    response.writeHead(chatbotResponse.status, {
-      "Content-Type": chatbotResponse.headers.get("content-type") || "application/json",
-      ...corsHeaders(request),
-    });
-    response.end(responseText);
-    return;
   }
 
   // Advocates (read)
@@ -938,6 +941,7 @@ async function route(request, response) {
     const body = await readBody(request);
     const msg = String(body.message || "").trim();
     if (!msg) return send(request, response, 400, { text: "Please type or speak a message.", type: "text" });
+    if (msg.length > 2000) return send(request, response, 400, { text: "Message is too long. Please keep your question under 2000 characters.", type: "text" });
 
     const isKn = /[\u0C80-\u0CFF]/.test(msg) || body.lang === "kn";
     const cleanQ = msg.toLowerCase().replace(/[^\w\s\u0C80-\u0CFF]/g, " ").replace(/\s+/g, " ").trim();
@@ -1002,20 +1006,95 @@ async function route(request, response) {
       });
     }
 
-    // C) Greetings Intent ("hi", "hello", "hey", "namaste", "namaskara", etc.)
-    const isGreetingIntent =
-      (/\b(hi|hello|hey|namaste|namaskar|good\s*(morning|afternoon|evening|day)|greetings|howdy)\b/i.test(cleanQ) && cleanQ.split(/\s+/).length <= 4) ||
-      /^(ಹಲೋ|ನಮಸ್ಕಾರ|ನಮಸ್ತೆ|ಶುಭೋದಯ|ಶುಭ ಸಂಜೆ)$/u.test(msg.trim());
+    // 1. Simple and Natural Chat Responses (Intent-Based Handler)
+    // Examples requested:
+    // User: "Hi" -> "Hello! 👋 How can I assist you today?"
+    // User: "Hello" -> "Hello! Welcome to AdvocateHub. How can I help you?"
+    // User: "Hey" -> "Hey there! 😊 What can I help you with?"
+    // User: "Good morning" -> "Good morning! Welcome to AdvocateHub. How may I assist you?"
+    // User: "Thank you" -> "You’re welcome! 😊 I’m happy to help."
+    // User: "Bye" -> "Goodbye! Have a great day. Feel free to chat with us anytime."
 
-    if (isGreetingIntent) {
-      const reply = isKn
-        ? `👋 **ನಮಸ್ಕಾರ! Advocates Hub AI ಕಾನೂನು ಸಹಾಯಕನಿಗೆ ಸ್ವಾಗತ.**\n\nನಾನು ನಿಮಗೆ ತ್ವರಿತ ಕಾನೂನು ಸಲಹೆ, ಪ್ರಕರಣದ ಸ್ಪಷ್ಟತೆ ಮತ್ತು ಪರಿಶೀಲಿತ ವಕೀಲರ ಸಂಪರ್ಕ ಕಲ್ಪಿಸಲು ಇಲ್ಲಿದ್ದೇನೆ.\n\n💬 **ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?**\n• ❓ ಪ್ರಶ್ನೆ ಕೇಳಿ: *'ನನಗೆ ಕೆಲವು ಪ್ರಶ್ನೆಗಳಿವೆ'* ಅಥವಾ *'ಕಾನೂನು ಸಲಹೆ ಬೇಕು'*\n• ⚖️ ಕಾನೂನು ಮಾಹಿತಿ: *'ಬೇಲ್ ಪಡೆಯುವುದು ಹೇಗೆ?'*, *'ಚೆಕ್ ಬೌನ್ಸ್ ನಿಯಮಗಳು'*, *'ವಿಚ್ಛೇದನ ಪ್ರಕ್ರಿಯೆ'*\n• 🔍 ವಕೀಲರ ಹುಡುಕಾಟ: ಹೆಸರು, ಊರು (ಉದಾ: *'Gokak'*, *'Bengaluru'*), ಅಥವಾ ವಿಭಾಗ (*'ಕ್ರಿಮಿನಲ್'*, *'ಆಸ್ತಿ'*, *'ಕೌಟುಂಬಿಕ'*)\n\nನಿಮ್ಮ ಪ್ರಶ್ನೆ ಅಥವಾ ಸಮಸ್ಯೆಯನ್ನು ತಿಳಿಸಿ!`
-        : `👋 **Hello! Welcome to Advocates Hub AI Legal Assistant.**\n\nI am here to provide you with instant legal advice, case clarity, and connect you with top verified advocates.\n\n💬 **How can I assist you today?**\n• ❓ Ask a question: *'I have some questions'* or *'I need legal advice'*\n• ⚖️ Inquire about a case: *'How to apply for bail?'*, *'Cheque bounce rules'*, *'Divorce procedure'*\n• 🔍 Find advocates: Search by name, city (e.g. *'Gokak'*, *'Bengaluru'*), or practice area (*'Criminal'*, *'Family'*, *'Property'*)\n\nWhat legal issue or question can I help you with today?`;
+    // "Hi" / "Hii" / "Hi there"
+    if (["hi", "hii", "hi there", "hi bot", "hi!"].includes(cleanQ) || cleanQ.startsWith("hi ") || cleanQ.startsWith("hii ") || cleanQ === "ಹಾಯ್") {
+      const reply = isKn ? "ಹಲೋ! 👋 ನಾನು ನಿಮಗೆ ಇಂದು ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?" : "Hello! 👋 How can I assist you today?";
+      return send(request, response, 200, { text: reply, type: "text" });
+    }
 
+    // "Hello" / "Hello there" / "Hello AdvocateHub"
+    if (["hello", "hello there", "hello advocatehub", "hello bot", "hello!", "helo"].includes(cleanQ) || cleanQ.startsWith("hello ") || cleanQ === "ಹಲೋ") {
+      const reply = isKn ? "ಹಲೋ! AdvocateHub ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?" : "Hello! Welcome to AdvocateHub. How can I help you?";
+      return send(request, response, 200, { text: reply, type: "text" });
+    }
+
+    // "Hey" / "Hey there"
+    if (["hey", "hey there", "heyy", "hey bot", "hey!"].includes(cleanQ) || cleanQ.startsWith("hey ") || cleanQ === "ಹೇ") {
+      const reply = isKn ? "ಹೇ! 😊 ನಾನು ನಿಮಗೆ ಯಾವ ವಿಷಯದಲ್ಲಿ ಸಹಾಯ ಮಾಡಲಿ?" : "Hey there! 😊 What can I help you with?";
+      return send(request, response, 200, { text: reply, type: "text" });
+    }
+
+    // "Good morning"
+    if (cleanQ.includes("good morning") || ["morning", "shubhodaya", "ಶುಭೋದಯ"].includes(cleanQ)) {
+      const reply = isKn ? "ಶುಭೋದಯ! AdvocateHub ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?" : "Good morning! Welcome to AdvocateHub. How may I assist you?";
+      return send(request, response, 200, { text: reply, type: "text" });
+    }
+
+    // "Good afternoon"
+    if (cleanQ.includes("good afternoon")) {
+      const reply = isKn ? "ಶುಭ ಮಧ್ಯಾಹ್ನ! AdvocateHub ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?" : "Good afternoon! Welcome to AdvocateHub. How may I assist you?";
+      return send(request, response, 200, { text: reply, type: "text" });
+    }
+
+    // "Good evening"
+    if (cleanQ.includes("good evening") || ["shubha sanje", "ಶುಭ ಸಂಜೆ"].includes(cleanQ)) {
+      const reply = isKn ? "ಶುಭ ಸಂಜೆ! AdvocateHub ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?" : "Good evening! Welcome to AdvocateHub. How may I assist you?";
+      return send(request, response, 200, { text: reply, type: "text" });
+    }
+
+    // "Thank you" / "Thanks"
+    if (/\b(thanks|thank\s*you|thx|appreciate\s*it|thank\s*u|dhanyavad|dhanyavadagalu)\b/i.test(cleanQ) || /(ಧನ್ಯವಾದ|ಧನ್ಯವಾದಗಳು|ತುಂಬಾ ಧನ್ಯವಾದ)/u.test(msg)) {
+      const reply = isKn ? "ನಿಮಗೆ ಸ್ವಾಗತ! 😊 ಸಹಾಯ ಮಾಡಲು ನನಗೆ ಸಂತೋಷವಾಗಿದೆ." : "You’re welcome! 😊 I’m happy to help.";
+      return send(request, response, 200, { text: reply, type: "text" });
+    }
+
+    // "Bye" / "Goodbye"
+    if (/\b(bye|goodbye|bye\s*bye|see\s*you|cya)\b/i.test(cleanQ) || /(ವಿದಾಯ)/u.test(msg)) {
+      const reply = isKn ? "ವಿದಾಯ! ನಿಮ್ಮ ದಿನ ಶುಭವಾಗಿರಲಿ. ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ನಮ್ಮೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಲು ಮುಕ್ತವಾಗಿರಿ." : "Goodbye! Have a great day. Feel free to chat with us anytime.";
+      return send(request, response, 200, { text: reply, type: "text" });
+    }
+
+    // AdvocateHub-Specific Platform Guidance
+    if (/\b(how\s*to\s*find\s*(an\s*)?advocate|how\s*to\s*find\s*(a\s*)?lawyer|find\s*(an\s*)?advocate|search\s*advocate)\b/i.test(cleanQ)) {
       return send(request, response, 200, {
-        text: reply,
-        type: "advocates",
-        advocates: topAdvs.map(formatCard),
+        text: isKn
+          ? "🔍 **ವಕೀಲರನ್ನು ಹುಡುಕುವುದು ಹೇಗೆ:**\n\n1. **ಹೆಸರು ಅಥವಾ ಊರಿನ ಮೂಲಕ ಹುಡುಕಿ:** ವಕೀಲರ ಹೆಸರು (ಉದಾ: Adv. Chetan V Chandaragi) ಅಥವಾ ಊರು (ಉದಾ: Gokak, Belagavi, Bengaluru) ಟೈಪ್ ಮಾಡಿ.\n2. **ವಿಭಾಗದ ಪ್ರಕಾರ ಹುಡುಕಿ:** ಕ್ರಿಮಿನಲ್, ಸಿವಿಲ್, ಆಸ್ತಿ, ಅಥವಾ ಕೌಟುಂಬಿಕ ಕಾನೂನು ಎಂದು ಕೇಳಿ.\n3. **ವಕೀಲರ ಪಟ್ಟಿ:** ಮೇಲಿನ ಮೆನುವಿನಲ್ಲಿರುವ **'Find Lawyer'** ಕ್ಲಿಕ್ ಮಾಡಿ ಎಲ್ಲಾ ಪರಿಶೀಲಿತ ವಕೀಲರನ್ನು ನೋಡಿ."
+          : "🔍 **How to Find an Advocate on AdvocateHub:**\n\n1. **Search by Name or City:** Type any advocate name (e.g. Adv. Chetan V Chandaragi) or city (e.g. Gokak, Belagavi, Bengaluru).\n2. **Search by Specialization:** Ask for specialists in Criminal Law, Family Law, Property Law, or Corporate Law.\n3. **Browse Directory:** Click **'Find Lawyer'** in the top navigation bar to explore our complete directory of verified advocates.",
+        type: "text",
+        navigate: "/find-lawyer",
+      });
+    }
+
+    if (/\b(client\s*portal|client\s*dashboard)\b/i.test(cleanQ)) {
+      return send(request, response, 200, {
+        text: "📱 **Client Portal & Dashboard:**\n\nIn the Client Portal, you can track active legal cases, communicate directly with your advocate via real-time WhatsApp-style chat, and view booking history. Access it anytime from the top navigation after logging in.",
+        type: "text",
+        navigate: "/client-dashboard",
+      });
+    }
+
+    if (/\b(how\s*to\s*request\s*consultation|book\s*consultation|how\s*to\s*consult)\b/i.test(cleanQ)) {
+      return send(request, response, 200, {
+        text: "💬 **How to Request a Consultation:**\n\n1. Open the **'Find Lawyer'** page or browse advocate profiles.\n2. Click **'Chat Now'** or **'Book Consultation'** on the advocate's card.\n3. Complete the quick consultation chit activation.\n4. Your private conversation will open immediately in the Client Portal for bi-directional real-time messaging!",
+        type: "text",
+        navigate: "/find-lawyer",
+      });
+    }
+
+    if (/\b(advocate\s*dashboard|advocate\s*portal)\b/i.test(cleanQ)) {
+      return send(request, response, 200, {
+        text: "⚖️ **Advocate Dashboard:**\n\nThe Advocate Dashboard allows advocates to review client intake requests, conduct real-time chats, update case stages, track consultation earnings, and view scheduled sessions. Access it via Advocate Login.",
+        type: "text",
+        navigate: "/advocate-dashboard",
       });
     }
 
@@ -1033,20 +1112,6 @@ async function route(request, response) {
         text: reply,
         type: "advocates",
         advocates: topAdvs.map(formatCard),
-      });
-    }
-
-    // C2) Human Conversational & Casual Intents
-    const isGratitudeIntent =
-      /\b(thanks|thank\s*you|thx|appreciate\s*it|thank\s*u|dhanyavad|dhanyavadagalu)\b/i.test(cleanQ) ||
-      /(ಧನ್ಯವಾದ|ಧನ್ಯವಾದಗಳು|ತುಂಬಾ ಧನ್ಯವಾದ)/u.test(msg);
-    if (isGratitudeIntent) {
-      const reply = isKn
-        ? `😊 **ತುಂಬಾ ಧನ್ಯವಾದಗಳು!**\n\nನಿಮಗೆ ಸಹಾಯ ಮಾಡಲು ನನಗೆ ಸಂತೋಷವಾಗಿದೆ. ಯಾವುದೇ ಕಾನೂನು ಮಾರ್ಗದರ್ಶನ, ಕಾಯ್ದೆಗಳ ಮಾಹಿತಿ ಅಥವಾ ವಕೀಲರ ಸಮಾಲೋಚನೆ ಅಗತ್ಯವಿದ್ದಲ್ಲಿ ನಾನು ಯಾವಾಗಲೂ ಲಭ್ಯವಿರುತ್ತೇನೆ.\n\nನಿಮ್ಮ ದಿನ ಶುಭವಾಗಿರಲಿ!`
-        : `😊 **You are most welcome!**\n\nI'm delighted I could help clarify things for you. Whenever you have legal questions, need case clarity, or wish to consult a verified advocate, I am always here to assist.\n\nWishing you peace of mind and success with your matter!`;
-      return send(request, response, 200, {
-        text: reply,
-        type: "text",
       });
     }
 
