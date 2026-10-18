@@ -125,6 +125,14 @@ function isMongoEnabled() {
   return collections !== null;
 }
 
+function getDb() {
+  return database;
+}
+
+function getClient() {
+  return client;
+}
+
 async function close() {
   if (client) await client.close();
 }
@@ -133,6 +141,8 @@ module.exports = {
   close,
   flush,
   getCollection,
+  getDb,
+  getClient,
   initialize,
   isMongoEnabled,
   setCollection,

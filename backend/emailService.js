@@ -28,6 +28,14 @@ try {
   // Graceful fallback if nodemailer is unavailable
 }
 
+let ResendClientClass = null;
+try {
+  const rpkg = require("resend");
+  ResendClientClass = rpkg.Resend || rpkg.default || rpkg;
+} catch {
+  // Graceful fallback to native fetch
+}
+
 function getAdminEmail() {
   return process.env.ADMIN_NOTIFICATION_EMAIL || "sandeepmasaguppi@gmail.com";
 }
@@ -110,9 +118,29 @@ function getTransporter() {
   });
 }
 
+function getResendApiKey() {
+  return (process.env.RESEND_API_KEY || "").trim();
+}
+
+function getResendFrom() {
+  return (
+    process.env.EMAIL_FROM ||
+    process.env.RESEND_FROM ||
+    "AdvocateHub <noreply@advocatehub.in>"
+  ).trim();
+}
+
+function getEmailReplyTo() {
+  return (
+    process.env.EMAIL_REPLY_TO ||
+    process.env.SMTP_REPLY_TO ||
+    "advocatehub.in@gmail.com"
+  ).trim();
+}
+
 function getDeliveryProvider() {
-  if (process.env.EMAIL_PROVIDER === "resend" || process.env.RESEND_API_KEY) {
-    return process.env.RESEND_API_KEY && process.env.RESEND_FROM ? "resend" : null;
+  if (process.env.RESEND_API_KEY || process.env.EMAIL_PROVIDER === "resend") {
+    return "resend";
   }
   return getTransporter() ? "smtp" : null;
 }
@@ -120,39 +148,96 @@ function getDeliveryProvider() {
 async function deliverEmail(message) {
   const provider = getDeliveryProvider();
   if (provider === "resend") {
+    const apiKey = getResendApiKey();
+    if (!apiKey) {
+      throw new Error("Resend API key is not configured. Please set RESEND_API_KEY in your environment variables.");
+    }
+    const from = message.from || getResendFrom();
+    const replyTo = message.replyTo || getEmailReplyTo();
+    const to = Array.isArray(message.to) ? message.to : [message.to];
+
+    // 1. Try official Resend Node SDK if available
+    if (ResendClientClass) {
+      try {
+        const resendInstance = new ResendClientClass(apiKey);
+        const { data, error } = await resendInstance.emails.send({
+          from,
+          to,
+          subject: message.subject,
+          text: message.text,
+          html: message.html,
+          reply_to: replyTo,
+        });
+        if (error) {
+          throw new Error(`Resend SDK: ${error.message || JSON.stringify(error)}`);
+        }
+        return { provider: "resend", messageId: data?.id };
+      } catch (sdkErr) {
+        console.warn(`[EmailService] Resend SDK attempt encountered error (${sdkErr.message}), trying REST API fallback...`);
+      }
+    }
+
+    // 2. Direct HTTP REST API (with automatic onboarding fallback if domain pending)
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM,
-        to: [message.to],
+        from,
+        to,
         subject: message.subject,
         text: message.text,
         html: message.html,
-        reply_to: process.env.SMTP_REPLY_TO || undefined,
+        reply_to: replyTo,
       }),
       signal: AbortSignal.timeout(15000),
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(`Resend API returned ${response.status}: ${result.message || "email delivery failed"}`);
+      const errDetail = result?.message || result?.error || `HTTP ${response.status}`;
+      // If custom domain is not yet verified in DNS, try test sender fallback
+      if (response.status === 403 && String(errDetail).toLowerCase().includes("not verified") && from !== "AdvocateHub <onboarding@resend.dev>") {
+        console.warn(`[EmailService] Custom domain advocatehub.in is pending DNS verification. Attempting delivery via onboarding@resend.dev...`);
+        const fallbackRes = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "AdvocateHub <onboarding@resend.dev>",
+            to,
+            subject: message.subject,
+            text: message.text,
+            html: message.html,
+            reply_to: replyTo,
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+        const fallbackResult = await fallbackRes.json().catch(() => ({}));
+        if (fallbackRes.ok) {
+          return { provider: "resend", messageId: fallbackResult.id, fallback: true };
+        }
+      }
+      throw new Error(`Resend API failed (${response.status}): ${errDetail}`);
     }
-    return { provider, messageId: result.id };
+    return { provider: "resend", messageId: result.id };
   }
 
   if (provider === "smtp") {
-    const info = await getTransporter().sendMail({
-      from: message.from || process.env.SMTP_FROM || `"Advocates Hub" <${process.env.SMTP_USER}>`,
-      replyTo: process.env.SMTP_REPLY_TO || "advocatehub.in@gmail.com",
+    const transporter = getTransporter();
+    if (!transporter) throw new Error("SMTP transport is not available");
+    const info = await transporter.sendMail({
+      from: message.from || process.env.SMTP_FROM || `"AdvocateHub" <${process.env.SMTP_USER}>`,
+      replyTo: message.replyTo || getEmailReplyTo(),
       to: message.to,
       subject: message.subject,
       text: message.text,
       html: message.html,
     });
-    return { provider, messageId: info.messageId };
+    return { provider: "smtp", messageId: info.messageId };
   }
 
   throw new Error(process.env.EMAIL_PROVIDER === "resend"
@@ -603,10 +688,17 @@ async function checkTwilioPhoneVerification({ phone, code }) {
 }
 
 /**
- * Sends a real-time OTP verification email to the registering client or advocate.
+ * Sends a real-time OTP verification email to the registering client or advocate via Resend.
  */
 async function sendOtpEmail({ to, otp, name, role = "client" }) {
-  const recipientName = name || (role === "advocate" ? "Advocate" : "Client");
+  if (!to || !String(to).trim()) {
+    throw new Error("Recipient email address is required for OTP verification");
+  }
+  if (!otp || String(otp).trim().length !== 6) {
+    throw new Error("A valid 6-digit OTP code is required");
+  }
+
+  const recipientName = String(name || (role === "advocate" ? "Advocate" : "Client")).trim();
   const safeRecipientName = recipientName.replace(/[&<>"']/g, (character) => ({
     "&": "&amp;",
     "<": "&lt;",
@@ -614,80 +706,99 @@ async function sendOtpEmail({ to, otp, name, role = "client" }) {
     '"': "&quot;",
     "'": "&#39;",
   })[character]);
-  const subject = "Your Advocates Hub email verification code";
+  const roleLabel = role === "advocate" ? "Advocate" : "Client";
+  const subject = `Your AdvocateHub Verification Code: ${otp}`;
 
   const text = `
 Hello ${recipientName},
 
-Your verification code for registering your ${role === "advocate" ? "Advocate account" : "Client account"} on Advocates Hub is:
+Your verification code for registering your ${roleLabel} account on AdvocateHub is:
 
 ${otp}
 
-This code is valid for 10 minutes. Please enter this OTP on the registration page to complete your signup.
+⏱️ This verification code will expire in 5 minutes.
+Please enter this code on the registration page to verify your email and complete your registration.
 
-If you did not request this code, please ignore this email.
+🔒 Security Warning:
+AdvocateHub will never ask for your verification code. Do not share this OTP with anyone, including support staff.
+
+If you did not request this verification code, please ignore this email or contact support.
 
 Best regards,
-Advocates Hub Team
-advocatehub.in@gmail.com
+The AdvocateHub Team
+Support: advocatehub.in@gmail.com
+https://advocate-hub.up.railway.app
 `.trim();
 
   const html = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
-    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
-    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; text-align: center; }
-    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }
-    .header p { margin: 0; font-size: 13px; color: #94a3b8; }
-    .content { padding: 28px 30px; text-align: center; }
-    .otp-box { display: inline-block; background: #f8fafc; border: 2px dashed #2563eb; color: #1e293b; letter-spacing: 8px; font-size: 32px; font-weight: 800; padding: 14px 28px; border-radius: 10px; margin: 20px 0; font-family: monospace; }
-    .info { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
-    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; margin: 0; padding: 28px 12px; color: #1e293b; }
+    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; }
+    .header { background: linear-gradient(135deg, #091224 0%, #1e1b4b 60%, #1e3a8a 100%); color: #ffffff; padding: 32px 30px; text-align: center; }
+    .header .logo { font-size: 32px; line-height: 1; margin-bottom: 8px; }
+    .header h1 { margin: 0 0 6px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.3px; color: #f8fafc; }
+    .header p { margin: 0; font-size: 13px; color: #94a3b8; font-weight: 500; }
+    .content { padding: 32px 30px; text-align: center; background: #ffffff; }
+    .greeting { font-size: 16px; font-weight: 600; color: #0f172a; margin: 0 0 12px 0; text-align: left; }
+    .instruction { font-size: 14px; color: #475569; line-height: 1.6; margin: 0 0 24px 0; text-align: left; }
+    .otp-container { background: #f8fafc; border: 2px dashed #3b82f6; border-radius: 12px; padding: 20px 16px; margin: 20px 0 24px 0; }
+    .otp-code { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 36px; font-weight: 800; letter-spacing: 10px; color: #1e3a8a; text-indent: 10px; display: inline-block; }
+    .expiry-badge { display: inline-flex; align-items: center; justify-content: center; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 9999px; margin-bottom: 20px; }
+    .security-notice { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px 16px; text-align: left; margin: 0 0 20px 0; }
+    .security-notice p { margin: 0; font-size: 12px; color: #92400e; line-height: 1.5; }
+    .security-notice strong { color: #78350f; }
+    .footer { padding: 20px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; line-height: 1.6; }
+    .footer a { color: #2563eb; text-decoration: none; font-weight: 500; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="header">
-      <h2>⚖️ Advocates Hub</h2>
-      <p>Email Verification Code</p>
+      <div class="logo">⚖️</div>
+      <h1>AdvocateHub</h1>
+      <p>Registration Email Verification</p>
     </div>
     <div class="content">
-      <p style="font-size: 16px; font-weight: 600; color: #0f172a; margin-top: 0;">
-        Hello ${safeRecipientName},
+      <p class="greeting">Hello ${safeRecipientName},</p>
+      <p class="instruction">
+        Thank you for starting your registration as a <strong>${roleLabel}</strong> on AdvocateHub. Please enter the following 6-digit verification code to verify your email address:
       </p>
-      <p class="info">
-        Use the One-Time Password (OTP) below to verify your email and complete your <strong>${role === "advocate" ? "Advocate" : "Client"}</strong> account registration on Advocates Hub:
-      </p>
-      <div class="otp-box">${otp}</div>
-      <p class="info" style="font-size: 13px; color: #ef4444;">
-        ⏱️ This code will expire in 10 minutes. Do not share this OTP with anyone.
+      <div class="otp-container">
+        <div class="otp-code">${otp}</div>
+      </div>
+      <div>
+        <span class="expiry-badge">⏱️ Code expires in 5 minutes</span>
+      </div>
+      <div class="security-notice">
+        <p><strong>🔒 Security Alert:</strong> Do not share this code with anyone. AdvocateHub staff will never ask for your verification code or password.</p>
+      </div>
+      <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: left;">
+        If you did not request this verification code, no action is needed. You can safely ignore this email.
       </p>
     </div>
     <div class="footer">
-      Advocates Hub Verification Desk · <a href="mailto:advocatehub.in@gmail.com" style="color: #2563eb;">advocatehub.in@gmail.com</a>
+      AdvocateHub · Legal Technology Platform<br>
+      Support: <a href="mailto:advocatehub.in@gmail.com">advocatehub.in@gmail.com</a>
     </div>
   </div>
 </body>
 </html>
 `.trim();
 
-  try {
-    const result = await deliverEmail({
-      to,
-      subject,
-      text,
-      html,
-    });
-    console.log(`[EmailService] OTP email delivered via ${result.provider}. MessageId: ${result.messageId || "not provided"}`);
-    return result;
-  } catch (err) {
-    console.warn(`[EmailService] SMTP delivery attempt failed (${err.message}). Falling back to direct OTP dispatch.`);
-    return { provider: "direct-email", status: "sent", to };
-  }
+  const result = await deliverEmail({
+    to,
+    subject,
+    text,
+    html,
+  });
+  console.log(`[EmailService] Registration OTP delivered to ${to} via ${result.provider}. MessageId: ${result.messageId || "ok"}`);
+  return result;
 }
 
 module.exports = {
@@ -696,6 +807,7 @@ module.exports = {
   notifyAdminNewClient,
   notifyAdminNewAdvocate,
   sendOtpEmail,
+  sendRegistrationOtpEmail: sendOtpEmail,
   sendWhatsappOtp,
   sendSmsOtp,
   startTwilioPhoneVerification,

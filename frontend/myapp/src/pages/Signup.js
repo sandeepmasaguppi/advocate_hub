@@ -712,10 +712,7 @@ export default function Signup({ defaultTab = "" }) {
   const [otpCode, setOtpCode] = useState("");
   const [otpErr, setOtpErr] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
-  const [advOtpSentChannels, setAdvOtpSentChannels] = useState([]);
-  const [advOtpChannel, setAdvOtpChannel] = useState("all"); // "all" | "email" | "phone" | "whatsapp"
   const [advOtpSetupError, setAdvOtpSetupError] = useState("");
-  const [activeAdvWhatsappUrl, setActiveAdvWhatsappUrl] = useState("");
 
   useEffect(() => {
     if (!otpStep || resendTimer <= 0) return;
@@ -1188,128 +1185,10 @@ export default function Signup({ defaultTab = "" }) {
     }
   };
 
-  const [showAdvChannelModal, setShowAdvChannelModal] = useState(false);
-
-  // ── Submit — persist locally via advocatesStore / clientsStore ──
-  const handleSubmit = (e) => {
-    e?.preventDefault();
-    const valid = tab === "client" ? validateClient() : validateAdvocate();
-    if (!valid) return;
-
-    if (tab === "client") {
-      navigate("/client-register");
-      return;
-    }
-
-    setShowAdvChannelModal(true);
-  };
-
-  const handleConfirmAdvChannelAndSend = (selectedChannel) => {
-    const channelToUse = selectedChannel || advOtpChannel;
-    setAdvOtpChannel(channelToUse);
+  // ── Submit — Advocate registration via Resend Email OTP ──────
+  const handleSendAdvEmailOtp = async () => {
     setAdvOtpSetupError("");
-    setLoading(true);
-
-    (async () => {
-      try {
-        const emailLower = adv.email.trim().toLowerCase();
-        const res = await fetch("/api/auth/send-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: adv.fullName.trim(),
-            email: emailLower,
-            phone: adv.phone.trim(),
-            role: "advocate",
-            channel: channelToUse,
-          }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          const errorMessage = data.message || data.error || "Failed to send verification code. Try again.";
-          if (res.status === 409) setAdvErr((p) => ({ ...p, email: errorMessage }));
-          setAdvOtpSetupError(errorMessage);
-          showToast(errorMessage, "error");
-          setLoading(false);
-          return;
-        }
-
-        const sentChannels = Array.isArray(data.sentChannels)
-          ? data.sentChannels
-          : [channelToUse === "phone" ? "sms" : channelToUse];
-        setAdvOtpSetupError("");
-        setAdvOtpSentChannels(sentChannels);
-        if (data.whatsappUrl) {
-          setActiveAdvWhatsappUrl(data.whatsappUrl);
-        } else {
-          setActiveAdvWhatsappUrl("");
-        }
-        setShowAdvChannelModal(false);
-        showToast(
-          data.message || `Verification code sent via ${formatOtpChannels(sentChannels)}.`,
-          data.failedChannels?.length ? "info" : "success"
-        );
-        setOtpStep(true);
-        setResendTimer(60);
-      } catch (err) {
-        console.error(err);
-        showToast("Could not reach the server. Please try again.", "error");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  };
-
-  const handleSelectAdvAdminApproval = async () => {
-    setLoading(true);
-    setAdvOtpSetupError("");
-    try {
-      const emailLower = adv.email.trim().toLowerCase();
-      const specsList = (adv.specialities && adv.specialities.length > 0)
-        ? adv.specialities
-        : (adv.speciality ? adv.speciality.split(/,\s*/).map(s => s.trim()).filter(Boolean) : []);
-      const finalSpeciality = specsList.join(", ");
-
-      await registerAdvocate({
-        name:          adv.fullName.trim(),
-        email:         emailLower,
-        password:      adv.password,
-        phone:         adv.phone.trim(),
-        barId:         adv.barId.trim(),
-        speciality:    finalSpeciality,
-        practiceArea:  finalSpeciality,
-        practiceAreas: specsList,
-        courtLevel:    adv.courtLevel,
-        district:      adv.district,
-        taluk:         adv.taluk,
-        court:         adv.court,
-        barCouncil:    adv.barCouncil,
-        experience:    adv.experience,
-        city:          adv.city || adv.taluk || adv.district,
-        fee:           adv.fee || "",
-        bio:           adv.bio,
-        avatarData:    adv.avatarData,
-        channel:       "admin",
-        verificationMethod: "admin",
-      });
-
-      setSuccessName(adv.fullName);
-      setShowAdvChannelModal(false);
-      setOtpStep(false);
-      setView("success");
-      showToast("Advocate profile submitted for Admin Approval ⏳", "success");
-    } catch (err) {
-      setAdvOtpSetupError(err.message || "Failed to submit for Admin Approval.");
-      showToast(err.message || "Submission failed.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendAdvOtp = async () => {
-    if (resendTimer > 0) return;
+    setOtpErr("");
     setLoading(true);
     try {
       const emailLower = adv.email.trim().toLowerCase();
@@ -1321,40 +1200,55 @@ export default function Signup({ defaultTab = "" }) {
           email: emailLower,
           phone: adv.phone.trim(),
           role: "advocate",
-          channel: advOtpChannel,
+          channel: "email",
         }),
       });
+
       const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        const sentChannels = Array.isArray(data.sentChannels)
-          ? data.sentChannels
-          : [advOtpChannel === "phone" ? "sms" : advOtpChannel];
-        setAdvOtpSentChannels(sentChannels);
-        if (data.whatsappUrl) {
-          setActiveAdvWhatsappUrl(data.whatsappUrl);
-        }
-        setAdvOtpSetupError("");
-        showToast(
-          data.message || `A new verification code was sent via ${formatOtpChannels(sentChannels)}.`,
-          data.failedChannels?.length ? "info" : "success"
-        );
-        setResendTimer(60);
-      } else {
-        const errorMessage = data.message || data.error || "Failed to resend code.";
+      if (!res.ok) {
+        const errorMessage = data.message || data.error || "Failed to send verification code. Try again.";
+        if (res.status === 409) setAdvErr((p) => ({ ...p, email: errorMessage }));
         setAdvOtpSetupError(errorMessage);
         showToast(errorMessage, "error");
+        setLoading(false);
+        return;
       }
-    } catch {
-      showToast("Network error during resend.", "error");
+
+      showToast(`Verification code sent to ${emailLower}`, "success");
+      setOtpStep(true);
+      setResendTimer(60);
+      setOtpCode("");
+    } catch (err) {
+      console.error(err);
+      showToast("Could not reach the server. Please check your connection.", "error");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSubmit = (e) => {
+    e?.preventDefault();
+    const valid = tab === "client" ? validateClient() : validateAdvocate();
+    if (!valid) return;
+
+    if (tab === "client") {
+      navigate("/client-register");
+      return;
+    }
+
+    handleSendAdvEmailOtp();
+  };
+
+  const handleResendAdvOtp = async () => {
+    if (resendTimer > 0 || loading) return;
+    await handleSendAdvEmailOtp();
+  };
+
   const handleVerifyAndRegisterAdv = async (e) => {
     e?.preventDefault();
-    if (!otpCode || otpCode.trim().length !== 6) {
-      setOtpErr("Please enter the 6-digit verification code");
+    const cleanCode = String(otpCode || "").trim();
+    if (!cleanCode || cleanCode.length !== 6 || !/^\d{6}$/.test(cleanCode)) {
+      setOtpErr("Please enter the 6-digit numeric verification code");
       return;
     }
 
@@ -1387,11 +1281,11 @@ export default function Signup({ defaultTab = "" }) {
         fee:           adv.fee || "",
         bio:           adv.bio,
         avatarData:    adv.avatarData,
-        otp:           otpCode.trim(),
+        otp:           cleanCode,
       });
 
       setSuccessName(adv.fullName);
-      showToast("Email verified & Advocate Profile Approved! 🎉", "success");
+      showToast("Email verified! Advocate profile submitted for review 🎉", "success");
       setOtpStep(false);
       setView("success");
     } catch (err) {
@@ -1501,108 +1395,10 @@ export default function Signup({ defaultTab = "" }) {
     <div className={`su-page ${theme === "dark" ? "theme-dark su-dark" : "theme-light su-light"}`} data-theme={theme}>
       <Toast toast={toast} />
 
-      {/* Full Screen Advocate OTP Delivery Channel Selection Modal (Mobile App Style) */}
-      {showAdvChannelModal && (
-        <div className="rg-modal-overlay">
-          <div className="rg-modal-card" style={{ maxWidth: 480, textAlign: "center" }}>
-            <button
-              type="button"
-              className="rg-modal-theme-toggle"
-              onClick={handleThemeToggle}
-              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-            >
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-            <div className="rg-otp-badge">📲</div>
-            <h2 className="su-title" style={{ fontSize: "1.55rem" }}>{isKn ? "ಒಟಿಪಿ ವಿಧಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select OTP Delivery Channel"}</h2>
-            <p className="su-subtitle" style={{ fontSize: "0.92rem", margin: "6px 0 20px" }}>
-              {isKn ? "ನಿಮ್ಮ ೬-ಅಂಕಿಯ ಪರಿಶೀಲನಾ ಕೋಡ್ ಅನ್ನು ಎಲ್ಲಿ ಕಳುಹಿಸಬೇಕು?" : "How would you like to receive your 6-digit verification code?"}
-            </p>
-            {advOtpSetupError && (
-              <p className="su-otp-setup-error" role="alert">{advOtpSetupError}</p>
-            )}
-            {loading && <p className="su-otp-sending" role="status">Sending your verification code…</p>}
-
-            <div className="rg-channel-card-list">
-              <button
-                type="button"
-                className="rg-channel-option-card chan-email"
-                onClick={() => handleConfirmAdvChannelAndSend("email")}
-                disabled={loading}
-              >
-                <div className="rg-channel-icon-avatar">✉️</div>
-                <div className="rg-channel-body">
-                  <div className="rg-channel-title">Email Address Only</div>
-                  <div className="rg-channel-desc">Sent directly to {adv.email}</div>
-                </div>
-                <div className="rg-channel-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="rg-channel-option-card chan-sms"
-                onClick={() => handleConfirmAdvChannelAndSend("phone")}
-                disabled={loading}
-              >
-                <div className="rg-channel-icon-avatar">📱</div>
-                <div className="rg-channel-body">
-                  <div className="rg-channel-title">Mobile SMS Message</div>
-                  <div className="rg-channel-desc">Sent via SMS to +91 {maskPhone(adv.phone)}</div>
-                </div>
-                <div className="rg-channel-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="rg-channel-option-card chan-wa"
-                onClick={() => handleConfirmAdvChannelAndSend("whatsapp")}
-                disabled={loading}
-              >
-                <div className="rg-channel-icon-avatar">💬</div>
-                <div className="rg-channel-body">
-                  <div className="rg-channel-title">WhatsApp Chat Message</div>
-                  <div className="rg-channel-desc">Instant OTP to WhatsApp number {maskPhone(adv.phone)}</div>
-                </div>
-                <div className="rg-channel-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="rg-channel-option-card chan-admin"
-                onClick={handleSelectAdvAdminApproval}
-                disabled={loading}
-              >
-                <div className="rg-channel-icon-avatar">🏛️</div>
-                <div className="rg-channel-body">
-                  <div className="rg-channel-title">
-                    Admin Approval <span className="rg-channel-badge badge-admin">Direct Review</span>
-                  </div>
-                  <div className="rg-channel-desc">Submit profile directly to Admin for verification & approval</div>
-                </div>
-                <div className="rg-channel-arrow">→</div>
-              </button>
-            </div>
-
-            <button
-              type="button"
-              style={{ background: "none", border: 0, color: "var(--rg-muted)", cursor: "pointer", textDecoration: "underline", font: "inherit", fontSize: "0.88rem" }}
-              onClick={() => {
-                setAdvOtpSetupError("");
-                setShowAdvChannelModal(false);
-              }}
-              disabled={loading}
-            >
-              ← Cancel & Back to Form
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* OTP Verification Modal */}
+      {/* Real Email OTP Verification Modal */}
       {otpStep && (
         <div className="rg-modal-overlay">
-          <div className="rg-modal-card">
+          <div className="rg-modal-card" style={{ maxWidth: 460, textAlign: "center" }}>
             <button
               type="button"
               className="rg-modal-theme-toggle"
@@ -1612,48 +1408,19 @@ export default function Signup({ defaultTab = "" }) {
             >
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
-            <div className="rg-otp-badge">🔐</div>
-            <h2 className="su-title" style={{ fontSize: "1.6rem" }}>Verify Advocate Account</h2>
-            <p className="su-subtitle" style={{ fontSize: "0.95rem", margin: "8px 0 16px" }}>
-              Verification code sent via<br />
-              <strong style={{ color: "var(--su-accent, #2dd4bf)" }}>
-                {formatOtpChannels(advOtpSentChannels.length ? advOtpSentChannels : [advOtpChannel])}
+            <div className="rg-otp-badge" style={{ fontSize: "2rem" }}>✉️</div>
+            <h2 className="su-title" style={{ fontSize: "1.55rem", marginTop: 8 }}>
+              {isKn ? "ವಕೀಲರ ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿ" : "Verify Advocate Email"}
+            </h2>
+            <p className="su-subtitle" style={{ fontSize: "0.93rem", margin: "6px 0 14px", color: "var(--rg-muted, #94a3b8)" }}>
+              {isKn ? "ನಿಮ್ಮ ಇಮೇಲ್ ವಿಳಾಸಕ್ಕೆ ೬-ಅಂಕಿಯ ಪರಿಶೀಲನಾ ಕೋಡ್ ಕಳುಹಿಸಲಾಗಿದೆ:" : "We've sent a 6-digit verification code to:"}<br />
+              <strong style={{ color: "var(--su-accent, #2dd4bf)", wordBreak: "break-all" }}>
+                {adv.email.trim()}
               </strong>
             </p>
-            <p style={{ fontSize: "0.82rem", color: "#64748b", background: "rgba(0,0,0,0.04)", padding: "8px 12px", borderRadius: "8px", margin: "0 0 20px" }}>
-              Check the listed inboxes/messages and enter the code below to approve your profile.
-            </p>
-            {advOtpSetupError && (
-              <p className="su-otp-setup-error" role="alert">{advOtpSetupError}</p>
-            )}
-
-            {activeAdvWhatsappUrl && (
-              <div style={{ marginBottom: 16 }}>
-                <a
-                  href={activeAdvWhatsappUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    width: "100%",
-                    padding: "12px 18px",
-                    background: "#22c55e",
-                    color: "#ffffff",
-                    borderRadius: 10,
-                    textDecoration: "none",
-                    fontWeight: 600,
-                    fontSize: "0.92rem",
-                    boxShadow: "0 4px 14px rgba(34, 197, 94, 0.35)",
-                    transition: "all 0.2s ease"
-                  }}
-                >
-                  💬 Open WhatsApp for Instant OTP →
-                </a>
-              </div>
-            )}
+            <div style={{ display: "inline-block", background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: "0.82rem", fontWeight: 600, padding: "5px 14px", borderRadius: 9999, marginBottom: 18 }}>
+              ⏱️ {isKn ? "ಕೋಡ್ ೫ ನಿಮಿಷಗಳಲ್ಲಿ ಮುಕ್ತಾಯವಾಗುತ್ತದೆ" : "Code expires in 5 minutes"}
+            </div>
 
             <form onSubmit={handleVerifyAndRegisterAdv}>
               <div className="su-field">
@@ -1669,32 +1436,46 @@ export default function Signup({ defaultTab = "" }) {
                   }}
                   autoFocus
                   disabled={loading}
+                  style={{
+                    textAlign: "center",
+                    letterSpacing: "8px",
+                    fontSize: "1.75rem",
+                    fontWeight: 700,
+                    fontFamily: "monospace",
+                  }}
                 />
                 {otpErr && <p className="su-field-err" style={{ color: "#ef4444", marginTop: 6 }}>⚠ {otpErr}</p>}
               </div>
 
-              <button type="submit" className="su-btn-primary su-btn-lg" style={{ marginTop: 16 }} disabled={loading}>
-                {loading ? <><span className="su-spinner" /> Verifying…</> : "Verify & Approve Profile →"}
+              <button type="submit" className="su-btn-primary su-btn-lg" style={{ marginTop: 16, width: "100%" }} disabled={loading}>
+                {loading ? <><span className="su-spinner" /> {isKn ? "ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…" : "Verifying Code…"}</> : (isKn ? "ಪರಿಶೀಲಿಸಿ ಮತ್ತು ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ →" : "Verify & Complete Signup →")}
               </button>
             </form>
 
-            <div style={{ marginTop: 18, fontSize: "0.88rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ marginTop: 20, fontSize: "0.88rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <button
                 type="button"
                 style={{ background: "none", border: 0, color: "#94a3b8", cursor: "pointer", textDecoration: "underline", font: "inherit" }}
                 onClick={() => setOtpStep(false)}
                 disabled={loading}
               >
-                ← Edit Form Details
+                ← {isKn ? "ವಿವರ ಬದಲಾಯಿಸಿ" : "Change Details"}
               </button>
 
               <button
                 type="button"
-                style={{ background: "none", border: 0, color: resendTimer > 0 ? "#94a3b8" : "#2dd4bf", cursor: resendTimer > 0 ? "default" : "pointer", fontWeight: 700, font: "inherit" }}
+                style={{
+                  background: "none",
+                  border: 0,
+                  color: resendTimer > 0 ? "#94a3b8" : "var(--su-accent, #2dd4bf)",
+                  cursor: resendTimer > 0 ? "default" : "pointer",
+                  fontWeight: 700,
+                  font: "inherit",
+                }}
                 onClick={handleResendAdvOtp}
                 disabled={resendTimer > 0 || loading}
               >
-                {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : "Resend OTP Code"}
+                {resendTimer > 0 ? (isKn ? `ಮತ್ತೆ ಕಳುಹಿಸಿ (${resendTimer}s)` : `Resend Code (${resendTimer}s)`) : (isKn ? "ಮತ್ತೆ ಕೋಡ್ ಕಳುಹಿಸಿ" : "Resend OTP Code")}
               </button>
             </div>
           </div>

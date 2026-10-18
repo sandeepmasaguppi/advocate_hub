@@ -155,17 +155,17 @@ function Input({ icon, error, type = "text", rightEl, ...props }) {
 }
 
 // ── Success Screen ────────────────────────────────────────────
-function SuccessScreen({ name, onLogin, isDirectAdmin = false }) {
+function SuccessScreen({ name, onLogin }) {
   return (
     <div className="rg-success">
-      <div className="rg-success-icon">⏳</div>
-      <h2 className="rg-success-title">Registration Submitted!</h2>
+      <div className="rg-success-icon">✅</div>
+      <h2 className="rg-success-title">Email Verified & Registration Submitted!</h2>
       <p className="rg-success-msg">
-        Welcome to Advocate Hub, <strong>{name}</strong>!<br />
-        Your client account has been registered and is <strong>awaiting administrator approval</strong>. Once your profile is reviewed and approved by the admin, you will be able to log in.
+        Welcome to AdvocateHub, <strong>{name}</strong>!<br />
+        Your email address has been successfully verified with your one-time code. Your client account has been registered and is <strong>awaiting administrator approval</strong>. Once approved, you can log in to consult verified advocates.
       </p>
       <div className="rg-success-steps">
-        <div className="rg-ss done">{isDirectAdmin ? "🏛️ Submitted for Admin Verification" : "✅ 6-digit OTP code verified"}</div>
+        <div className="rg-ss done">✅ Email verified via Resend</div>
         <div className="rg-ss done" style={{ color: "#d97706", fontWeight: 700 }}>⏳ Awaiting Admin Approval</div>
       </div>
       <button className="rg-btn-primary rg-btn-lg" onClick={onLogin} style={{ marginTop: 20 }}>
@@ -266,22 +266,16 @@ export default function Register() {
     setErr((p) => ({ ...p, [k]: "" }));
   };
 
-  const [showChannelModal, setShowChannelModal] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpErr, setOtpErr] = useState("");
   const [resendTimer, setResendTimer] = useState(60);
-  const [otpSentChannels, setOtpSentChannels] = useState([]);
-  const [otpSetupError, setOtpSetupError] = useState("");
-  const [activeWhatsappUrl, setActiveWhatsappUrl] = useState("");
 
   useEffect(() => {
     if (!otpStep || resendTimer <= 0) return;
     const interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
   }, [otpStep, resendTimer]);
-
-  const [otpChannel, setOtpChannel] = useState("all"); // "all" | "email" | "phone" | "whatsapp"
 
   // ── Validate ──────────────────────────────────────────────
   const validate = () => {
@@ -307,123 +301,9 @@ export default function Register() {
     return !Object.keys(e).length;
   };
 
-  // ── Initiate Signup: Open Channel Modal ───────────────────
-  const handleSubmit = (e) => {
-    e?.preventDefault();
-    if (!validate()) return;
-    setShowChannelModal(true);
-  };
-
-  // ── Dispatch OTP via Selected Channel ─────────────────────
-  const handleConfirmChannelAndSend = (selectedChannel) => {
-    const channelToUse = selectedChannel || otpChannel;
-    setOtpChannel(channelToUse);
-    setOtpSetupError("");
-    setLoading(true);
-
-    (async () => {
-      try {
-        const emailLower = client.email.trim().toLowerCase();
-        const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: client.fullName.trim(),
-            email: emailLower,
-            phone: client.phone.trim(),
-            role: "client",
-            channel: channelToUse,
-          }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          const errorMessage = data.message || data.error || "Failed to send verification code. Try again.";
-          if (res.status === 409) {
-            setErr((p) => ({ ...p, email: errorMessage }));
-          }
-          setOtpSetupError(errorMessage);
-          showToast(errorMessage, "error");
-          setLoading(false);
-          return;
-        }
-
-        const sentChannels = Array.isArray(data.sentChannels)
-          ? data.sentChannels
-          : [channelToUse === "phone" ? "sms" : channelToUse];
-        setOtpSetupError("");
-        setOtpSentChannels(sentChannels);
-        if (data.whatsappUrl) {
-          setActiveWhatsappUrl(data.whatsappUrl);
-        } else {
-          setActiveWhatsappUrl("");
-        }
-        setShowChannelModal(false);
-        showToast(
-          data.message || `Verification code sent via ${formatOtpChannels(sentChannels)}.`,
-          data.failedChannels?.length ? "info" : "success"
-        );
-        setOtpStep(true);
-        setResendTimer(60);
-      } catch (err) {
-        console.error(err);
-        showToast("Could not reach the server. Please try again.", "error");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  };
-
-  const handleSelectAdminApproval = async () => {
-    setLoading(true);
-    setOtpSetupError("");
-    try {
-      const emailLower = client.email.trim().toLowerCase();
-      const res = await fetch(`${API_BASE}/api/clients/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: client.fullName.trim(),
-          email: emailLower,
-          password: client.password,
-          phone: client.phone.trim(),
-          city: client.city,
-          legalIssue: client.legalIssue,
-          channel: "admin",
-          verificationMethod: "admin",
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        const errorMessage = data.message || data.error || "Failed to submit for Admin Approval.";
-        if (res.status === 409) {
-          setErr((p) => ({ ...p, email: errorMessage }));
-        }
-        setOtpSetupError(errorMessage);
-        showToast(errorMessage, "error");
-        setLoading(false);
-        return;
-      }
-
-      setSuccessName(client.fullName.trim());
-      setIsDirectAdmin(true);
-      setShowChannelModal(false);
-      setOtpStep(false);
-      setView("success");
-      showToast("Registration submitted directly for Admin Approval ⏳", "success");
-    } catch (err) {
-      console.error(err);
-      showToast("Could not reach the server. Please try again.", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    if (resendTimer > 0) return;
+  // ── Send Real Registration Email OTP via Resend ─────────────
+  const handleSendEmailOtp = async () => {
+    setOtpErr("");
     setLoading(true);
     try {
       const emailLower = client.email.trim().toLowerCase();
@@ -435,40 +315,51 @@ export default function Register() {
           email: emailLower,
           phone: client.phone.trim(),
           role: "client",
-          channel: otpChannel,
+          channel: "email",
         }),
       });
+
       const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        const sentChannels = Array.isArray(data.sentChannels)
-          ? data.sentChannels
-          : [otpChannel === "phone" ? "sms" : otpChannel];
-        setOtpSentChannels(sentChannels);
-        if (data.whatsappUrl) {
-          setActiveWhatsappUrl(data.whatsappUrl);
+
+      if (!res.ok) {
+        const errorMessage = data.message || data.error || "Failed to send verification code. Try again.";
+        if (res.status === 409) {
+          setErr((p) => ({ ...p, email: errorMessage }));
+          setActiveStep(1);
         }
-        setOtpSetupError("");
-        showToast(
-          data.message || `A new verification code was sent via ${formatOtpChannels(sentChannels)}.`,
-          data.failedChannels?.length ? "info" : "success"
-        );
-        setResendTimer(60);
-      } else {
-        const errorMessage = data.message || data.error || "Failed to resend code.";
-        setOtpSetupError(errorMessage);
         showToast(errorMessage, "error");
+        setLoading(false);
+        return;
       }
-    } catch {
-      showToast("Network error during resend.", "error");
+
+      showToast(`Verification code sent to ${emailLower}`, "success");
+      setOtpStep(true);
+      setResendTimer(60);
+      setOtpCode("");
+    } catch (err) {
+      console.error(err);
+      showToast("Could not reach the server. Please check your connection.", "error");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSubmit = (e) => {
+    e?.preventDefault();
+    if (!validate()) return;
+    handleSendEmailOtp();
+  };
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0 || loading) return;
+    await handleSendEmailOtp();
+  };
+
   const handleVerifyAndRegister = async (e) => {
     e?.preventDefault();
-    if (!otpCode || otpCode.trim().length !== 6) {
-      setOtpErr("Please enter the 6-digit verification code");
+    const cleanCode = String(otpCode || "").trim();
+    if (!cleanCode || cleanCode.length !== 6 || !/^\d{6}$/.test(cleanCode)) {
+      setOtpErr("Please enter the 6-digit numeric verification code");
       return;
     }
 
@@ -487,15 +378,16 @@ export default function Register() {
           phone: client.phone.trim(),
           city: client.city,
           legalIssue: client.legalIssue,
-          otp: otpCode.trim(),
+          otp: cleanCode,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setOtpErr(data.message || "Invalid verification code.");
-        showToast(data.message || "Verification failed.", "error");
+        const errorMsg = data.message || data.error || "Invalid verification code.";
+        setOtpErr(errorMsg);
+        showToast(errorMsg, "error");
         setLoading(false);
         return;
       }
@@ -504,7 +396,7 @@ export default function Register() {
       setSuccessName(client.fullName.trim());
       setOtpStep(false);
       setView("success");
-      showToast("OTP verified! Account submitted for admin approval ⏳", "success");
+      showToast("Email verified! Registration successful 🎉", "success");
     } catch (err) {
       console.error(err);
       setOtpErr("Could not complete registration. Check your connection.");
@@ -533,106 +425,10 @@ export default function Register() {
     <div className={`rg-page ${theme === "dark" ? "rg-dark" : "rg-light"}`}>
       <Toast toast={toast} />
 
-      {/* Full Screen OTP Delivery Channel Selection Modal (Mobile App Style) */}
-      {showChannelModal && (
-        <div className="rg-modal-overlay">
-          <div className="rg-modal-card" style={{ maxWidth: 480, textAlign: "center" }}>
-            <button
-              type="button"
-              className="rg-modal-theme-toggle"
-              onClick={handleThemeToggle}
-              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-            >
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-            <div className="rg-otp-badge">📲</div>
-            <h2 className="rg-title" style={{ fontSize: "1.55rem" }}>Select OTP Delivery Channel</h2>
-            <p className="rg-subtitle" style={{ fontSize: "0.92rem", margin: "6px 0 20px" }}>
-              How would you like to receive your 6-digit verification code?
-            </p>
-            {otpSetupError && <p className="rg-otp-setup-error" role="alert">{otpSetupError}</p>}
-            {loading && <p className="rg-otp-sending" role="status">Sending your verification code…</p>}
-
-            <div className="rg-channel-card-list">
-              <button
-                type="button"
-                className="rg-channel-option-card chan-email"
-                onClick={() => handleConfirmChannelAndSend("email")}
-                disabled={loading}
-              >
-                <div className="rg-channel-icon-avatar">✉️</div>
-                <div className="rg-channel-body">
-                  <div className="rg-channel-title">Email Address Only</div>
-                  <div className="rg-channel-desc">Sent directly to {client.email}</div>
-                </div>
-                <div className="rg-channel-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="rg-channel-option-card chan-sms"
-                onClick={() => handleConfirmChannelAndSend("phone")}
-                disabled={loading}
-              >
-                <div className="rg-channel-icon-avatar">📱</div>
-                <div className="rg-channel-body">
-                  <div className="rg-channel-title">Mobile SMS Message</div>
-                  <div className="rg-channel-desc">Sent via SMS to +91 {maskPhone(client.phone)}</div>
-                </div>
-                <div className="rg-channel-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="rg-channel-option-card chan-wa"
-                onClick={() => handleConfirmChannelAndSend("whatsapp")}
-                disabled={loading}
-              >
-                <div className="rg-channel-icon-avatar">💬</div>
-                <div className="rg-channel-body">
-                  <div className="rg-channel-title">WhatsApp Chat Message</div>
-                  <div className="rg-channel-desc">Instant OTP to WhatsApp number {maskPhone(client.phone)}</div>
-                </div>
-                <div className="rg-channel-arrow">→</div>
-              </button>
-
-              <button
-                type="button"
-                className="rg-channel-option-card chan-admin"
-                onClick={handleSelectAdminApproval}
-                disabled={loading}
-              >
-                <div className="rg-channel-icon-avatar">🏛️</div>
-                <div className="rg-channel-body">
-                  <div className="rg-channel-title">
-                    Admin Approval <span className="rg-channel-badge badge-admin">Direct Review</span>
-                  </div>
-                  <div className="rg-channel-desc">Submit application directly to Admin for verification & approval</div>
-                </div>
-                <div className="rg-channel-arrow">→</div>
-              </button>
-            </div>
-
-            <button
-              type="button"
-              style={{ background: "none", border: 0, color: "var(--rg-muted)", cursor: "pointer", textDecoration: "underline", font: "inherit", fontSize: "0.88rem" }}
-              onClick={() => {
-                setOtpSetupError("");
-                setShowChannelModal(false);
-              }}
-              disabled={loading}
-            >
-              ← Cancel & Back to Form
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* OTP Verification Modal */}
+      {/* Real Email OTP Verification Modal */}
       {otpStep && (
         <div className="rg-modal-overlay">
-          <div className="rg-modal-card">
+          <div className="rg-modal-card" style={{ maxWidth: 460, textAlign: "center" }}>
             <button
               type="button"
               className="rg-modal-theme-toggle"
@@ -642,44 +438,17 @@ export default function Register() {
             >
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
-            <div className="rg-otp-badge">🔐</div>
-            <h2 className="rg-title" style={{ fontSize: "1.6rem" }}>Verify Client Account</h2>
-            <p className="rg-subtitle" style={{ fontSize: "0.95rem", margin: "8px 0 16px" }}>
-              Verification code sent via<br />
-              <strong style={{ color: "var(--rg-accent)" }}>
-                {formatOtpChannels(otpSentChannels.length ? otpSentChannels : [otpChannel])}
+            <div className="rg-otp-badge" style={{ fontSize: "2rem" }}>✉️</div>
+            <h2 className="rg-title" style={{ fontSize: "1.55rem", marginTop: 8 }}>Verify Your Email</h2>
+            <p className="rg-subtitle" style={{ fontSize: "0.93rem", margin: "6px 0 14px", color: "var(--rg-muted, #64748b)" }}>
+              We've sent a 6-digit verification code to<br />
+              <strong style={{ color: "var(--rg-accent, #2563eb)", wordBreak: "break-all" }}>
+                {client.email.trim()}
               </strong>
             </p>
-            <p style={{ fontSize: "0.82rem", color: "var(--rg-muted, #64748b)", background: "rgba(0,0,0,0.04)", padding: "8px 12px", borderRadius: "8px", margin: "0 0 20px" }}>
-              Check the listed inboxes/messages and enter the code below to complete registration.
-            </p>
-            {otpSetupError && <p className="rg-otp-setup-error" role="alert">{otpSetupError}</p>}
-
-            {activeWhatsappUrl && (
-              <div style={{ marginBottom: 16 }}>
-                <a
-                  href={activeWhatsappUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    width: "100%",
-                    padding: "12px 18px",
-                    background: "#22c55e",
-                    color: "#ffffff",
-                    borderRadius: 10,
-                    fontWeight: 700,
-                    textDecoration: "none",
-                    boxShadow: "0 4px 14px rgba(34, 197, 94, 0.35)",
-                  }}
-                >
-                  💬 Receive Verification Code on WhatsApp →
-                </a>
-              </div>
-            )}
+            <div style={{ display: "inline-block", background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: "0.82rem", fontWeight: 600, padding: "5px 14px", borderRadius: 9999, marginBottom: 18 }}>
+              ⏱️ Code expires in 5 minutes
+            </div>
 
             <form onSubmit={handleVerifyAndRegister}>
               <Field error={otpErr}>
@@ -695,31 +464,45 @@ export default function Register() {
                   }}
                   autoFocus
                   disabled={loading}
+                  style={{
+                    textAlign: "center",
+                    letterSpacing: "8px",
+                    fontSize: "1.75rem",
+                    fontWeight: 700,
+                    fontFamily: "monospace",
+                  }}
                 />
               </Field>
 
-              <button type="submit" className="rg-btn-primary rg-btn-lg" disabled={loading}>
-                {loading ? <><span className="rg-spinner" /> Verifying…</> : "Verify & Complete Registration →"}
+              <button type="submit" className="rg-btn-primary rg-btn-lg" disabled={loading} style={{ width: "100%", marginTop: 12 }}>
+                {loading ? <><span className="rg-spinner" /> Verifying Code…</> : "Verify & Complete Registration →"}
               </button>
             </form>
 
-            <div style={{ marginTop: 18, fontSize: "0.88rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ marginTop: 20, fontSize: "0.88rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <button
                 type="button"
-                style={{ background: "none", border: 0, color: "var(--rg-muted)", cursor: "pointer", textDecoration: "underline", font: "inherit" }}
+                style={{ background: "none", border: 0, color: "var(--rg-muted, #64748b)", cursor: "pointer", textDecoration: "underline", font: "inherit" }}
                 onClick={() => setOtpStep(false)}
                 disabled={loading}
               >
-                ← Edit Registration Details
+                ← Change Details
               </button>
 
               <button
                 type="button"
-                style={{ background: "none", border: 0, color: resendTimer > 0 ? "var(--rg-muted)" : "var(--rg-accent)", cursor: resendTimer > 0 ? "default" : "pointer", fontWeight: 700, font: "inherit" }}
+                style={{
+                  background: "none",
+                  border: 0,
+                  color: resendTimer > 0 ? "var(--rg-muted, #94a3b8)" : "var(--rg-accent, #2563eb)",
+                  cursor: resendTimer > 0 ? "default" : "pointer",
+                  fontWeight: 700,
+                  font: "inherit",
+                }}
                 onClick={handleResendOtp}
                 disabled={resendTimer > 0 || loading}
               >
-                {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : "Resend OTP Code"}
+                {resendTimer > 0 ? `Resend Code (${resendTimer}s)` : "Resend OTP Code"}
               </button>
             </div>
           </div>

@@ -488,37 +488,246 @@ function buildAdvocateRecord(payload, id, status) {
   };
 }
 
-// ── OTP Store ──────────────────────────────────────────────────
-const otpStore = new Map();
-const otpSendTimestamps = new Map();
+// ── Secure Registration OTP Engine (Resend.com + MongoDB) ─────
+// • Registration email verification ONLY (logins remain untouched)
+// • Cryptographically secure 6-digit numeric OTPs
+// • Stored strictly as HMAC-SHA256 hashes in MongoDB registration_otps
+// • 5-minute strict expiration with MongoDB TTL auto-cleanup
+// • Maximum 5 failed attempts limit per OTP
+// • Single-use verification consumption
+// • Automatic invalidation of previous OTPs on new request
+// • 60-second cooldown rate limit per recipient email
+
 const OTP_SEND_COOLDOWN_MS = 60 * 1000;
+const OTP_EXPIRATION_MS = 5 * 60 * 1000; // 5 minutes
+const OTP_MAX_ATTEMPTS = 5;
+
+const inMemoryRegistrationOtps = new Map();
+const otpSendTimestamps = new Map();
+const verifiedEmailSessions = new Map();
+let otpMongoIndexCreated = false;
+
+function hashOtp(otp, email) {
+  const norm = normalizeEmail(email);
+  const code = String(otp || "").trim();
+  return crypto.createHmac("sha256", AUTH_SECRET).update(`${norm}:${code}`).digest("hex");
+}
 
 function generateOtpCode() {
   return String(crypto.randomInt(100000, 1000000));
 }
 
+async function getRegistrationOtpsCollection() {
+  const db = dataStore.getDb ? dataStore.getDb() : null;
+  if (!db) return null;
+  const col = db.collection("registration_otps");
+  if (!otpMongoIndexCreated) {
+    try {
+      await col.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+      await col.createIndex({ email: 1, consumed: 1, superseded: 1 });
+      otpMongoIndexCreated = true;
+    } catch {
+      // index already exists or background building
+    }
+  }
+  return col;
+}
+
+/**
+ * Stores a hashed registration OTP in MongoDB (and in-memory fallback).
+ * Invalides previous active OTPs for this email as superseded.
+ */
+async function storeRegistrationOtp({ email, otp, role, name }) {
+  const normEmail = normalizeEmail(email);
+  const otpHash = hashOtp(otp, normEmail);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + OTP_EXPIRATION_MS);
+
+  const doc = {
+    email: normEmail,
+    otpHash,
+    role: role === "advocate" ? "advocate" : "client",
+    name: String(name || "").trim(),
+    attempts: 0,
+    maxAttempts: OTP_MAX_ATTEMPTS,
+    consumed: false,
+    superseded: false,
+    createdAt: now,
+    expiresAt,
+  };
+
+  // Invalidate previous active OTPs in memory
+  const existingMem = inMemoryRegistrationOtps.get(normEmail);
+  if (existingMem) {
+    existingMem.superseded = true;
+  }
+  inMemoryRegistrationOtps.set(normEmail, { ...doc });
+
+  // Invalidate previous active OTPs in MongoDB & insert new record
+  const col = await getRegistrationOtpsCollection();
+  if (col) {
+    try {
+      await col.updateMany(
+        { email: normEmail, consumed: false, superseded: false },
+        { $set: { superseded: true, supersededAt: now } }
+      );
+      await col.insertOne(doc);
+    } catch (mongoErr) {
+      console.warn("[OTP] MongoDB store warning (in-memory preserved):", mongoErr.message);
+    }
+  }
+}
+
+/**
+ * Finds the latest active, non-superseded, non-consumed OTP record for an email.
+ */
+async function getActiveRegistrationOtp(email) {
+  const normEmail = normalizeEmail(email);
+  const col = await getRegistrationOtpsCollection();
+  if (col) {
+    try {
+      const doc = await col.findOne(
+        { email: normEmail, consumed: false, superseded: false },
+        { sort: { createdAt: -1 } }
+      );
+      if (doc) return doc;
+    } catch (mongoErr) {
+      console.warn("[OTP] MongoDB query warning:", mongoErr.message);
+    }
+  }
+
+  const mem = inMemoryRegistrationOtps.get(normEmail);
+  if (mem && !mem.consumed && !mem.superseded) {
+    return mem;
+  }
+  return null;
+}
+
+async function markOtpConsumed(record) {
+  const normEmail = record.email;
+  const now = new Date();
+
+  const mem = inMemoryRegistrationOtps.get(normEmail);
+  if (mem) {
+    mem.consumed = true;
+    mem.consumedAt = now;
+  }
+
+  const col = await getRegistrationOtpsCollection();
+  if (col && record._id) {
+    try {
+      await col.updateOne({ _id: record._id }, { $set: { consumed: true, consumedAt: now } });
+    } catch {}
+  }
+}
+
+async function markOtpInvalid(record, reason) {
+  const normEmail = record.email;
+  const now = new Date();
+
+  const mem = inMemoryRegistrationOtps.get(normEmail);
+  if (mem) {
+    mem.consumed = true;
+    mem.invalidationReason = reason;
+  }
+
+  const col = await getRegistrationOtpsCollection();
+  if (col && record._id) {
+    try {
+      await col.updateOne({ _id: record._id }, { $set: { consumed: true, invalidationReason: reason, invalidatedAt: now } });
+    } catch {}
+  }
+}
+
+async function incrementOtpAttempts(record, attempts) {
+  const normEmail = record.email;
+
+  const mem = inMemoryRegistrationOtps.get(normEmail);
+  if (mem) {
+    mem.attempts = attempts;
+  }
+
+  const col = await getRegistrationOtpsCollection();
+  if (col && record._id) {
+    try {
+      await col.updateOne({ _id: record._id }, { $set: { attempts } });
+    } catch {}
+  }
+}
+
+/**
+ * Verifies a 6-digit registration OTP code against the stored hash.
+ * Enforces single-use, 5-minute expiry, and maximum 5 failed attempts.
+ */
+async function verifyOtpCode(email, code) {
+  const normEmail = normalizeEmail(email);
+  const submitted = String(code || "").trim();
+
+  // Allow short grace period (3 min) if verified via /api/auth/verify-otp before registration POST
+  const verifiedSession = verifiedEmailSessions.get(normEmail);
+  if (verifiedSession && (Date.now() - verifiedSession.verifiedAt) < 3 * 60 * 1000) {
+    return true;
+  }
+
+  if (!submitted || submitted.length !== 6 || !/^\d{6}$/.test(submitted)) {
+    throw new HttpError(400, "Please enter a valid 6-digit numeric verification code");
+  }
+
+  const record = await getActiveRegistrationOtp(normEmail);
+  if (!record) {
+    throw new HttpError(400, "No active verification code found for this email or it has expired. Please request a new verification code.");
+  }
+
+  const expiryTime = record.expiresAt instanceof Date ? record.expiresAt.getTime() : new Date(record.expiresAt).getTime();
+  const now = Date.now();
+
+  if (now > expiryTime) {
+    await markOtpInvalid(record, "expired");
+    throw new HttpError(400, "Verification code has expired (valid for 5 minutes). Please request a new code.");
+  }
+
+  const attempts = Number(record.attempts || 0);
+  if (attempts >= OTP_MAX_ATTEMPTS) {
+    await markOtpInvalid(record, "too_many_attempts");
+    throw new HttpError(400, "Too many failed attempts. This code has been invalidated. Please request a new verification code.");
+  }
+
+  const expectedHash = record.otpHash;
+  const submittedHash = hashOtp(submitted, normEmail);
+
+  let isMatch = false;
+  try {
+    isMatch = crypto.timingSafeEqual(Buffer.from(expectedHash, "hex"), Buffer.from(submittedHash, "hex"));
+  } catch {
+    isMatch = expectedHash === submittedHash;
+  }
+
+  if (!isMatch) {
+    const newAttempts = attempts + 1;
+    const remaining = OTP_MAX_ATTEMPTS - newAttempts;
+    await incrementOtpAttempts(record, newAttempts);
+
+    if (remaining <= 0) {
+      await markOtpInvalid(record, "max_attempts_reached");
+      throw new HttpError(400, "Incorrect verification code. Maximum attempts reached. Please request a new code.");
+    }
+    throw new HttpError(400, `Incorrect verification code. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`);
+  }
+
+  // OTP verified successfully! Mark single-use consumed
+  await markOtpConsumed(record);
+  verifiedEmailSessions.set(normEmail, { verifiedAt: Date.now() });
+  return true;
+}
+
 async function handleSendOtp(payload) {
   const email = normalizeEmail(payload.email || payload.identifier);
-  const phone = String(payload.phone || (isValidEmail(payload.identifier) ? "" : payload.identifier) || "").trim();
-  const requestedChannel = String(payload.channel || "all").toLowerCase();
-  const channel = requestedChannel === "phone" ? "sms" : requestedChannel;
-  if (!["all", "email", "sms", "whatsapp", "admin"].includes(channel)) {
-    throw new HttpError(400, "Invalid verification delivery channel");
-  }
-  if (channel === "admin") {
-    return {
-      success: true,
-      channel: "admin",
-      message: "Direct Admin Approval selected. No OTP verification code required.",
-    };
-  }
-  if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
-  if (channel !== "email" && !phone) {
-    throw new HttpError(400, "A phone number is required for SMS and WhatsApp verification");
-  }
+  if (!isValidEmail(email)) throw new HttpError(400, "A valid email address is required");
+
   const name = String(payload.name || "User").trim();
   const role = payload.role === "advocate" ? "advocate" : "client";
 
+  // Prevent duplicate registration for existing accounts
   if (role === "client") {
     if (loadClients().some((c) => normalizeEmail(c.email) === email)) {
       throw new HttpError(409, "An account with this email already exists");
@@ -529,127 +738,57 @@ async function handleSendOtp(payload) {
     }
   }
 
+  // 60-second rate-limiting cooldown per email
   const now = Date.now();
   for (const [key, timestamp] of otpSendTimestamps) {
     if (now - timestamp >= OTP_SEND_COOLDOWN_MS) otpSendTimestamps.delete(key);
   }
-  const requestedChannels = channel === "all" ? ["email", "sms", "whatsapp"] : [channel];
-  const normalizedPhone = phone.replace(/\D/g, "");
-  const destinationKeys = requestedChannels.map((deliveryChannel) => (
-    deliveryChannel === "email"
-      ? `email:${email}`
-      : `${deliveryChannel}:${normalizedPhone}`
-  ));
-  const cooldownRemaining = destinationKeys.reduce((remaining, key) => {
-    const sentAt = otpSendTimestamps.get(key);
-    return sentAt ? Math.max(remaining, OTP_SEND_COOLDOWN_MS - (now - sentAt)) : remaining;
-  }, 0);
-  if (cooldownRemaining > 0) {
-    const seconds = Math.ceil(cooldownRemaining / 1000);
-    throw new HttpError(429, `Please wait ${seconds} seconds before requesting another code via this channel.`);
+  const cooldownKey = `email:${email}`;
+  const sentAt = otpSendTimestamps.get(cooldownKey);
+  if (sentAt && now - sentAt < OTP_SEND_COOLDOWN_MS) {
+    const remainingSec = Math.ceil((OTP_SEND_COOLDOWN_MS - (now - sentAt)) / 1000);
+    throw new HttpError(429, `Please wait ${remainingSec} seconds before requesting another verification code.`);
   }
 
+  // Generate cryptographically secure 6-digit numeric OTP
   const otp = generateOtpCode();
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-  const whatsappUrl = `https://api.whatsapp.com/send?phone=91${normalizedPhone.slice(-10)}&text=${encodeURIComponent(`AdvocateHub Verification Code: *${otp}*\n\nYour 6-digit verification code is ${otp}. Valid for 10 minutes.`)}`;
 
-  const deliveries = await Promise.allSettled(requestedChannels.map((deliveryChannel) => {
-    if (deliveryChannel === "email") return sendOtpEmail({ to: email, otp, name, role });
-    if (deliveryChannel === "sms") return sendSmsOtp({ phone, otp });
-    return sendWhatsappOtp({ phone, otp });
-  }));
-  const sentChannels = [];
-  const failedChannels = [];
-
-  deliveries.forEach((delivery, index) => {
-    const deliveryChannel = requestedChannels[index];
-    if (delivery.status === "fulfilled") {
-      sentChannels.push(deliveryChannel);
-      return;
+  // Send real email verification via Resend Node SDK / REST fallback
+  try {
+    await sendOtpEmail({ to: email, otp, name, role });
+  } catch (emailErr) {
+    console.error(`[OTP] Failed to deliver verification email to ${email}:`, emailErr.message);
+    const msg = emailErr.message || "";
+    if (msg.toLowerCase().includes("not verified")) {
+      throw new HttpError(
+        503,
+        "Email delivery domain (advocatehub.in) is pending DNS verification on Resend. Please ensure the 3 DNS records are added at your domain registrar."
+      );
     }
-    failedChannels.push(deliveryChannel);
-    console.error(`[OTP] ${deliveryChannel} delivery failed: ${delivery.reason?.message || "provider error"}`);
-  });
-
-  if (sentChannels.length === 0) {
-    const failedLabels = failedChannels.map((failedChannel) => ({
-      email: "email",
-      sms: "SMS",
-      whatsapp: "WhatsApp",
-    })[failedChannel] || failedChannel);
-    throw new HttpError(503, `Could not send verification code via ${failedLabels.join(", ")}. Please try another channel.`);
+    throw new HttpError(500, `Failed to deliver verification code: ${msg}`);
   }
 
-  const sentAt = Date.now();
-  sentChannels.forEach((deliveryChannel) => {
-    const key = deliveryChannel === "email"
-      ? `email:${email}`
-      : `${deliveryChannel}:${normalizedPhone}`;
-    otpSendTimestamps.set(key, sentAt);
-  });
+  // Store hashed OTP in MongoDB (collection: registration_otps)
+  await storeRegistrationOtp({ email, otp, role, name });
 
-  otpStore.set(email, {
-    otp,
-    expiresAt,
-    attempts: 0,
-    role,
-    name,
-    phone,
-    whatsappUrl,
-    channel,
-  });
-  const channelLabel = (deliveryChannel) => ({
-    email: "Email",
-    sms: "SMS",
-    whatsapp: "WhatsApp",
-  })[deliveryChannel] || deliveryChannel;
+  // Update cooldown timestamp
+  otpSendTimestamps.set(cooldownKey, Date.now());
 
-  console.log(`[OTP] 6-digit code for ${email} / +91 ${normalizedPhone}: ${otp} (Channels: ${sentChannels.join(", ")})`);
+  console.log(`[OTP] 6-digit registration verification code sent to ${email} (Role: ${role})`);
 
   return {
     success: true,
-    message: failedChannels.length
-      ? `Verification code sent via ${sentChannels.map(channelLabel).join(", ")}. Could not send via ${failedChannels.map(channelLabel).join(", ")}.`
-      : `Verification code sent via ${sentChannels.map(channelLabel).join(", ")}.`,
-    whatsappUrl,
-    sentChannels,
-    failedChannels,
+    channel: "email",
+    email,
+    message: `A 6-digit verification code has been sent to ${email}. Valid for 5 minutes.`,
   };
-}
-
-async function verifyOtpCode(email, code) {
-  const normEmail = normalizeEmail(email);
-  const record = otpStore.get(normEmail);
-  if (!record) {
-    throw new HttpError(400, "No OTP requested for this email or code expired. Please request a new OTP.");
-  }
-  if (Date.now() > record.expiresAt) {
-    otpStore.delete(normEmail);
-    throw new HttpError(400, "OTP expired. Please request a new verification code.");
-  }
-  if (record.attempts >= 5) {
-    otpStore.delete(normEmail);
-    throw new HttpError(400, "Too many invalid attempts. Please request a new OTP.");
-  }
-  const submittedCode = String(code).trim();
-  if (record.otp && submittedCode === record.otp) {
-    otpStore.delete(normEmail);
-    return true;
-  }
-
-  record.attempts += 1;
-  if (record.attempts >= 5) {
-    otpStore.delete(normEmail);
-    throw new HttpError(400, "Too many invalid attempts. Please request a new OTP.");
-  }
-  throw new HttpError(400, "Invalid verification code. Please check your email, SMS, or WhatsApp and try again.");
 }
 
 async function handleVerifyOtpEndpoint(payload) {
   const email = normalizeEmail(payload.email);
   const otp = payload.otp;
   await verifyOtpCode(email, otp);
-  return { verified: true, message: "Verification code accepted" };
+  return { verified: true, message: "Email verification successful." };
 }
 
 // Public: advocate self-registration → status is "pending" until admin approves.
@@ -658,9 +797,9 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
   if (!String(payload.name || "").trim()) throw new HttpError(400, "Name is required");
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   if (!byAdmin && String(payload.password || "").length < 6) throw new HttpError(400, "Password must be at least 6 characters");
-  const isDirectAdminApproval = payload.channel === "admin" || payload.verificationMethod === "admin";
-  if (!byAdmin && !isDirectAdminApproval) {
-    if (!payload.otp) throw new HttpError(400, "A verification code is required");
+  
+  if (!byAdmin) {
+    if (!payload.otp) throw new HttpError(400, "A 6-digit email verification code is required to register");
     await verifyOtpCode(email, payload.otp);
   }
 
@@ -671,7 +810,9 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
   const record = buildAdvocateRecord(payload, id, byAdmin ? (payload.status || status || "approved") : "pending");
   // Admin-created accounts without a password can't log in until one is set.
   record.passwordHash = payload.password ? hashPassword(payload.password) : null;
-  record.verificationMethod = isDirectAdminApproval ? "admin_approval" : (payload.channel || "otp");
+  record.verificationMethod = byAdmin ? "admin" : "email_otp";
+  record.emailVerified = !byAdmin;
+  record.emailVerifiedAt = byAdmin ? null : new Date().toISOString();
   const avatar = saveAvatar(record.name, payload.avatarData, id);
   if (avatar) {
     record.avatar = avatar;
@@ -697,9 +838,9 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   const password = payload.password || "client123";
   if (String(password).length < 6) throw new HttpError(400, "Password must be at least 6 characters");
-  const isDirectAdminApproval = payload.channel === "admin" || payload.verificationMethod === "admin";
-  if (!byAdmin && !isDirectAdminApproval) {
-    if (!payload.otp) throw new HttpError(400, "A verification code is required");
+  
+  if (!byAdmin) {
+    if (!payload.otp) throw new HttpError(400, "A 6-digit email verification code is required to register");
     await verifyOtpCode(email, payload.otp);
   }
 
@@ -714,7 +855,9 @@ async function registerClient(payload, { byAdmin = false } = {}) {
     legalIssue: payload.legalIssue || "",
     passwordHash: hashPassword(password),
     sessionVersion: 0,
-    verificationMethod: isDirectAdminApproval ? "admin_approval" : (payload.channel || "otp"),
+    verificationMethod: byAdmin ? "admin" : "email_otp",
+    emailVerified: !byAdmin,
+    emailVerifiedAt: byAdmin ? null : new Date().toISOString(),
     status: byAdmin ? (payload.status || "approved") : "pending",
     createdAt: new Date().toISOString(),
   };
