@@ -205,6 +205,22 @@ export default function Login() {
               <div style={{ marginTop: 6, fontSize: "0.8rem", color: theme === "dark" ? "#fbbf24" : "#92400e" }}>
                 For expedited review, contact: <strong>advocatehub.in@gmail.com</strong>
               </div>
+              <div style={{ marginTop: 8 }}>
+                <Link
+                  to={`/registration-status?email=${encodeURIComponent(form.email.trim())}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    color: "#2563eb",
+                    fontWeight: 700,
+                    fontSize: "0.82rem",
+                    textDecoration: "underline",
+                  }}
+                >
+                  🔍 Check Live Approval Status →
+                </Link>
+              </div>
             </div>
           ) : (
             <p className="am-err">⚠ {err}</p>

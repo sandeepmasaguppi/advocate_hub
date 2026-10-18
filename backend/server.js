@@ -822,28 +822,64 @@ async function handleVerifyOtpEndpoint(payload) {
   return { verified: true, message: "Email verification successful." };
 }
 
-// Public: advocate self-registration → status is "pending" until admin approves.
+// Public: advocate self-registration
+// Channels: 'email', 'sms', 'whatsapp' -> Auto-approved on verified OTP
+// Channel: 'admin_approval' -> Saved as pending_admin_approval (no OTP required)
 async function registerAdvocate(request, payload, { status = "pending", byAdmin = false } = {}) {
   const email = normalizeEmail(payload.email);
   if (!String(payload.name || "").trim()) throw new HttpError(400, "Name is required");
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   if (!byAdmin && String(payload.password || "").length < 6) throw new HttpError(400, "Password must be at least 6 characters");
-  
-  if (!byAdmin) {
-    if (!payload.otp) throw new HttpError(400, "A 6-digit email verification code is required to register");
+
+  const channel = String(payload.verificationMethod || payload.verificationChannel || payload.channel || payload.method || "email_otp")
+    .toLowerCase()
+    .trim()
+    .replace(/[-\s]/g, "_");
+  const isAdminApproval =
+    channel === "admin_approval" ||
+    channel === "admin" ||
+    channel === "approval" ||
+    channel === "manual" ||
+    channel === "manual_approval";
+  let finalStatus = "pending";
+  let approvalStatus = "pending";
+
+  if (byAdmin) {
+    finalStatus = payload.status || status || "approved";
+    approvalStatus = finalStatus;
+  } else if (isAdminApproval) {
+    // Admin Approval: No OTP required, submitted directly for administrator review
+    finalStatus = "pending";
+    approvalStatus = "pending_admin_approval";
+  } else {
+    // OTP verification (Email / SMS / WhatsApp)
+    if (!payload.otp) {
+      throw new HttpError(400, "A 6-digit verification code is required to complete registration");
+    }
     await verifyOtpCode(email, payload.otp);
+    // Automatic approval for successful OTP verification!
+    finalStatus = "approved";
+    approvalStatus = "approved";
   }
 
   const list = loadAdvocates();
   if (list.some((a) => normalizeEmail(a.email) === email)) throw new HttpError(409, "An account with this email already exists");
 
   const id = nextId(list);
-  const record = buildAdvocateRecord(payload, id, byAdmin ? (payload.status || status || "approved") : "pending");
+  const now = new Date().toISOString();
+  const record = buildAdvocateRecord(payload, id, finalStatus);
+  record.approvalStatus = approvalStatus;
   // Admin-created accounts without a password can't log in until one is set.
   record.passwordHash = payload.password ? hashPassword(payload.password) : null;
-  record.verificationMethod = byAdmin ? "admin" : "email_otp";
-  record.emailVerified = !byAdmin;
-  record.emailVerifiedAt = byAdmin ? null : new Date().toISOString();
+  record.verificationMethod = byAdmin ? "admin" : (isAdminApproval ? "admin_approval" : (payload.verificationChannel || payload.channel || "email_otp"));
+  record.emailVerified = !isAdminApproval && !byAdmin;
+  record.emailVerifiedAt = (!isAdminApproval && !byAdmin) ? now : null;
+  record.createdAt = now;
+  if (finalStatus === "approved") {
+    record.approvedAt = now;
+    record.approvedBy = byAdmin ? "admin" : "system_auto_otp";
+  }
+
   const avatar = saveAvatar(record.name, payload.avatarData, id);
   if (avatar) {
     record.avatar = avatar;
@@ -854,7 +890,7 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
   list.push(record);
   saveAdvocates(list);
 
-  if (!byAdmin && record.status === "pending") {
+  if (!byAdmin && finalStatus === "pending") {
     notifyAdminNewAdvocate(record).catch((err) => {
       console.warn("[AdminAlert] Advocate notification dispatch error:", err?.message || err);
     });
@@ -869,14 +905,42 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   const password = payload.password || "client123";
   if (String(password).length < 6) throw new HttpError(400, "Password must be at least 6 characters");
-  
-  if (!byAdmin) {
-    if (!payload.otp) throw new HttpError(400, "A 6-digit email verification code is required to register");
+
+  const channel = String(payload.verificationMethod || payload.verificationChannel || payload.channel || payload.method || "email_otp")
+    .toLowerCase()
+    .trim()
+    .replace(/[-\s]/g, "_");
+  const isAdminApproval =
+    channel === "admin_approval" ||
+    channel === "admin" ||
+    channel === "approval" ||
+    channel === "manual" ||
+    channel === "manual_approval";
+  let finalStatus = "pending";
+  let approvalStatus = "pending";
+
+  if (byAdmin) {
+    finalStatus = payload.status || "approved";
+    approvalStatus = finalStatus;
+  } else if (isAdminApproval) {
+    // Admin Approval: No OTP required, submitted directly for administrator review
+    finalStatus = "pending";
+    approvalStatus = "pending_admin_approval";
+  } else {
+    // OTP verification (Email / SMS / WhatsApp)
+    if (!payload.otp) {
+      throw new HttpError(400, "A 6-digit verification code is required to complete registration");
+    }
     await verifyOtpCode(email, payload.otp);
+    // Automatic approval for successful OTP verification!
+    finalStatus = "approved";
+    approvalStatus = "approved";
   }
 
   const list = loadClients();
   if (list.some((c) => normalizeEmail(c.email) === email)) throw new HttpError(409, "An account with this email already exists");
+
+  const now = new Date().toISOString();
   const record = {
     id: nextId(list),
     name: String(payload.name).trim(),
@@ -886,22 +950,286 @@ async function registerClient(payload, { byAdmin = false } = {}) {
     legalIssue: payload.legalIssue || "",
     passwordHash: hashPassword(password),
     sessionVersion: 0,
-    verificationMethod: byAdmin ? "admin" : "email_otp",
-    emailVerified: !byAdmin,
-    emailVerifiedAt: byAdmin ? null : new Date().toISOString(),
-    status: byAdmin ? (payload.status || "approved") : "pending",
-    createdAt: new Date().toISOString(),
+    verificationMethod: byAdmin ? "admin" : (isAdminApproval ? "admin_approval" : (payload.verificationChannel || payload.channel || "email_otp")),
+    emailVerified: !isAdminApproval && !byAdmin,
+    emailVerifiedAt: (!isAdminApproval && !byAdmin) ? now : null,
+    status: finalStatus,
+    approvalStatus: approvalStatus,
+    createdAt: now,
   };
+  if (finalStatus === "approved") {
+    record.approvedAt = now;
+    record.approvedBy = byAdmin ? "admin" : "system_auto_otp";
+  }
+
   list.push(record);
   saveClients(list);
 
-  // Automated notification dispatched to admin team at advocatehub.in@gmail.com
-  notifyAdminNewClient(record).catch((err) => {
-    console.warn("[AdminAlert] Client notification dispatch error:", err?.message || err);
-  });
+  if (!byAdmin && finalStatus === "pending") {
+    // Automated notification dispatched to admin team at advocatehub.in@gmail.com
+    notifyAdminNewClient(record).catch((err) => {
+      console.warn("[AdminAlert] Client notification dispatch error:", err?.message || err);
+    });
+  }
 
   const { passwordHash, ...safe } = record;
   return safe;
+}
+
+// ── Public Status Lookup ──────────────────────────────────────
+function getRegistrationStatus(query) {
+  const email = normalizeEmail(query.email || query.identifier);
+  const phone = String(query.phone || "").replace(/\D/g, "");
+
+  if (!email && !phone) {
+    throw new HttpError(400, "Please provide an email or phone number to check registration status");
+  }
+
+  const advocates = loadAdvocates();
+  const clients = loadClients();
+
+  let match = null;
+  let role = null;
+
+  if (email) {
+    match = advocates.find((a) => normalizeEmail(a.email) === email);
+    if (match) role = "advocate";
+    if (!match) {
+      match = clients.find((c) => normalizeEmail(c.email) === email);
+      if (match) role = "client";
+    }
+  }
+
+  if (!match && phone && phone.length >= 10) {
+    match = advocates.find((a) => String(a.phone || "").replace(/\D/g, "").endsWith(phone.slice(-10)));
+    if (match) role = "advocate";
+    if (!match) {
+      match = clients.find((c) => String(c.phone || "").replace(/\D/g, "").endsWith(phone.slice(-10)));
+      if (match) role = "client";
+    }
+  }
+
+  if (!match) {
+    return {
+      found: false,
+      message: "No registration record found for this email address.",
+    };
+  }
+
+  const isApproved = match.status === "approved";
+  const isRejected = match.status === "rejected";
+
+  return {
+    found: true,
+    id: match.id,
+    role,
+    name: match.name,
+    email: match.email,
+    phone: match.phone || "",
+    barId: match.barId || null,
+    city: match.city || "",
+    status: match.status || (isApproved ? "approved" : "pending"),
+    approvalStatus: match.approvalStatus || (isApproved ? "approved" : (isRejected ? "rejected" : "pending_admin_approval")),
+    verificationMethod: match.verificationMethod || (match.emailVerified ? "email_otp" : "admin_approval"),
+    verificationStatus: match.emailVerified ? "verified" : (isApproved ? "verified" : "pending"),
+    rejectionReason: match.rejectionReason || null,
+    createdAt: match.createdAt || null,
+    approvedAt: match.approvedAt || null,
+    approvedBy: match.approvedBy || null,
+  };
+}
+
+// ── Admin: Registration Approval Requests Management ─────────
+function getAdminRegistrationRequests() {
+  const advocates = loadAdvocates();
+  const clients = loadClients();
+
+  const requests = [];
+
+  for (const a of advocates) {
+    requests.push({
+      id: a.id,
+      role: "advocate",
+      name: a.name,
+      email: a.email,
+      phone: a.phone || "",
+      barId: a.barId || "",
+      barCouncil: a.barCouncil || "",
+      speciality: a.speciality || a.practiceArea || "",
+      practiceAreas: Array.isArray(a.practiceAreas) ? a.practiceAreas : (a.speciality ? [a.speciality] : []),
+      city: a.city || a.taluk || a.district || "",
+      district: a.district || "",
+      taluk: a.taluk || "",
+      court: a.court || "",
+      courtLevel: a.courtLevel || "",
+      experience: a.experience || "",
+      fee: a.fee || "",
+      languages: Array.isArray(a.languages) ? a.languages : [],
+      bio: a.bio || "",
+      verificationMethod: a.verificationMethod || (a.status === "approved" ? "email_otp" : "admin_approval"),
+      status: a.status || "approved",
+      approvalStatus: a.approvalStatus || (a.status === "approved" ? "approved" : "pending_admin_approval"),
+      rejectionReason: a.rejectionReason || null,
+      createdAt: a.createdAt || null,
+      approvedAt: a.approvedAt || null,
+      avatar: a.avatar || "",
+    });
+  }
+
+  for (const c of clients) {
+    requests.push({
+      id: c.id,
+      role: "client",
+      name: c.name,
+      email: c.email,
+      phone: c.phone || "",
+      city: c.city || "",
+      legalIssue: c.legalIssue || "",
+      verificationMethod: c.verificationMethod || (c.status === "approved" ? "email_otp" : "admin_approval"),
+      status: c.status || "approved",
+      approvalStatus: c.approvalStatus || (c.status === "approved" ? "approved" : "pending_admin_approval"),
+      rejectionReason: c.rejectionReason || null,
+      createdAt: c.createdAt || null,
+      approvedAt: c.approvedAt || null,
+    });
+  }
+
+  // Sort: pending first, then by date descending
+  requests.sort((a, b) => {
+    const aPending = a.status === "pending" ? 1 : 0;
+    const bPending = b.status === "pending" ? 1 : 0;
+    if (aPending !== bPending) return bPending - aPending;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
+
+  return requests;
+}
+
+function handleAdminApproveRegistrationRequest(id, payload = {}) {
+  const targetId = Number(id);
+  const targetRole = payload.role;
+  const now = new Date().toISOString();
+
+  if (targetRole === "client") {
+    const clients = loadClients();
+    const idx = clients.findIndex((c) => Number(c.id) === targetId);
+    if (idx === -1) throw new HttpError(404, "Client not found");
+    clients[idx].status = "approved";
+    clients[idx].approvalStatus = "approved";
+    clients[idx].approvedAt = now;
+    clients[idx].approvedBy = "admin";
+    delete clients[idx].rejectionReason;
+    clients[idx].sessionVersion = (Number(clients[idx].sessionVersion) || 0) + 1;
+    saveClients(clients);
+    const { passwordHash, ...safe } = clients[idx];
+    return safe;
+  }
+
+  if (targetRole === "advocate") {
+    const advocates = loadAdvocates();
+    const idx = advocates.findIndex((a) => Number(a.id) === targetId);
+    if (idx === -1) throw new HttpError(404, "Advocate not found");
+    advocates[idx].status = "approved";
+    advocates[idx].approvalStatus = "approved";
+    advocates[idx].approvedAt = now;
+    advocates[idx].approvedBy = "admin";
+    delete advocates[idx].rejectionReason;
+    saveAdvocates(advocates);
+    return toPublic(advocates[idx]);
+  }
+
+  // Auto-detect by ID if role not explicitly passed
+  const advocates = loadAdvocates();
+  const advIdx = advocates.findIndex((a) => Number(a.id) === targetId);
+  if (advIdx !== -1) {
+    advocates[advIdx].status = "approved";
+    advocates[advIdx].approvalStatus = "approved";
+    advocates[advIdx].approvedAt = now;
+    advocates[advIdx].approvedBy = "admin";
+    delete advocates[advIdx].rejectionReason;
+    saveAdvocates(advocates);
+    return toPublic(advocates[advIdx]);
+  }
+
+  const clients = loadClients();
+  const cliIdx = clients.findIndex((c) => Number(c.id) === targetId);
+  if (cliIdx !== -1) {
+    clients[cliIdx].status = "approved";
+    clients[cliIdx].approvalStatus = "approved";
+    clients[cliIdx].approvedAt = now;
+    clients[cliIdx].approvedBy = "admin";
+    delete clients[cliIdx].rejectionReason;
+    clients[cliIdx].sessionVersion = (Number(clients[cliIdx].sessionVersion) || 0) + 1;
+    saveClients(clients);
+    const { passwordHash, ...safe } = clients[cliIdx];
+    return safe;
+  }
+
+  throw new HttpError(404, "Registration request not found");
+}
+
+function handleAdminRejectRegistrationRequest(id, payload = {}) {
+  const targetId = Number(id);
+  const targetRole = payload.role;
+  const reason = String(payload.reason || "Application rejected by administrator").trim();
+  const now = new Date().toISOString();
+
+  if (targetRole === "client") {
+    const clients = loadClients();
+    const idx = clients.findIndex((c) => Number(c.id) === targetId);
+    if (idx === -1) throw new HttpError(404, "Client not found");
+    clients[idx].status = "rejected";
+    clients[idx].approvalStatus = "rejected";
+    clients[idx].rejectionReason = reason;
+    clients[idx].rejectedAt = now;
+    clients[idx].rejectedBy = "admin";
+    clients[idx].sessionVersion = (Number(clients[idx].sessionVersion) || 0) + 1;
+    saveClients(clients);
+    const { passwordHash, ...safe } = clients[idx];
+    return safe;
+  }
+
+  if (targetRole === "advocate") {
+    const advocates = loadAdvocates();
+    const idx = advocates.findIndex((a) => Number(a.id) === targetId);
+    if (idx === -1) throw new HttpError(404, "Advocate not found");
+    advocates[idx].status = "rejected";
+    advocates[idx].approvalStatus = "rejected";
+    advocates[idx].rejectionReason = reason;
+    advocates[idx].rejectedAt = now;
+    advocates[idx].rejectedBy = "admin";
+    saveAdvocates(advocates);
+    return toPublic(advocates[idx]);
+  }
+
+  // Auto-detect by ID if role not explicitly passed
+  const advocates = loadAdvocates();
+  const advIdx = advocates.findIndex((a) => Number(a.id) === targetId);
+  if (advIdx !== -1) {
+    advocates[advIdx].status = "rejected";
+    advocates[advIdx].approvalStatus = "rejected";
+    advocates[advIdx].rejectionReason = reason;
+    advocates[advIdx].rejectedAt = now;
+    advocates[advIdx].rejectedBy = "admin";
+    saveAdvocates(advocates);
+    return toPublic(advocates[advIdx]);
+  }
+
+  const clients = loadClients();
+  const cliIdx = clients.findIndex((c) => Number(c.id) === targetId);
+  if (cliIdx !== -1) {
+    clients[cliIdx].status = "rejected";
+    clients[cliIdx].approvalStatus = "rejected";
+    clients[cliIdx].rejectionReason = reason;
+    clients[cliIdx].rejectedAt = now;
+    clients[cliIdx].rejectedBy = "admin";
+    clients[cliIdx].sessionVersion = (Number(clients[cliIdx].sessionVersion) || 0) + 1;
+    saveClients(clients);
+    const { passwordHash, ...safe } = clients[cliIdx];
+    return safe;
+  }
+
+  throw new HttpError(404, "Registration request not found");
 }
 
 function advocateLogin(payload) {
@@ -1612,6 +1940,7 @@ async function route(request, response) {
   // Auth & OTP
   if (method === "POST" && p === "/api/auth/send-otp") return send(request, response, 200, await handleSendOtp(await readBody(request)));
   if (method === "POST" && p === "/api/auth/verify-otp") return send(request, response, 200, await handleVerifyOtpEndpoint(await readBody(request)));
+  if (method === "GET" && p === "/api/auth/registration-status") return send(request, response, 200, getRegistrationStatus(Object.fromEntries(url.searchParams.entries())));
   if (method === "POST" && p === "/api/auth/advocate/login") return send(request, response, 200, advocateLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/admin/login") return send(request, response, 200, adminLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/client/login") return send(request, response, 200, clientLogin(await readBody(request)));
@@ -1641,6 +1970,13 @@ async function route(request, response) {
   // Registration (public)
   if (method === "POST" && p === "/api/advocates/register") return send(request, response, 201, await registerAdvocate(request, await readBody(request)));
   if (method === "POST" && p === "/api/clients/register") return send(request, response, 201, await registerClient(await readBody(request)));
+
+  // Admin: Registration Approval Requests
+  if (method === "GET" && p === "/api/admin/registration-requests") {
+    requireAdmin(request);
+    const requests = getAdminRegistrationRequests();
+    return send(request, response, 200, { ok: true, requests });
+  }
 
   // Admin: get stored registration email notifications
   if (method === "GET" && p === "/api/notifications") {
@@ -2164,6 +2500,21 @@ async function route(request, response) {
     }
     saveMessages(remaining);
     return send(request, response, 200, { ok: true, deleted: messages.length - remaining.length });
+  }
+
+  // Admin Registration Requests: Approve / Reject
+  const reqApproveMatch = p.match(/^\/api\/admin\/registration-requests\/(\d+)\/approve$/);
+  if (reqApproveMatch && method === "POST") {
+    requireAdmin(request);
+    const body = await readBody(request);
+    return send(request, response, 200, handleAdminApproveRegistrationRequest(reqApproveMatch[1], body));
+  }
+
+  const reqRejectMatch = p.match(/^\/api\/admin\/registration-requests\/(\d+)\/reject$/);
+  if (reqRejectMatch && method === "POST") {
+    requireAdmin(request);
+    const body = await readBody(request);
+    return send(request, response, 200, handleAdminRejectRegistrationRequest(reqRejectMatch[1], body));
   }
 
   // Admin-only writes

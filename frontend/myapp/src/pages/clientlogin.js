@@ -205,7 +205,47 @@ export default function ClientLogin() {
           </Link>
         </div>
 
-        {err && <p className="am-err">⚠ {err}</p>}
+        {err && (
+          err.toLowerCase().includes("pending") || err.toLowerCase().includes("approval") ? (
+            <div style={{
+              background: "rgba(245, 158, 11, 0.12)",
+              border: "1px solid rgba(245, 158, 11, 0.4)",
+              borderRadius: 10,
+              padding: "12px 14px",
+              margin: "12px 0 16px",
+              textAlign: "left",
+              fontSize: "0.86rem",
+              color: "#d97706",
+              lineHeight: 1.5,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, marginBottom: 4, color: "#b45309" }}>
+                <span>⏳</span>
+                <span>Account Awaiting Administrator Approval</span>
+              </div>
+              <div style={{ color: theme === "dark" ? "#fde68a" : "#78350f" }}>
+                {err}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <Link
+                  to={`/registration-status?email=${encodeURIComponent(form.email.trim())}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    color: "#2563eb",
+                    fontWeight: 700,
+                    fontSize: "0.82rem",
+                    textDecoration: "underline",
+                  }}
+                >
+                  🔍 Check Live Approval Status →
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <p className="am-err">⚠ {err}</p>
+          )
+        )}
 
         <button type="submit" className="am-btn-primary client-btn" disabled={loading}>
           {loading ? "Signing in…" : "Login to Client Portal →"}

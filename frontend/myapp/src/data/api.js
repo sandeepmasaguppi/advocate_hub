@@ -39,12 +39,42 @@ export async function api(path, { method = "GET", body, token } = {}) {
   try { data = await response.json(); } catch { /* empty body */ }
 
   if (!response.ok) {
-    const error = new Error(data?.error || `Request failed (${response.status})`);
+    const error = new Error(data?.message || data?.error || `Request failed (${response.status})`);
     error.status = response.status;
     error.data = data;
     throw error;
   }
   return data;
+}
+
+// ── Registration Status & Admin Approval Helpers ──────────────
+export async function getRegistrationStatus(identifier) {
+  const query = String(identifier || "").trim();
+  const param = query.includes("@") ? `email=${encodeURIComponent(query)}` : `phone=${encodeURIComponent(query)}`;
+  return api(`/api/auth/registration-status?${param}`);
+}
+
+export async function getAdminRegistrationRequests() {
+  const token = getAdminToken();
+  return api("/api/admin/registration-requests", { token });
+}
+
+export async function approveRegistrationRequest(id, role) {
+  const token = getAdminToken();
+  return api(`/api/admin/registration-requests/${id}/approve`, {
+    method: "POST",
+    body: { role },
+    token,
+  });
+}
+
+export async function rejectRegistrationRequest(id, role, reason) {
+  const token = getAdminToken();
+  return api(`/api/admin/registration-requests/${id}/reject`, {
+    method: "POST",
+    body: { role, reason },
+    token,
+  });
 }
 
 // Avatar paths come back as "/uploads/x.png"; make them absolute when

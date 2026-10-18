@@ -615,70 +615,95 @@ function Select({ icon, error, children, ...props }) {
 }
 
 // ── Success Screen ────────────────────────────────────────────
-function SuccessScreen({ type, name, onLogin, adv = {}, channel = "email" }) {
-  const channelLabel = channel === "whatsapp" ? "WhatsApp" : channel === "sms" ? "SMS" : "Email";
+// ── Success Screen ────────────────────────────────────────────
+function SuccessScreen({ type, name, onLogin, adv = {}, channel = "email", isApproved = false }) {
+  const isPending = !isApproved || channel === "admin_approval";
+  const channelLabel = channel === "admin_approval"
+    ? "Admin Approval"
+    : channel === "whatsapp"
+    ? "WhatsApp"
+    : channel === "sms"
+    ? "SMS"
+    : "Email";
 
   return (
-    <div className="su-success" style={{ maxWidth: 540, margin: "0 auto", textAlign: "center" }}>
+    <div className="su-success" style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}>
       <div className="su-success-icon" style={{ fontSize: "3.2rem", marginBottom: 10 }}>
-        {type === "client" ? "✅" : "⏳"}
+        {isPending ? "⏳" : "✅"}
       </div>
       <h2 className="su-success-title" style={{ fontSize: "1.7rem", marginBottom: 8 }}>
-        {type === "client" ? "Registration Successful" : "Registration Submitted · Pending Admin Approval"}
+        {isPending
+          ? "Registration Submitted · Pending Admin Approval"
+          : "Registration Verified & Approved!"}
       </h2>
       <p className="su-success-msg" style={{ fontSize: "0.95rem", lineHeight: 1.6, color: "var(--su-muted, #94a3b8)", marginBottom: 18 }}>
-        Welcome to Advocate Hub, <strong>{name}</strong>!<br />
-        {type === "advocate" ? (
-          <>
-            Your credentials were verified via <strong>{channelLabel}</strong>. Your advocate profile has been registered and is currently <strong>awaiting administrator approval</strong> before your dashboard is activated.
-          </>
+        Welcome to AdvocateHub, <strong>{name}</strong>!<br />
+        {isPending ? (
+          "Your registration request has been submitted successfully. Your account will be activated after administrator approval."
         ) : (
-          "Your client account has been created successfully."
+          <>
+            Your identity has been verified via <strong>{channelLabel}</strong>. Your account has been <strong>automatically approved and activated</strong>!
+          </>
         )}
       </p>
 
-      {type === "advocate" && (
-        <div style={{
-          background: "rgba(245, 158, 11, 0.08)",
-          border: "1px solid rgba(245, 158, 11, 0.35)",
-          borderRadius: 12,
-          padding: "18px 20px",
-          textAlign: "left",
-          margin: "18px 0 22px",
-          fontSize: "0.9rem"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, color: "#d97706", marginBottom: 12 }}>
-            <span style={{ fontSize: "1.2rem" }}>⏳</span>
-            <span>Status: Awaiting Administrator Review</span>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px", color: "var(--su-text, #e2e8f0)", fontSize: "0.86rem" }}>
-            {adv.barId && <div><strong>Bar Council ID:</strong> {adv.barId}</div>}
-            {adv.city && <div><strong>Location:</strong> {adv.city}</div>}
-            {adv.email && <div style={{ wordBreak: "break-all" }}><strong>Email:</strong> {adv.email}</div>}
-            {adv.phone && <div><strong>Mobile:</strong> {adv.phone}</div>}
-          </div>
-
-          <hr style={{ border: 0, borderTop: "1px solid rgba(245, 158, 11, 0.2)", margin: "14px 0 10px" }} />
-          <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--su-muted, #94a3b8)", lineHeight: 1.5 }}>
-            🛡️ <strong>Admin Verification:</strong> Our compliance team manually verifies all Bar Council credentials to ensure platform security. Your application is in the admin queue now. Once approved, you will be able to log in to your dashboard. For expedited activation, contact: <a href="mailto:advocatehub.in@gmail.com" style={{ color: "#d97706", fontWeight: 600 }}>advocatehub.in@gmail.com</a>.
-          </p>
+      <div style={{
+        background: isPending ? "rgba(245, 158, 11, 0.08)" : "rgba(16, 185, 129, 0.08)",
+        border: isPending ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid rgba(16, 185, 129, 0.35)",
+        borderRadius: 12,
+        padding: "18px 20px",
+        textAlign: "left",
+        margin: "18px 0 22px",
+        fontSize: "0.9rem"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, color: isPending ? "#d97706" : "#059669", marginBottom: 12 }}>
+          <span style={{ fontSize: "1.2rem" }}>{isPending ? "⏳" : "✓"}</span>
+          <span>Status: {isPending ? "Awaiting Administrator Approval" : "Account Approved & Active"}</span>
         </div>
-      )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px", color: "var(--su-text, #e2e8f0)", fontSize: "0.86rem" }}>
+          {adv.barId && <div><strong>Bar Council ID:</strong> {adv.barId}</div>}
+          {adv.city && <div><strong>Location:</strong> {adv.city}</div>}
+          {adv.email && <div style={{ wordBreak: "break-all" }}><strong>Email:</strong> {adv.email}</div>}
+          {adv.phone && <div><strong>Mobile:</strong> {adv.phone}</div>}
+          <div><strong>Method:</strong> {channelLabel}</div>
+        </div>
+
+        {isPending && (
+          <>
+            <hr style={{ border: 0, borderTop: "1px solid rgba(245, 158, 11, 0.2)", margin: "14px 0 10px" }} />
+            <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--su-muted, #94a3b8)", lineHeight: 1.5 }}>
+              🛡️ <strong>Admin Verification:</strong> Our compliance team manually verifies all Bar Council credentials to ensure platform security. Your application is in the admin queue now. Once approved, you will be able to log in to your dashboard. For expedited activation, contact: <a href="mailto:advocatehub.in@gmail.com" style={{ color: "#d97706", fontWeight: 600 }}>advocatehub.in@gmail.com</a>.
+            </p>
+          </>
+        )}
+      </div>
 
       <div className="su-success-steps" style={{ display: "flex", flexDirection: "column", gap: 10, margin: "16px 0 24px" }}>
         <div className="su-ss done" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ color: "#16a34a" }}>✅</span> Identity Verified via {channelLabel}
+          <span style={{ color: "#16a34a" }}>✅</span> Registration Profile Created
         </div>
-        <div className="su-ss done" style={{ display: "flex", alignItems: "center", gap: 8, color: "#d97706", fontWeight: 700 }}>
-          <span>⏳</span> Bar Council ID Review (Pending Admin Approval)
+        <div className="su-ss done" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ color: "#16a34a" }}>✅</span> Channel: {channelLabel}
         </div>
-        <div className="su-ss" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--su-muted, #64748b)" }}>
-          <span>🔒</span> Advocate Dashboard &amp; Consultations (Unlocks upon approval)
+        <div className="su-ss done" style={{ display: "flex", alignItems: "center", gap: 8, color: isPending ? "#d97706" : "#16a34a", fontWeight: 700 }}>
+          <span>{isPending ? "⏳" : "✅"}</span> {isPending ? "Administrator Review (Pending Approval)" : "Administrator Review (Auto-Approved)"}
+        </div>
+        <div className="su-ss" style={{ display: "flex", alignItems: "center", gap: 8, color: isPending ? "var(--su-muted, #64748b)" : "#16a34a", fontWeight: isPending ? 400 : 700 }}>
+          <span>{isPending ? "🔒" : "🔓"}</span> {isPending ? "Advocate Dashboard (Unlocks upon approval)" : "Advocate Dashboard Unlocked"}
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        {isPending && (
+          <Link
+            to={`/registration-status?email=${encodeURIComponent(adv.email || "")}`}
+            className="su-btn-secondary"
+            style={{ padding: "12px 20px", borderRadius: 12, border: "1px solid #cbd5e1", textDecoration: "none", fontWeight: 700, fontSize: "0.92rem", display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            🔍 Check Live Status
+          </Link>
+        )}
         <button className="su-btn-primary su-btn-lg" onClick={onLogin}>
           {type === "client" ? "Continue to Client Portal →" : "Proceed to Advocate Login →"}
         </button>
@@ -740,11 +765,12 @@ export default function Signup({ defaultTab = "" }) {
   const [showPw,  setShowPw]  = useState(false);
   const [showCPw, setShowCPw] = useState(false);
   const [successName, setSuccessName] = useState("");
+  const [registrationApproved, setRegistrationApproved] = useState(false);
 
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpErr, setOtpErr] = useState("");
-  const [otpChannel, setOtpChannel] = useState("email"); // "email" | "sms" | "whatsapp"
+  const [otpChannel, setOtpChannel] = useState("email"); // "email" | "sms" | "whatsapp" | "admin_approval"
   const [resendTimer, setResendTimer] = useState(60);
   const [advOtpSetupError, setAdvOtpSetupError] = useState("");
 
@@ -1265,6 +1291,57 @@ export default function Signup({ defaultTab = "" }) {
     }
   };
 
+  const handleDirectAdminSubmit = async () => {
+    setLoading(true);
+    try {
+      const emailLower = adv.email.trim().toLowerCase();
+      const specsList = (adv.specialities && adv.specialities.length > 0)
+        ? adv.specialities
+        : (adv.speciality ? adv.speciality.split(/,\s*/).map(s => s.trim()).filter(Boolean) : []);
+      const finalSpeciality = specsList.join(", ");
+
+      await registerAdvocate({
+        name:          adv.fullName.trim(),
+        email:         emailLower,
+        password:      adv.password,
+        phone:         adv.phone.trim(),
+        barId:         adv.barId.trim(),
+        speciality:    finalSpeciality,
+        practiceArea:  finalSpeciality,
+        practiceAreas: specsList,
+        courtLevel:    adv.courtLevel,
+        district:      adv.district,
+        taluk:         adv.taluk,
+        court:         adv.court,
+        barCouncil:    adv.barCouncil,
+        experience:    adv.experience,
+        city:          adv.city || adv.taluk || adv.district,
+        fee:           adv.fee || "",
+        bio:           adv.bio,
+        avatarData:    adv.avatarData,
+        verificationMethod: "admin_approval",
+        verificationChannel: "admin_approval",
+      });
+
+      setSuccessName(adv.fullName);
+      setRegistrationApproved(false);
+      showToast(isKn ? "ನೋಂದಣಿ ವಿನಂತಿಯನ್ನು ಸಲ್ಲಿಸಲಾಗಿದೆ! ನಿರ್ವಾಹಕರ ಅನುಮೋದನೆ ಬಾಕಿಯಿದೆ." : "Registration submitted! Awaiting administrator approval.", "success");
+      setView("success");
+
+      // Open live status in a new tab as requested
+      try {
+        const statusUrl = `/registration-status?email=${encodeURIComponent(emailLower)}`;
+        window.open(statusUrl, "_blank");
+      } catch (e) {
+        console.warn("Could not open new tab:", e);
+      }
+    } catch (err) {
+      showToast(err.message || "Registration submission failed.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e?.preventDefault();
     const valid = tab === "client" ? validateClient() : validateAdvocate();
@@ -1272,6 +1349,11 @@ export default function Signup({ defaultTab = "" }) {
 
     if (tab === "client") {
       navigate("/client-register");
+      return;
+    }
+
+    if (otpChannel === "admin_approval") {
+      handleDirectAdminSubmit();
       return;
     }
 
@@ -1321,11 +1403,13 @@ export default function Signup({ defaultTab = "" }) {
         bio:           adv.bio,
         avatarData:    adv.avatarData,
         otp:           cleanCode,
+        verificationMethod: otpChannel,
         verificationChannel: otpChannel,
       });
 
       setSuccessName(adv.fullName);
-      showToast("Identity verified! Advocate profile submitted for Admin Approval 🎉", "success");
+      setRegistrationApproved(true);
+      showToast(isKn ? "ಪರಿಶೀಲನೆ ಯಶಸ್ವಿಯಾಗಿದೆ ಮತ್ತು ಖಾತೆಯನ್ನು ಅನುಮೋದಿಸಲಾಗಿದೆ! 🎉" : "Registration verified & auto-approved successfully! 🎉", "success");
       setOtpStep(false);
       setView("success");
     } catch (err) {
@@ -1426,6 +1510,7 @@ export default function Signup({ defaultTab = "" }) {
             onLogin={goToLogin}
             adv={adv}
             channel={otpChannel}
+            isApproved={registrationApproved}
           />
         </div>
       </div>
@@ -2747,13 +2832,116 @@ export default function Signup({ defaultTab = "" }) {
                         </Field>
                       </div>
 
-                      <div className="su-verify-card">
-                        <span className="su-verify-shield-icon">{ADMIN_ICONS.shieldCheck}</span>
-                        <div className="su-verify-body">
-                          <div className="su-verify-title">
-                            {isKn ? "ಪರಿಶೀಲನಾ ಪ್ರಕ್ರಿಯೆ" : "Verification Process"}
+                      {/* Select Verification Channel Section */}
+                      <div className="su-verification-channel-section" style={{ margin: "20px 0 16px" }}>
+                        <div className="su-channel-section-header">
+                          <div className="su-channel-section-title">
+                            <span>🛡️</span>
+                            <h3>{isKn ? "ಪರಿಶೀಲನಾ ವಿಧಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select Verification Channel"}</h3>
+                          </div>
+                          <p className="su-channel-section-desc">
+                            {isKn
+                              ? "ಮುಂದುವರಿಯಲು ದಯವಿಟ್ಟು ಒಂದು ಪರಿಶೀಲನಾ ವಿಧಾನವನ್ನು ಆರಿಸಿ. OTP ವಿಧಾನಗಳು ಪರಿಶೀಲನೆಯ ನಂತರ ಖಾತೆಯನ್ನು ತಕ್ಷಣ ಸಕ್ರಿಯಗೊಳಿಸುತ್ತವೆ."
+                              : "Please select one verification method to activate your account. OTP methods are automatically approved upon successful verification."}
+                          </p>
+                        </div>
+
+                        <div className="su-channel-grid">
+                          {/* Option 1: Email OTP */}
+                          <div
+                            className={`su-channel-card ${otpChannel === "email" ? "selected" : ""}`}
+                            onClick={() => setOtpChannel("email")}
+                          >
+                            <div className="su-channel-radio-wrap">
+                              <input
+                                type="radio"
+                                id="adv-chan-email"
+                                name="advOtpChannel"
+                                checked={otpChannel === "email"}
+                                onChange={() => setOtpChannel("email")}
+                              />
+                            </div>
+                            <span className="su-channel-icon">✉️</span>
+                            <div className="su-channel-content">
+                              <div className="su-channel-title">{isKn ? "ಇಮೇಲ್ OTP ಪರಿಶೀಲನೆ" : "Email OTP Verification"}</div>
+                              <div className="su-channel-desc">
+                                {isKn ? "ನಿಮ್ಮ ನೋಂದಾಯಿತ ಇಮೇಲ್ ವಿಳಾಸಕ್ಕೆ ನೈಜ ೬-ಅಂಕಿಯ OTP ಕೋಡ್ ಕಳುಹಿಸಲಾಗುತ್ತದೆ." : "Receive a real 6-digit OTP code sent to your registered email address."}
+                              </div>
+                              <span className="su-channel-badge su-badge-auto">⚡ {isKn ? "ಸ್ವಯಂ ಅನುಮೋದನೆ" : "Auto-Approved"}</span>
+                            </div>
                           </div>
 
+                          {/* Option 2: SMS OTP */}
+                          <div
+                            className={`su-channel-card ${otpChannel === "sms" ? "selected" : ""}`}
+                            onClick={() => setOtpChannel("sms")}
+                          >
+                            <div className="su-channel-radio-wrap">
+                              <input
+                                type="radio"
+                                id="adv-chan-sms"
+                                name="advOtpChannel"
+                                checked={otpChannel === "sms"}
+                                onChange={() => setOtpChannel("sms")}
+                              />
+                            </div>
+                            <span className="su-channel-icon">💬</span>
+                            <div className="su-channel-content">
+                              <div className="su-channel-title">{isKn ? "SMS OTP ಪರಿಶೀಲನೆ" : "SMS OTP Verification"}</div>
+                              <div className="su-channel-desc">
+                                {isKn ? "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಗೆ ೬-ಅಂಕಿಯ ಕೋಡ್ SMS ಮೂಲಕ ಕಳುಹಿಸಲಾಗುತ್ತದೆ." : "Receive a real 6-digit OTP code sent via SMS to your mobile."}
+                              </div>
+                              <span className="su-channel-badge su-badge-auto">⚡ {isKn ? "ಸ್ವಯಂ ಅನುಮೋದನೆ" : "Auto-Approved"}</span>
+                            </div>
+                          </div>
+
+                          {/* Option 3: WhatsApp OTP */}
+                          <div
+                            className={`su-channel-card ${otpChannel === "whatsapp" ? "selected" : ""}`}
+                            onClick={() => setOtpChannel("whatsapp")}
+                          >
+                            <div className="su-channel-radio-wrap">
+                              <input
+                                type="radio"
+                                id="adv-chan-whatsapp"
+                                name="advOtpChannel"
+                                checked={otpChannel === "whatsapp"}
+                                onChange={() => setOtpChannel("whatsapp")}
+                              />
+                            </div>
+                            <span className="su-channel-icon">🟢</span>
+                            <div className="su-channel-content">
+                              <div className="su-channel-title">{isKn ? "WhatsApp OTP ಪರಿಶೀಲನೆ" : "WhatsApp OTP Verification"}</div>
+                              <div className="su-channel-desc">
+                                {isKn ? "ನಿಮ್ಮ WhatsApp ಮೆಸೆಂಜರ್‌ಗೆ ನೇರವಾಗಿ ೬-ಅಂಕಿಯ OTP ಕಳುಹಿಸಲಾಗುತ್ತದೆ." : "Receive a real 6-digit OTP code sent directly on WhatsApp."}
+                              </div>
+                              <span className="su-channel-badge su-badge-auto">⚡ {isKn ? "ಸ್ವಯಂ ಅನುಮೋದನೆ" : "Auto-Approved"}</span>
+                            </div>
+                          </div>
+
+                          {/* Option 4: Admin Approval */}
+                          <div
+                            className={`su-channel-card ${otpChannel === "admin_approval" ? "selected" : ""}`}
+                            onClick={() => setOtpChannel("admin_approval")}
+                          >
+                            <div className="su-channel-radio-wrap">
+                              <input
+                                type="radio"
+                                id="adv-chan-admin"
+                                name="advOtpChannel"
+                                checked={otpChannel === "admin_approval"}
+                                onChange={() => setOtpChannel("admin_approval")}
+                              />
+                            </div>
+                            <span className="su-channel-icon">🛡️</span>
+                            <div className="su-channel-content">
+                              <div className="su-channel-title">{isKn ? "ನಿರ್ವಾಹಕರ ಅನುಮೋದನೆ" : "Admin Approval"}</div>
+                              <div className="su-channel-desc">
+                                {isKn ? "OTP ಇಲ್ಲದೆ ನೇರವಾಗಿ ಸಲ್ಲಿಸಿ. ನಮ್ಮ ತಂಡವು ಬಾರ್ ಕೌನ್ಸಿಲ್ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಅನುಮೋದಿಸುತ್ತದೆ." : "Submit application directly for administrator review without OTP."}
+                              </div>
+                              <span className="su-channel-badge su-badge-admin">⏳ {isKn ? "ಹಸ್ತಚಾಲಿತ ಪರಿಶೀಲನೆ" : "Manual Approval Required"}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -2818,8 +3006,10 @@ export default function Signup({ defaultTab = "" }) {
                       >
                         {loading ? (
                           <><span className="su-spinner" /> {t.registering}</>
+                        ) : otpChannel === "admin_approval" ? (
+                          <>{ADMIN_ICONS.shield} <span>{isKn ? "ನಿರ್ವಾಹಕರ ಅನುಮೋದನೆಗಾಗಿ ಸಲ್ಲಿಸಿ" : "Submit for Admin Approval"}</span> {ADMIN_ICONS.arrowRight}</>
                         ) : (
-                          <>{ADMIN_ICONS.sparkle} <span>{t.createAdvocateBtn}</span> {ADMIN_ICONS.arrowRight}</>
+                          <>{ADMIN_ICONS.sparkle} <span>{isKn ? `${otpChannel === "whatsapp" ? "WhatsApp" : otpChannel === "sms" ? "SMS" : "ಇಮೇಲ್"} OTP ಮೂಲಕ ಮುಂದುವರಿಯಿರಿ` : `Verify via ${otpChannel === "whatsapp" ? "WhatsApp" : otpChannel === "sms" ? "SMS" : "Email"} OTP`}</span> {ADMIN_ICONS.arrowRight}</>
                         )}
                       </button>
                     )}

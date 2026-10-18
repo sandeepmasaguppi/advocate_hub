@@ -20,7 +20,14 @@ import {
   rejectAdvocate,
   loadAdvocates,
 } from "../data/Advocatesstore";
-import { api, setAdminToken, getAdminToken } from "../data/api";
+import {
+  api,
+  setAdminToken,
+  getAdminToken,
+  getAdminRegistrationRequests,
+  approveRegistrationRequest,
+  rejectRegistrationRequest,
+} from "../data/api";
 import { createClient, updateClient, deleteClient, getClients, getLocalClients } from "../data/Clientsstore";
 import BrandLogo from "../components/BrandLogo";
 import { getMessages, markAsRead, deleteMessage } from "../data/MessageStore";
@@ -468,6 +475,366 @@ export function matchesClientRecord(client, item) {
   }
 
   return false;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  REGISTRATION REQUEST DETAIL MODAL (Advocate / Client Personal & Legal Data)
+// ─────────────────────────────────────────────────────────────
+function RegRequestDetailModal({ request, onClose, onApprove, onReject }) {
+  if (!request) return null;
+  const isAdvocate = request.role === "advocate";
+  const isPending = request.status === "pending" || request.approvalStatus === "pending_admin_approval";
+  const isApproved = request.status === "approved";
+  const isRejected = request.status === "rejected";
+
+  const channelMeta = {
+    email: { icon: "✉️", label: "Email OTP", badge: "⚡ Auto-Approved via Verified Email OTP" },
+    sms: { icon: "💬", label: "SMS OTP", badge: "⚡ Auto-Approved via Verified SMS OTP" },
+    whatsapp: { icon: "🟢", label: "WhatsApp OTP", badge: "⚡ Auto-Approved via Verified WhatsApp OTP" },
+    admin_approval: { icon: "🛡️", label: "Admin Approval", badge: "⏳ Direct Submission Awaiting Admin Approval" },
+  }[request.verificationMethod] || { icon: "✉️", label: request.verificationMethod || "Email", badge: "Verified" };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,.65)",
+        zIndex: 700,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        className="am-modal"
+        style={{
+          background: "var(--adm-bg-card, #ffffff)",
+          color: "var(--adm-text, #0f172a)",
+          borderRadius: 16,
+          width: "100%",
+          maxWidth: 680,
+          maxHeight: "92vh",
+          overflowY: "auto",
+          boxShadow: "0 24px 64px rgba(0,0,0,.3)",
+          border: "1px solid var(--adm-border, #e2e8f0)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "18px 24px",
+            borderBottom: "1px solid var(--adm-border, #e2e8f0)",
+            background: isAdvocate
+              ? "linear-gradient(135deg, #1e293b, #0f172a)"
+              : "linear-gradient(135deg, #4c1d95, #1e1b4b)",
+            color: "#fff",
+            borderRadius: "16px 16px 0 0",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <Avi name={request.name} size={48} />
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontWeight: 800, fontSize: 18 }}>{request.name}</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: 12,
+                    background: isAdvocate ? "rgba(59, 130, 246, 0.25)" : "rgba(168, 85, 247, 0.25)",
+                    color: "#fff",
+                  }}
+                >
+                  {isAdvocate ? "⚖️ Advocate Application" : "👤 Client Registration"}
+                </span>
+                <SBadge status={request.status || "pending"} />
+              </div>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                Submitted: {fmtDateTime(request.createdAt)} · ID #{request.id}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255,255,255,.15)",
+              border: "none",
+              color: "#fff",
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              cursor: "pointer",
+              fontSize: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content Body */}
+        <div style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Verification Method Strip */}
+          <div
+            style={{
+              padding: "12px 16px",
+              borderRadius: 10,
+              background: request.verificationMethod === "admin_approval" ? "rgba(245, 158, 11, 0.1)" : "rgba(16, 185, 129, 0.1)",
+              border: request.verificationMethod === "admin_approval" ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>{channelMeta.icon}</span>
+              <div>
+                <strong style={{ fontSize: 14 }}>{channelMeta.label}</strong>
+                <div style={{ fontSize: 12, color: "var(--adm-muted, #64748b)" }}>{channelMeta.badge}</div>
+              </div>
+            </div>
+            <span
+              style={{
+                fontSize: 11.5,
+                fontWeight: 700,
+                padding: "3px 10px",
+                borderRadius: 99,
+                background: isPending ? "#fef3c7" : isApproved ? "#dcfce7" : "#fee2e2",
+                color: isPending ? "#92400e" : isApproved ? "#14532d" : "#7f1d1d",
+              }}
+            >
+              {isPending ? "⏳ Pending Review" : isApproved ? "✓ Approved" : "✕ Rejected"}
+            </span>
+          </div>
+
+          {/* Contact & Personal Information */}
+          <div>
+            <h4 style={{ margin: "0 0 10px 0", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--adm-muted, #64748b)" }}>
+              👤 Contact &amp; Personal Details
+            </h4>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gap: 12,
+                background: "var(--adm-bg, #f8fafc)",
+                padding: 14,
+                borderRadius: 10,
+                border: "1px solid var(--adm-border, #e2e8f0)",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Full Name</span>
+                <strong style={{ fontSize: 13.5 }}>{request.name}</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Email Address</span>
+                <strong style={{ fontSize: 13, wordBreak: "break-all" }}>{request.email || "—"}</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Mobile Phone</span>
+                <strong style={{ fontSize: 13 }}>{request.phone ? `+91 ${request.phone}` : "—"}</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>City / Location</span>
+                <strong style={{ fontSize: 13 }}>📍 {request.city || "—"}</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Advocate Specific Details */}
+          {isAdvocate && (
+            <div>
+              <h4 style={{ margin: "0 0 10px 0", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--adm-muted, #64748b)" }}>
+                ⚖️ Legal Credentials &amp; Practice
+              </h4>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                  gap: 12,
+                  background: "var(--adm-bg, #f8fafc)",
+                  padding: 14,
+                  borderRadius: 10,
+                  border: "1px solid var(--adm-border, #e2e8f0)",
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Bar Council ID</span>
+                  <strong style={{ fontSize: 13, color: "#2563eb" }}>{request.barId || "—"}</strong>
+                </div>
+                {request.barCouncil && (
+                  <div>
+                    <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Bar Council Body</span>
+                    <strong style={{ fontSize: 13 }}>{request.barCouncil}</strong>
+                  </div>
+                )}
+                {request.court && (
+                  <div>
+                    <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Court</span>
+                    <strong style={{ fontSize: 13 }}>🏛️ {request.court}</strong>
+                  </div>
+                )}
+                {request.courtLevel && (
+                  <div>
+                    <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Court Level</span>
+                    <strong style={{ fontSize: 13 }}>{request.courtLevel}</strong>
+                  </div>
+                )}
+                {request.experience && (
+                  <div>
+                    <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Experience</span>
+                    <strong style={{ fontSize: 13 }}>⏳ {request.experience}</strong>
+                  </div>
+                )}
+                {request.fee && (
+                  <div>
+                    <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Consultation Fee</span>
+                    <strong style={{ fontSize: 13 }}>💰 {request.fee}</strong>
+                  </div>
+                )}
+              </div>
+
+              {/* Specialities / Practice Areas */}
+              {(request.practiceAreas?.length > 0 || request.speciality) && (
+                <div style={{ marginTop: 12 }}>
+                  <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block", marginBottom: 6 }}>
+                    Practice Areas &amp; Specialities:
+                  </span>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {(request.practiceAreas?.length > 0
+                      ? request.practiceAreas
+                      : (request.speciality ? request.speciality.split(/,\s*/) : [])
+                    ).map((sp) => (
+                      <span
+                        key={sp}
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          padding: "3px 10px",
+                          borderRadius: 99,
+                          background: "rgba(37, 99, 235, 0.1)",
+                          color: "#2563eb",
+                          border: "1px solid rgba(37, 99, 235, 0.25)",
+                        }}
+                      >
+                        ⚖️ {sp}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Languages */}
+              {Array.isArray(request.languages) && request.languages.length > 0 && (
+                <div style={{ marginTop: 12, fontSize: 12.5 }}>
+                  <span style={{ color: "var(--adm-muted, #64748b)" }}>Languages Spoken: </span>
+                  <strong>{request.languages.join(", ")}</strong>
+                </div>
+              )}
+
+              {/* Bio */}
+              {request.bio && (
+                <div style={{ marginTop: 12 }}>
+                  <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block", marginBottom: 4 }}>
+                    Professional Bio:
+                  </span>
+                  <div style={{ fontSize: 13, background: "var(--adm-bg, #f8fafc)", padding: 10, borderRadius: 8, fontStyle: "italic", border: "1px solid var(--adm-border, #e2e8f0)" }}>
+                    "{request.bio}"
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Client Specific Details */}
+          {!isAdvocate && (
+            <div>
+              <h4 style={{ margin: "0 0 10px 0", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--adm-muted, #64748b)" }}>
+                📋 Legal Matter &amp; Consultation Request
+              </h4>
+              <div
+                style={{
+                  background: "var(--adm-bg, #f8fafc)",
+                  padding: 14,
+                  borderRadius: 10,
+                  border: "1px solid var(--adm-border, #e2e8f0)",
+                }}
+              >
+                <div style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", marginBottom: 4 }}>Legal Issue Category</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--adm-accent, #0f766e)" }}>
+                  ⚖️ {request.legalIssue || "General Legal Consultation"}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Rejection Reason if any */}
+          {request.rejectionReason && (
+            <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, padding: 12, color: "#7f1d1d", fontSize: 13 }}>
+              <strong>Rejection Reason:</strong> {request.rejectionReason}
+            </div>
+          )}
+
+          {/* Footer Actions */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTop: "1px solid var(--adm-border, #e2e8f0)",
+              paddingTop: 16,
+              flexWrap: "wrap",
+              gap: 10,
+            }}
+          >
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {!isApproved && (
+                <button
+                  type="button"
+                  className="am-btn-approve"
+                  onClick={() => {
+                    onApprove(request);
+                    onClose();
+                  }}
+                  style={{ padding: "8px 18px", fontSize: 13, fontWeight: 700 }}
+                >
+                  ✓ Approve Registration
+                </button>
+              )}
+              {!isRejected && (
+                <button
+                  type="button"
+                  className="am-btn-reject"
+                  onClick={() => {
+                    onReject(request);
+                    onClose();
+                  }}
+                  style={{ padding: "8px 18px", fontSize: 13, fontWeight: 700 }}
+                >
+                  ✕ Reject Registration
+                </button>
+              )}
+            </div>
+            <button type="button" className="am-btn-secondary" onClick={onClose} style={{ padding: "8px 18px" }}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1231,6 +1598,7 @@ const RAIL_ICONS = {
   questions: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.7" /><path d="M12 17h.01" /></svg>,
   bookings:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>,
   requests:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" /></svg>,
+  regRequests: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>,
   logout:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" /></svg>,
   collapse:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>,
   expand:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>,
@@ -2228,6 +2596,17 @@ export default function AdminPage() {
   const [deletingConsult, setDeletingConsult] = useState(null);
   const [addingClient, setAddingClient] = useState(false);
 
+  // Registration Approval Requests state (Multi-Channel & Admin Approval)
+  const [regRequests, setRegRequests] = useState([]);
+  const [loadingRegRequests, setLoadingRegRequests] = useState(false);
+  const [regSearch, setRegSearch] = useState("");
+  const [regRoleFilter, setRegRoleFilter] = useState("all");
+  const [regStatusFilter, setRegStatusFilter] = useState("all");
+  const [regChannelFilter, setRegChannelFilter] = useState("all");
+  const [rejectModalItem, setRejectModalItem] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [selectedRegRequestModal, setSelectedRegRequestModal] = useState(null);
+
   // Restore a session if the stored token is still valid.
   useEffect(() => {
     const token = getAdminToken();
@@ -2284,6 +2663,85 @@ export default function AdminPage() {
   }, []);
   const refreshMessages  = () => setMessages(getMessages());
   const refreshQuestions = () => setQuestions(getQuestions());
+
+  const refreshRegRequests = useCallback(async () => {
+    setLoadingRegRequests(true);
+    try {
+      const data = await getAdminRegistrationRequests();
+      const list = Array.isArray(data) ? data : (data?.requests || []);
+      setRegRequests(list);
+    } catch (err) {
+      console.error("Failed to load registration requests:", err);
+    } finally {
+      setLoadingRegRequests(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authed) {
+      refreshRegRequests();
+      const interval = setInterval(refreshRegRequests, 12000);
+      return () => clearInterval(interval);
+    }
+  }, [authed, refreshRegRequests]);
+
+  const handleApproveRegRequest = useCallback(async (item) => {
+    try {
+      await approveRegistrationRequest(item.id, item.role);
+      showToast(`Approved registration for ${item.name} (${item.role})!`);
+      await refreshRegRequests();
+      await Promise.allSettled([refreshAdvocates(), refreshClients()]);
+    } catch (err) {
+      showToast(err.message || "Approval failed", "error");
+    }
+  }, [refreshRegRequests, refreshAdvocates, refreshClients, showToast]);
+
+  const handleOpenRejectModal = (item) => {
+    setRejectModalItem(item);
+    setRejectReason("");
+  };
+
+  const handleConfirmRejectRegRequest = useCallback(async () => {
+    if (!rejectModalItem) return;
+    try {
+      await rejectRegistrationRequest(rejectModalItem.id, rejectModalItem.role, rejectReason);
+      showToast(`Registration request for ${rejectModalItem.name} rejected.`);
+      setRejectModalItem(null);
+      setRejectReason("");
+      await refreshRegRequests();
+      await Promise.allSettled([refreshAdvocates(), refreshClients()]);
+    } catch (err) {
+      showToast(err.message || "Rejection failed", "error");
+    }
+  }, [rejectModalItem, rejectReason, refreshRegRequests, refreshAdvocates, refreshClients, showToast]);
+
+  const pendingRegRequestsCount = useMemo(() => {
+    return regRequests.filter(r => r.status === "pending" || r.approvalStatus === "pending_admin_approval").length;
+  }, [regRequests]);
+
+  const filteredRegRequests = useMemo(() => {
+    return regRequests.filter((req) => {
+      if (regRoleFilter !== "all" && req.role !== regRoleFilter) return false;
+      if (regStatusFilter !== "all") {
+        const isPending = req.status === "pending" || req.approvalStatus === "pending_admin_approval";
+        if (regStatusFilter === "pending" && !isPending) return false;
+        if (regStatusFilter === "approved" && req.status !== "approved") return false;
+        if (regStatusFilter === "rejected" && req.status !== "rejected") return false;
+      }
+      if (regChannelFilter !== "all") {
+        if ((req.verificationMethod || "email") !== regChannelFilter) return false;
+      }
+      if (!regSearch.trim()) return true;
+      const q = regSearch.trim().toLowerCase();
+      return (
+        (req.name || "").toLowerCase().includes(q) ||
+        (req.email || "").toLowerCase().includes(q) ||
+        (req.phone || "").toLowerCase().includes(q) ||
+        (req.barId || "").toLowerCase().includes(q) ||
+        (req.city || "").toLowerCase().includes(q)
+      );
+    });
+  }, [regRequests, regRoleFilter, regStatusFilter, regChannelFilter, regSearch]);
 
   const refreshConsultations = useCallback(() => {
     const DUMMY_EMAILS = new Set(["chetan@gmail.com", "giri@gmail.com", "gagan@gmail.com", "ajay@gmail.com", "man@gmail.com", "sandeep@gmail.com"]);
@@ -2373,12 +2831,13 @@ export default function AdminPage() {
       refreshMessages();
       refreshQuestions();
       refreshConsultations();
+      refreshRegRequests();
       setAllReqs(loadRequests());
       setBookings(loadBookings());
     };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [authed, refreshAdvocates, refreshClients, refreshConsultations]);
+  }, [authed, refreshAdvocates, refreshClients, refreshConsultations, refreshRegRequests]);
     const allReqList = useMemo(() => Object.values(allReqs).flat(), [allReqs]);
     const dashStats = useMemo(() => {
       const totalReqs = allReqList.length;
@@ -2638,6 +3097,7 @@ export default function AdminPage() {
           <span className="am-rail-label">Advocate<b>Hub</b></span>
         </Link>
         <RailButton id="pending"   label="Pending approvals" tab={tab} setTab={setTab} count={pending.length + pendingClients.length} />
+        <RailButton id="regRequests" label="Registration Approvals" tab={tab} setTab={setTab} count={pendingRegRequestsCount} />
         <RailButton id="all"       label="All advocates"     tab={tab} setTab={setTab} />
         <RailButton id="messages"  label="Messages"          tab={tab} setTab={setTab} count={unreadMessages.length} />
         <RailButton id="clients"   label="Clients"           tab={tab} setTab={setTab} count={clients.length} />
@@ -2720,6 +3180,7 @@ export default function AdminPage() {
           <StatCard label="Total clients"    value={clients.length}        hint="Registered client accounts" tone="am-tone-cyan" />
           <StatCard label="Paid consultations" value={paidConsultations.length} hint="₹10 PhonePe chat unlocks" tone="am-tone-good" />
           <StatCard label="Consultation fees" value={`₹${paidConsultations.length * 10}`} hint="PhonePe 9108717353-3@ybl" tone="am-tone-gold" />
+          <StatCard label="Registration requests" value={regRequests.length} hint={`${pendingRegRequestsCount} pending review`} tone="am-tone-warn" />
           <StatCard label="Unread messages"  value={unreadMessages.length} hint="Contact & partner forms" tone="am-tone-blue" />
           <StatCard label="New questions"    value={unreadQuestions.length} hint="Awaiting an answer" tone="am-tone-violet" />
         </div>
@@ -2729,6 +3190,9 @@ export default function AdminPage() {
         <div className="am-tabs">
           <button className={`am-tab ${tab === "pending" ? "active" : ""}`} onClick={() => setTab("pending")}>
             Pending Approvals {(pending.length + pendingClients.length) > 0 && <span className="am-tab-badge">{pending.length + pendingClients.length}</span>}
+          </button>
+          <button className={`am-tab ${tab === "regRequests" ? "active" : ""}`} onClick={() => setTab("regRequests")}>
+            🛡️ Registration Approval Requests {pendingRegRequestsCount > 0 && <span className="am-tab-badge" style={{ background: "#ea580c" }}>{pendingRegRequestsCount}</span>}
           </button>
           <button className={`am-tab ${tab === "all" ? "active" : ""}`} onClick={() => setTab("all")}>
             All Advocates
@@ -3470,6 +3934,300 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* ── Registration Approval Requests tab ── */}
+        {tab === "regRequests" && (
+          <div className="am-section">
+            <div className="am-bk-header" style={{ marginBottom: 18 }}>
+              <div>
+                <h2 className="am-bk-title" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: 0 }}>
+                  🛡️ Registration Approval Requests
+                  <span className="am-count-pill" style={{ background: "rgba(234, 88, 12, 0.12)", color: "#ea580c", borderColor: "rgba(234, 88, 12, 0.3)" }}>
+                    {regRequests.length} Total Applications
+                  </span>
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "var(--adm-text-muted)" }}>
+                  Review multi-channel registrations across Email OTP, SMS OTP, WhatsApp OTP, and Admin Approval queues.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="am-btn-secondary"
+                  onClick={refreshRegRequests}
+                  disabled={loadingRegRequests}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.82rem", padding: "7px 14px" }}
+                >
+                  🔄 {loadingRegRequests ? "Refreshing…" : "Refresh Queue"}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Summary Strip */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 18 }}>
+              <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11.5, color: "var(--adm-text-muted)", fontWeight: 600 }}>Total Requests</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--adm-text-main)", marginTop: 2 }}>{regRequests.length}</div>
+              </div>
+              <div style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11.5, color: "#d97706", fontWeight: 700 }}>⏳ Pending Admin Review</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#d97706", marginTop: 2 }}>
+                  {regRequests.filter(r => r.status === "pending" || r.approvalStatus === "pending_admin_approval").length}
+                </div>
+              </div>
+              <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11.5, color: "#059669", fontWeight: 700 }}>⚡ Auto-Approved via OTP</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#059669", marginTop: 2 }}>
+                  {regRequests.filter(r => (r.verificationMethod === "email" || r.verificationMethod === "sms" || r.verificationMethod === "whatsapp") && r.status === "approved").length}
+                </div>
+              </div>
+              <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11.5, color: "#dc2626", fontWeight: 700 }}>❌ Rejected</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#dc2626", marginTop: 2 }}>
+                  {regRequests.filter(r => r.status === "rejected").length}
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Toolbar */}
+            <div className="am-toolbar" style={{ marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <input
+                className="am-search"
+                style={{ flex: "1 1 220px" }}
+                placeholder="🔍 Search applicant name, email, phone, Bar ID…"
+                value={regSearch}
+                onChange={(e) => setRegSearch(e.target.value)}
+              />
+
+              <select
+                className="am-status-filter"
+                value={regRoleFilter}
+                onChange={(e) => setRegRoleFilter(e.target.value)}
+              >
+                <option value="all">All Roles</option>
+                <option value="advocate">⚖️ Advocates Only</option>
+                <option value="client">👤 Clients Only</option>
+              </select>
+
+              <select
+                className="am-status-filter"
+                value={regChannelFilter}
+                onChange={(e) => setRegChannelFilter(e.target.value)}
+              >
+                <option value="all">All Channels</option>
+                <option value="email">✉️ Email OTP</option>
+                <option value="sms">💬 SMS OTP</option>
+                <option value="whatsapp">🟢 WhatsApp OTP</option>
+                <option value="admin_approval">🛡️ Admin Approval</option>
+              </select>
+
+              <select
+                className="am-status-filter"
+                value={regStatusFilter}
+                onChange={(e) => setRegStatusFilter(e.target.value)}
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">⏳ Pending Review</option>
+                <option value="approved">✅ Approved</option>
+                <option value="rejected">❌ Rejected</option>
+              </select>
+            </div>
+
+            {/* List / Cards */}
+            {filteredRegRequests.length === 0 ? (
+              <div className="am-empty am-empty-rich">
+                <div className="am-empty-icon">🛡️</div>
+                <div className="am-empty-title">No registration requests found</div>
+                <div>No applications match the current filter or search criteria.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredRegRequests.map((req) => {
+                  const isPending = req.status === "pending" || req.approvalStatus === "pending_admin_approval";
+                  const isApproved = req.status === "approved";
+                  const isRejected = req.status === "rejected";
+
+                  const channelMeta = {
+                    email: { icon: "✉️", label: "Email OTP", badge: "⚡ Auto-Approved" },
+                    sms: { icon: "💬", label: "SMS OTP", badge: "⚡ Auto-Approved" },
+                    whatsapp: { icon: "🟢", label: "WhatsApp OTP", badge: "⚡ Auto-Approved" },
+                    admin_approval: { icon: "🛡️", label: "Admin Approval", badge: "⏳ Manual Review" },
+                  }[req.verificationMethod] || { icon: "✉️", label: req.verificationMethod || "Email", badge: "Verified" };
+
+                  return (
+                    <div
+                      key={`${req.role}_${req.id}`}
+                      style={{
+                        background: "var(--adm-bg-card)",
+                        border: isPending ? "1.5px solid rgba(245, 158, 11, 0.45)" : "1px solid var(--adm-border)",
+                        borderRadius: 14,
+                        padding: "16px 20px",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: 16,
+                        boxShadow: isPending ? "0 4px 14px rgba(245, 158, 11, 0.08)" : "none",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {/* Left: Applicant details */}
+                      <div
+                        style={{ display: "flex", alignItems: "flex-start", gap: 14, minWidth: 260, flex: "1 1 300px", cursor: "pointer" }}
+                        onClick={() => setSelectedRegRequestModal(req)}
+                        title="Click to view full applicant profile"
+                      >
+                        <Avi name={req.name} color={colorFor(req.id)} size={46} />
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <span style={{ fontWeight: 800, fontSize: 16, color: "var(--adm-text-main)" }}>
+                              {req.name}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 6,
+                                background: req.role === "advocate" ? "rgba(37, 99, 235, 0.12)" : "rgba(124, 58, 237, 0.12)",
+                                color: req.role === "advocate" ? "#2563eb" : "#7c3aed",
+                                border: req.role === "advocate" ? "1px solid rgba(37, 99, 235, 0.25)" : "1px solid rgba(124, 58, 237, 0.25)",
+                              }}
+                            >
+                              {req.role === "advocate" ? "⚖️ Advocate" : "👤 Client"}
+                            </span>
+                          </div>
+
+                          <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 6, fontSize: "0.85rem", color: "var(--adm-text-muted)" }}>
+                            {req.barId && (
+                              <div>
+                                <strong style={{ color: "var(--adm-text-main)" }}>Bar Council ID:</strong> {req.barId}
+                              </div>
+                            )}
+                            <div>
+                              <span>✉️ {req.email}</span>
+                              {req.phone && <span style={{ marginLeft: 12 }}>📞 +91 {req.phone}</span>}
+                            </div>
+                            {(req.city || req.speciality) && (
+                              <div style={{ fontSize: "0.8rem" }}>
+                                {req.city && <span>📍 {req.city}</span>}
+                                {req.speciality && <span style={{ marginLeft: 10 }}>🏷️ {req.speciality}</span>}
+                              </div>
+                            )}
+                            {req.role === "client" && req.legalIssue && (
+                              <div style={{ fontSize: "0.82rem", color: "var(--adm-accent, #0f766e)", marginTop: 2 }}>
+                                <strong>Legal Matter:</strong> ⚖️ {req.legalIssue}
+                              </div>
+                            )}
+                            {req.role === "advocate" && (req.court || req.experience || req.fee) && (
+                              <div style={{ fontSize: "0.8rem", color: "var(--adm-text-muted)", marginTop: 2, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                                {req.court && <span>🏛️ {req.court}{req.courtLevel ? ` (${req.courtLevel})` : ""}</span>}
+                                {req.experience && <span>⏳ {req.experience}</span>}
+                                {req.fee && <span>💰 {req.fee}</span>}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Middle: Verification Channel & Submission Meta */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 200, flex: "0 1 240px", fontSize: "0.84rem" }}>
+                        <div>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--adm-text-muted)", textTransform: "uppercase", letterSpacing: "0.4px", display: "block" }}>
+                            Verification Channel
+                          </span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                            <span style={{ fontSize: 16 }}>{channelMeta.icon}</span>
+                            <strong style={{ color: "var(--adm-text-main)" }}>{channelMeta.label}</strong>
+                          </div>
+                          <span style={{
+                            display: "inline-block",
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                            padding: "1px 7px",
+                            borderRadius: 99,
+                            marginTop: 3,
+                            background: req.verificationMethod === "admin_approval" ? "rgba(245, 158, 11, 0.12)" : "rgba(16, 185, 129, 0.12)",
+                            color: req.verificationMethod === "admin_approval" ? "#d97706" : "#10b981",
+                            border: req.verificationMethod === "admin_approval" ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)"
+                          }}>
+                            {channelMeta.badge}
+                          </span>
+                        </div>
+
+                        <div style={{ marginTop: 4 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--adm-text-muted)", textTransform: "uppercase", letterSpacing: "0.4px", display: "block" }}>
+                            Submitted At
+                          </span>
+                          <span style={{ color: "var(--adm-text-muted)", fontSize: "0.82rem" }}>
+                            📅 {fmtDateTime(req.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Status badge & Action buttons */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, minWidth: 160 }}>
+                        {isPending && (
+                          <span className="am-status-pill am-status-awaiting" style={{ padding: "4px 12px", fontSize: 12 }}>
+                            <span className="am-status-icon">⏳</span> Pending Approval
+                          </span>
+                        )}
+                        {isApproved && (
+                          <span className="am-status-pill" style={{ background: "#dcfce7", color: "#14532d", border: "1px solid #86efac", padding: "4px 12px", fontSize: 12 }}>
+                            <span className="am-status-icon">✓</span> Approved &amp; Active
+                          </span>
+                        )}
+                        {isRejected && (
+                          <div>
+                            <span className="am-status-pill" style={{ background: "#fee2e2", color: "#7f1d1d", border: "1px solid #fca5a5", padding: "4px 12px", fontSize: 12 }}>
+                              <span className="am-status-icon">✕</span> Rejected
+                            </span>
+                            {req.rejectionReason && (
+                              <div style={{ fontSize: 11, color: "#dc2626", marginTop: 4, maxWidth: 180, textAlign: "right" }}>
+                                Reason: {req.rejectionReason}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                          <button
+                            type="button"
+                            className="am-btn-secondary"
+                            onClick={() => setSelectedRegRequestModal(req)}
+                            style={{ padding: "6px 12px", fontSize: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}
+                          >
+                            👁️ View Details
+                          </button>
+                          {!isApproved && (
+                            <button
+                              type="button"
+                              className="am-btn-approve"
+                              onClick={() => handleApproveRegRequest(req)}
+                              style={{ padding: "6px 14px", fontSize: 12, fontWeight: 700 }}
+                            >
+                              ✓ Approve
+                            </button>
+                          )}
+                          {!isRejected && (
+                            <button
+                              type="button"
+                              className="am-btn-reject"
+                              onClick={() => handleOpenRejectModal(req)}
+                              style={{ padding: "6px 14px", fontSize: 12, fontWeight: 700 }}
+                            >
+                              ✕ Reject
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         </div>{/* /am-panel */}
       </div>{/* /am-container */}
       </div>{/* /am-main */}
@@ -3586,6 +4344,53 @@ export default function AdminPage() {
           onConfirm={() => {
             handleDeleteConsultation(deletingConsult.id);
             setDeletingConsult(null);
+          }}
+        />
+      )}
+      {rejectModalItem && (
+        <div className="am-modal-overlay" onClick={() => setRejectModalItem(null)}>
+          <div className="am-modal am-modal-sm" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="am-modal-header">
+              <h3 style={{ margin: 0, fontSize: 16 }}>✕ Reject Registration Request</h3>
+              <button className="am-modal-close" onClick={() => setRejectModalItem(null)}>✕</button>
+            </div>
+            <div style={{ padding: "16px 20px" }}>
+              <p style={{ margin: "0 0 12px", fontSize: 14 }}>
+                Reject application for <strong>{rejectModalItem.name}</strong> ({rejectModalItem.role === "advocate" ? "Advocate" : "Client"})?
+              </p>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--adm-text-muted)", display: "block", marginBottom: 6 }}>
+                  Reason for rejection (shown to applicant on status check):
+                </label>
+                <textarea
+                  className="am-input"
+                  style={{ width: "100%", minHeight: 84, padding: 10, borderRadius: 8, border: "1px solid var(--adm-border)", resize: "vertical", fontFamily: "inherit", fontSize: 13 }}
+                  placeholder="e.g. Invalid Bar Council ID format, incomplete practice details, or unverified contact information."
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                />
+              </div>
+              <div className="am-modal-actions" style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                <button type="button" className="am-btn-secondary" onClick={() => setRejectModalItem(null)}>Cancel</button>
+                <button type="button" className="am-btn-delete-confirm" onClick={handleConfirmRejectRegRequest}>
+                  Confirm Rejection
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {selectedRegRequestModal && (
+        <RegRequestDetailModal
+          request={selectedRegRequestModal}
+          onClose={() => setSelectedRegRequestModal(null)}
+          onApprove={(item) => {
+            handleApproveRegRequest(item);
+            setSelectedRegRequestModal(null);
+          }}
+          onReject={(item) => {
+            handleOpenRejectModal(item);
+            setSelectedRegRequestModal(null);
           }}
         />
       )}

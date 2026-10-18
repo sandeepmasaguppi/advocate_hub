@@ -25,6 +25,7 @@ import BareActs from "./pages/BareActs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermOfUse";
 import TalkToAdvocate from "./pages/TalkToAdvocate";
+import RegistrationStatus from "./pages/RegistrationStatus";
 import Chatbot from "./pages/Chatbot";
 import { getTheme, initTheme } from "./data/themeStore";
 
@@ -98,6 +99,8 @@ function App() {
         <Route path="/signup/advocate" element={<Signup defaultTab="advocate" key="advocate" />} />
         <Route path="/client-register" element={<ClientRegister />} />
         <Route path="/advocate-register" element={<Signup defaultTab="advocate" key="advocate" />} />
+        <Route path="/registration-status" element={<RegistrationStatus />} />
+        <Route path="/approval-status" element={<RegistrationStatus />} />
         <Route path="/login" element={<Login />} />
         <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/client-main" element={<ClientMainPage />} />

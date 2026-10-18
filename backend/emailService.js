@@ -635,68 +635,88 @@ async function sendSmsOtp({ phone, otp }) {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const fromNumber = process.env.TWILIO_FROM || process.env.TWILIO_PHONE_NUMBER;
 
-  // 1. If standard Twilio SMS credentials exist, dispatch via Twilio Messages API (does NOT require Verify Service SID)
-  if (accountSid && authToken && fromNumber && otp) {
-    try {
-      const recipient = normalizeOtpPhone(phone);
-      const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          To: recipient,
-          From: fromNumber,
-          Body: `Your AdvocateHub verification code is: ${otp}. Valid for 10 minutes.`,
-        }),
-        signal: AbortSignal.timeout(10000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        console.log(`[OTP] SMS dispatched via Twilio Messages API (${data.sid}) to ${phone}`);
-        return { provider: "twilio-sms", status: "sent", messageId: data.sid };
-      }
-    } catch (err) {
-      console.warn(`[OTP] Twilio Messages SMS attempt: ${err.message}`);
-    }
+  if (!accountSid || !authToken || !fromNumber) {
+    throw new Error("SMS OTP delivery is not configured on this server. Please configure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM in backend environment variables, or select Email OTP / Admin Approval.");
   }
 
-  // 2. Direct dispatch mode (no Service SID required)
-  console.log(`[OTP SMS to +91 ${phone.replace(/\D/g, "")}]: Your AdvocateHub verification code is: ${otp}`);
-  return { provider: "direct-sms", status: "sent", phone };
+  const recipient = normalizeOtpPhone(phone);
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      To: recipient,
+      From: fromNumber,
+      Body: `Your AdvocateHub verification code is: ${otp}. Valid for 5 minutes.`,
+    }),
+    signal: AbortSignal.timeout(10000),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(`Twilio SMS dispatch failed: ${data.message || res.statusText}`);
+  }
+  console.log(`[OTP] SMS dispatched via Twilio Messages API (${data.sid}) to ${phone}`);
+  return { provider: "twilio-sms", status: "sent", messageId: data.sid };
 }
 
 async function sendWhatsappOtp({ phone, otp }) {
   const ultraMsgInstance = process.env.ULTRAMSG_INSTANCE_ID;
   const ultraMsgToken = process.env.ULTRAMSG_TOKEN;
+  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+  const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
+  const twilioWaFrom = process.env.TWILIO_WHATSAPP_FROM || process.env.TWILIO_FROM;
 
-  // 1. UltraMsg WhatsApp API if configured
-  if (ultraMsgInstance && ultraMsgToken && otp) {
-    try {
-      const recipient = phone.replace(/\D/g, "");
-      const res = await fetch(`https://api.ultramsg.com/${ultraMsgInstance}/messages/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          token: ultraMsgToken,
-          to: recipient.startsWith("91") ? recipient : `91${recipient}`,
-          body: `⚖️ *AdvocateHub Verification Code*\n\nYour 6-digit verification code is: *${otp}*\n\nEnter this code to complete your signup. Valid for 10 minutes.`,
-        }),
-        signal: AbortSignal.timeout(10000),
-      });
-      if (res.ok) {
-        console.log(`[OTP] WhatsApp message sent via UltraMsg to ${phone}`);
-        return { provider: "ultramsg", status: "sent" };
-      }
-    } catch (err) {
-      console.warn(`[OTP] UltraMsg attempt: ${err.message}`);
+  // 1. UltraMsg WhatsApp API
+  if (ultraMsgInstance && ultraMsgToken) {
+    const recipient = phone.replace(/\D/g, "");
+    const res = await fetch(`https://api.ultramsg.com/${ultraMsgInstance}/messages/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        token: ultraMsgToken,
+        to: recipient.startsWith("91") ? recipient : `91${recipient}`,
+        body: `⚖️ *AdvocateHub Verification Code*\n\nYour 6-digit verification code is: *${otp}*\n\nEnter this code to complete your signup. Valid for 5 minutes.`,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (res.ok) {
+      console.log(`[OTP] WhatsApp message sent via UltraMsg to ${phone}`);
+      return { provider: "ultramsg", status: "sent" };
     }
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(`UltraMsg WhatsApp dispatch failed: ${errData.message || res.statusText}`);
   }
 
-  // 2. Direct WhatsApp dispatch mode (no Service SID required)
-  console.log(`[OTP WhatsApp to +91 ${phone.replace(/\D/g, "")}]: Your AdvocateHub verification code is: ${otp}`);
-  return { provider: "whatsapp-direct", status: "sent", phone };
+  // 2. Twilio WhatsApp API
+  if (twilioSid && twilioAuth && twilioWaFrom) {
+    const rawDigits = phone.replace(/\D/g, "");
+    const waRecipient = `whatsapp:+${rawDigits.startsWith("91") ? rawDigits : `91${rawDigits}`}`;
+    const waFrom = twilioWaFrom.startsWith("whatsapp:") ? twilioWaFrom : `whatsapp:${twilioWaFrom}`;
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${twilioSid}:${twilioAuth}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        To: waRecipient,
+        From: waFrom,
+        Body: `Your AdvocateHub verification code is: ${otp}. Valid for 5 minutes.`,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      console.log(`[OTP] WhatsApp dispatched via Twilio (${data.sid}) to ${phone}`);
+      return { provider: "twilio-whatsapp", status: "sent", messageId: data.sid };
+    }
+    throw new Error(`Twilio WhatsApp dispatch failed: ${data.message || res.statusText}`);
+  }
+
+  throw new Error("WhatsApp OTP service is not configured. Please configure WhatsApp API credentials (ULTRAMSG_INSTANCE_ID and ULTRAMSG_TOKEN) in backend environment variables, or select Email OTP / Admin Approval.");
 }
 
 async function startTwilioPhoneVerification({ phone, channel = "sms" }) {

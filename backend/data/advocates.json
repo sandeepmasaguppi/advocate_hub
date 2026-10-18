@@ -2200,7 +2200,7 @@
     "availability": "Available",
     "bio": "Specialist in divorce, child custody and matrimonial disputes.",
     "avatar": "/uploads/priya-sharma-94.jpg",
-    "status": "pending",
+    "status": "approved",
     "passwordHash": "scrypt$8a6d5fad0fa473128704ba29c87f8339$9f97ac7bb21cde6f5a694bfe68099aac01557871f2a8d83e37fae2f5f87b0ee461e21e60b54bfe0dc8738a79fabb3960b7309270158ee20b0c875c65218d9427",
     "verificationMethod": "admin_approval"
   }

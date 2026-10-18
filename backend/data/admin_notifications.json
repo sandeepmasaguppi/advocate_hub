@@ -1,5 +1,37 @@
 [
   {
+    "id": "NOTIF_1792313508587_yreb0t",
+    "to": "sandeepmasaguppi@gmail.com",
+    "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔔 New Client Registration - SANDEEP REVAPPA MASAGUPPI (Afzalpur)",
+    "text": "New Client Registration on Advocates Hub\n=========================================\nName:          SANDEEP REVAPPA MASAGUPPI\nEmail:         sandeepmasgggaguppi@gmail.com\nPhone:         9108717353\nCity:          Afzalpur\nLegal Issue:   Criminal Law\nStatus:        pending\nRegistered At: 18/10/2026, 2:21:48 pm (IST)\n\nAdmin Portal:  http://localhost:3000/admin",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; }\n    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; margin-bottom: 18px; }\n    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }\n    th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }\n    th { color: #64748b; font-weight: 600; width: 35%; background: #f8fafc; }\n    td { color: #0f172a; font-weight: 500; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub — Admin Alert</h2>\n      <p>Automated notification for account registration</p>\n    </div>\n    <div class=\"content\">\n      <span class=\"badge\">👤 New Client Account</span>\n      <p style=\"margin-top: 0; font-size: 15px; line-height: 1.5;\">\n        A new client has registered on the <strong>Advocates Hub</strong> platform. Here are the details:\n      </p>\n      <table>\n        <tr><th>Full Name</th><td><strong>SANDEEP REVAPPA MASAGUPPI</strong></td></tr>\n        <tr><th>Email Address</th><td><a href=\"mailto:sandeepmasgggaguppi@gmail.com\" style=\"color: #2563eb;\">sandeepmasgggaguppi@gmail.com</a></td></tr>\n        <tr><th>Phone Number</th><td>9108717353</td></tr>\n        <tr><th>City / Location</th><td>Afzalpur</td></tr>\n        <tr><th>Legal Matter</th><td>Criminal Law</td></tr>\n        <tr><th>Account Status</th><td><span style=\"color: #16a34a; font-weight: 600;\">pending</span></td></tr>\n        <tr><th>Registered At</th><td>18/10/2026, 2:21:48 pm IST</td></tr>\n      </table>\n      <div style=\"text-align: center; margin-top: 24px;\">\n        <a href=\"http://localhost:3000/admin\" class=\"btn\">Open Admin Console →</a>\n      </div>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Automated Notification Desk · Sent to sandeepmasaguppi@gmail.com\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "client_registration",
+      "clientId": 13,
+      "email": "sandeepmasgggaguppi@gmail.com"
+    },
+    "timestamp": "2026-10-18T08:51:48.587Z",
+    "delivered": false,
+    "error": "Resend API failed (403): The advocatehub.in domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+  },
+  {
+    "id": "NOTIF_1792313504079_xz0nq1",
+    "to": "sandeepmasaguppi@gmail.com",
+    "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔔 New Client Registration - Sandeep Real Test (Gokak)",
+    "text": "New Client Registration on Advocates Hub\n=========================================\nName:          Sandeep Real Test\nEmail:         sandeep_real_test_99@example.com\nPhone:         9108717353\nCity:          Gokak\nLegal Issue:   Family Law\nStatus:        pending\nRegistered At: 18/10/2026, 2:21:44 pm (IST)\n\nAdmin Portal:  http://localhost:3000/admin",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; }\n    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; margin-bottom: 18px; }\n    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }\n    th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }\n    th { color: #64748b; font-weight: 600; width: 35%; background: #f8fafc; }\n    td { color: #0f172a; font-weight: 500; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub — Admin Alert</h2>\n      <p>Automated notification for account registration</p>\n    </div>\n    <div class=\"content\">\n      <span class=\"badge\">👤 New Client Account</span>\n      <p style=\"margin-top: 0; font-size: 15px; line-height: 1.5;\">\n        A new client has registered on the <strong>Advocates Hub</strong> platform. Here are the details:\n      </p>\n      <table>\n        <tr><th>Full Name</th><td><strong>Sandeep Real Test</strong></td></tr>\n        <tr><th>Email Address</th><td><a href=\"mailto:sandeep_real_test_99@example.com\" style=\"color: #2563eb;\">sandeep_real_test_99@example.com</a></td></tr>\n        <tr><th>Phone Number</th><td>9108717353</td></tr>\n        <tr><th>City / Location</th><td>Gokak</td></tr>\n        <tr><th>Legal Matter</th><td>Family Law</td></tr>\n        <tr><th>Account Status</th><td><span style=\"color: #16a34a; font-weight: 600;\">pending</span></td></tr>\n        <tr><th>Registered At</th><td>18/10/2026, 2:21:44 pm IST</td></tr>\n      </table>\n      <div style=\"text-align: center; margin-top: 24px;\">\n        <a href=\"http://localhost:3000/admin\" class=\"btn\">Open Admin Console →</a>\n      </div>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Automated Notification Desk · Sent to sandeepmasaguppi@gmail.com\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "client_registration",
+      "clientId": 12,
+      "email": "sandeep_real_test_99@example.com"
+    },
+    "timestamp": "2026-10-18T08:51:44.079Z",
+    "delivered": false,
+    "error": "Resend API failed (403): The advocatehub.in domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+  },
+  {
     "id": "NOTIF_1792214886147_7g4wq1",
     "to": "sandeepmasaguppi@gmail.com",
     "from": "\"Sandeep Masaguppi\" <sandeepmasaguppi@gmail.com>",
@@ -13,7 +45,7 @@
     },
     "timestamp": "2026-10-17T05:28:06.147Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792159187683_h3mylp",
@@ -29,7 +61,7 @@
     },
     "timestamp": "2026-10-16T13:59:47.683Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792133189175_o73tqb",
@@ -45,7 +77,7 @@
     },
     "timestamp": "2026-10-16T06:46:29.175Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792132931185_9qlbx1",
@@ -61,7 +93,7 @@
     },
     "timestamp": "2026-10-16T06:42:11.185Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792131445098_pymify",
@@ -77,7 +109,7 @@
     },
     "timestamp": "2026-10-16T06:17:25.098Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792131355073_udj0du",
@@ -93,7 +125,7 @@
     },
     "timestamp": "2026-10-16T06:15:55.073Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792131201398_fodzwd",
@@ -109,7 +141,7 @@
     },
     "timestamp": "2026-10-16T06:13:21.398Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792131162542_ld9v4e",
@@ -125,7 +157,7 @@
     },
     "timestamp": "2026-10-16T06:12:42.542Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1791515101590_u7taal",
@@ -159,7 +191,7 @@
     },
     "timestamp": "2026-10-09T03:03:57.531Z",
     "delivered": false,
-    "error": "getaddrinfo EAI_AGAIN smtp.gmail.com"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1791428207970_mxx6nt",

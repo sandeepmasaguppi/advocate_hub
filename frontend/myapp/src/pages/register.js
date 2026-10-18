@@ -67,6 +67,12 @@ export const ADMIN_ICONS = {
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   ),
+  verified: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  ),
   check: (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20 6L9 17l-5-5" />
@@ -88,18 +94,6 @@ export const ADMIN_ICONS = {
 // ── Helpers ───────────────────────────────────────────────────
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidPhone(p) { return /^\d{10}$/.test(p.replace(/\s|-/g, "")); }
-function formatOtpChannels(channels) {
-  const labels = { email: "Email", sms: "SMS", phone: "SMS", whatsapp: "WhatsApp" };
-  const expanded = channels.flatMap((channel) => channel === "all" ? ["email", "sms"] : [channel]);
-  return expanded.map((channel) => labels[channel] || channel).join(", ");
-}
-function maskPhone(p) {
-  if (!p) return "";
-  const cleaned = p.replace(/\D/g, "");
-  if (cleaned.length <= 4) return cleaned;
-  const last4 = cleaned.slice(-4);
-  return `******${last4}`;
-}
 
 function PwStrength({ pw }) {
   if (!pw) return null;
@@ -155,23 +149,102 @@ function Input({ icon, error, type = "text", rightEl, ...props }) {
 }
 
 // ── Success Screen ────────────────────────────────────────────
-function SuccessScreen({ name, onLogin, channel = "email" }) {
-  const channelLabel = channel === "whatsapp" ? "WhatsApp" : channel === "sms" ? "SMS" : "Email";
+function SuccessScreen({ name, onLogin, channel = "email", isApproved = false, email = "", phone = "", city = "" }) {
+  const isPending = !isApproved || channel === "admin_approval";
+  const channelLabel = channel === "admin_approval"
+    ? "Admin Approval"
+    : channel === "whatsapp"
+    ? "WhatsApp"
+    : channel === "sms"
+    ? "SMS"
+    : "Email";
+
   return (
-    <div className="rg-success">
-      <div className="rg-success-icon">✅</div>
-      <h2 className="rg-success-title">Registration Submitted · Awaiting Admin Approval</h2>
-      <p className="rg-success-msg">
-        Welcome to AdvocateHub, <strong>{name}</strong>!<br />
-        Your identity has been verified via <strong>{channelLabel}</strong>. Your client account has been registered and is currently <strong>awaiting administrator approval</strong>. Once approved, you can log in to book consultations with verified advocates.
-      </p>
-      <div className="rg-success-steps">
-        <div className="rg-ss done">✅ Verified via {channelLabel}</div>
-        <div className="rg-ss done" style={{ color: "#d97706", fontWeight: 700 }}>⏳ Awaiting Administrator Approval</div>
+    <div className="rg-success" style={{ maxWidth: 540, margin: "0 auto", textAlign: "center" }}>
+      <div className="rg-success-icon" style={{ fontSize: "3.2rem", marginBottom: 10 }}>
+        {isPending ? "⏳" : "✅"}
       </div>
-      <button className="rg-btn-primary rg-btn-lg" onClick={onLogin} style={{ marginTop: 20 }}>
-        Go to Client Login →
-      </button>
+      <h2 className="rg-success-title" style={{ fontSize: "1.65rem", marginBottom: 8 }}>
+        {isPending
+          ? "Registration Submitted · Pending Admin Approval"
+          : "Registration Verified & Approved!"}
+      </h2>
+      <p className="rg-success-msg" style={{ fontSize: "0.95rem", lineHeight: 1.6, color: "var(--rg-muted, #94a3b8)", marginBottom: 18 }}>
+        Welcome to AdvocateHub, <strong>{name}</strong>!<br />
+        {isPending ? (
+          "Your registration request has been submitted successfully. Your account will be activated after administrator approval."
+        ) : (
+          <>
+            Your identity has been verified via <strong>{channelLabel}</strong>. Your client account has been <strong>automatically approved and activated</strong>!
+          </>
+        )}
+      </p>
+
+      <div style={{
+        background: isPending ? "rgba(245, 158, 11, 0.08)" : "rgba(16, 185, 129, 0.08)",
+        border: isPending ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid rgba(16, 185, 129, 0.35)",
+        borderRadius: 12,
+        padding: "16px 20px",
+        textAlign: "left",
+        margin: "16px 0 20px",
+        fontSize: "0.88rem"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700, color: isPending ? "#d97706" : "#059669", marginBottom: 10 }}>
+          <span style={{ fontSize: "1.1rem" }}>{isPending ? "⏳" : "✓"}</span>
+          <span>Status: {isPending ? "Awaiting Administrator Approval" : "Account Approved & Active"}</span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px", color: "var(--rg-text, #e2e8f0)", fontSize: "0.85rem" }}>
+          {email && <div style={{ wordBreak: "break-all" }}><strong>Email:</strong> {email}</div>}
+          {phone && <div><strong>Mobile:</strong> {phone}</div>}
+          {city && <div><strong>City:</strong> {city}</div>}
+          <div><strong>Method:</strong> {channelLabel}</div>
+        </div>
+
+        {isPending && (
+          <>
+            <hr style={{ border: 0, borderTop: "1px solid rgba(245, 158, 11, 0.2)", margin: "12px 0 8px" }} />
+            <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--rg-muted, #94a3b8)", lineHeight: 1.5 }}>
+              🛡️ <strong>Admin Verification:</strong> Your registration request is in the administrator approval queue. Once approved, you will be able to log in to your client portal. Check back anytime using your email address.
+            </p>
+          </>
+        )}
+      </div>
+
+      <div className="rg-success-steps" style={{ display: "flex", flexDirection: "column", gap: 8, margin: "14px 0 22px" }}>
+        <div className="rg-ss done">✅ Registration Profile Created</div>
+        <div className="rg-ss done">✅ Channel: {channelLabel}</div>
+        <div className="rg-ss done" style={{ color: isPending ? "#d97706" : "#16a34a", fontWeight: 700 }}>
+          {isPending ? "⏳ Administrator Review (Pending Approval)" : "✅ Administrator Review (Auto-Approved)"}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        {isPending && (
+          <Link
+            to={`/registration-status?email=${encodeURIComponent(email || "")}`}
+            className="rg-btn-secondary"
+            style={{
+              padding: "10px 18px",
+              borderRadius: 8,
+              textDecoration: "none",
+              fontWeight: 600,
+              fontSize: "0.9rem",
+              background: "rgba(59, 130, 246, 0.12)",
+              color: "#3b82f6",
+              border: "1px solid rgba(59, 130, 246, 0.3)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6
+            }}
+          >
+            🔍 Check Live Approval Status
+          </Link>
+        )}
+        <button className="rg-btn-primary" onClick={onLogin} style={{ padding: "10px 20px" }}>
+          {isPending ? "Go to Client Login →" : "Proceed to Client Login →"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -209,7 +282,8 @@ export default function Register() {
   const [showPw, setShowPw]   = useState(false);
   const [showCPw, setShowCPw] = useState(false);
   const [successName, setSuccessName] = useState("");
-  const [isDirectAdmin, setIsDirectAdmin] = useState(false);
+  const [registrationApproved, setRegistrationApproved] = useState(false);
+  const [otpChannel, setOtpChannel] = useState("email"); // "email" | "sms" | "whatsapp" | "admin_approval"
 
   const [client, setClient] = useState({
     fullName: "", email: "", phone: "", password: "", confirmPw: "",
@@ -219,6 +293,7 @@ export default function Register() {
 
   const isStep1Done = Boolean(client.fullName.trim() && isValidPhone(client.phone) && isValidEmail(client.email));
   const isStep2Done = Boolean(client.password && client.password.length >= 6 && client.password === client.confirmPw && client.agreeTerms);
+  const isStep3Done = Boolean(otpChannel);
 
   const validateStep1 = () => {
     const e = {};
@@ -236,14 +311,43 @@ export default function Register() {
     return true;
   };
 
-  const handleNextStep = () => {
+  const validateStep2 = () => {
+    const e = {};
+    if (!client.password) e.password = "Password is required";
+    else if (client.password.length < 6) e.password = "Min 6 characters";
+    if (client.password !== client.confirmPw) e.confirmPw = "Passwords do not match";
+    if (!client.agreeTerms) e.agreeTerms = "Please accept terms of service";
+
+    if (Object.keys(e).length > 0) {
+      setErr((prev) => ({ ...prev, ...e }));
+      showToast("Please complete security & terms agreement", "error");
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextToStep2 = () => {
     if (validateStep1()) {
       setActiveStep(2);
     }
   };
 
-  const handlePrevStep = () => {
+  const handleNextToStep3 = () => {
+    if (!validateStep1()) {
+      setActiveStep(1);
+      return;
+    }
+    if (validateStep2()) {
+      setActiveStep(3);
+    }
+  };
+
+  const handlePrevToStep1 = () => {
     setActiveStep(1);
+  };
+
+  const handlePrevToStep2 = () => {
+    setActiveStep(2);
   };
 
   useEffect(() => {
@@ -270,7 +374,6 @@ export default function Register() {
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpErr, setOtpErr] = useState("");
-  const [otpChannel, setOtpChannel] = useState("email"); // "email" | "sms" | "whatsapp"
   const [resendTimer, setResendTimer] = useState(60);
 
   useEffect(() => {
@@ -292,12 +395,23 @@ export default function Register() {
     if (!client.password) { e.password = "Password is required"; if (!firstErrStep) firstErrStep = 2; }
     else if (client.password.length < 6) { e.password = "Min 6 characters"; if (!firstErrStep) firstErrStep = 2; }
     if (client.password !== client.confirmPw) { e.confirmPw = "Passwords do not match"; if (!firstErrStep) firstErrStep = 2; }
-    if (!client.agreeTerms) { e.agreeTerms = "Please accept terms"; if (!firstErrStep) firstErrStep = 2; }
+    if (!client.agreeTerms) { e.agreeTerms = "Please accept terms of service"; if (!firstErrStep) firstErrStep = 2; }
+
+    if (!otpChannel) {
+      if (!firstErrStep) firstErrStep = 3;
+    }
 
     setErr(e);
     if (firstErrStep) {
       setActiveStep(firstErrStep);
-      showToast(firstErrStep === 1 ? "Please complete personal details" : "Please complete security details", "error");
+      showToast(
+        firstErrStep === 1
+          ? "Please complete personal details"
+          : firstErrStep === 2
+          ? "Please complete security details"
+          : "Please select a verification channel",
+        "error"
+      );
       return false;
     }
     return !Object.keys(e).length;
@@ -351,9 +465,60 @@ export default function Register() {
     }
   };
 
+  const handleDirectAdminSubmit = async () => {
+    setLoading(true);
+    try {
+      const emailLower = client.email.trim().toLowerCase();
+      const res = await fetch(`${API_BASE}/api/clients/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: client.fullName.trim(),
+          email: emailLower,
+          password: client.password,
+          phone: client.phone.trim(),
+          city: client.city,
+          legalIssue: client.legalIssue,
+          verificationMethod: "admin_approval",
+          verificationChannel: "admin_approval",
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const errorMsg = data.message || data.error || "Failed to submit registration request.";
+        showToast(errorMsg, "error");
+        setLoading(false);
+        return;
+      }
+
+      setSuccessName(client.fullName.trim());
+      setRegistrationApproved(false);
+      setView("success");
+      showToast("Registration request submitted! Awaiting administrator approval.", "success");
+
+      // Open live status in a new tab as requested
+      try {
+        const statusUrl = `/registration-status?email=${encodeURIComponent(emailLower)}`;
+        window.open(statusUrl, "_blank");
+      } catch (e) {
+        console.warn("Could not open new tab:", e);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Could not submit registration. Check your connection.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e?.preventDefault();
     if (!validate()) return;
+    if (otpChannel === "admin_approval") {
+      handleDirectAdminSubmit();
+      return;
+    }
     handleSendClientOtp(otpChannel);
   };
 
@@ -386,6 +551,8 @@ export default function Register() {
           city: client.city,
           legalIssue: client.legalIssue,
           otp: cleanCode,
+          verificationMethod: otpChannel,
+          verificationChannel: otpChannel,
         }),
       });
 
@@ -399,11 +566,12 @@ export default function Register() {
         return;
       }
 
-      // Registration successful with pending status
+      // Registration successful and auto-approved
       setSuccessName(client.fullName.trim());
+      setRegistrationApproved(true);
       setOtpStep(false);
       setView("success");
-      showToast("Email verified! Registration successful 🎉", "success");
+      showToast("Verification successful & account auto-approved! 🎉", "success");
     } catch (err) {
       console.error(err);
       setOtpErr("Could not complete registration. Check your connection.");
@@ -422,7 +590,15 @@ export default function Register() {
         </button>
         <Toast toast={toast} />
         <div className="rg-card rg-success-card">
-          <SuccessScreen name={successName} onLogin={goToLogin} isDirectAdmin={isDirectAdmin} channel={otpChannel} />
+          <SuccessScreen
+            name={successName}
+            onLogin={goToLogin}
+            channel={otpChannel}
+            isApproved={registrationApproved}
+            email={client.email}
+            phone={client.phone}
+            city={client.city}
+          />
         </div>
       </div>
     );
@@ -635,7 +811,7 @@ export default function Register() {
         </div>
 
         <form className="rg-form" onSubmit={handleSubmit} noValidate>
-          {/* 2-Step Navigation Tabs Header */}
+          {/* 3-Step Navigation Tabs Header */}
           <div className="rg-step-tabs-nav" role="tablist" aria-label="Registration Steps">
             <button
               type="button"
@@ -668,14 +844,10 @@ export default function Register() {
               role="tab"
               aria-selected={activeStep === 2}
               className={`rg-step-tab-btn ${activeStep === 2 ? "active" : ""} ${isStep2Done ? "completed" : ""}`}
-              onClick={() => {
-                if (validateStep1()) {
-                  setActiveStep(2);
-                }
-              }}
+              onClick={handleNextToStep2}
             >
               <div className="rg-step-tab-indicator">
-                {isStep2Done ? (
+                {isStep2Done && activeStep !== 2 ? (
                   <span className="rg-step-check">{ADMIN_ICONS.check}</span>
                 ) : (
                   <span className="rg-step-num">2</span>
@@ -689,6 +861,32 @@ export default function Register() {
                 <div className="rg-step-tab-sub">Password & Account Terms</div>
               </div>
               {isStep2Done && <span className="rg-step-done-badge">Done</span>}
+            </button>
+
+            <div className="rg-step-tab-connector" />
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeStep === 3}
+              className={`rg-step-tab-btn ${activeStep === 3 ? "active" : ""} ${isStep3Done ? "completed" : ""}`}
+              onClick={handleNextToStep3}
+            >
+              <div className="rg-step-tab-indicator">
+                {isStep3Done && activeStep !== 3 ? (
+                  <span className="rg-step-check">{ADMIN_ICONS.check}</span>
+                ) : (
+                  <span className="rg-step-num">3</span>
+                )}
+              </div>
+              <div className="rg-step-tab-content">
+                <div className="rg-step-tab-title">
+                  <span className="rg-tab-icon">{ADMIN_ICONS.verified}</span>
+                  <span>Verification</span>
+                </div>
+                <div className="rg-step-tab-sub">OTP or Admin Approval</div>
+              </div>
+              {isStep3Done && <span className="rg-step-done-badge">Done</span>}
             </button>
           </div>
 
@@ -770,9 +968,9 @@ export default function Register() {
                 <button
                   type="button"
                   className="rg-btn-next"
-                  onClick={handleNextStep}
+                  onClick={handleNextToStep2}
                 >
-                  <span>Next: Security (2/2)</span>
+                  <span>Next: Security (2/3)</span>
                   {ADMIN_ICONS.arrowRight}
                 </button>
               </div>
@@ -845,19 +1043,167 @@ export default function Register() {
                 <button
                   type="button"
                   className="rg-btn-prev"
-                  onClick={handlePrevStep}
+                  onClick={handlePrevToStep1}
                   disabled={loading}
                 >
                   {ADMIN_ICONS.arrowLeft}
                   <span>Previous: Personal Details</span>
                 </button>
 
+                <button
+                  type="button"
+                  className="rg-btn-next"
+                  onClick={handleNextToStep3}
+                  disabled={loading}
+                >
+                  <span>Next: Verification Channel (3/3)</span>
+                  {ADMIN_ICONS.arrowRight}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Select Verification Channel */}
+          {activeStep === 3 && (
+            <div className="rg-step-body rg-fade-in">
+              <div className="rg-form-section-title">
+                <span className="rg-tab-icon" style={{ marginRight: 6 }}>{ADMIN_ICONS.verified}</span>
+                3. Select Verification Channel
+              </div>
+
+              {/* Select Verification Channel Section */}
+              <div className="rg-verification-channel-section" style={{ margin: "10px 0 20px" }}>
+                <div className="rg-channel-section-header">
+                  <div className="rg-channel-section-title">
+                    <span>🛡️</span>
+                    <h3>Select Verification Channel</h3>
+                  </div>
+                  <p className="rg-channel-section-desc">
+                    Please select one verification method to activate your account. OTP methods are automatically approved upon successful verification.
+                  </p>
+                </div>
+
+                <div className="rg-channel-grid">
+                  {/* Option 1: Email OTP */}
+                  <div
+                    className={`rg-channel-card ${otpChannel === "email" ? "selected" : ""}`}
+                    onClick={() => setOtpChannel("email")}
+                  >
+                    <div className="rg-channel-radio-wrap">
+                      <input
+                        type="radio"
+                        id="client-chan-email"
+                        name="clientOtpChannel"
+                        checked={otpChannel === "email"}
+                        onChange={() => setOtpChannel("email")}
+                      />
+                    </div>
+                    <span className="rg-channel-icon">✉️</span>
+                    <div className="rg-channel-content">
+                      <div className="rg-channel-title">Email OTP Verification</div>
+                      <div className="rg-channel-desc">
+                        Receive a real 6-digit OTP code sent to your registered email address.
+                      </div>
+                      <span className="rg-channel-badge rg-badge-auto">⚡ Auto-Approved</span>
+                    </div>
+                  </div>
+
+                  {/* Option 2: SMS OTP */}
+                  <div
+                    className={`rg-channel-card ${otpChannel === "sms" ? "selected" : ""}`}
+                    onClick={() => setOtpChannel("sms")}
+                  >
+                    <div className="rg-channel-radio-wrap">
+                      <input
+                        type="radio"
+                        id="client-chan-sms"
+                        name="clientOtpChannel"
+                        checked={otpChannel === "sms"}
+                        onChange={() => setOtpChannel("sms")}
+                      />
+                    </div>
+                    <span className="rg-channel-icon">💬</span>
+                    <div className="rg-channel-content">
+                      <div className="rg-channel-title">SMS OTP Verification</div>
+                      <div className="rg-channel-desc">
+                        Receive a real 6-digit OTP code sent via SMS to your mobile.
+                      </div>
+                      <span className="rg-channel-badge rg-badge-auto">⚡ Auto-Approved</span>
+                    </div>
+                  </div>
+
+                  {/* Option 3: WhatsApp OTP */}
+                  <div
+                    className={`rg-channel-card ${otpChannel === "whatsapp" ? "selected" : ""}`}
+                    onClick={() => setOtpChannel("whatsapp")}
+                  >
+                    <div className="rg-channel-radio-wrap">
+                      <input
+                        type="radio"
+                        id="client-chan-whatsapp"
+                        name="clientOtpChannel"
+                        checked={otpChannel === "whatsapp"}
+                        onChange={() => setOtpChannel("whatsapp")}
+                      />
+                    </div>
+                    <span className="rg-channel-icon">🟢</span>
+                    <div className="rg-channel-content">
+                      <div className="rg-channel-title">WhatsApp OTP Verification</div>
+                      <div className="rg-channel-desc">
+                        Receive a real 6-digit OTP code sent directly on WhatsApp.
+                      </div>
+                      <span className="rg-channel-badge rg-badge-auto">⚡ Auto-Approved</span>
+                    </div>
+                  </div>
+
+                  {/* Option 4: Admin Approval */}
+                  <div
+                    className={`rg-channel-card ${otpChannel === "admin_approval" ? "selected" : ""}`}
+                    onClick={() => setOtpChannel("admin_approval")}
+                  >
+                    <div className="rg-channel-radio-wrap">
+                      <input
+                        type="radio"
+                        id="client-chan-admin"
+                        name="clientOtpChannel"
+                        checked={otpChannel === "admin_approval"}
+                        onChange={() => setOtpChannel("admin_approval")}
+                      />
+                    </div>
+                    <span className="rg-channel-icon">🛡️</span>
+                    <div className="rg-channel-content">
+                      <div className="rg-channel-title">Admin Approval</div>
+                      <div className="rg-channel-desc">
+                        Submit request directly for administrator review without OTP.
+                      </div>
+                      <span className="rg-channel-badge rg-badge-admin">⏳ Manual Approval Required</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rg-step-nav-actions">
+                <button
+                  type="button"
+                  className="rg-btn-prev"
+                  onClick={handlePrevToStep2}
+                  disabled={loading}
+                >
+                  {ADMIN_ICONS.arrowLeft}
+                  <span>Previous: Security &amp; Password</span>
+                </button>
+
                 <button type="submit" className="rg-btn-submit" disabled={loading}>
                   {loading ? (
-                    <><span className="rg-spinner" /> Validating details…</>
+                    <><span className="rg-spinner" /> Processing…</>
+                  ) : otpChannel === "admin_approval" ? (
+                    <>
+                      <span>🛡️ Submit for Admin Approval</span>
+                      {ADMIN_ICONS.arrowRight}
+                    </>
                   ) : (
                     <>
-                      <span>Send Verification Code</span>
+                      <span>Verify via {otpChannel === "whatsapp" ? "WhatsApp" : otpChannel === "sms" ? "SMS" : "Email"} OTP</span>
                       {ADMIN_ICONS.arrowRight}
                     </>
                   )}
