@@ -1,5 +1,21 @@
 [
   {
+    "id": "NOTIF_1792346439281_fkznut",
+    "to": "sandeepmasaguppi@gmail.com",
+    "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
+    "subject": "🔔 New Client Registration - Sandeep Direct Client (Gokak)",
+    "text": "New Client Registration on Advocates Hub\n=========================================\nName:          Sandeep Direct Client\nEmail:         sandeep_direct_test_101@example.com\nPhone:         9108717353\nCity:          Gokak\nLegal Issue:   General Legal Inquiry\nStatus:        approved\nRegistered At: 18/10/2026, 11:30:39 pm (IST)\n\nAdmin Portal:  http://localhost:3000/admin",
+    "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }\n    .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }\n    .header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: #ffffff; padding: 24px 30px; }\n    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; color: #f8fafc; }\n    .header p { margin: 0; font-size: 13px; color: #94a3b8; }\n    .content { padding: 28px 30px; }\n    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1d4ed8; margin-bottom: 18px; }\n    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }\n    th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #f1f5f9; }\n    th { color: #64748b; font-weight: 600; width: 35%; background: #f8fafc; }\n    td { color: #0f172a; font-weight: 500; }\n    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }\n    .footer { padding: 16px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <h2>⚖️ Advocates Hub — Admin Alert</h2>\n      <p>Automated notification for account registration</p>\n    </div>\n    <div class=\"content\">\n      <span class=\"badge\">👤 New Client Account</span>\n      <p style=\"margin-top: 0; font-size: 15px; line-height: 1.5;\">\n        A new client has registered on the <strong>Advocates Hub</strong> platform. Here are the details:\n      </p>\n      <table>\n        <tr><th>Full Name</th><td><strong>Sandeep Direct Client</strong></td></tr>\n        <tr><th>Email Address</th><td><a href=\"mailto:sandeep_direct_test_101@example.com\" style=\"color: #2563eb;\">sandeep_direct_test_101@example.com</a></td></tr>\n        <tr><th>Phone Number</th><td>9108717353</td></tr>\n        <tr><th>City / Location</th><td>Gokak</td></tr>\n        <tr><th>Legal Matter</th><td>General Legal Inquiry</td></tr>\n        <tr><th>Account Status</th><td><span style=\"color: #16a34a; font-weight: 600;\">approved</span></td></tr>\n        <tr><th>Registered At</th><td>18/10/2026, 11:30:39 pm IST</td></tr>\n      </table>\n      <div style=\"text-align: center; margin-top: 24px;\">\n        <a href=\"http://localhost:3000/admin\" class=\"btn\">Open Admin Console →</a>\n      </div>\n    </div>\n    <div class=\"footer\">\n      Advocates Hub Automated Notification Desk · Sent to sandeepmasaguppi@gmail.com\n    </div>\n  </div>\n</body>\n</html>",
+    "meta": {
+      "type": "client_registration",
+      "clientId": 15,
+      "email": "sandeep_direct_test_101@example.com"
+    },
+    "timestamp": "2026-10-18T18:00:39.281Z",
+    "delivered": false,
+    "error": "Resend API failed (403): The advocatehub.in domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+  },
+  {
     "id": "NOTIF_1792313508587_yreb0t",
     "to": "sandeepmasaguppi@gmail.com",
     "from": "\"Advocates Hub\" <advocatehub.in@gmail.com>",
@@ -13,7 +29,7 @@
     },
     "timestamp": "2026-10-18T08:51:48.587Z",
     "delivered": false,
-    "error": "Resend API failed (403): The advocatehub.in domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792313504079_xz0nq1",
@@ -29,7 +45,7 @@
     },
     "timestamp": "2026-10-18T08:51:44.079Z",
     "delivered": false,
-    "error": "Resend API failed (403): The advocatehub.in domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792214886147_7g4wq1",

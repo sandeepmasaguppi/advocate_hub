@@ -906,41 +906,13 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   const password = payload.password || "client123";
   if (String(password).length < 6) throw new HttpError(400, "Password must be at least 6 characters");
 
-  const channel = String(payload.verificationMethod || payload.verificationChannel || payload.channel || payload.method || "email_otp")
-    .toLowerCase()
-    .trim()
-    .replace(/[-\s]/g, "_");
-  const isAdminApproval =
-    channel === "admin_approval" ||
-    channel === "admin" ||
-    channel === "approval" ||
-    channel === "manual" ||
-    channel === "manual_approval";
-  let finalStatus = "pending";
-  let approvalStatus = "pending";
-
-  if (byAdmin) {
-    finalStatus = payload.status || "approved";
-    approvalStatus = finalStatus;
-  } else if (isAdminApproval) {
-    // Admin Approval: No OTP required, submitted directly for administrator review
-    finalStatus = "pending";
-    approvalStatus = "pending_admin_approval";
-  } else {
-    // OTP verification (Email / SMS / WhatsApp)
-    if (!payload.otp) {
-      throw new HttpError(400, "A 6-digit verification code is required to complete registration");
-    }
-    await verifyOtpCode(email, payload.otp);
-    // Automatic approval for successful OTP verification!
-    finalStatus = "approved";
-    approvalStatus = "approved";
-  }
-
   const list = loadClients();
   if (list.some((c) => normalizeEmail(c.email) === email)) throw new HttpError(409, "An account with this email already exists");
 
   const now = new Date().toISOString();
+  const finalStatus = "approved";
+  const approvalStatus = "approved";
+
   const record = {
     id: nextId(list),
     name: String(payload.name).trim(),
@@ -950,23 +922,21 @@ async function registerClient(payload, { byAdmin = false } = {}) {
     legalIssue: payload.legalIssue || "",
     passwordHash: hashPassword(password),
     sessionVersion: 0,
-    verificationMethod: byAdmin ? "admin" : (isAdminApproval ? "admin_approval" : (payload.verificationChannel || payload.channel || "email_otp")),
-    emailVerified: !isAdminApproval && !byAdmin,
-    emailVerifiedAt: (!isAdminApproval && !byAdmin) ? now : null,
+    verificationMethod: byAdmin ? "admin" : (payload.verificationMethod || payload.verificationChannel || "direct"),
+    emailVerified: true,
+    emailVerifiedAt: now,
     status: finalStatus,
     approvalStatus: approvalStatus,
+    approvedAt: now,
+    approvedBy: byAdmin ? "admin" : "direct_registration",
     createdAt: now,
   };
-  if (finalStatus === "approved") {
-    record.approvedAt = now;
-    record.approvedBy = byAdmin ? "admin" : "system_auto_otp";
-  }
 
   list.push(record);
   saveClients(list);
 
-  if (!byAdmin && finalStatus === "pending") {
-    // Automated notification dispatched to admin team at advocatehub.in@gmail.com
+  if (!byAdmin) {
+    // Notify admin of new client registration
     notifyAdminNewClient(record).catch((err) => {
       console.warn("[AdminAlert] Client notification dispatch error:", err?.message || err);
     });
@@ -1085,9 +1055,9 @@ function getAdminRegistrationRequests() {
       phone: c.phone || "",
       city: c.city || "",
       legalIssue: c.legalIssue || "",
-      verificationMethod: c.verificationMethod || (c.status === "approved" ? "email_otp" : "admin_approval"),
+      verificationMethod: c.verificationMethod || "direct",
       status: c.status || "approved",
-      approvalStatus: c.approvalStatus || (c.status === "approved" ? "approved" : "pending_admin_approval"),
+      approvalStatus: c.approvalStatus || "approved",
       rejectionReason: c.rejectionReason || null,
       createdAt: c.createdAt || null,
       approvedAt: c.approvedAt || null,
