@@ -537,7 +537,7 @@ async function getRegistrationOtpsCollection() {
  * Stores a hashed registration OTP in MongoDB (and in-memory fallback).
  * Invalides previous active OTPs for this email as superseded.
  */
-async function storeRegistrationOtp({ email, otp, role, name }) {
+async function storeRegistrationOtp({ email, otp, role, name, phone, channel }) {
   const normEmail = normalizeEmail(email);
   const otpHash = hashOtp(otp, normEmail);
   const now = new Date();
@@ -548,6 +548,8 @@ async function storeRegistrationOtp({ email, otp, role, name }) {
     otpHash,
     role: role === "advocate" ? "advocate" : "client",
     name: String(name || "").trim(),
+    phone: String(phone || "").trim(),
+    channel: String(channel || "email").toLowerCase(),
     attempts: 0,
     maxAttempts: OTP_MAX_ATTEMPTS,
     consumed: false,
@@ -726,6 +728,12 @@ async function handleSendOtp(payload) {
 
   const name = String(payload.name || "User").trim();
   const role = payload.role === "advocate" ? "advocate" : "client";
+  const channel = String(payload.channel || "email").toLowerCase();
+  const phone = String(payload.phone || "").trim();
+
+  if ((channel === "sms" || channel === "whatsapp") && !phone) {
+    throw new HttpError(400, `A valid mobile number is required to receive verification code via ${channel === "whatsapp" ? "WhatsApp" : "SMS"}`);
+  }
 
   // Prevent duplicate registration for existing accounts
   if (role === "client") {
@@ -738,12 +746,13 @@ async function handleSendOtp(payload) {
     }
   }
 
-  // 60-second rate-limiting cooldown per email
+  // 60-second rate-limiting cooldown per recipient
   const now = Date.now();
   for (const [key, timestamp] of otpSendTimestamps) {
     if (now - timestamp >= OTP_SEND_COOLDOWN_MS) otpSendTimestamps.delete(key);
   }
-  const cooldownKey = `email:${email}`;
+  const recipientTarget = channel === "email" ? email : phone.replace(/\D/g, "");
+  const cooldownKey = `${channel}:${recipientTarget}`;
   const sentAt = otpSendTimestamps.get(cooldownKey);
   if (sentAt && now - sentAt < OTP_SEND_COOLDOWN_MS) {
     const remainingSec = Math.ceil((OTP_SEND_COOLDOWN_MS - (now - sentAt)) / 1000);
@@ -753,34 +762,56 @@ async function handleSendOtp(payload) {
   // Generate cryptographically secure 6-digit numeric OTP
   const otp = generateOtpCode();
 
-  // Send real email verification via Resend Node SDK / REST fallback
-  try {
-    await sendOtpEmail({ to: email, otp, name, role });
-  } catch (emailErr) {
-    console.error(`[OTP] Failed to deliver verification email to ${email}:`, emailErr.message);
-    const msg = emailErr.message || "";
-    if (msg.toLowerCase().includes("not verified")) {
-      throw new HttpError(
-        503,
-        "Email delivery domain (advocatehub.in) is pending DNS verification on Resend. Please ensure the 3 DNS records are added at your domain registrar."
-      );
+  // Send real verification code via chosen channel
+  const channelLabel = channel === "whatsapp" ? "WhatsApp" : channel === "sms" ? "SMS" : "Email";
+
+  if (channel === "sms") {
+    try {
+      await sendSmsOtp({ phone, otp });
+    } catch (smsErr) {
+      console.error(`[OTP] Failed to deliver SMS OTP to ${phone}:`, smsErr.message);
+      throw new HttpError(500, `Failed to send SMS code: ${smsErr.message}`);
     }
-    throw new HttpError(500, `Failed to deliver verification code: ${msg}`);
+  } else if (channel === "whatsapp") {
+    try {
+      await sendWhatsappOtp({ phone, otp });
+    } catch (waErr) {
+      console.error(`[OTP] Failed to deliver WhatsApp OTP to ${phone}:`, waErr.message);
+      throw new HttpError(500, `Failed to send WhatsApp code: ${waErr.message}`);
+    }
+  } else {
+    // Default: Email via Resend / SMTP fallback
+    try {
+      await sendOtpEmail({ to: email, otp, name, role });
+    } catch (emailErr) {
+      console.error(`[OTP] Failed to deliver verification email to ${email}:`, emailErr.message);
+      const msg = emailErr.message || "";
+      if (msg.toLowerCase().includes("not verified")) {
+        throw new HttpError(
+          503,
+          "Email delivery domain (advocatehub.in) is pending DNS verification on Resend. You can also select SMS or WhatsApp to verify instantly."
+        );
+      }
+      throw new HttpError(500, `Failed to deliver verification code: ${msg}`);
+    }
   }
 
   // Store hashed OTP in MongoDB (collection: registration_otps)
-  await storeRegistrationOtp({ email, otp, role, name });
+  await storeRegistrationOtp({ email, otp, role, name, phone, channel });
 
   // Update cooldown timestamp
   otpSendTimestamps.set(cooldownKey, Date.now());
 
-  console.log(`[OTP] 6-digit registration verification code sent to ${email} (Role: ${role})`);
+  const formattedTarget = channel === "email" ? email : `+91 ${phone.replace(/\D/g, "").slice(-10)}`;
+  console.log(`[OTP] 6-digit registration verification code sent to ${formattedTarget} via ${channelLabel} (Role: ${role})`);
 
   return {
     success: true,
-    channel: "email",
+    channel,
     email,
-    message: `A 6-digit verification code has been sent to ${email}. Valid for 5 minutes.`,
+    phone,
+    target: formattedTarget,
+    message: `A 6-digit verification code has been sent via ${channelLabel} to ${formattedTarget}. Valid for 5 minutes.`,
   };
 }
 

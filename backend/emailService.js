@@ -221,6 +221,26 @@ async function deliverEmail(message) {
           return { provider: "resend", messageId: fallbackResult.id, fallback: true };
         }
       }
+
+      // If Resend failed (e.g. domain is still pending DNS verification), fall back to SMTP seamlessly
+      const transporter = getTransporter();
+      if (transporter) {
+        console.warn(`[EmailService] Resend delivery pending domain verification (${errDetail}). Falling back seamlessly to SMTP transport...`);
+        try {
+          const info = await transporter.sendMail({
+            from: process.env.SMTP_FROM || `"AdvocateHub" <${process.env.SMTP_USER}>`,
+            replyTo: message.replyTo || getEmailReplyTo(),
+            to: message.to,
+            subject: message.subject,
+            text: message.text,
+            html: message.html,
+          });
+          return { provider: "smtp", messageId: info.messageId, fallback: true };
+        } catch (smtpErr) {
+          console.error(`[EmailService] SMTP fallback failed:`, smtpErr.message);
+        }
+      }
+
       throw new Error(`Resend API failed (${response.status}): ${errDetail}`);
     }
     return { provider: "resend", messageId: result.id };

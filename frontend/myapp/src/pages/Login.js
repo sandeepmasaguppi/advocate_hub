@@ -182,7 +182,34 @@ export default function Login() {
           </Link>
         </div>
 
-        {err && <p className="am-err">⚠ {err}</p>}
+        {err && (
+          (err.toLowerCase().includes("awaiting admin approval") || err.toLowerCase().includes("pending") || err.toLowerCase().includes("admin approval")) ? (
+            <div style={{
+              background: "rgba(245, 158, 11, 0.12)",
+              border: "1px solid rgba(245, 158, 11, 0.4)",
+              borderRadius: 10,
+              padding: "12px 14px",
+              margin: "12px 0 16px",
+              textAlign: "left",
+              fontSize: "0.86rem",
+              color: "#d97706",
+              lineHeight: 1.5,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, marginBottom: 4, color: "#b45309" }}>
+                <span>⏳</span>
+                <span>Account Awaiting Administrator Approval</span>
+              </div>
+              <div style={{ color: theme === "dark" ? "#fde68a" : "#78350f" }}>
+                Your registration has been verified and is currently awaiting administrator approval. Our team manually reviews all Bar Council IDs before granting portal access.
+              </div>
+              <div style={{ marginTop: 6, fontSize: "0.8rem", color: theme === "dark" ? "#fbbf24" : "#92400e" }}>
+                For expedited review, contact: <strong>advocatehub.in@gmail.com</strong>
+              </div>
+            </div>
+          ) : (
+            <p className="am-err">⚠ {err}</p>
+          )
+        )}
 
         <button type="submit" className="am-btn-primary" disabled={loading}>
           {loading ? "Signing in…" : "Login to Advocate Portal →"}
