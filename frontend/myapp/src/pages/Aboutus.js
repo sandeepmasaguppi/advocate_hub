@@ -95,7 +95,6 @@ const PILLARS = [
   }
 ];
 
-// ── Leadership Team Data (Clean, Client-Friendly Format) ──
 const TEAM = [
   {
     id: "chetan",
