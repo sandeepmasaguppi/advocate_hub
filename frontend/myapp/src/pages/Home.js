@@ -266,21 +266,25 @@ const STATS_KN = [
 
 const FOOTER_LINKS = {
   "Privacy Policy": "/privacy",
-  "Terms of Use": "/terms",
+  "Terms and Conditions": "/terms-and-conditions",
+  "Terms of Use": "/terms-and-conditions",
   "Contact Us": "/Contact",
   "About Us": "/aboutus",
   "Partners": "/partners",
+  "Download App": "/download",
   "Lawyer Signup": "/signup",
   "ಗೌಪ್ಯತೆ ನೀತಿ": "/privacy",
-  "ಬಳಕೆಯ ನಿಯಮಗಳು": "/terms",
+  "ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು": "/terms-and-conditions",
+  "ಬಳಕೆಯ ನಿಯಮಗಳು": "/terms-and-conditions",
   "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ": "/Contact",
   "ನಮ್ಮ ಬಗ್ಗೆ": "/aboutus",
   "ಪಾಲುದಾರರು": "/partners",
+  "ಆ್ಯಪ್ ಡೌನ್‌ಲೋಡ್": "/download",
   "ವಕೀಲರ ನೋಂದಣಿ": "/signup",
 };
 
-const FOOTER_ITEMS_EN = ["Privacy Policy", "Terms of Use", "Contact Us", "About Us", "Partners", "Lawyer Signup"];
-const FOOTER_ITEMS_KN = ["ಗೌಪ್ಯತೆ ನೀತಿ", "ಬಳಕೆಯ ನಿಯಮಗಳು", "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ", "ನಮ್ಮ ಬಗ್ಗೆ", "ಪಾಲುದಾರರು", "ವಕೀಲರ ನೋಂದಣಿ"];
+const FOOTER_ITEMS_EN = ["Terms and Conditions", "Privacy Policy", "Contact Us", "About Us", "Partners", "Download App", "Lawyer Signup"];
+const FOOTER_ITEMS_KN = ["ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು", "ಗೌಪ್ಯತೆ ನೀತಿ", "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ", "ನಮ್ಮ ಬಗ್ಗೆ", "ಪಾಲುದಾರರು", "ಆ್ಯಪ್ ಡೌನ್‌ಲೋಡ್", "ವಕೀಲರ ನೋಂದಣಿ"];
 
 // Read through advocatesStore (not raw advocates.json) so ids stay
 // consistent with Login.js / AdvocateDashboard.js / Profile.js.
@@ -478,6 +482,7 @@ export default function Home() {
               </div>
             ))}
           </div>
+
           <div className="lw-talk-row">
             <button className="lw-btn-primary lw-btn-lg" onClick={() => navigate("/find-lawyer")}>
               {isKn ? "💬 ಎಲ್ಲಾ ವಕೀಲರನ್ನು ನೋಡಿ ಮತ್ತು ಸಮಾಲೋಚಿಸಿ" : "💬 Explore All Lawyers & Consult Now"}
@@ -530,12 +535,13 @@ export default function Home() {
                     }
                   }}
                 >
+                  <div className="lw-how-card-watermark">{step.step}</div>
                   <div className="lw-how-card-top">
                     <div className="lw-how-icon-box">
                       <span className="lw-how-svg-icon">{step.icon}</span>
                     </div>
                     <div className="lw-how-badge-group">
-                      <span className="lw-how-step-num">{step.step}</span>
+                      <span className="lw-how-step-num">{isKn ? `ಹಂತ ${step.step}` : `Step ${step.step}`}</span>
                       <span className="lw-how-badge">
                         <span className="lw-how-emoji">{step.emoji}</span>
                         <span>{step.tag}</span>

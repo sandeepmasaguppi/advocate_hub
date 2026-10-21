@@ -668,6 +668,19 @@ export default function Navbar() {
 
                 <div className="lw-profile-dropdown-divider" />
 
+                {/* Row: Download Apps */}
+                <div className="lw-profile-link-row">
+                  <Link to="/download" className="lw-profile-dropdown-link" style={{ textDecoration: "none" }} onClick={handleLinkClick}>
+                    <div className="lw-pdl-left">
+                      <span className="lw-pml-icon">📱</span>
+                      <span>{isKn ? "ಆ್ಯಪ್ ಡೌನ್‌ಲೋಡ್ (Android & iOS)" : "Download Apps (Android & iOS)"}</span>
+                    </div>
+                    <span className="lw-pdl-arrow">{NAV_ICONS.arrowRight}</span>
+                  </Link>
+                </div>
+
+                <div className="lw-profile-dropdown-divider" />
+
                 {/* Row 3: Sign Up (Create Account) */}
                 <div className="lw-profile-link-row">
                   <Link to="/signup" className="lw-profile-dropdown-link" style={{ textDecoration: "none" }} onClick={handleLinkClick}>

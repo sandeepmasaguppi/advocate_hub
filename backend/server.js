@@ -252,6 +252,8 @@ function toPublicDirectoryRecord(advocate) {
       ? advocate.practiceAreas
       : [advocate.speciality || advocate.practiceArea].filter(Boolean),
     status: "pending",
+    approvalStatus: "pending",
+    verified: false,
   };
 }
 
@@ -473,7 +475,7 @@ function buildAdvocateRecord(payload, id, status) {
     court: payload.court || "",
     city: payload.city || payload.taluk || payload.district || "",
     barCouncil: payload.barCouncil || "",
-    barId: payload.barId || "",
+    barId: payload.barId ? String(payload.barId).trim().toUpperCase() : "",
     experience: payload.experience || "",
     rating: Number(payload.rating) || 0,
     cases: Number(payload.cases) || 0,
@@ -555,6 +557,7 @@ async function storeRegistrationOtp({ email, otp, role, name, phone, channel }) 
     consumed: false,
     superseded: false,
     createdAt: now,
+
     expiresAt,
   };
 
@@ -830,6 +833,24 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
   if (!String(payload.name || "").trim()) throw new HttpError(400, "Name is required");
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   if (!byAdmin && String(payload.password || "").length < 6) throw new HttpError(400, "Password must be at least 6 characters");
+  if (!byAdmin) {
+    const termsAccepted = payload.termsAccepted === true || payload.agreeTerms === true;
+    if (!termsAccepted) {
+      throw new HttpError(400, "You must read and agree to the Terms and Conditions and Privacy Policy to register as an advocate.");
+    }
+  }
+
+  const barIdClean = String(payload.barId || "").trim().toUpperCase();
+  if (!byAdmin) {
+    if (!barIdClean) {
+      throw new HttpError(400, "Bar enrollment number is required");
+    }
+    if (!/^[A-Z]{3}\/\d{4}\/\d{4}$/.test(barIdClean)) {
+      throw new HttpError(400, "Bar enrollment number must be in KAR/1424/2016 format (e.g. KAR/1424/2016)");
+    }
+  }
+
+
 
   const channel = String(payload.verificationMethod || payload.verificationChannel || payload.channel || payload.method || "email_otp")
     .toLowerCase()
@@ -875,6 +896,9 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
   record.emailVerified = !isAdminApproval && !byAdmin;
   record.emailVerifiedAt = (!isAdminApproval && !byAdmin) ? now : null;
   record.createdAt = now;
+  record.termsAccepted = !byAdmin ? true : Boolean(payload.termsAccepted);
+  record.termsAcceptedAt = !byAdmin ? now : (payload.termsAccepted ? now : null);
+  record.termsVersion = String(payload.termsVersion || "1.0");
   if (finalStatus === "approved") {
     record.approvedAt = now;
     record.approvedBy = byAdmin ? "admin" : "system_auto_otp";
@@ -905,6 +929,14 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   const password = payload.password || "client123";
   if (String(password).length < 6) throw new HttpError(400, "Password must be at least 6 characters");
+  if (!byAdmin) {
+    const termsAccepted = payload.termsAccepted === true || payload.agreeTerms === true;
+    if (!termsAccepted) {
+      throw new HttpError(400, "You must read and agree to the Terms and Conditions and Privacy Policy to complete client registration.");
+    }
+  }
+
+
 
   const list = loadClients();
   if (list.some((c) => normalizeEmail(c.email) === email)) throw new HttpError(409, "An account with this email already exists");
@@ -929,7 +961,11 @@ async function registerClient(payload, { byAdmin = false } = {}) {
     approvalStatus: approvalStatus,
     approvedAt: now,
     approvedBy: byAdmin ? "admin" : "direct_registration",
+    termsAccepted: !byAdmin ? true : Boolean(payload.termsAccepted),
+    termsAcceptedAt: !byAdmin ? now : (payload.termsAccepted ? now : null),
+    termsVersion: String(payload.termsVersion || "1.0"),
     createdAt: now,
+
   };
 
   list.push(record);
@@ -1266,6 +1302,13 @@ function updateAdvocate(id, payload) {
   const email = payload.email !== undefined ? normalizeEmail(payload.email) : current.email;
   if (!isValidEmail(email)) throw new HttpError(400, "A valid email is required");
   if (list.some((a, i) => i !== index && normalizeEmail(a.email) === email)) throw new HttpError(409, "Email already in use");
+
+  if (payload.barId !== undefined && String(payload.barId).trim()) {
+    const barIdClean = String(payload.barId).trim().toUpperCase();
+    if (!/^[A-Z]{3}\/\d{4}\/\d{4}$/.test(barIdClean)) {
+      throw new HttpError(400, "Bar enrollment number must be in KAR/1424/2016 format (e.g. KAR/1424/2016)");
+    }
+  }
 
   const merged = { ...current, ...buildAdvocateRecord({ ...current, ...payload, email }, current.id, payload.status || current.status) };
   merged.passwordHash = payload.password ? hashPassword(payload.password) : current.passwordHash;

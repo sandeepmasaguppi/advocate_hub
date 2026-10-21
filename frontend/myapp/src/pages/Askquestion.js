@@ -10,38 +10,39 @@ import { useNavigate } from "react-router-dom";
 import { getTheme } from "../data/themeStore";
 import { getAdvocates } from "../data/Advocatesstore";
 import { addQuestion } from "../data/QuestionStore";
+import LegalIcon from "../components/LegalIcons";
 import "./Askquestion.css";
 
 export const CATEGORIES_EN = [
-  { id: "family",     icon: "👨‍👩‍👧", label: "Family Law",      sub: "Divorce, custody, maintenance" },
-  { id: "criminal",   icon: "🔒",      label: "Criminal Law",    sub: "FIR, bail, arrest, POCSO" },
-  { id: "property",   icon: "🏠",      label: "Property Law",    sub: "Dispute, title, RERA" },
-  { id: "civil",      icon: "⚖️",      label: "Civil Law",       sub: "Suits, injunction, recovery" },
-  { id: "corporate",  icon: "🏢",      label: "Corporate Law",   sub: "Company, compliance, GST" },
-  { id: "tax",        icon: "💰",      label: "Tax Law",         sub: "Income tax, GST, returns" },
-  { id: "labour",     icon: "👷",      label: "Labour Law",      sub: "Termination, PF, ESIC" },
-  { id: "consumer",   icon: "📦",      label: "Consumer Law",    sub: "Refund, product, e-commerce" },
-  { id: "cyber",      icon: "💻",      label: "Cyber Law",       sub: "Online fraud, IT Act" },
-  { id: "immigration",icon: "✈️",      label: "Immigration",     sub: "Visa, OCI, citizenship" },
-  { id: "banking",    icon: "🏦",      label: "Banking Law",     sub: "SARFAESI, DRT, fraud" },
-  { id: "other",      icon: "📋",      label: "Other Matters",   sub: "Any other legal issue" },
+  { id: "family",      iconName: "relationship", label: "Family Law",        sub: "Divorce, child custody, maintenance & domestic disputes" },
+  { id: "criminal",    iconName: "lock",         label: "Criminal Law",      sub: "FIR, anticipatory bail, arrest, police complaints & BNSS" },
+  { id: "property",    iconName: "home",         label: "Property Law",      sub: "Land dispute, partition, title deed, mutation & RERA" },
+  { id: "civil",       iconName: "scale",        label: "Civil Law",         sub: "Recovery suits, injunctions, damages & breach of contract" },
+  { id: "corporate",   iconName: "briefcase",    label: "Corporate Law",     sub: "Company incorporation, founder agreements & startup compliance" },
+  { id: "tax",         iconName: "fees",         label: "Tax Law",           sub: "Income tax notices, GST assessments, audits & appeals" },
+  { id: "labour",      iconName: "client",       label: "Labour & Service",  sub: "Wrongful termination, PF, gratuity, salary & harassment" },
+  { id: "consumer",    iconName: "shieldCheck",  label: "Consumer Rights",   sub: "Defective goods, e-commerce refunds & service deficiency" },
+  { id: "cyber",       iconName: "settings",     label: "Cyber Crime",       sub: "Online financial fraud, account hacking & IT Act complaints" },
+  { id: "immigration", iconName: "availability", label: "Immigration",       sub: "Visa rejections, passport delays, OCI & deportation issues" },
+  { id: "banking",     iconName: "fees",         label: "Banking & Cheques", sub: "Section 138 cheque bounce, loan recovery, SARFAESI & DRT" },
+  { id: "other",       iconName: "documents",    label: "Other Matters",     sub: "Affidavits, legal notices, wills & general legal queries" },
 ];
 
 export const CATEGORIES = CATEGORIES_EN;
 
 export const CATEGORIES_KN = [
-  { id: "family",     icon: "👨‍👩‍👧", label: "ಕೌಟುಂಬಿಕ ಕಾನೂನು",  sub: "ವಿಚ್ಛೇದನ, ಮಗುವಿನ ಪಾಲನೆ, ಜೀವನಾಂಶ" },
-  { id: "criminal",   icon: "🔒",      label: "ಕ್ರಿಮಿನಲ್ ಕಾನೂನು",   sub: "ಎಫ್‌ಐಆರ್, ಜಾಮೀನು, ಬಂಧನ, ಪೋಕ್ಸೋ" },
-  { id: "property",   icon: "🏠",      label: "ಆಸ್ತಿ ಕಾನೂನು",      sub: "ಆಸ್ತಿ ವಿವಾದ, ಹಕ್ಕುಪತ್ರ, ರೇರಾ" },
-  { id: "civil",      icon: "⚖️",      label: "ಸಿವಿಲ್ ಕಾನೂನು",     sub: "ಸಿವಿಲ್ ದಾವೆಗಳು, ತಡೆಯಾಜ್ಞೆ, ವಸೂಲಾತಿ" },
-  { id: "corporate",  icon: "🏢",      label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು", sub: "ಕಂಪನಿ ಕಾಯ್ದೆ, ಜಿಎಸ್‌ಟಿ, ಒಪ್ಪಂದಗಳು" },
-  { id: "tax",        icon: "💰",      label: "ತೆರಿಗೆ ಕಾನೂನು",     sub: "ಆದಾಯ ತೆರಿಗೆ, ಜಿಎಸ್‌ಟಿ ರಿಟರ್ನ್ಸ್" },
-  { id: "labour",     icon: "👷",      label: "ಕಾರ್ಮಿಕ ಕಾನೂನು",    sub: "ಉದ್ಯೋಗ ವಿವಾದ, ಪಿಎಫ್, ಇಎಸ್‌ಐ" },
-  { id: "consumer",   icon: "📦",      label: "ಗ್ರಾಹಕ ಕಾನೂನು",     sub: "ರೀಫಂಡ್, ದೋಷಯುಕ್ತ ಸೇವೆ, ಗ್ರಾಹಕ ವೇದಿಕೆ" },
-  { id: "cyber",      icon: "💻",      label: "ಸೈಬರ್ ಕಾನೂನು",      sub: "ಆನ್‌ಲೈನ್ ವಂಚನೆ, ಐಟಿ ಕಾಯ್ದೆ" },
-  { id: "immigration",icon: "✈️",      label: "ವಲಸೆ / ಇಮಿಗ್ರೇಷನ್", sub: "ವೀಸಾ, ಓಸಿಐ, ಪಾಸ್‌ಪೋರ್ಟ್" },
-  { id: "banking",    icon: "🏦",      label: "ಬ್ಯಾಂಕಿಂಗ್ ಕಾನೂನು",   sub: "ಸರ್ಫೇಸಿ, ಸಾಲ ವಸೂಲಾತಿ, ಚೆಕ್ ಬೌನ್ಸ್" },
-  { id: "other",      icon: "📋",      label: "ಇತರ ವಿಷಯಗಳು",       sub: "ಯಾವುದೇ ಇತರ ಕಾನೂನು ಸಮಸ್ಯೆ" },
+  { id: "family",      iconName: "relationship", label: "ಕೌಟುಂಬಿಕ ಕಾನೂನು",    sub: "ವಿಚ್ಛೇದನ, ಮಗುವಿನ ಪಾಲನೆ, ಜೀವನಾಂಶ ಮತ್ತು ಕೌಟುಂಬಿಕ ವಿವಾದ" },
+  { id: "criminal",    iconName: "lock",         label: "ಕ್ರಿಮಿನಲ್ ಕಾನೂನು",     sub: "ಎಫ್‌ಐಆರ್, ನಿರೀಕ್ಷಣಾ ಜಾಮೀನು, ಬಂಧನ, ಪೊಲೀಸ್ ದೂರು ಮತ್ತು BNSS" },
+  { id: "property",    iconName: "home",         label: "ಆಸ್ತಿ ಕಾನೂನು",        sub: "ಆಸ್ತಿ ವಿವಾದ, ಭಾಗಪತ್ರ, ಖಾತಾ ಬದಲಾವಣೆ, ಹಕ್ಕುಪತ್ರ ಮತ್ತು ರೇರಾ" },
+  { id: "civil",       iconName: "scale",        label: "ಸಿವಿಲ್ ಕಾನೂನು",       sub: "ಸಿವಿಲ್ ದಾವೆಗಳು, ತಡೆಯಾಜ್ಞೆ, ಒಪ್ಪಂದ ಉಲ್ಲಂಘನೆ ಮತ್ತು ವಸೂಲಾತಿ" },
+  { id: "corporate",   iconName: "briefcase",    label: "ಕಾರ್ಪೊರೇಟ್ ಕಾನೂನು",   sub: "ಕಂಪನಿ ಸ್ಥಾಪನೆ, ಪಾಲುದಾರಿಕೆ ಒಪ್ಪಂದ ಮತ್ತು ನಿಯಮಗಳ ಪಾಲನೆ" },
+  { id: "tax",         iconName: "fees",         label: "ತೆರಿಗೆ ಕಾನೂನು",       sub: "ಆದಾಯ ತೆರಿಗೆ ನೋಟಿಸ್, ಜಿಎಸ್‌ಟಿ ತಪಾಸಣೆ ಮತ್ತು ಮೇಲ್ಮನವಿ" },
+  { id: "labour",      iconName: "client",       label: "ಕಾರ್ಮಿಕ & ಸೇವಾ ಕಾನೂನು",sub: "ಉದ್ಯೋಗ ವಜಾ, ವೇತನ ಬಾಕಿ, ಪಿಎಫ್ ಮತ್ತು ಕೆಲಸದ ಸ್ಥಳದ ಸಮಸ್ಯೆ" },
+  { id: "consumer",    iconName: "shieldCheck",  label: "ಗ್ರಾಹಕ ರಕ್ಷಣೆ",        sub: "ದೋಷಯುಕ್ತ ಉತ್ಪನ್ನ, ಇ-ಕಾಮರ್ಸ್ ವಂಚನೆ ಮತ್ತು ಪರಿಹಾರ" },
+  { id: "cyber",       iconName: "settings",     label: "ಸೈಬರ್ ಅಪರಾಧ",        sub: "ಆನ್‌ಲೈನ್ ಹಣಕಾಸು ವಂಚನೆ, ಖಾತೆ ಹ್ಯಾಕಿಂಗ್ ಮತ್ತು ಐಟಿ ಕಾಯ್ದೆ" },
+  { id: "immigration", iconName: "availability", label: "ವಲಸೆ & ಪಾಸ್‌ಪೋರ್ಟ್",   sub: "ವೀಸಾ ನಿರಾಕರಣೆ, ಪಾಸ್‌ಪೋರ್ಟ್ ವಿಳಂಬ ಮತ್ತು ಓಸಿಐ ಸಮಸ್ಯೆಗಳು" },
+  { id: "banking",     iconName: "fees",         label: "ಬ್ಯಾಂಕಿಂಗ್ & ಚೆಕ್ ಬೌನ್ಸ್", sub: "ಸೆಕ್ಷನ್ 138 ಚೆಕ್ ಬೌನ್ಸ್, ಸಾಲ ವಸೂಲಾತಿ, ಸರ್ಫೇಸಿ & ಡಿಆರ್‌ಟಿ" },
+  { id: "other",       iconName: "documents",    label: "ಇತರ ವಿಷಯಗಳು",         sub: "ಪ್ರಮಾಣಪತ್ರ, ಲೀಗಲ್ ನೋಟಿಸ್, ವಿಲ್ ಮತ್ತು ಸಾಮಾನ್ಯ ಪ್ರಶ್ನೆಗಳು" },
 ];
 
 export const RECENT_QUESTIONS = [
@@ -199,8 +200,10 @@ export default function AskQuestion() {
   const [selectedCat, setSelectedCat] = useState(null);
   const [question, setQuestion] = useState("");
   const [description, setDescription] = useState("");
+  const [city, setCity] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -215,25 +218,25 @@ export default function AskQuestion() {
   const validate = () => {
     const e = {};
     if (!question.trim()) {
-      e.question = isKn ? "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ನಮೂದಿಸಿ" : "Please enter your question";
+      e.question = isKn ? "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪ್ರಶ್ನೆಯ ಮುಖ್ಯ ವಿಷಯವನ್ನು ನಮೂದಿಸಿ" : "Please enter the headline of your question";
     } else if (question.trim().length < 15) {
       e.question = isKn ? "ಪ್ರಶ್ನೆ ತುಂಬಾ ಚಿಕ್ಕದಾಗಿದೆ (ಕನಿಷ್ಠ ೧೫ ಅಕ್ಷರಗಳು)" : "Question is too short (min 15 chars)";
     }
 
     if (!description.trim()) {
-      e.description = isKn ? "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸಮಸ್ಯೆಯನ್ನು ವಿವರವಾಗಿ ಬರೆಯಿರಿ" : "Please describe your issue in detail";
+      e.description = isKn ? "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸಮಸ್ಯೆಯ ವಿವರಗಳನ್ನು ಬರೆಯಿರಿ" : "Please describe your legal issue in detail";
     } else if (description.trim().length < 30) {
-      e.description = isKn ? "ವಿವರಣೆ ತುಂಬಾ ಚಿಕ್ಕದಾಗಿದೆ (ಕನಿಷ್ಠ ೩೦ ಅಕ್ಷರಗಳು)" : "Description too short (min 30 chars)";
+      e.description = isKn ? "ವಿವರಣೆ ತುಂಬಾ ಚಿಕ್ಕದಾಗಿದೆ (ಕನಿಷ್ಠ ೩೦ ಅಕ್ಷರಗಳು)" : "Description is too short (min 30 chars)";
     }
 
     if (!isAnonymous) {
       if (!name.trim()) {
-        e.name = isKn ? "ಹೆಸರು ಅಗತ್ಯವಿದೆ" : "Name is required";
+        e.name = isKn ? "ನಿಮ್ಮ ಹೆಸರು ಅಗತ್ಯವಿದೆ" : "Full name is required";
       }
       if (!phone.trim()) {
-        e.phone = isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Phone is required";
-      } else if (!/^\d{10}$/.test(phone.replace(/\s/g, ""))) {
-        e.phone = isKn ? "ಮಾನ್ಯವಾದ ೧೦-ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ" : "Enter valid 10-digit mobile number";
+        e.phone = isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Mobile number is required";
+      } else if (!/^\d{10}$/.test(phone.replace(/\D/g, ""))) {
+        e.phone = isKn ? "ಮಾನ್ಯವಾದ ೧೦-ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ" : "Enter a valid 10-digit mobile number";
       }
     }
     setErrors(e);
@@ -244,94 +247,161 @@ export default function AskQuestion() {
     if (!validate()) return;
     addQuestion({
       category: selectedCat?.label || "Other",
+      categoryEn: selectedCat?.labelEn || selectedCat?.label || "Other",
       question: question.trim(),
       description: description.trim(),
-      name: isAnonymous ? (isKn ? "ಅನಾಮಧೇಯ" : "Anonymous") : name.trim(),
+      city: city.trim(),
+      name: isAnonymous ? (isKn ? "ಅನಾಮಧೇಯ ಬಳಕೆದಾರ" : "Anonymous Citizen") : name.trim(),
       phone: isAnonymous ? "" : phone.trim(),
+      email: isAnonymous ? "" : email.trim(),
       isAnonymous,
     });
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       setStep(3);
-    }, 1200);
+    }, 1000);
   };
 
   return (
     <div className={`lw-aq-page ${theme === "dark" ? "aq-dark" : "aq-light"}`}>
       {/* Header Banner */}
-      <div className="lw-aq-header">
+      <header className="lw-aq-header">
+        <div className="lw-aq-header-glow"></div>
         <div className="lw-aq-header-inner">
-          <span className="lw-aq-header-badge">
-            {isKn ? "💬 ಅಧಿಕೃತ ಕಾನೂನು ಸಮಾಲೋಚನೆ" : "💬 Verified Legal Advice"}
-          </span>
+          <div className="lw-aq-header-badge">
+            <span className="lw-aq-beacon"></span>
+            <LegalIcon name="shieldCheck" size={13} className="lw-aq-badge-icon" />
+            <span>
+              {isKn ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ • ಅಧಿಕೃತ ಕಾನೂನು ಸಮಾಲೋಚನಾ ವಿಭಾಗ" : "ADVOCATES HUB • VERIFIED LEGAL ADVICE DESK"}
+            </span>
+          </div>
+
           <h1 className="lw-aq-title">
-            {isKn ? "ಪರಿಣಿತ ವಕೀಲರಿಗೆ ಕಾನೂನು ಪ್ರಶ್ನೆ ಕೇಳಿ" : "Ask a Verified Advocate"}
+            {isKn ? (
+              <>
+                ಪರಿಣಿತ ವಕೀಲರಿಗೆ{" "}
+                <span className="lw-aq-gradient-text">ಕಾನೂನು ಪ್ರಶ್ನೆ ಕೇಳಿ</span>
+              </>
+            ) : (
+              <>
+                Ask a Question to{" "}
+                <span className="lw-aq-gradient-text">Verified Advocates</span>
+              </>
+            )}
           </h1>
+
           <p className="lw-aq-subtitle">
             {isKn
-              ? "ನಿಮ್ಮ ಕಾನೂನು ಸಮಸ್ಯೆಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ — ಭಾರತದ ಅನುಭವಿ ವಕೀಲರಿಂದ ೨೪ ಗಂಟೆಗಳಲ್ಲಿ ವಿಶ್ವಾಸಾರ್ಹ ಉತ್ತರ ಪಡೆಯಿರಿ."
-              : "Post your legal inquiry and receive comprehensive guidance from verified High Court and District Court advocates."}
+              ? "ನಿಮ್ಮ ಕಾನೂನು ಸಮಸ್ಯೆಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ — ಕರ್ನಾಟಕ ಮತ್ತು ಭಾರತದ ಅನುಭವಿ ಹೈಕೋರ್ಟ್ ಮತ್ತು ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯದ ವಕೀಲರಿಂದ ೨೪ ಗಂಟೆಗಳಲ್ಲಿ ಸ್ಪಷ್ಟ ಮಾರ್ಗದರ್ಶನ ಪಡೆಯಿರಿ."
+              : "Post your legal inquiry in plain language and receive authoritative answers from certified State Bar Council advocates across High Court and District benches."}
           </p>
+
           <div className="lw-aq-header-stats">
-            <span>⚖️ {isKn ? "೫೦,೦೦೦+ ಉತ್ತರಿಸಲಾದ ಪ್ರಶ್ನೆಗಳು" : "50,000+ Questions Answered"}</span>
-            <span>👨‍⚖️ {isKn ? "೫೦೦+ ಸಕ್ರಿಯ ವಕೀಲರು" : "500+ Active Advocates"}</span>
-            <span>⏱️ {isKn ? "ಸರಾಸರಿ ೨ ಗಂಟೆಗಳಲ್ಲಿ ಉತ್ತರ" : "Avg. reply within 2 hours"}</span>
-            <span>🔒 {isKn ? "೧೦೦% ಗೌಪ್ಯತೆ ಖಾತರಿ" : "100% Confidential & Secure"}</span>
+            <div className="lw-aq-hstat-item">
+              <LegalIcon name="documents" size={14} className="lw-aq-hs-icon" />
+              <span>{isKn ? "೫೦,೦೦೦+ ಉತ್ತರಿಸಲಾದ ಪ್ರಶ್ನೆಗಳು" : "50,000+ Questions Answered"}</span>
+            </div>
+            <div className="lw-aq-hstat-item">
+              <LegalIcon name="scale" size={14} className="lw-aq-hs-icon" />
+              <span>{isKn ? "೫೦+ ಪರಿಶೀಲಿತ ಹಿರಿಯ ವಕೀಲರು" : "50+ Bar Verified Advocates"}</span>
+            </div>
+            <div className="lw-aq-hstat-item">
+              <LegalIcon name="clock" size={14} className="lw-aq-hs-icon" />
+              <span>{isKn ? "ಸರಾಸರಿ ೨-೪ ಗಂಟೆಗಳಲ್ಲಿ ಉತ್ತರ" : "Avg. reply within 2-4 hours"}</span>
+            </div>
+            <div className="lw-aq-hstat-item">
+              <LegalIcon name="lock" size={14} className="lw-aq-hs-icon" />
+              <span>{isKn ? "೧೦೦% ಶಾಸನಬದ್ಧ ಗೌಪ್ಯತೆ" : "100% Confidential & Secure"}</span>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Navigation Tabs */}
-      <div className="lw-aq-tabs">
-        {[
-          ["ask", isKn ? "❓ ಹೊಸ ಪ್ರಶ್ನೆ ಕೇಳಿ" : "❓ Ask a Question"],
-          ["recent", isKn ? "💬 ಇತ್ತೀಚಿನ ಪ್ರಶ್ನೆಗಳು" : "💬 Recent Questions"],
-          ["experts", isKn ? "👨‍⚖️ ಪರಿಣಿತ ವಕೀಲರು" : "👨‍⚖️ Top Advocates"],
-        ].map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            className={`lw-aq-tab ${activeTab === key ? "active" : ""}`}
-            onClick={() => setActiveTab(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <nav className="lw-aq-tabs" aria-label="Ask Question Navigation Tabs">
+        <button
+          type="button"
+          className={`lw-aq-tab ${activeTab === "ask" ? "active" : ""}`}
+          onClick={() => setActiveTab("ask")}
+        >
+          <LegalIcon name="chat" size={15} />
+          <span>{isKn ? "ಹೊಸ ಪ್ರಶ್ನೆ ಕೇಳಿ" : "Ask a Question"}</span>
+        </button>
+        <button
+          type="button"
+          className={`lw-aq-tab ${activeTab === "recent" ? "active" : ""}`}
+          onClick={() => setActiveTab("recent")}
+        >
+          <LegalIcon name="documents" size={15} />
+          <span>{isKn ? "ಇತ್ತೀಚಿನ ಪ್ರಶ್ನೆಗಳು" : "Recent Questions"}</span>
+        </button>
+        <button
+          type="button"
+          className={`lw-aq-tab ${activeTab === "experts" ? "active" : ""}`}
+          onClick={() => setActiveTab("experts")}
+        >
+          <LegalIcon name="scale" size={15} />
+          <span>{isKn ? "ಪರಿಣಿತ ವಕೀಲರು" : "Top Advocates"}</span>
+        </button>
+      </nav>
 
-      <div className="lw-aq-body">
-        {/* ── ASK TAB ── */}
+      <main className="lw-aq-body">
+        {/* ── 1. ASK TAB ── */}
         {activeTab === "ask" && (
           <div className="lw-aq-form-wrap">
             {step === 3 ? (
               <div className="lw-aq-success-card">
-                <div className="lw-aq-success-badge">✅</div>
-                <h2>{isKn ? "ಪ್ರಶ್ನೆ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಕೆಯಾಗಿದೆ!" : "Question Submitted Successfully!"}</h2>
+                <div className="lw-aq-success-badge">
+                  <LegalIcon name="checkCircle" size={54} className="lw-aq-success-svg" />
+                </div>
+                <h2>
+                  {isKn ? "ಪ್ರಶ್ನೆ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಕೆಯಾಗಿದೆ!" : "Question Registered Successfully!"}
+                </h2>
                 <p>
                   {isKn
-                    ? "ನಿಮ್ಮ ಕಾನೂನು ಪ್ರಶ್ನೆಯನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ. ಪರಿಣಿತ ವಕೀಲರು ೨೪ ಗಂಟೆಗಳಲ್ಲಿ ಉತ್ತರ ನೀಡಲಿದ್ದಾರೆ."
-                    : "Your legal inquiry has been registered. Our bar-certified advocates will post answers within 24 hours."}
+                    ? "ನಿಮ್ಮ ಕಾನೂನು ವಿಚಾರಣೆಯನ್ನು ನಮ್ಮ ಪರಿಶೀಲನಾ ವ್ಯವಸ್ಥೆಯು ದಾಖಲಿಸಿದೆ. ನಮ್ಮ ಪರಿಶೀಲಿತ ವಕೀಲರು ಶೀಘ್ರವಾಗಿ ಪರಿಶೀಲಿಸಿ ಉತ್ತರ ನೀಡಲಿದ್ದಾರೆ."
+                    : "Your legal inquiry has been registered on Advocates Hub. Certified practitioners in your practice area will review and provide counsel."}
                 </p>
+
                 <div className="lw-aq-success-info">
-                  <div>
-                    <span>{isKn ? "📋 ವಿಭಾಗ:" : "📋 Category:"}</span>
-                    <strong>{selectedCat?.label}</strong>
+                  <div className="lw-aq-sinfo-row">
+                    <span className="lw-aq-sinfo-label">
+                      <LegalIcon name="briefcase" size={14} />
+                      <span>{isKn ? "ಕಾನೂನು ವಿಭಾಗ:" : "Legal Domain:"}</span>
+                    </span>
+                    <strong className="lw-aq-sinfo-val">{selectedCat?.label}</strong>
                   </div>
-                  <div>
-                    <span>{isKn ? "❓ ಪ್ರಶ್ನೆ:" : "❓ Question:"}</span>
-                    <strong>
-                      {question.slice(0, 75)}
-                      {question.length > 75 ? "…" : ""}
+                  <div className="lw-aq-sinfo-row">
+                    <span className="lw-aq-sinfo-label">
+                      <LegalIcon name="documents" size={14} />
+                      <span>{isKn ? "ಮುಖ್ಯ ಪ್ರಶ್ನೆ:" : "Headline Question:"}</span>
+                    </span>
+                    <strong className="lw-aq-sinfo-val">
+                      {question.slice(0, 85)}
+                      {question.length > 85 ? "…" : ""}
                     </strong>
                   </div>
+                  {city.trim() && (
+                    <div className="lw-aq-sinfo-row">
+                      <span className="lw-aq-sinfo-label">
+                        <LegalIcon name="pin" size={14} />
+                        <span>{isKn ? "ನ್ಯಾಯವ್ಯಾಪ್ತಿ / ನಗರ:" : "Jurisdiction / City:"}</span>
+                      </span>
+                      <strong className="lw-aq-sinfo-val">{city}</strong>
+                    </div>
+                  )}
                   {!isAnonymous && (
-                    <div>
-                      <span>{isKn ? "👤 ಸಲ್ಲಿಸಿದವರು:" : "👤 Submitted by:"}</span>
-                      <strong>{name}</strong>
+                    <div className="lw-aq-sinfo-row">
+                      <span className="lw-aq-sinfo-label">
+                        <LegalIcon name="user" size={14} />
+                        <span>{isKn ? "ಸಲ್ಲಿಸಿದವರು:" : "Submitted by:"}</span>
+                      </span>
+                      <strong className="lw-aq-sinfo-val">{name}</strong>
                     </div>
                   )}
                 </div>
+
                 <div className="lw-aq-success-actions">
                   <button
                     type="button"
@@ -341,88 +411,110 @@ export default function AskQuestion() {
                       setSelectedCat(null);
                       setQuestion("");
                       setDescription("");
+                      setCity("");
                     }}
                   >
-                    {isKn ? "ಮತ್ತೊಂದು ಪ್ರಶ್ನೆ ಕೇಳಿ" : "Ask Another Question"}
+                    <LegalIcon name="arrowLeft" size={14} />
+                    <span>{isKn ? "ಮತ್ತೊಂದು ಪ್ರಶ್ನೆ ಕೇಳಿ" : "Ask Another Question"}</span>
                   </button>
                   <button
                     type="button"
                     className="lw-aq-btn-primary"
                     onClick={() => navigate("/find-lawyer")}
                   >
-                    {isKn ? "ವಕೀಲರೊಂದಿಗೆ ನೇರ ಚಾಟ್ ಮಾಡಿ →" : "Connect with Advocate Now →"}
+                    <span>{isKn ? "ವಕೀಲರೊಂದಿಗೆ ನೇರ ಸಂಪರ್ಕ" : "Connect with Advocate Now"}</span>
+                    <LegalIcon name="arrowRight" size={14} />
                   </button>
                 </div>
               </div>
             ) : (
               <>
-                {/* Progress bar */}
+                {/* Visual Progress Steps Tracker */}
                 <div className="lw-aq-progress">
                   {[
-                    isKn ? "ವಿಭಾಗ ಆಯ್ಕೆ" : "Select Category",
-                    isKn ? "ಪ್ರಶ್ನೆ ವಿವರ" : "Your Question",
-                    isKn ? "ಸಲ್ಲಿಕೆ ಪೂರ್ಣ" : "Confirmation",
-                  ].map((label, i) => (
-                    <React.Fragment key={label}>
-                      <div
-                        className={`lw-aq-prog-step ${step > i + 1 ? "done" : ""} ${
-                          step === i + 1 ? "active" : ""
-                        }`}
-                      >
-                        <div className="lw-aq-prog-dot">{step > i + 1 ? "✓" : i + 1}</div>
-                        <span>{label}</span>
-                      </div>
-                      {i < 2 && (
-                        <div className={`lw-aq-prog-line ${step > i + 1 ? "done" : ""}`} />
-                      )}
-                    </React.Fragment>
-                  ))}
+                    isKn ? "೧. ವಿಭಾಗ ಆಯ್ಕೆ" : "1. Select Category",
+                    isKn ? "೨. ಪ್ರಶ್ನೆ ವಿವರಣೆ" : "2. Your Question",
+                    isKn ? "೩. ದೃಢೀಕರಣ" : "3. Confirmation",
+                  ].map((label, i) => {
+                    const stepNum = i + 1;
+                    const isDone = step > stepNum;
+                    const isActive = step === stepNum;
+                    return (
+                      <React.Fragment key={label}>
+                        <div
+                          className={`lw-aq-prog-step ${isDone ? "done" : ""} ${isActive ? "active" : ""}`}
+                        >
+                          <div className="lw-aq-prog-dot">
+                            {isDone ? <LegalIcon name="check" size={12} /> : stepNum}
+                          </div>
+                          <span>{label}</span>
+                        </div>
+                        {i < 2 && (
+                          <div className={`lw-aq-prog-line ${isDone ? "done" : ""}`} />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
 
-                {/* Step 1: Category */}
+                {/* ── Step 1: Category Selection ── */}
                 {step === 1 && (
-                  <div>
+                  <div className="lw-aq-step-panel">
                     <div className="lw-aq-step-header">
-                      <h3 className="lw-aq-step-title">
-                        {isKn ? "೧. ನಿಮ್ಮ ಸಮಸ್ಯೆ ಯಾವ ಕಾನೂನು ವಿಭಾಗಕ್ಕೆ ಸಂಬಂಧಿಸಿದೆ?" : "1. What is your legal issue regarding?"}
-                      </h3>
+                      <div className="lw-aq-step-pill">
+                        <LegalIcon name="briefcase" size={13} />
+                        <span>{isKn ? "ಹಂತ ೧" : "STEP 1 OF 2"}</span>
+                      </div>
+                      <h2 className="lw-aq-step-title">
+                        {isKn ? "ನಿಮ್ಮ ಸಮಸ್ಯೆ ಯಾವ ಕಾನೂನು ವಿಭಾಗಕ್ಕೆ ಸಂಬಂಧಿಸಿದೆ?" : "What is the subject of your legal inquiry?"}
+                      </h2>
                       <p className="lw-aq-step-desc">
                         {isKn
-                          ? "ಸೂಕ್ತ ವಿಭಾಗವನ್ನು ಆರಿಸಿ, ಇದರಿಂದ ಸಂಬಂಧಪಟ್ಟ ವಿಶೇಷಜ್ಞ ವಕೀಲರು ಶೀಘ್ರವಾಗಿ ಮಾರ್ಗದರ್ಶನ ನೀಡಬಹುದು."
-                          : "Select the legal domain so our specialist advocates in that field can answer immediately."}
+                          ? "ಸೂಕ್ತ ಕಾನೂನು ವಿಭಾಗವನ್ನು ಆರಿಸಿ, ಇದರಿಂದ ಸಂಬಂಧಪಟ್ಟ ಪರಿಣಿತ ವಕೀಲರು ನಿಖರ ಉತ್ತರವನ್ನು ಶೀಘ್ರವಾಗಿ ನೀಡಬಹುದು."
+                          : "Choose the relevant legal domain below so that certified practitioners with active trial experience in that area can assist you."}
                       </p>
                     </div>
 
                     <div className="lw-aq-cat-grid">
-                      {categoriesList.map((cat) => (
-                        <button
-                          type="button"
-                          key={cat.id || cat.label}
-                          className={`lw-aq-cat-card ${
-                            selectedCat?.id === cat.id || selectedCat?.label === cat.label
-                              ? "selected"
-                              : ""
-                          }`}
-                          onClick={() => setSelectedCat(cat)}
-                        >
-                          <span className="lw-aq-cat-icon">{cat.icon}</span>
-                          <div className="lw-aq-cat-label">{cat.label}</div>
-                          <div className="lw-aq-cat-sub">{cat.sub}</div>
-                          {(selectedCat?.id === cat.id || selectedCat?.label === cat.label) && (
-                            <span className="lw-aq-cat-check">✓</span>
-                          )}
-                        </button>
-                      ))}
+                      {categoriesList.map((cat) => {
+                        const isSelected = selectedCat?.id === cat.id;
+                        return (
+                          <button
+                            type="button"
+                            key={cat.id}
+                            className={`lw-aq-cat-card ${isSelected ? "selected" : ""}`}
+                            onClick={() => setSelectedCat(cat)}
+                          >
+                            <div className="lw-aq-cat-top-bar">
+                              <div className="lw-aq-cat-icon-box">
+                                <LegalIcon name={cat.iconName} size={20} className="lw-aq-cat-icon" />
+                              </div>
+                              {isSelected && (
+                                <span className="lw-aq-cat-check">
+                                  <LegalIcon name="check" size={11} />
+                                </span>
+                              )}
+                            </div>
+                            <div className="lw-aq-cat-label">{cat.label}</div>
+                            <div className="lw-aq-cat-sub">{cat.sub}</div>
+                          </button>
+                        );
+                      })}
                     </div>
 
                     <div className="lw-aq-step-footer">
                       <div className="lw-aq-footer-info">
                         {selectedCat ? (
-                          <span>
-                            {isKn ? "ಆಯ್ಕೆಯಾದ ವಿಭಾಗ:" : "Selected:"} <strong>{selectedCat.icon} {selectedCat.label}</strong>
-                          </span>
+                          <div className="lw-aq-selected-pill">
+                            <LegalIcon name={selectedCat.iconName} size={15} />
+                            <span>
+                              {isKn ? "ಆಯ್ಕೆಯಾದ ವಿಭಾಗ:" : "Selected:"} <strong>{selectedCat.label}</strong>
+                            </span>
+                          </div>
                         ) : (
-                          <span>{isKn ? "ಮುಂದುವರಿಯಲು ಒಂದು ವಿಭಾಗವನ್ನು ಆಯ್ಕೆ ಮಾಡಿ" : "Please select a category above to continue"}</span>
+                          <span className="lw-aq-unselected-hint">
+                            {isKn ? "ಮುಂದುವರಿಯಲು ಮೇಲಿನ ಒಂದು ವಿಭಾಗವನ್ನು ಆಯ್ಕೆ ಮಾಡಿ" : "Please select a category above to proceed"}
+                          </span>
                         )}
                       </div>
                       <button
@@ -431,36 +523,78 @@ export default function AskQuestion() {
                         disabled={!selectedCat}
                         onClick={() => setStep(2)}
                       >
-                        {isKn ? "ಮುಂದಿನ ಹಂತ: ಪ್ರಶ್ನೆ ಬರೆಯಿರಿ →" : "Next: Write Your Question →"}
+                        <span>{isKn ? "ಮುಂದಿನ ಹಂತ: ಪ್ರಶ್ನೆ ಬರೆಯಿರಿ" : "Next: Write Your Question"}</span>
+                        <LegalIcon name="arrowRight" size={14} />
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Step 2: Question */}
+                {/* ── Step 2: Write Question & Client Details ── */}
                 {step === 2 && (
-                  <div>
+                  <div className="lw-aq-step-panel">
                     <div className="lw-aq-step-header">
-                      <h3 className="lw-aq-step-title">
-                        {selectedCat?.icon} {selectedCat?.label} — {isKn ? "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ವಿವರಿಸಿ" : "Describe your legal matter"}
-                      </h3>
+                      <div className="lw-aq-selected-cat-banner">
+                        <div className="lw-aq-scb-left">
+                          <LegalIcon name={selectedCat?.iconName} size={18} />
+                          <div>
+                            <span className="lw-aq-scb-tag">{isKn ? "ಆಯ್ಕೆಯಾದ ವಿಭಾಗ" : "SELECTED CATEGORY"}</span>
+                            <h3 className="lw-aq-scb-title">{selectedCat?.label}</h3>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="lw-aq-scb-change-btn"
+                          onClick={() => setStep(1)}
+                        >
+                          <LegalIcon name="arrowLeft" size={13} />
+                          <span>{isKn ? "ವಿಭಾಗ ಬದಲಾಯಿಸಿ" : "Change Category"}</span>
+                        </button>
+                      </div>
+
+                      <h2 className="lw-aq-step-title" style={{ marginTop: 16 }}>
+                        {isKn ? "ನಿಮ್ಮ ಪ್ರಶ್ನೆ ಮತ್ತು ಸನ್ನಿವೇಶವನ್ನು ವಿವರಿಸಿ" : "Describe Your Legal Question & Situation"}
+                      </h2>
                       <p className="lw-aq-step-desc">
                         {isKn
-                          ? "ನಿಮ್ಮ ಪ್ರಕರಣದ ಸತ್ಯಾಂಶಗಳು, ದಿನಾಂಕಗಳು ಮತ್ತು ನೀವು ನಿರೀಕ್ಷಿಸುವ ಪರಿಹಾರವನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ನಮೂದಿಸಿ."
-                          : "Be clear and specific. Mention relevant dates, agreements, notices or police actions."}
+                          ? "ನಿಮ್ಮ ಪ್ರಕರಣದ ಪ್ರಮುಖ ಸತ್ಯಾಂಶಗಳು, ದಿನಾಂಕಗಳು ಮತ್ತು ನೀವು ನಿರೀಕ್ಷಿಸುವ ಕಾನೂನು ಪರಿಹಾರವನ್ನು ಕೆಳಗೆ ಬರೆಯಿರಿ."
+                          : "Provide clear facts and dates so advocates can assess your rights under Indian law and give you practical next steps."}
                       </p>
                     </div>
 
+                    {/* Client Helpful Guidance Box */}
+                    <div className="lw-aq-guide-box">
+                      <div className="lw-aq-guide-title">
+                        <LegalIcon name="info" size={15} />
+                        <strong>{isKn ? "ಉತ್ತಮ ಸಲಹೆ ಪಡೆಯಲು ಸರಳ ಸಲಹೆಗಳು:" : "Tips for a Fast & Accurate Answer:"}</strong>
+                      </div>
+                      <div className="lw-aq-guide-bullets">
+                        <div className="lw-aq-gb-item">
+                          <LegalIcon name="check" size={12} className="lw-aq-gb-check" />
+                          <span>{isKn ? "ದಿನಾಂಕಗಳು ಮತ್ತು ಒಪ್ಪಂದಗಳನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ಉಲ್ಲೇಖಿಸಿ" : "Mention approximate dates, monetary amounts, or agreements involved."}</span>
+                        </div>
+                        <div className="lw-aq-gb-item">
+                          <LegalIcon name="check" size={12} className="lw-aq-gb-check" />
+                          <span>{isKn ? "ಪೊಲೀಸ್ ದೂರು, ಕೋರ್ಟ್ ನೋಟಿಸ್ ಅಥವಾ ಕಾಗದಪತ್ರಗಳಿದ್ದರೆ ತಿಳಿಸಿ" : "State if any police FIR, legal notice, or court summon has already been issued."}</span>
+                        </div>
+                        <div className="lw-aq-gb-item">
+                          <LegalIcon name="check" size={12} className="lw-aq-gb-check" />
+                          <span>{isKn ? "ನೀವು ನಿರೀಕ್ಷಿಸುವ ತುರ್ತು ಪರಿಹಾರವನ್ನು ಸ್ಪಷ್ಟಪಡಿಸಿ" : "State what specific relief or remedy you wish to seek."}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Headline Question Input */}
                     <div className="lw-aq-field">
                       <label>
-                        {isKn ? "ಮುಖ್ಯ ಪ್ರಶ್ನೆ" : "Headline Question"} <span className="lw-req">*</span>
+                        {isKn ? "ಪ್ರಶ್ನೆಯ ಮುಖ್ಯ ಶೀರ್ಷಿಕೆ" : "Headline Summary of Your Question"} <span className="lw-req">*</span>
                       </label>
                       <input
                         className={`lw-aq-input ${errors.question ? "error" : ""}`}
                         placeholder={
                           isKn
-                            ? "ಉದಾ: ಮನೆ ಖಾಲಿ ಮಾಡಿದರೂ ಮಾಲೀಕರು ಅಡ್ವಾನ್ಸ್ ಹಣ ಮರಳಿಸುತ್ತಿಲ್ಲ..."
-                            : "e.g. Landlord refusing to return deposit after vacating flat..."
+                            ? "ಉದಾ: ೩ ತಿಂಗಳು ಕಳೆದರೂ ಮನೆ ಮಾಲೀಕರು ಅಡ್ವಾನ್ಸ್ ಹಣ ಮರಳಿಸುತ್ತಿಲ್ಲ..."
+                            : "e.g. Landlord refusing to return ₹50,000 security deposit after vacating flat..."
                         }
                         value={question}
                         onChange={(e) => {
@@ -470,20 +604,26 @@ export default function AskQuestion() {
                         maxLength={200}
                       />
                       <div className="lw-aq-char">{question.length}/200</div>
-                      {errors.question && <p className="lw-aq-err">⚠ {errors.question}</p>}
+                      {errors.question && (
+                        <p className="lw-aq-err">
+                          <LegalIcon name="alertCircle" size={13} />
+                          <span>{errors.question}</span>
+                        </p>
+                      )}
                     </div>
 
+                    {/* Detailed Description Textarea */}
                     <div className="lw-aq-field">
                       <label>
-                        {isKn ? "ವಿವರವಾದ ವಿವರಣೆ" : "Detailed Background & Facts"} <span className="lw-req">*</span>
+                        {isKn ? "ವಿವರವಾದ ಸನ್ನಿವೇಶ ಮತ್ತು ಸತ್ಯಾಂಶಗಳು" : "Detailed Background & Facts"} <span className="lw-req">*</span>
                       </label>
                       <textarea
                         className={`lw-aq-textarea ${errors.description ? "error" : ""}`}
                         rows={6}
                         placeholder={
                           isKn
-                            ? "ನಿಮ್ಮ ಪರಿಸ್ಥಿತಿಯ ಸಂಪೂರ್ಣ ವಿವರಗಳು, ದಿನಾಂಕಗಳು, ದಾಖಲೆಗಳು ಮತ್ತು ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ವಿವರವಾಗಿ ಬರೆಯಿರಿ..."
-                            : "Provide complete facts, dates, notices received, financial amounts involved, and what specific legal remedy you are seeking..."
+                            ? "ನಿಮ್ಮ ಪ್ರಕರಣದ ಪೂರ್ಣ ವಿವರಗಳು, ಒಪ್ಪಂದಗಳ ದಿನಾಂಕ, ದಾಖಲೆಗಳು ಮತ್ತು ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ವಿವರವಾಗಿ ಬರೆಯಿರಿ..."
+                            : "Provide complete facts, dates, notices received, what actions have been taken so far, and what guidance you are seeking..."
                         }
                         value={description}
                         onChange={(e) => {
@@ -493,9 +633,32 @@ export default function AskQuestion() {
                         maxLength={2000}
                       />
                       <div className="lw-aq-char">{description.length}/2000</div>
-                      {errors.description && <p className="lw-aq-err">⚠ {errors.description}</p>}
+                      {errors.description && (
+                        <p className="lw-aq-err">
+                          <LegalIcon name="alertCircle" size={13} />
+                          <span>{errors.description}</span>
+                        </p>
+                      )}
                     </div>
 
+                    {/* City / Jurisdiction Field */}
+                    <div className="lw-aq-field">
+                      <label>
+                        {isKn ? "ನ್ಯಾಯವ್ಯಾಪ್ತಿ / ನಗರ (ಐಚ್ಛಿಕ)" : "City / District Jurisdiction (Optional)"}
+                      </label>
+                      <input
+                        className="lw-aq-input"
+                        placeholder={
+                          isKn
+                            ? "ಉದಾ: ಬೆಂಗಳೂರು, ಹುಬ್ಬಳ್ಳಿ, ಬೆಳಗಾವಿ, ಮೈಸೂರು"
+                            : "e.g. Bengaluru, Hubballi, Belagavi, Mysuru, High Court Bench"
+                        }
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Anonymous Toggle Option */}
                     <div className="lw-aq-field lw-aq-anon-field">
                       <label className="lw-aq-anon-label">
                         <input
@@ -505,36 +668,43 @@ export default function AskQuestion() {
                         />
                         <span>
                           {isKn
-                            ? "ಅನಾಮಧೇಯವಾಗಿ ಪೋಸ್ಟ್ ಮಾಡಿ (ಸಾರ್ವಜನಿಕವಾಗಿ ನಿಮ್ಮ ಹೆಸರು ಗೋಚರಿಸುವುದಿಲ್ಲ)"
-                            : "Post anonymously (your name will not be shown on public listings)"}
+                            ? "ಅನಾಮಧೇಯವಾಗಿ ಪೋಸ್ಟ್ ಮಾಡಿ (ಸಾರ್ವಜನಿಕವಾಗಿ ನಿಮ್ಮ ಹೆಸರು ಮತ್ತು ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಗೋಚರಿಸುವುದಿಲ್ಲ)"
+                            : "Post anonymously (your name and contact details will remain private from public view)"}
                         </span>
                       </label>
                     </div>
 
+                    {/* Contact Info (if not anonymous) */}
                     {!isAnonymous && (
-                      <div className="lw-aq-grid-2">
+                      <div className="lw-aq-grid-3">
                         <div className="lw-aq-field">
                           <label>
                             {isKn ? "ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರು" : "Your Full Name"} <span className="lw-req">*</span>
                           </label>
                           <input
                             className={`lw-aq-input ${errors.name ? "error" : ""}`}
-                            placeholder={isKn ? "ನಿಮ್ಮ ಹೆಸರು" : "Full legal name"}
+                            placeholder={isKn ? "ನಿಮ್ಮ ಹೆಸರು" : "e.g. Ramesh Kumar"}
                             value={name}
                             onChange={(e) => {
                               setName(e.target.value);
                               setErrors((p) => ({ ...p, name: "" }));
                             }}
                           />
-                          {errors.name && <p className="lw-aq-err">⚠ {errors.name}</p>}
+                          {errors.name && (
+                            <p className="lw-aq-err">
+                              <LegalIcon name="alertCircle" size={13} />
+                              <span>{errors.name}</span>
+                            </p>
+                          )}
                         </div>
+
                         <div className="lw-aq-field">
                           <label>
-                            {isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ" : "Mobile Number"} <span className="lw-req">*</span>
+                            {isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ" : "10-Digit Mobile"} <span className="lw-req">*</span>
                           </label>
                           <input
                             className={`lw-aq-input ${errors.phone ? "error" : ""}`}
-                            placeholder="10-digit mobile"
+                            placeholder="10-digit number"
                             type="tel"
                             maxLength={10}
                             value={phone}
@@ -543,17 +713,37 @@ export default function AskQuestion() {
                               setErrors((p) => ({ ...p, phone: "" }));
                             }}
                           />
-                          {errors.phone && <p className="lw-aq-err">⚠ {errors.phone}</p>}
+                          {errors.phone && (
+                            <p className="lw-aq-err">
+                              <LegalIcon name="alertCircle" size={13} />
+                              <span>{errors.phone}</span>
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="lw-aq-field">
+                          <label>
+                            {isKn ? "ಇಮೇಲ್ ವಿಳಾಸ (ಐಚ್ಛಿಕ)" : "Email Address (Optional)"}
+                          </label>
+                          <input
+                            className="lw-aq-input"
+                            placeholder="name@example.com"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                          />
                         </div>
                       </div>
                     )}
 
+                    {/* Confidentiality Privilege Notice */}
                     <div className="lw-aq-note">
-                      <span>ℹ️</span>
+                      <LegalIcon name="lock" size={18} className="lw-aq-note-icon" />
                       <div>
+                        <strong>{isKn ? "ಶಾಸನಬದ್ಧ ವಕೀಲ-ಕ್ಲೈಂಟ್ ಗೌಪ್ಯತೆ:" : "Statutory Attorney-Client Privilege:"}</strong>{" "}
                         {isKn
-                          ? "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಬಾರ್ ಕೌನ್ಸಿಲ್ ಮಾನ್ಯತೆ ಪಡೆದ ಪರಿಶೀಲಿತ ವಕೀಲರು ಪರಿಶೀಲಿಸುತ್ತಾರೆ. ವೈಯಕ್ತಿಕ ವಿವರಗಳು ಸುರಕ್ಷಿತವಾಗಿರುತ್ತವೆ."
-                          : "Your query will be published to verified Bar Council advocates for review. Sensitive contact information remains strictly encrypted."}
+                          ? "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಕರ್ನಾಟಕ ಬಾರ್ ಕೌನ್ಸಿಲ್ ಮಾನ್ಯತೆ ಪಡೆದ ಪರಿಶೀಲಿತ ವಕೀಲರು ಪರಿಶೀಲಿಸುತ್ತಾರೆ. ಭಾರತೀಯ ಸಾಕ್ಷ್ಯ ಕಾಯ್ದೆ ಮತ್ತು BSA ಸೆಕ್ಷನ್ ೧೩೨ ರ ಅಡಿಯಲ್ಲಿ ನಿಮ್ಮ ವಿವರಗಳು ಸುರಕ್ಷಿತವಾಗಿರುತ್ತವೆ."
+                          : "Your inquiry is safeguarded under Section 126 of the Indian Evidence Act and Section 132 of the Bharatiya Sakshya Adhiniyam. Personal details remain protected."}
                       </div>
                     </div>
 
@@ -563,7 +753,8 @@ export default function AskQuestion() {
                         className="lw-aq-btn-outline"
                         onClick={() => setStep(1)}
                       >
-                        {isKn ? "← ಹಿಂದಕ್ಕೆ" : "← Back to Categories"}
+                        <LegalIcon name="arrowLeft" size={14} />
+                        <span>{isKn ? "ಹಿಂದಕ್ಕೆ (ವಿಭಾಗಗಳು)" : "Back to Categories"}</span>
                       </button>
                       <button
                         type="button"
@@ -571,9 +762,12 @@ export default function AskQuestion() {
                         onClick={handleSubmit}
                         disabled={loading}
                       >
-                        {loading
-                          ? (isKn ? "ಸಲ್ಲಿಸಲಾಗುತ್ತಿದೆ..." : "Submitting Question...")
-                          : (isKn ? "ಪ್ರಶ್ನೆ ಸಲ್ಲಿಸಿ ✓" : "Submit Question ✓")}
+                        <span>
+                          {loading
+                            ? (isKn ? "ಸಲ್ಲಿಸಲಾಗುತ್ತಿದೆ..." : "Submitting Question...")
+                            : (isKn ? "ಪ್ರಶ್ನೆ ಸಲ್ಲಿಸಿ" : "Submit Question")}
+                        </span>
+                        <LegalIcon name="check" size={15} />
                       </button>
                     </div>
                   </div>
@@ -583,14 +777,20 @@ export default function AskQuestion() {
           </div>
         )}
 
-        {/* ── RECENT QUESTIONS TAB ── */}
+        {/* ── 2. RECENT QUESTIONS TAB ── */}
         {activeTab === "recent" && (
           <div className="lw-aq-recent-wrap">
             <div className="lw-aq-search-wrap">
-              <span className="lw-aq-search-icon">🔍</span>
+              <span className="lw-aq-search-icon">
+                <LegalIcon name="search" size={16} />
+              </span>
               <input
                 className="lw-aq-search"
-                placeholder={isKn ? "ಪ್ರಶ್ನೆಗಳನ್ನು ಹುಡುಕಿ (ಉದಾ: ಮನೆ ಬಾಡಿಗೆ, ಚೆಕ್ ಬೌನ್ಸ್, ಜಾಮೀನು)..." : "Search legal queries (e.g., rent, bail, cheque bounce, divorce)..."}
+                placeholder={
+                  isKn
+                    ? "ಪ್ರಶ್ನೆಗಳನ್ನು ಹುಡುಕಿ (ಉದಾ: ಮನೆ ಬಾಡಿಗೆ, ಚೆಕ್ ಬೌನ್ಸ್, ನಿರೀಕ್ಷಣಾ ಜಾಮೀನು, ವಿಚ್ಛೇದನ)..."
+                    : "Search legal queries (e.g., rent deposit, bail, cheque bounce, divorce, RERA)..."
+                }
                 value={searchQ}
                 onChange={(e) => setSearchQ(e.target.value)}
               />
@@ -599,6 +799,7 @@ export default function AskQuestion() {
                   type="button"
                   className="lw-aq-search-clear"
                   onClick={() => setSearchQ("")}
+                  aria-label="Clear search"
                 >
                   ✕
                 </button>
@@ -608,25 +809,35 @@ export default function AskQuestion() {
             <div className="lw-aq-recent-list">
               {filteredRecent.length === 0 ? (
                 <div className="lw-aq-empty">
-                  <div style={{ fontSize: 36, marginBottom: 8 }}>🔍</div>
-                  {isKn
-                    ? `"${searchQ}" ಗಾಗಿ ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ`
-                    : `No questions found matching "${searchQ}"`}
+                  <div className="lw-aq-empty-icon">
+                    <LegalIcon name="search" size={36} />
+                  </div>
+                  <p>
+                    {isKn
+                      ? `"${searchQ}" ಗಾಗಿ ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ`
+                      : `No questions found matching "${searchQ}"`}
+                  </p>
                 </div>
               ) : (
                 filteredRecent.map((q) => (
-                  <div key={q.id} className="lw-aq-q-card">
+                  <article key={q.id} className="lw-aq-q-card">
                     <div className="lw-aq-q-top">
                       <Avatar initials={q.avatar} color={q.color} size={38} />
                       <div className="lw-aq-q-meta">
                         <span className="lw-aq-q-cat">{isKn ? q.categoryKn : q.category}</span>
-                        <span className="lw-aq-q-time">{isKn ? q.timeKn : q.time}</span>
+                        <span className="lw-aq-q-time">
+                          <LegalIcon name="clock" size={11} />
+                          <span>{isKn ? q.timeKn : q.time}</span>
+                        </span>
                       </div>
                     </div>
                     <p className="lw-aq-q-text">{isKn ? q.questionKn : q.question}</p>
                     <div className="lw-aq-q-footer">
                       <span className="lw-aq-q-answers">
-                        💬 {q.answers} {isKn ? "ವಕೀಲರ ಉತ್ತರಗಳು" : "advocate answers"}
+                        <LegalIcon name="chat" size={13} />
+                        <span>
+                          {q.answers} {isKn ? "ವಕೀಲರ ಉತ್ತರಗಳು" : "advocate answers"}
+                        </span>
                       </span>
                       <button
                         type="button"
@@ -641,66 +852,83 @@ export default function AskQuestion() {
                           setStep(2);
                         }}
                       >
-                        {isKn ? "ನನ್ನ ಪ್ರಶ್ನೆ ಕೇಳಿ →" : "Ask Similar Question →"}
+                        <span>{isKn ? "ನನ್ನ ಪ್ರಶ್ನೆ ಕೇಳಿ" : "Ask Similar Question"}</span>
+                        <LegalIcon name="arrowRight" size={12} />
                       </button>
                     </div>
-                  </div>
+                  </article>
                 ))
               )}
             </div>
           </div>
         )}
 
-        {/* ── EXPERTS TAB ── */}
+        {/* ── 3. EXPERTS TAB ── */}
         {activeTab === "experts" && (
           <div className="lw-aq-experts-wrap">
             <div className="lw-aq-experts-header">
-              <h3 className="lw-aq-experts-title">
+              <div className="lw-aq-step-pill">
+                <LegalIcon name="shieldCheck" size={13} />
+                <span>{isKn ? "ಪರಿಶೀಲಿತ ವಕೀಲರು" : "ACTIVE CONTRIBUTORS"}</span>
+              </div>
+              <h2 className="lw-aq-experts-title">
                 {isKn ? "ಪ್ರಮುಖ ಉತ್ತರಿಸುವ ಪರಿಣಿತ ವಕೀಲರು" : "Top Contributing Advocates"}
-              </h3>
+              </h2>
               <p className="lw-aq-experts-subtitle">
                 {isKn
-                  ? "ಈ ವಕೀಲರು ನಮ್ಮ ನಾಗರಿಕರಿಗೆ ಅತಿ ಹೆಚ್ಚು ಉಚಿತ ಮಾರ್ಗದರ್ಶನ ನೀಡಿದ್ದಾರೆ. ನೇರ ಸಮಾಲೋಚನೆಗೆ ಸಂಪರ್ಕಿಸಿ."
-                  : "Verified advocates with high resolution rates and prompt responses on Advocates Hub."}
+                  ? "ಈ ಹಿರಿಯ ವಕೀಲರು ನಾಗರಿಕರ ಪ್ರಶ್ನೆಗಳಿಗೆ ಅತಿ ಹೆಚ್ಚು ಸ್ಪಷ್ಟ ಮಾರ್ಗದರ್ಶನ ನೀಡಿದ್ದಾರೆ. ನೇರ ಸಮಾಲೋಚನೆಗೆ ಸಂಪರ್ಕಿಸಿ."
+                  : "Certified advocates with verified Bar Council credentials, prompt response rates, and high client ratings."}
               </p>
             </div>
 
             <div className="lw-aq-experts-grid">
               {EXPERT_ADVOCATES.map((adv) => (
                 <div key={adv.name} className="lw-aq-expert-card">
-                  <Avatar advocate={adv} initials={adv.initials} color={adv.color} size={64} />
+                  <Avatar advocate={adv} initials={adv.initials} color={adv.color} size={68} />
                   <div className="lw-aq-expert-name">{adv.name}</div>
                   <div className="lw-aq-expert-spec">{adv.spec}</div>
                   <div className="lw-aq-expert-stats">
-                    <span>💬 {adv.answers} {isKn ? "ಪ್ರಕರಣಗಳು" : "cases"}</span>
-                    <span>⭐ {adv.rating || "4.9"}</span>
-                    <span>🏛️ {adv.court || (isKn ? "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ" : "High Court")}</span>
+                    <span className="lw-aq-es-item">
+                      <LegalIcon name="briefcase" size={13} />
+                      <span>{adv.answers} {isKn ? "ಪ್ರಕರಣಗಳು" : "cases"}</span>
+                    </span>
+                    <span className="lw-aq-es-item">
+                      <LegalIcon name="star" size={13} />
+                      <span>{adv.rating || "4.9"}</span>
+                    </span>
+                    <span className="lw-aq-es-item">
+                      <LegalIcon name="platform" size={13} />
+                      <span>{adv.court || (isKn ? "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯ" : "High Court")}</span>
+                    </span>
                   </div>
                   <button
                     type="button"
                     className="lw-aq-btn-primary"
-                    style={{ marginTop: 12, width: "100%" }}
+                    style={{ marginTop: 14, width: "100%" }}
                     onClick={() =>
                       navigate(adv.email ? `/profile?email=${encodeURIComponent(adv.email)}` : `/find-lawyer`)
                     }
                   >
-                    {isKn ? "ನೇರ ಸಮಾಲೋಚನೆ ಪಡೆಯಿರಿ →" : "Consult Advocate Now →"}
+                    <span>{isKn ? "ನೇರ ಸಮಾಲೋಚನೆ ಪಡೆಯಿರಿ" : "Consult Advocate Now"}</span>
+                    <LegalIcon name="arrowRight" size={13} />
                   </button>
                 </div>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </main>
 
       {/* Bottom CTA Banner */}
-      <div className="lw-aq-bottom-cta">
+      <section className="lw-aq-bottom-cta">
         <div className="lw-aq-bottom-cta-text">
-          <h4>{isKn ? "ತುರ್ತು ಕಾನೂನು ನೆರವು ಬೇಕೇ?" : "Need Urgent One-on-One Legal Assistance?"}</h4>
+          <h4>
+            {isKn ? "ತುರ್ತು ಕಾನೂನು ನೆರವು ಅಥವಾ ವಕಾಲತ್ತು ಬೇಕೇ?" : "Need Urgent One-on-One Legal Assistance?"}
+          </h4>
           <p>
             {isKn
-              ? "ನಿಮ್ಮ ನಗರದ ಅನುಭವಿ ವಕೀಲರೊಂದಿಗೆ ತಕ್ಷಣವೇ ಚಾಟ್ ಮಾಡಿ ಅಥವಾ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ನಿಗದಿಪಡಿಸಿ."
-              : "Connect directly with verified Advocates in your city for immediate legal representation and advisory."}
+              ? "ನಿಮ್ಮ ನಗರದ ಅನುಭವಿ ವಕೀಲರೊಂದಿಗೆ ತಕ್ಷಣವೇ ಚಾಟ್ ಮಾಡಿ ಅಥವಾ ನೇರ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ನಿಗದಿಪಡಿಸಿ."
+              : "Connect directly with verified Advocates in your city for immediate legal representation, bail, or drafting."}
           </p>
         </div>
         <button
@@ -708,9 +936,10 @@ export default function AskQuestion() {
           className="lw-aq-bottom-cta-btn"
           onClick={() => navigate("/find-lawyer")}
         >
-          {isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ →" : "Find an Advocate →"}
+          <span>{isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ" : "Find an Advocate"}</span>
+          <LegalIcon name="arrowRight" size={14} />
         </button>
-      </div>
+      </section>
     </div>
   );
 }

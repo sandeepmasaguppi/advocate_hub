@@ -40,6 +40,7 @@ import {
   buildTargetCourt,
 } from "../data/CourtsData";
 import { getTheme, toggleTheme as toggleGlobalTheme, applyTheme } from "../data/themeStore";
+import { formatBarEnrollment, isValidBarEnrollment } from "../data/barEnrollmentHelper";
 import "./AdminPage.css";
 const REQUESTS_KEY   = "law4u_requests";    // { [advocateId]: Request[] }
 const BOOKINGS_KEY   = "law4u_bookings";    // { bookingId: Booking }
@@ -1976,6 +1977,9 @@ function AdvocateFormModal({ initial, onClose, onSave }) {
     }
     if (!form.city && !form.taluk && !form.district) e.city = "Select a city";
     if (specialities.length === 0 && !form.speciality.trim()) e.speciality = "Select at least one practice area";
+    if (form.barId && form.barId.trim() && !isValidBarEnrollment(form.barId)) {
+      e.barId = "Bar ID must match format KAR/1424/2016 (3 letters / 4 digits / 4 digits)";
+    }
     setErr(e);
     return !Object.keys(e).length;
   };
@@ -2358,8 +2362,14 @@ function AdvocateFormModal({ initial, onClose, onSave }) {
 
           <div className="am-modal-grid">
             <div className="am-field">
-              <label>Bar ID</label>
-              <input value={form.barId} onChange={(e) => setF("barId", e.target.value)} />
+              <label>Bar ID (KAR/1424/2016)</label>
+              <input
+                placeholder="KAR/1424/2016"
+                maxLength={13}
+                value={form.barId}
+                onChange={(e) => setF("barId", formatBarEnrollment(e.target.value))}
+              />
+              {err.barId && <p className="am-err">⚠ {err.barId}</p>}
             </div>
 
             <div className="am-field">

@@ -353,6 +353,7 @@ export default function ClientDashboard() {
   // One-time ₹10 consultation fee verification per advocate for this client
   const [, setPaidVersion] = useState(0);
   const isAdvocatePaid = (advId) => {
+    return true;
     if (!advId) return false;
     const cid = clientId || "guest";
     if (localStorage.getItem(`law4u_client_paid_${cid}_adv_${advId}`) === "true") return true;
@@ -917,6 +918,8 @@ export default function ClientDashboard() {
   const sendMessage = () => {
     if ((!message.trim() && !pendingAttachment) || !selected) return;
     const textToSend = message.trim();
+    executeSendMessage(textToSend);
+    return;
 
     // Check if client has already paid the one-time ₹10 fee for this specific advocate
     if (!isAdvocatePaid(selected.id)) {
@@ -1816,7 +1819,7 @@ export default function ClientDashboard() {
                 <div className="wa-meta-sub">
                   <div className="wa-advocate-desc">{a.speciality || a.practiceArea}</div>
                   <div className={`wa-advocate-fee-chip ${isAdvocatePaid(a.id) ? "paid" : "unpaid"}`}>
-                    {isAdvocatePaid(a.id) ? "✓ Active" : "₹10 Chat"}
+                    ✓ Active
                   </div>
                 </div>
               </div>
@@ -1826,7 +1829,7 @@ export default function ClientDashboard() {
       </aside>
 
       {selected && profileOpen && (
-        !isAdvocatePaid(selected.id) ? (
+        false ? (
           <div className="wa-profile-overlay" onClick={() => setProfileOpen(false)}>
             <div className={`wa-profile-card wa-profile-card-locked ${theme === "dark" ? "dark" : ""}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "460px", textAlign: "center" }}>
               <button className="wa-profile-close" type="button" onClick={() => setProfileOpen(false)}>×</button>
@@ -2030,13 +2033,13 @@ export default function ClientDashboard() {
             <div
               className="wa-header-contact-info"
               onClick={() => {
-                if (!isAdvocatePaid(selected.id)) {
+                if (false) {
                   setShowPaymentModal(true);
                   return;
                 }
                 setProfileOpen(true);
               }}
-              title={isAdvocatePaid(selected.id) ? "View Advocate Profile" : "🔒 Complete ₹10 Payment to Unlock Profile Details"}
+              title="View Advocate Profile"
               style={{ cursor: "pointer" }}
             >
               <div className="wa-header-avatar">
@@ -2049,7 +2052,7 @@ export default function ClientDashboard() {
               <div className="wa-header-text">
                 <div className="wa-header-title">{selected.name} <span className="wa-badge-check">✓</span></div>
                 <div className="wa-header-subtitle">
-                  {selected.speciality || selected.practiceArea} · {isAdvocatePaid(selected.id) ? (
+                  {selected.speciality || selected.practiceArea} · {true ? (
                     <span style={{ color: "#00a884", fontWeight: 700 }}>✓ {lang === "kn" ? "ಸಕ್ರಿಯ ಸಮಾಲೋಚನೆ" : "Consultation Active"}</span>
                   ) : (
                     <span style={{ color: "#7c3aed", fontWeight: 700 }}>🔒 {lang === "kn" ? "₹10 ಒಂದು ಬಾರಿ ಶುಲ್ಕ" : "₹10 Activation"}</span>
@@ -2102,7 +2105,7 @@ export default function ClientDashboard() {
               )}
             </div>
           ) : messages.length === 0 ? (
-            !isAdvocatePaid(selected.id) ? (
+            false ? (
               <div className="wa-adv-first-consult-box">
                 <div className="wa-first-consult-header">
                   <div className="wa-first-consult-avatar">
@@ -2572,7 +2575,7 @@ export default function ClientDashboard() {
               }}
               placeholder={
                 selected
-                  ? isAdvocatePaid(selected.id)
+                  ? true
                     ? `Message ${selected.name}…`
                     : lang === "kn"
                       ? `${selected.name} ಅವರಿಗೆ ಸಂದೇಶ ಬರೆಯಿರಿ (₹10 ಸಮಾಲೋಚನಾ ಶುಲ್ಕ)…`
@@ -2589,7 +2592,7 @@ export default function ClientDashboard() {
       {/* ========================================================
           SIMPLIFIED ELEGANT PAYMENT MODAL (MOBILE & DESKTOP)
           ======================================================== */}
-      {showPaymentModal && (
+      {false && (
         <div className="wa-pay-overlay" onClick={() => !isProcessingPayment && setShowPaymentModal(false)}>
           <div className={`wa-pay-card ${theme === "dark" ? "dark" : ""}`} onClick={(e) => e.stopPropagation()}>
             {/* Header */}

@@ -62,5 +62,28 @@
       "from": "advocate"
     },
     "t": "2026-10-17T16:26:48.808Z"
+  },
+  {
+    "id": "msg_1792556834723_gxlcx",
+    "key": "chat_2_24",
+    "clientId": 2,
+    "advocateId": 24,
+    "from": "client",
+    "text": "hi",
+    "clientName": "Vijay sir",
+    "clientAvatar": "",
+    "advocateName": "Adv. Aarti Naik",
+    "advocateAvatar": "",
+    "attachment": null,
+    "replyTo": null,
+    "forwarded": false,
+    "forwardedFrom": null,
+    "isEdited": false,
+    "isDeleted": false,
+    "deletedForEveryone": false,
+    "deletedFor": [],
+    "t": "2026-10-21T04:27:14.722Z",
+    "createdAt": "2026-10-21T04:27:14.722Z",
+    "updatedAt": "2026-10-21T04:27:14.743Z"
   }
 ]

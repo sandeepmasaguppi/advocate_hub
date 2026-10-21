@@ -291,7 +291,7 @@ export default function Register() {
     if (!client.password) { e.password = "Password is required"; if (!firstErrStep) firstErrStep = 2; }
     else if (client.password.length < 6) { e.password = "Min 6 characters"; if (!firstErrStep) firstErrStep = 2; }
     if (client.password !== client.confirmPw) { e.confirmPw = "Passwords do not match"; if (!firstErrStep) firstErrStep = 2; }
-    if (!client.agreeTerms) { e.agreeTerms = "Please accept terms of service"; if (!firstErrStep) firstErrStep = 2; }
+    if (!client.agreeTerms) { e.agreeTerms = "You must read and agree to the Terms and Conditions and Privacy Policy"; if (!firstErrStep) firstErrStep = 2; }
 
     setErr(e);
     if (firstErrStep) {
@@ -325,6 +325,8 @@ export default function Register() {
           phone: client.phone.trim(),
           city: client.city || "",
           verificationMethod: "direct",
+          termsAccepted: Boolean(client.agreeTerms),
+          termsVersion: "1.0",
         }),
       });
 
@@ -586,8 +588,15 @@ export default function Register() {
                   onChange={(e) => setC("agreeTerms", e.target.checked)}
                 />
                 <span>
-                  I agree to the <a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a> and{" "}
-                  <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>
+                  I have read and agree to the{" "}
+                  <Link to="/terms-and-conditions" target="_blank" rel="noreferrer">
+                    Terms and Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" target="_blank" rel="noreferrer">
+                    Privacy Policy
+                  </Link>
+                  .
                 </span>
               </label>
               {err.agreeTerms && <p className="rg-field-err">⚠ {err.agreeTerms}</p>}

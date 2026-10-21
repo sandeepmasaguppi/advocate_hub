@@ -3,16 +3,14 @@
 //  Part of the 4 Legal Sections:
 //    1. Ask a Question  2. Legal Documents  3. Bare Acts  4. Legal News
 //  Supports White & Dark Themes with English & Kannada translations
-//  Features:
-//    • Complete BNS 2023, BNSS 2023, BSA 2023 Criminal Law Overhaul
-//    • Interactive Old ⇄ New Criminal Law Section Converter
-//    • Deep Section Explorer with Sub-sections, Punishments & Bail status
-//    • Word (.doc) and Text (.txt) Download + Court Print
+//  Admin Console Visual System with Stroke-based SVG Icons
+//  Mobile & Laptop Optimized with Working Converter & Section Reader
 // ============================================================
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getTheme } from "../data/themeStore";
+import LegalIcon from "../components/LegalIcons";
 import {
   BARE_ACT_CATEGORIES_EN,
   BARE_ACT_CATEGORIES_KN,
@@ -27,6 +25,33 @@ export const CATEGORIES_KN = BARE_ACT_CATEGORIES_KN;
 export const CATEGORIES = BARE_ACT_CATEGORIES_EN;
 export const BARE_ACTS = BARE_ACTS_DATA;
 export { CAT_COLORS, OLD_TO_NEW_CRIMINAL_MAPPING, BARE_ACTS_DATA };
+
+// Helper to get matching SVG icon for each category
+export function getCategoryIconName(category) {
+  switch (category) {
+    case "Criminal":
+      return "lock";
+    case "Civil":
+      return "scale";
+    case "Family":
+      return "relationship";
+    case "Property":
+      return "home";
+    case "Corporate":
+      return "briefcase";
+    case "Commercial":
+      return "fees";
+    case "Labour":
+      return "client";
+    case "Constitutional":
+      return "platform";
+    case "New Acts (2023)":
+      return "zap";
+    case "Special Laws":
+    default:
+      return "shieldCheck";
+  }
+}
 
 /**
  * Downloads a structured Bare Act text document
@@ -69,7 +94,7 @@ function downloadBareActText(act) {
   });
 
   content += `=========================================================\n`;
-  content += `Provided for judicial reference, legal education & advocacy by Advocates Hub (https://advocateshub.in)\n`;
+  content += `Provided for judicial reference, legal education & advocacy by Advocates Hub (https://advocate-hub.up.railway.app/)\n`;
 
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -160,7 +185,7 @@ ${chaptersHtml}
 ${sectionsHtml}
 
 <div class="footer-note">
-  Compiled via Advocates Hub (https://advocateshub.in) • Official Indian Legal Repository
+  Compiled via Advocates Hub • Official Indian Statutory Repository
 </div>
 </body>
 </html>`;
@@ -185,7 +210,7 @@ function LawConverter({ isKn }) {
 
   const matchedMappings = useMemo(() => {
     const mappingsList = Array.isArray(OLD_TO_NEW_CRIMINAL_MAPPING) ? OLD_TO_NEW_CRIMINAL_MAPPING : [];
-    if (!filterQuery.trim()) return mappingsList.slice(0, 8);
+    if (!filterQuery.trim()) return mappingsList.slice(0, 10);
     const q = filterQuery.toLowerCase().trim();
     return mappingsList.filter(
       (m) =>
@@ -209,7 +234,10 @@ function LawConverter({ isKn }) {
     <div className="ba-converter-card">
       <div className="ba-conv-header">
         <div className="ba-conv-title-wrap">
-          <span className="ba-conv-pill">⚡ 2024 Legal Revolution</span>
+          <span className="ba-conv-pill">
+            <LegalIcon name="zap" size={13} />
+            <span>{isKn ? "೨೦೨೪ ಕಾನೂನು ಸುಧಾರಣೆ" : "2024 Legal Overhaul"}</span>
+          </span>
           <h3>
             {isKn
               ? "ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳ ಪರಿವರ್ತಕ (IPC / CrPC / IEA ➔ BNS / BNSS / BSA)"
@@ -223,7 +251,7 @@ function LawConverter({ isKn }) {
         </div>
 
         <div className="ba-conv-search-box">
-          <span className="ba-conv-search-icon">🔍</span>
+          <LegalIcon name="search" size={16} className="ba-conv-search-icon" />
           <input
             type="text"
             placeholder={
@@ -239,6 +267,7 @@ function LawConverter({ isKn }) {
               type="button"
               className="ba-conv-clear"
               onClick={() => setFilterQuery("")}
+              aria-label="Clear converter filter"
             >
               ✕
             </button>
@@ -246,7 +275,7 @@ function LawConverter({ isKn }) {
         </div>
       </div>
 
-      {/* Quick Quick-tags */}
+      {/* Quick Search Tags */}
       <div className="ba-quick-pills">
         <span className="ba-qp-label">{isKn ? "ತ್ವರಿತ ಶೋಧ:" : "Popular Searches:"}</span>
         {["302", "420", "498A", "376", "154", "438", "65B", "Mob Lynching", "Snatching"].map((tag) => (
@@ -263,43 +292,60 @@ function LawConverter({ isKn }) {
 
       {/* Comparison Grid */}
       <div className="ba-conv-grid">
-        {matchedMappings.map((item, idx) => (
-          <div key={idx} className="ba-conv-item">
-            <div className="ba-ci-top">
-              <span className="ba-ci-offence">{item.offence}</span>
-              <button
-                type="button"
-                className="ba-ci-copy"
-                onClick={() => handleCopyCitation(item, idx)}
-                title="Copy citation"
-              >
-                {copiedId === idx ? "✓ Copied!" : "📋 Copy"}
-              </button>
-            </div>
-
-            <div className="ba-ci-comparison">
-              <div className="ba-ci-side old">
-                <span className="ba-ci-act-tag old">{item.oldAct}</span>
-                <span className="ba-ci-sec">Section {item.oldSection}</span>
-              </div>
-              <div className="ba-ci-arrow">➔</div>
-              <div className="ba-ci-side new">
-                <span className="ba-ci-act-tag new">{item.newAct} 2023</span>
-                <span className="ba-ci-sec">Section {item.newSection}</span>
-              </div>
-            </div>
-
-            <p className="ba-ci-change">{item.changeSummary}</p>
-
-            <div className="ba-ci-chips">
-              <span className="ba-chip pun">⚖️ {item.punishment}</span>
-              <span className={`ba-chip ${item.bailable.includes("Non") ? "non-bail" : "bail"}`}>
-                {item.bailable}
-              </span>
-              <span className="ba-chip court">🏛️ {item.triableBy}</span>
-            </div>
+        {matchedMappings.length === 0 ? (
+          <div className="ba-conv-empty">
+            <LegalIcon name="info" size={28} />
+            <p>{isKn ? "ಯಾವುದೇ ಹೊಂದಾಣಿಕೆಯ ಸೆಕ್ಷನ್ ಕಂಡುಬಂದಿಲ್ಲ." : "No matching statutory conversion found."}</p>
           </div>
-        ))}
+        ) : (
+          matchedMappings.map((item, idx) => (
+            <div key={idx} className="ba-conv-item">
+              <div className="ba-ci-top">
+                <span className="ba-ci-offence">{item.offence}</span>
+                <button
+                  type="button"
+                  className="ba-ci-copy"
+                  onClick={() => handleCopyCitation(item, idx)}
+                  title="Copy citation"
+                >
+                  <LegalIcon name={copiedId === idx ? "check" : "copy"} size={13} />
+                  <span>{copiedId === idx ? (isKn ? "ನಕಲಿಸಲಾಗಿದೆ!" : "Copied!") : (isKn ? "ನಕಲು" : "Copy")}</span>
+                </button>
+              </div>
+
+              <div className="ba-ci-comparison">
+                <div className="ba-ci-side old">
+                  <span className="ba-ci-act-tag old">{item.oldAct}</span>
+                  <span className="ba-ci-sec">Section {item.oldSection}</span>
+                </div>
+                <div className="ba-ci-arrow">
+                  <LegalIcon name="arrowRight" size={16} />
+                </div>
+                <div className="ba-ci-side new">
+                  <span className="ba-ci-act-tag new">{item.newAct} 2023</span>
+                  <span className="ba-ci-sec">Section {item.newSection}</span>
+                </div>
+              </div>
+
+              <p className="ba-ci-change">{item.changeSummary}</p>
+
+              <div className="ba-ci-chips">
+                <span className="ba-chip pun">
+                  <LegalIcon name="scale" size={12} />
+                  <span>{item.punishment}</span>
+                </span>
+                <span className={`ba-chip ${item.bailable.includes("Non") ? "non-bail" : "bail"}`}>
+                  <LegalIcon name={item.bailable.includes("Non") ? "alertCircle" : "shieldCheck"} size={12} />
+                  <span>{item.bailable}</span>
+                </span>
+                <span className="ba-chip court">
+                  <LegalIcon name="platform" size={12} />
+                  <span>{item.triableBy}</span>
+                </span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -309,16 +355,33 @@ function LawConverter({ isKn }) {
  * Act Card Component
  */
 function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
+  const iconName = getCategoryIconName(act.category);
+
   return (
     <div className="ba-card">
       <div className="ba-card-top">
-        <div className="ba-act-icon">{act.icon}</div>
+        <div
+          className="ba-act-icon-box"
+          style={{
+            background: (CAT_COLORS[act.category] || "#2563eb") + "18",
+            borderColor: (CAT_COLORS[act.category] || "#2563eb") + "35",
+            color: CAT_COLORS[act.category] || "#2563eb",
+          }}
+        >
+          <LegalIcon name={iconName} size={22} />
+        </div>
         <div className="ba-act-badges">
           {act.isNew && (
-            <span className="ba-badge new">{isKn ? "🆕 ೨೦೨೩ ಸಂಹಿತೆ" : "🆕 2023 Sanhita"}</span>
+            <span className="ba-badge new">
+              <LegalIcon name="zap" size={12} />
+              <span>{isKn ? "೨೦೨೩ ಸಂಹಿತೆ" : "2023 Sanhita"}</span>
+            </span>
           )}
           {act.popular && (
-            <span className="ba-badge popular">{isKn ? "🔥 ಜನಪ್ರಿಯ" : "🔥 Most Cited"}</span>
+            <span className="ba-badge popular">
+              <LegalIcon name="star" size={12} />
+              <span>{isKn ? "ಜನಪ್ರಿಯ" : "Most Cited"}</span>
+            </span>
           )}
         </div>
       </div>
@@ -326,7 +389,7 @@ function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
       <div className="ba-card-meta-strip">
         <span
           className="ba-short-name"
-          style={{ color: CAT_COLORS[act.category] || "#6366f1" }}
+          style={{ color: CAT_COLORS[act.category] || "#2563eb" }}
         >
           {act.shortName}
         </span>
@@ -337,15 +400,20 @@ function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
       <p className="ba-act-desc">{act.desc}</p>
 
       <div className="ba-act-meta">
-        <span className="ba-act-year">📅 {act.year}</span>
+        <span className="ba-act-year">
+          <LegalIcon name="clock" size={13} />
+          <span>{act.year}</span>
+        </span>
         <span className="ba-act-sections">
-          📋 {act.sectionsCount || act.sections?.length} {isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"}
+          <LegalIcon name="documents" size={13} />
+          <span>{act.sectionsCount || act.sections?.length} {isKn ? "ಸೆಕ್ಷನ್‌ಗಳು" : "Sections"}</span>
         </span>
         <span
           className="ba-act-cat"
           style={{
-            background: (CAT_COLORS[act.category] || "#6366f1") + "18",
-            color: CAT_COLORS[act.category] || "#6366f1",
+            background: (CAT_COLORS[act.category] || "#2563eb") + "16",
+            color: CAT_COLORS[act.category] || "#2563eb",
+            borderColor: (CAT_COLORS[act.category] || "#2563eb") + "30",
           }}
         >
           {act.category}
@@ -354,7 +422,10 @@ function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
 
       {act.sections && act.sections.length > 0 && (
         <div className="ba-card-sec-preview">
-          <span className="ba-csp-label">⚡ {isKn ? "ಪ್ರಮುಖ ಸೆಕ್ಷನ್‌ಗಳು:" : "Key Provisions:"}</span>
+          <span className="ba-csp-label">
+            <LegalIcon name="documents" size={12} />
+            <span>{isKn ? "ಪ್ರಮುಖ ಸೆಕ್ಷನ್‌ಗಳು:" : "Key Provisions:"}</span>
+          </span>
           <div className="ba-csp-chips">
             {act.sections.slice(0, 3).map((s, i) => (
               <span key={i} className="ba-csp-chip">
@@ -370,7 +441,8 @@ function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
 
       <div className="ba-card-actions">
         <button type="button" className="ba-btn-read" onClick={() => onRead(act)}>
-          📖 {isKn ? "ಕಾಯಿದೆ ಓದಿ & ಅನ್ವೇಷಿಸಿ" : "Read & Explore"}
+          <LegalIcon name="book" size={14} />
+          <span>{isKn ? "ಕಾಯಿದೆ ಓದಿ & ಅನ್ವೇಷಿಸಿ" : "Read & Explore"}</span>
         </button>
 
         <div className="ba-btn-dl-group">
@@ -380,7 +452,8 @@ function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
             onClick={() => onDownloadWord(act)}
             title="Download formatted Word document (.doc)"
           >
-            📥 Word
+            <LegalIcon name="download" size={13} />
+            <span>Word</span>
           </button>
           <button
             type="button"
@@ -388,7 +461,8 @@ function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
             onClick={() => onDownloadText(act)}
             title="Download clean plain text (.txt)"
           >
-            📄 Text
+            <LegalIcon name="documents" size={13} />
+            <span>Text</span>
           </button>
         </div>
       </div>
@@ -397,7 +471,7 @@ function ActCard({ act, onRead, onDownloadText, onDownloadWord, isKn }) {
 }
 
 /**
- * Deep Statutory Reading Modal with Tabs, Section Search, Copy, and Print
+ * Deep Statutory Reading Modal with Mobile Quick Selector, Tabs, Copy, and Print
  */
 function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
   const [activeTab, setActiveTab] = useState("sections"); // "sections" | "overview" | "comparison"
@@ -426,7 +500,7 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
 
   const handleCopySection = () => {
     if (!activeSectionObj) return;
-    const textToCopy = `Section ${activeSectionObj.no} — ${activeSectionObj.title}\n(${act.title})\n\n${activeSectionObj.content}\n\nAdvocate Note: ${activeSectionObj.note || "Official Statutory Enactment"}\n(Source: Advocates Hub - https://advocateshub.in)`;
+    const textToCopy = `Section ${activeSectionObj.no} — ${activeSectionObj.title}\n(${act.title})\n\n${activeSectionObj.content}\n\nAdvocate Note: ${activeSectionObj.note || "Official Statutory Enactment"}\n(Source: Advocates Hub - https://advocate-hub.up.railway.app/)`;
     navigator.clipboard.writeText(textToCopy);
     setCopiedSec(true);
     setTimeout(() => setCopiedSec(false), 2000);
@@ -435,6 +509,7 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
   const handlePrintSection = () => {
     if (!activeSectionObj) return;
     const win = window.open("", "_blank");
+    if (!win) return;
     win.document.write(`
       <html>
         <head>
@@ -468,7 +543,7 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
           }
           <div class="sec-body">${activeSectionObj.content}</div>
           ${activeSectionObj.note ? `<div class="sec-note">Practice Note: ${activeSectionObj.note}</div>` : ""}
-          <div class="footer">Certified Copy via Advocates Hub • Official Legal Platform of Karnataka & India</div>
+          <div class="footer">Certified Copy via Advocates Hub • Official Legal Platform of India</div>
         </body>
       </html>
     `);
@@ -485,21 +560,33 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
         {/* Header */}
         <div
           className="ba-modal-header"
-          style={{ borderBottom: `3px solid ${CAT_COLORS[act.category] || "#6366f1"}` }}
+          style={{ borderBottom: `3px solid ${CAT_COLORS[act.category] || "#2563eb"}` }}
         >
           <div className="ba-mh-left">
             <span
               className="ba-modal-short"
-              style={{ color: CAT_COLORS[act.category] || "#6366f1" }}
+              style={{ color: CAT_COLORS[act.category] || "#2563eb" }}
             >
               {act.shortName}
             </span>
             <h3 className="ba-modal-title">{act.title}</h3>
             <div className="ba-modal-meta">
-              <span>🏛️ {act.actNumber || `Act of ${act.year}`}</span>
-              <span>📅 {act.enactmentDate || act.year}</span>
-              <span>📋 {act.sectionsCount || act.sections?.length} Sections</span>
-              <span>🏷️ {act.category}</span>
+              <span>
+                <LegalIcon name="platform" size={13} />
+                <span>{act.actNumber || `Act of ${act.year}`}</span>
+              </span>
+              <span>
+                <LegalIcon name="clock" size={13} />
+                <span>{act.enactmentDate || act.year}</span>
+              </span>
+              <span>
+                <LegalIcon name="documents" size={13} />
+                <span>{act.sectionsCount || act.sections?.length} Sections</span>
+              </span>
+              <span>
+                <LegalIcon name="shieldCheck" size={13} />
+                <span>{act.category}</span>
+              </span>
             </div>
           </div>
           <button type="button" className="ba-modal-close" onClick={onClose} aria-label="Close modal">
@@ -514,14 +601,16 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
             className={`ba-mnt-btn ${activeTab === "sections" ? "active" : ""}`}
             onClick={() => setActiveTab("sections")}
           >
-            📖 {isKn ? "ಸೆಕ್ಷನ್‌ಗಳ ಪಟ್ಟಿ & ಪೂರ್ಣ ಪಠ್ಯ" : "Section Explorer & Text"}
+            <LegalIcon name="book" size={15} />
+            <span>{isKn ? "ಸೆಕ್ಷನ್‌ಗಳ ಪಟ್ಟಿ & ಪೂರ್ಣ ಪಠ್ಯ" : "Section Explorer & Text"}</span>
           </button>
           <button
             type="button"
             className={`ba-mnt-btn ${activeTab === "overview" ? "active" : ""}`}
             onClick={() => setActiveTab("overview")}
           >
-            📑 {isKn ? "ಅಧ್ಯಾಯಗಳು & ಕಾಯಿದೆಯ ರೂಪರೇಖೆ" : "Chapters & Act Profile"}
+            <LegalIcon name="documents" size={15} />
+            <span>{isKn ? "ಅಧ್ಯಾಯಗಳು & ಕಾಯಿದೆಯ ರೂಪರೇಖೆ" : "Chapters & Act Profile"}</span>
           </button>
           {isNewLaw && (
             <button
@@ -529,7 +618,8 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
               className={`ba-mnt-btn ${activeTab === "comparison" ? "active" : ""}`}
               onClick={() => setActiveTab("comparison")}
             >
-              🔄 {isKn ? "ಹೊಸ ⇄ ಹಳೆಯ ಕಾಯಿದೆ ಹೋಲಿಕೆ" : "New ⇄ Old Law Mapping"}
+              <LegalIcon name="zap" size={15} />
+              <span>{isKn ? "ಹೊಸ ⇄ ಹಳೆಯ ಕಾಯಿದೆ ಹೋಲಿಕೆ" : "New ⇄ Old Law Mapping"}</span>
             </button>
           )}
         </div>
@@ -539,9 +629,30 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
           {/* TAB 1: SECTION EXPLORER */}
           {activeTab === "sections" && (
             <div className="ba-sec-explorer-container">
-              {/* Sidebar with Section Picker */}
+              {/* Mobile Quick Section Jumper */}
+              <div className="ba-mobile-sec-jumper">
+                <label htmlFor="ba-mobile-sec-select">
+                  <LegalIcon name="documents" size={13} />
+                  <span>{isKn ? "ಸೆಕ್ಷನ್ ಆಯ್ಕೆಮಾಡಿ:" : "Jump to Section:"}</span>
+                </label>
+                <select
+                  id="ba-mobile-sec-select"
+                  value={selectedSecNo}
+                  onChange={(e) => setSelectedSecNo(e.target.value)}
+                  className="ba-mobile-sec-dropdown"
+                >
+                  {availableSections.map((s) => (
+                    <option key={s.no} value={s.no}>
+                      § {s.no} — {s.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Desktop/Tablet Sidebar with Section Picker */}
               <div className="ba-modal-sidebar">
                 <div className="ba-sidebar-search">
+                  <LegalIcon name="search" size={14} style={{ color: "#94a3b8" }} />
                   <input
                     type="text"
                     placeholder={isKn ? "ಸೆಕ್ಷನ್ ಹುಡುಕಿ..." : "Filter sections..."}
@@ -568,12 +679,15 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
                     </button>
                   ))}
                   {filteredSections.length === 0 && (
-                    <div className="ba-sec-none-found">No sections match filter.</div>
+                    <div className="ba-sec-none-found">
+                      {isKn ? "ಯಾವುದೇ ಸೆಕ್ಷನ್ ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ." : "No sections match filter."}
+                    </div>
                   )}
                 </div>
 
                 <div className="ba-more-sections">
-                  Showing {filteredSections.length} of {act.sectionsCount || availableSections.length} statutory provisions
+                  {isKn ? "ತೋರಿಸಲಾಗುತ್ತಿದೆ " : "Showing "}
+                  <strong>{filteredSections.length}</strong> of {act.sectionsCount || availableSections.length}
                 </div>
               </div>
 
@@ -591,15 +705,19 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
                           type="button"
                           className="ba-btn-tool"
                           onClick={handleCopySection}
+                          title="Copy Section Text"
                         >
-                          {copiedSec ? "✓ Copied!" : "📋 Copy Section"}
+                          <LegalIcon name={copiedSec ? "check" : "copy"} size={13} />
+                          <span>{copiedSec ? (isKn ? "ನಕಲಿಸಲಾಗಿದೆ!" : "Copied!") : (isKn ? "ನಕಲು" : "Copy Section")}</span>
                         </button>
                         <button
                           type="button"
                           className="ba-btn-tool"
                           onClick={handlePrintSection}
+                          title="Print Section for Court Filing"
                         >
-                          🖨️ Court Print
+                          <LegalIcon name="printer" size={13} />
+                          <span>{isKn ? "ಪ್ರಿಂಟ್" : "Court Print"}</span>
                         </button>
                       </div>
                     </div>
@@ -608,7 +726,8 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
                     {activeSectionObj.classification && (
                       <div className="ba-sec-class-bar">
                         <span className="ba-sclass-item type">
-                          🏷️ {activeSectionObj.classification.type || "Statutory Provision"}
+                          <LegalIcon name="shieldCheck" size={12} />
+                          <span>{activeSectionObj.classification.type || "Statutory Provision"}</span>
                         </span>
                         {activeSectionObj.classification.cognizable && (
                           <span
@@ -618,7 +737,8 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
                                 : "cog"
                             }`}
                           >
-                            🚨 {activeSectionObj.classification.cognizable}
+                            <LegalIcon name={activeSectionObj.classification.cognizable.includes("Non") ? "alertCircle" : "zap"} size={12} />
+                            <span>{activeSectionObj.classification.cognizable}</span>
                           </span>
                         )}
                         {activeSectionObj.classification.bailable && (
@@ -629,36 +749,43 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
                                 : "bail"
                             }`}
                           >
-                            🛡️ {activeSectionObj.classification.bailable}
+                            <LegalIcon name={activeSectionObj.classification.bailable.includes("Non") ? "alertCircle" : "shieldCheck"} size={12} />
+                            <span>{activeSectionObj.classification.bailable}</span>
                           </span>
                         )}
                         {activeSectionObj.classification.triable && (
                           <span className="ba-sclass-item court">
-                            🏛️ {activeSectionObj.classification.triable}
+                            <LegalIcon name="platform" size={12} />
+                            <span>{activeSectionObj.classification.triable}</span>
                           </span>
                         )}
                       </div>
                     )}
 
-                    {/* Official Text */}
+                    {/* Official Statutory Text */}
                     <div className="ba-content-text">
                       {activeSectionObj.content.split("\n").map((line, idx) => (
-                        <p key={idx} style={{ marginBottom: line.trim() === "" ? 10 : 6 }}>
+                        <p key={idx} style={{ marginBottom: line.trim() === "" ? 10 : 8 }}>
                           {line}
                         </p>
                       ))}
                     </div>
 
-                    {/* Practice Note / Supreme Court Precedent */}
+                    {/* Advocate Practice Note & Precedent */}
                     {activeSectionObj.note && (
                       <div className="ba-content-note">
-                        <div className="ba-cn-title">⚖️ Advocate Practice Note & Precedent:</div>
+                        <div className="ba-cn-title">
+                          <LegalIcon name="scale" size={14} />
+                          <span>{isKn ? "ವಕೀಲರ ಪ್ರಾಯೋಗಿಕ ಟಿಪ್ಪಣಿ & ಪೂರ್ವನಿದರ್ಶನ:" : "Advocate Practice Note & Landmark Precedent:"}</span>
+                        </div>
                         <p>{activeSectionObj.note}</p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="ba-empty-sec-notice">Select a section from the left sidebar to view legal text.</div>
+                  <div className="ba-empty-sec-notice">
+                    {isKn ? "ಸೆಕ್ಷನ್ ವೀಕ್ಷಿಸಲು ಎಡಭಾಗದ ಪಟ್ಟಿಯಿಂದ ಆಯ್ಕೆಮಾಡಿ." : "Select a section from the list to view statutory text."}
+                  </div>
                 )}
               </div>
             </div>
@@ -669,31 +796,35 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
             <div className="ba-overview-tab-content">
               <div className="ba-ot-meta-grid">
                 <div className="ba-ot-box">
-                  <span className="ba-ot-lbl">Official Title:</span>
+                  <span className="ba-ot-lbl">{isKn ? "ಅಧಿಕೃತ ಶೀರ್ಷಿಕೆ:" : "Official Title:"}</span>
                   <strong>{act.title}</strong>
                 </div>
                 <div className="ba-ot-box">
-                  <span className="ba-ot-lbl">Statutory Citation:</span>
+                  <span className="ba-ot-lbl">{isKn ? "ಕಾನೂನು ಉಲ್ಲೇಖ:" : "Statutory Citation:"}</span>
                   <strong>{act.actNumber || "Central Legislation"}</strong>
                 </div>
                 <div className="ba-ot-box">
-                  <span className="ba-ot-lbl">Enactment / Effective Date:</span>
+                  <span className="ba-ot-lbl">{isKn ? "ಜಾರಿಗೆ ಬಂದ ದಿನಾಂಕ:" : "Enactment / Effective Date:"}</span>
                   <strong>{act.enactmentDate || act.year}</strong>
                 </div>
                 <div className="ba-ot-box">
-                  <span className="ba-ot-lbl">Administering Ministry:</span>
+                  <span className="ba-ot-lbl">{isKn ? "ಸಂಬಂಧಿತ ಸಚಿವಾಲಯ:" : "Administering Ministry:"}</span>
                   <strong>{act.ministry || "Ministry of Law and Justice, New Delhi"}</strong>
                 </div>
               </div>
 
               <div className="ba-ot-desc-card">
-                <h4>Statement of Objects and Reasons</h4>
+                <h4>{isKn ? "ಕಾಯಿದೆಯ ಉದ್ದೇಶಗಳು ಮತ್ತು ಕಾರಣಗಳು" : "Statement of Objects and Reasons"}</h4>
                 <p>{act.desc}</p>
               </div>
 
               {act.chapters && act.chapters.length > 0 && (
                 <div className="ba-ot-chapters-card">
-                  <h4>Arrangement of Chapters ({act.chapters.length} Chapters)</h4>
+                  <h4>
+                    {isKn
+                      ? `ಅಧ್ಯಾಯಗಳ ವ್ಯವಸ್ಥೆ (${act.chapters.length} ಅಧ್ಯಾಯಗಳು)`
+                      : `Arrangement of Chapters (${act.chapters.length} Chapters)`}
+                  </h4>
                   <div className="ba-chapters-list">
                     {act.chapters.map((ch, idx) => (
                       <div key={idx} className="ba-ch-row">
@@ -771,17 +902,19 @@ function ReadModal({ act, onClose, onDownloadText, onDownloadWord, isKn }) {
               className="ba-btn-download-word"
               onClick={() => onDownloadWord(act)}
             >
-              📥 Download Word (.doc)
+              <LegalIcon name="download" size={13} />
+              <span>Word (.doc)</span>
             </button>
             <button
               type="button"
               className="ba-btn-download-txt"
               onClick={() => onDownloadText(act)}
             >
-              📄 Download Text (.txt)
+              <LegalIcon name="documents" size={13} />
+              <span>Text (.txt)</span>
             </button>
             <button type="button" className="ba-btn-close-modal" onClick={onClose}>
-              Close
+              {isKn ? "ಮುಚ್ಚಿ" : "Close"}
             </button>
           </div>
         </div>
@@ -832,8 +965,8 @@ export default function BareActs() {
   const [showConverter, setShowConverter] = useState(false);
 
   const marqueeContent = isKn
-    ? "⚡ ಹಳೆಯ ⇄ ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳ ಪರಿವರ್ತಕ (IPC / CrPC / IEA ➔ BNS / BNSS / BSA) • IPC 302 ➔ BNS 103(1) (ಕೊಲೆ) • IPC 420 ➔ BNS 318(4) (ವಂಚನೆ) • IPC 498A ➔ BNS 85 (ದೌರ್ಜನ್ಯ) • CrPC 154 ➔ BNSS 173 (ಜೀರೋ ಎಫ್‌ಐಆರ್) • CrPC 438 ➔ BNSS 482 (ಮುಂಗಡ ಜಾಮೀನು) • IEA 65B ➔ BSA 63 (ಡಿಜಿಟಲ್ ಸಾಕ್ಷ್ಯ) • ತೆರೆಯಲು ಇಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ ➔         "
-    : "⚡ Old ⇄ New Criminal Law Converter (IPC / CrPC / IEA ➔ BNS / BNSS / BSA) • IPC 302 ➔ BNS 103(1) (Murder) • IPC 420 ➔ BNS 318(4) (Cheating) • IPC 498A ➔ BNS 85 (Cruelty) • CrPC 154 ➔ BNSS 173 (Zero FIR) • CrPC 438 ➔ BNSS 482 (Anticipatory Bail) • IEA 65B ➔ BSA 63 (Electronic Evidence) • Click Here to Open Interactive Converter ➔         ";
+    ? "ಹಳೆಯ ⇄ ಹೊಸ ಅಪರಾಧ ಕಾಯಿದೆಗಳ ಪರಿವರ್ತಕ (IPC / CrPC / IEA ➔ BNS / BNSS / BSA) • IPC 302 ➔ BNS 103(1) (ಕೊಲೆ) • IPC 420 ➔ BNS 318(4) (ವಂಚನೆ) • IPC 498A ➔ BNS 85 (ದೌರ್ಜನ್ಯ) • CrPC 154 ➔ BNSS 173 (ಜೀರೋ ಎಫ್‌ಐಆರ್) • CrPC 438 ➔ BNSS 482 (ಮುಂಗಡ ಜಾಮೀನು) • IEA 65B ➔ BSA 63 (ಡಿಜಿಟಲ್ ಸಾಕ್ಷ್ಯ) • ತೆರೆಯಲು ಇಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ ➔         "
+    : "Old ⇄ New Criminal Law Converter (IPC / CrPC / IEA ➔ BNS / BNSS / BSA) • IPC 302 ➔ BNS 103(1) (Murder) • IPC 420 ➔ BNS 318(4) (Cheating) • IPC 498A ➔ BNS 85 (Cruelty) • CrPC 154 ➔ BNSS 173 (Zero FIR) • CrPC 438 ➔ BNSS 482 (Anticipatory Bail) • IEA 65B ➔ BSA 63 (Electronic Evidence) • Click Here to Open Interactive Converter ➔         ";
 
   const allActs = useMemo(() => (Array.isArray(BARE_ACTS_DATA) ? BARE_ACTS_DATA : []), []);
 
@@ -879,32 +1012,50 @@ export default function BareActs() {
 
   return (
     <div className={`ba-page ${theme === "dark" ? "ba-dark" : "ba-light"}`}>
-      {/* Header */}
+      {/* Header Banner */}
       <div className="ba-header">
+        <div className="ba-header-glow"></div>
         <div className="ba-header-inner">
-          <span className="ba-header-badge">
-            {isKn ? "📜 ಭಾರತೀಯ ಅಧಿಕೃತ ಕಾಯ್ದೆಗಳು & ಸಂಹಿತೆಗಳು" : "📜 Official Indian Statutory Repository"}
-          </span>
+          <div className="ba-header-badge">
+            <span className="ba-header-beacon"></span>
+            <LegalIcon name="shieldCheck" size={13} />
+            <span>
+              {isKn ? "ಭಾರತೀಯ ಅಧಿಕೃತ ಶಾಸನಬದ್ಧ ಭಂಡಾರ" : "Official Indian Statutory Repository"}
+            </span>
+          </div>
+
           <h1 className="ba-title">
             {isKn ? "ಭಾರತೀಯ ಕಾಯಿದೆಗಳು ಮತ್ತು ಸಂಹಿತೆಗಳು (Bare Acts)" : "Indian Bare Acts & Central Statutes"}
           </h1>
+
           <p className="ba-subtitle">
             {isKn
               ? "ಭಾರತೀಯ ನ್ಯಾಯ ಸಂಹಿತೆ (BNS), ನಾಗರಿಕ ಸುರಕ್ಷಾ ಸಂಹಿತೆ (BNSS), ಸಾಕ್ಷ್ಯ ಅಧಿನಿಯಮ (BSA) ಮತ್ತು ಎಲ್ಲಾ ಪ್ರಮುಖ ಕ್ರಿಮಿನಲ್, ಸಿವಿಲ್, ಕೌಟುಂಬಿಕ ಮತ್ತು ವಾಣಿಜ್ಯ ಕಾಯಿದೆಗಳನ್ನು ಓದಿ ಮತ್ತು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ."
               : "Access official enacted Indian legislation including complete text for the 2023 Criminal Sanhitas (BNS, BNSS, BSA), Constitution of India, CPC, HMA, RERA, NI Act, and Corporate codes."}
           </p>
+
           <div className="ba-header-stats">
-            <span>📚 {allActs.length}+ {isKn ? "ಕಾಯಿದೆಗಳು" : "Enacted Acts"}</span>
-            <span>🆕 {allActs.filter((a) => a.isNew).length} {isKn ? "ಹೊಸ ಕಾಯಿದೆಗಳು (೨೦೨೩)" : "New Criminal Laws (2023)"}</span>
-            <span>🔥 {allActs.filter((a) => a.popular).length} {isKn ? "ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "Most Cited Codes"}</span>
-            <span style={{ background: "rgba(16, 185, 129, 0.25)", color: "#a7f3d0" }}>
-              ⬇ 100% Free Word (.doc) & Text (.txt) Downloads
+            <span className="ba-hstat-pill">
+              <LegalIcon name="documents" size={13} />
+              <span>{allActs.length}+ {isKn ? "ಕಾಯಿದೆಗಳು" : "Enacted Acts"}</span>
+            </span>
+            <span className="ba-hstat-pill">
+              <LegalIcon name="zap" size={13} />
+              <span>{allActs.filter((a) => a.isNew).length} {isKn ? "ಹೊಸ ಕಾಯಿದೆಗಳು (೨೦೨೩)" : "New Sanhitas (2023)"}</span>
+            </span>
+            <span className="ba-hstat-pill">
+              <LegalIcon name="star" size={13} />
+              <span>{allActs.filter((a) => a.popular).length} {isKn ? "ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "Most Cited Codes"}</span>
+            </span>
+            <span className="ba-hstat-pill highlight">
+              <LegalIcon name="download" size={13} />
+              <span>{isKn ? "ಉಚಿತ Word & Text ಡೌನ್‌ಲೋಡ್" : "100% Free Word & Text Downloads"}</span>
             </span>
           </div>
         </div>
       </div>
 
-      {/* Interactive Old ⇄ New Law Converter with Right-to-Left Scrolling Marquee */}
+      {/* Interactive Old ⇄ New Law Converter with Responsive Toggle Bar */}
       <div className="ba-converter-toggle-bar">
         <button
           type="button"
@@ -914,9 +1065,12 @@ export default function BareActs() {
           aria-expanded={showConverter}
         >
           <div className="ba-conv-toggle-fixed-left">
-            <span className="ba-conv-toggle-icon">{showConverter ? "▼" : "▶"}</span>
+            <span className="ba-conv-toggle-icon">
+              <LegalIcon name={showConverter ? "chevronUp" : "chevronDown"} size={13} />
+            </span>
             <span className="ba-conv-toggle-pill">
-              {isKn ? "⚡ ೨೦೨೩ ಸಂಹಿತೆಗಳು" : "⚡ 2024 Law Converter"}
+              <LegalIcon name="zap" size={12} />
+              <span>{isKn ? "೨೦೨೩ ಸಂಹಿತೆಗಳು" : "2024 Law Converter"}</span>
             </span>
           </div>
 
@@ -929,7 +1083,7 @@ export default function BareActs() {
 
           <div className="ba-conv-toggle-fixed-right">
             <span className={`ba-badge-active ${showConverter ? "open" : "closed"}`}>
-              {showConverter ? (isKn ? "▲ ಮುಚ್ಚಿ" : "▲ Close") : (isKn ? "👆 ತೆರೆಯಲು ಕ್ಲಿಕ್ ಮಾಡಿ" : "👆 Click to Open")}
+              {showConverter ? (isKn ? "ಮುಚ್ಚಿ" : "Close") : (isKn ? "ತೆರೆಯಲು ಕ್ಲಿಕ್ ಮಾಡಿ" : "Click to Open")}
             </span>
           </div>
         </button>
@@ -940,7 +1094,7 @@ export default function BareActs() {
       {/* Search + filter bar */}
       <div className="ba-filter-bar">
         <div className="ba-search-wrap">
-          <span>🔍</span>
+          <LegalIcon name="search" size={16} className="ba-search-icon" />
           <input
             className="ba-search"
             placeholder={
@@ -952,29 +1106,29 @@ export default function BareActs() {
             onChange={(e) => setSearch(e.target.value)}
           />
           {search && (
-            <button type="button" onClick={() => setSearch("")} aria-label="Clear search">
+            <button type="button" onClick={() => setSearch("")} aria-label="Clear search" className="ba-search-clear">
               ✕
             </button>
           )}
         </div>
 
         <div className="ba-filter-toggles">
-          <label className="ba-toggle">
-            <input
-              type="checkbox"
-              checked={showNew}
-              onChange={(e) => setShowNew(e.target.checked)}
-            />
-            <span>{isKn ? "🆕 ೨೦೨೩ ಹೊಸ ಕಾಯಿದೆಗಳು" : "🆕 2023 New Sanhitas"}</span>
-          </label>
-          <label className="ba-toggle">
-            <input
-              type="checkbox"
-              checked={showPop}
-              onChange={(e) => setShowPop(e.target.checked)}
-            />
-            <span>{isKn ? "🔥 ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "🔥 Most Cited"}</span>
-          </label>
+          <button
+            type="button"
+            className={`ba-toggle-btn ${showNew ? "active" : ""}`}
+            onClick={() => setShowNew(!showNew)}
+          >
+            <LegalIcon name="zap" size={13} />
+            <span>{isKn ? "೨೦೨೩ ಹೊಸ ಕಾಯಿದೆಗಳು" : "2023 New Sanhitas"}</span>
+          </button>
+          <button
+            type="button"
+            className={`ba-toggle-btn ${showPop ? "active" : ""}`}
+            onClick={() => setShowPop(!showPop)}
+          >
+            <LegalIcon name="star" size={13} />
+            <span>{isKn ? "ಜನಪ್ರಿಯ ಕಾಯಿದೆಗಳು" : "Most Cited"}</span>
+          </button>
         </div>
 
         <select
@@ -991,31 +1145,36 @@ export default function BareActs() {
         </select>
       </div>
 
-      {/* Category tabs */}
-      <div className="ba-cat-tabs">
-        {BARE_ACT_CATEGORIES_EN.map((cat, idx) => {
-          const label = isKn ? BARE_ACT_CATEGORIES_KN[idx] || cat : cat;
-          const isActive = activeCat === cat;
-          return (
-            <button
-              key={cat}
-              type="button"
-              className={`ba-cat-tab ${isActive ? "active" : ""}`}
-              onClick={() => setActiveCat(cat)}
-              style={
-                isActive && cat !== "All"
-                  ? {
-                      borderColor: CAT_COLORS[cat] || "#2563eb",
-                      color: CAT_COLORS[cat] || "#2563eb",
-                      background: (CAT_COLORS[cat] || "#2563eb") + "18",
-                    }
-                  : {}
-              }
-            >
-              {label}
-            </button>
-          );
-        })}
+      {/* Category tabs (Scrollable on mobile) */}
+      <div className="ba-cat-tabs-scroll-wrap">
+        <div className="ba-cat-tabs">
+          {BARE_ACT_CATEGORIES_EN.map((cat, idx) => {
+            const label = isKn ? BARE_ACT_CATEGORIES_KN[idx] || cat : cat;
+            const isActive = activeCat === cat;
+            const catIcon = cat === "All" ? "documents" : getCategoryIconName(cat);
+
+            return (
+              <button
+                key={cat}
+                type="button"
+                className={`ba-cat-tab ${isActive ? "active" : ""}`}
+                onClick={() => setActiveCat(cat)}
+                style={
+                  isActive && cat !== "All"
+                    ? {
+                        borderColor: CAT_COLORS[cat] || "#2563eb",
+                        color: CAT_COLORS[cat] || "#2563eb",
+                        background: (CAT_COLORS[cat] || "#2563eb") + "18",
+                      }
+                    : {}
+                }
+              >
+                <LegalIcon name={catIcon} size={14} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Main Body Grid */}
@@ -1035,7 +1194,9 @@ export default function BareActs() {
 
         {filtered.length === 0 ? (
           <div className="ba-empty">
-            <div style={{ fontSize: 48 }}>📚</div>
+            <div className="ba-empty-icon-wrap">
+              <LegalIcon name="documents" size={38} />
+            </div>
             <h3>{isKn ? "ಯಾವುದೇ ಕಾಯ್ದೆ ಕಂಡುಬಂದಿಲ್ಲ" : "No Bare Acts Found"}</h3>
             <p>
               {isKn
@@ -1063,9 +1224,8 @@ export default function BareActs() {
       <div className="ba-cta-banner">
         <div className="ba-cta-text">
           <h3>
-            {isKn
-              ? "ನ್ಯಾಯಾಲಯದ ವ್ಯಾಜ್ಯಗಳಿಗೆ ವಕೀಲರ ನೆರವು ಬೇಕೇ?"
-              : "Need legal representation or expert opinion on statutory provisions?"}
+            <LegalIcon name="scale" size={22} style={{ marginRight: 8, verticalAlign: "middle" }} />
+            <span>{isKn ? "ನ್ಯಾಯಾಲಯದ ವ್ಯಾಜ್ಯಗಳಿಗೆ ವಕೀಲರ ನೆರವು ಬೇಕೇ?" : "Need legal representation or expert opinion on statutory provisions?"}</span>
           </h3>
           <p>
             {isKn
@@ -1078,7 +1238,8 @@ export default function BareActs() {
           className="ba-cta-btn"
           onClick={() => navigate("/talk-to-advocate")}
         >
-          {isKn ? "ವಕೀಲರೊಂದಿಗೆ ಮಾತನಾಡಿ →" : "Consult an Advocate →"}
+          <span>{isKn ? "ವಕೀಲರೊಂದಿಗೆ ಮಾತನಾಡಿ" : "Consult an Advocate"}</span>
+          <LegalIcon name="arrowRight" size={15} />
         </button>
       </div>
 

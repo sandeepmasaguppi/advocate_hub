@@ -8,6 +8,7 @@ import "./AdvocateDashboard.css";
 import { getAdvocateById, logoutAdvocate, updateAdvocate } from "../data/Advocatesstore";
 import { api, assetUrl } from "../data/api";
 import { getTheme, toggleTheme } from "../data/themeStore";
+import { formatBarEnrollment, isValidBarEnrollment } from "../data/barEnrollmentHelper";
 import { initSocket, joinConversation, emitSendMessage, emitEditMessage, emitDeleteForEveryone, emitDeleteForMe } from "../data/socket";
 import AdvocateHeader from "../components/advocate/AdvocateHeader";
 import ProfileOverview from "../components/advocate/ProfileOverview";
@@ -1482,6 +1483,10 @@ export default function AdvocateDashboard() {
   };
 
   const handleSaveProfile = async () => {
+    if (profileForm?.barId && !isValidBarEnrollment(profileForm.barId)) {
+      setProfileMsg("Bar ID must match format KAR/1424/2016 (3 letters / 4 digits / 4 digits)");
+      return false;
+    }
     if (!advocateId || !profileForm) return;
     setProfileSaving(true);
     setProfileMsg("");
@@ -3571,8 +3576,8 @@ export default function AdvocateDashboard() {
                       <label className="ad-label">Bar Council</label>
                       <input className="ad-input" disabled={!isProfileEditing} value={profileForm.barCouncil} onChange={e => setProfileForm({...profileForm, barCouncil: e.target.value})} />
 
-                      <label className="ad-label">Bar ID</label>
-                      <input className="ad-input" disabled={!isProfileEditing} value={profileForm.barId} onChange={e => setProfileForm({...profileForm, barId: e.target.value})} />
+                      <label className="ad-label">Bar ID (KAR/1424/2016)</label>
+                      <input className="ad-input" disabled={!isProfileEditing} placeholder="KAR/1424/2016" maxLength={13} value={profileForm.barId} onChange={e => setProfileForm({...profileForm, barId: formatBarEnrollment(e.target.value)})} />
                     </div>
 
                     <div style={{ gridColumn: "2 / 3", display: "flex", flexDirection: "column", gap: 8 }}>

@@ -13,7 +13,7 @@
     },
     "timestamp": "2026-10-18T18:00:39.281Z",
     "delivered": false,
-    "error": "Resend API failed (403): The advocatehub.in domain is not verified. Please, add and verify your domain on https://resend.com/domains"
+    "error": "Resend API failed (403): The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"
   },
   {
     "id": "NOTIF_1792313508587_yreb0t",

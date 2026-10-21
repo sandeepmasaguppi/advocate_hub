@@ -523,7 +523,7 @@
     "practiceArea": "Divorce",
     "speciality": "Divorce & Matrimonial",
     "experience": "6 years",
-    "rating": 4.6,
+    "rating": 5,
     "cases": 160,
     "fee": "₹1,900 / consult",
     "phone": "+91 98765 43233",
@@ -536,7 +536,16 @@
     "availability": "Available today",
     "bio": "Helps clients through divorce proceedings, alimony claims, and family settlements with practical solutions.",
     "status": "approved",
-    "passwordHash": "scrypt$103b82b61e2744da569e4348ccaea290$fbd702e874bbb88899f647eb27e2efd1517deda5bcde3fe7e45ca483af1fc2fa11a499a6efe8eabecfba2a3e968d48ebc8ad6479f4d17a61b7134c29c88b93e2"
+    "passwordHash": "scrypt$103b82b61e2744da569e4348ccaea290$fbd702e874bbb88899f647eb27e2efd1517deda5bcde3fe7e45ca483af1fc2fa11a499a6efe8eabecfba2a3e968d48ebc8ad6479f4d17a61b7134c29c88b93e2",
+    "ratings": {
+      "2": {
+        "score": 5,
+        "clientName": "Vijay sir",
+        "comment": "",
+        "date": "2026-10-21T04:30:33.504Z"
+      }
+    },
+    "ratingCount": 1
   },
   {
     "id": 25,

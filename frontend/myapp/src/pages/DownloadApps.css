@@ -1,0 +1,557 @@
+/* ============================================================
+   DownloadApps.css — Mobile App Download & QR Scanner Page
+   AdvocateHub Android & iOS Apps
+   ============================================================ */
+
+.dl-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 100px 20px 60px;
+  background: var(--dl-bg, #0b1220);
+  color: var(--dl-text, #e8eef8);
+  font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  transition: background 0.25s ease, color 0.25s ease;
+  position: relative;
+}
+
+.App.theme-light .dl-page,
+.dl-page.theme-light {
+  --dl-bg: #f8fafc;
+  --dl-card-bg: #ffffff;
+  --dl-card-border: #e2e8f0;
+  --dl-text: #0f172a;
+  --dl-muted: #64748b;
+  --dl-accent: #2563eb;
+  --dl-scanner-border: #cbd5e1;
+  --dl-chip-bg: rgba(37, 99, 235, 0.08);
+  --dl-chip-text: #1d4ed8;
+  --dl-laser: #2563eb;
+  --dl-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+.App.theme-dark .dl-page,
+.dl-page.theme-dark {
+  --dl-bg: #090e1a;
+  --dl-card-bg: #111a2e;
+  --dl-card-border: #1e293b;
+  --dl-text: #f8fafc;
+  --dl-muted: #94a3b8;
+  --dl-accent: #38bdf8;
+  --dl-scanner-border: #334155;
+  --dl-chip-bg: rgba(56, 189, 248, 0.12);
+  --dl-chip-text: #38bdf8;
+  --dl-laser: #38bdf8;
+  --dl-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.dl-container {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ── Hero Header ────────────────────────────────────────────── */
+.dl-hero {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 48px;
+}
+
+.dl-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  background: var(--dl-chip-bg);
+  color: var(--dl-chip-text);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.dl-title {
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px;
+  color: var(--dl-text);
+}
+
+.dl-title .dl-gradient-text {
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 50%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dl-subtitle {
+  font-size: clamp(0.98rem, 2vw, 1.15rem);
+  line-height: 1.65;
+  color: var(--dl-muted);
+  margin: 0;
+}
+
+/* ── Dual Scanner Grid ──────────────────────────────────────── */
+.dl-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  margin-bottom: 50px;
+}
+
+@media (max-width: 860px) {
+  .dl-grid {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ── Scanner Card ───────────────────────────────────────────── */
+.dl-card {
+  background: var(--dl-card-bg);
+  border: 1px solid var(--dl-card-border);
+  border-radius: 24px;
+  padding: 36px 30px;
+  box-shadow: var(--dl-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.dl-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.dl-card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb, #38bdf8, #10b981);
+}
+
+.dl-card.ios .dl-card-glow {
+  background: linear-gradient(90deg, #a855f7, #6366f1, #38bdf8);
+}
+
+.dl-card-header {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dl-platform-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.dl-platform-icon-wrap.android {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+}
+
+.dl-platform-icon-wrap.ios {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dl-card-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: var(--dl-text);
+  letter-spacing: -0.02em;
+}
+
+.dl-card-desc {
+  font-size: 0.92rem;
+  color: var(--dl-muted);
+  margin: 0;
+}
+
+/* ── Interactive QR Scanner Frame ───────────────────────────── */
+.dl-qr-stage {
+  position: relative;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  margin-bottom: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dl-qr-frame {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.dl-qr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Laser Scanning Line Animation */
+.dl-laser-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #2563eb, #38bdf8, transparent);
+  box-shadow: 0 0 12px #38bdf8;
+  animation: dl-laser-sweep 2.4s ease-in-out infinite alternate;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dl-card.ios .dl-laser-line {
+  background: linear-gradient(90deg, transparent, #a855f7, #6366f1, transparent);
+  box-shadow: 0 0 12px #818cf8;
+}
+
+@keyframes dl-laser-sweep {
+  0% {
+    top: 5%;
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: 92%;
+    opacity: 0.3;
+  }
+}
+
+/* Scanner Corner Brackets */
+.dl-corner-bracket {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: #0f172a;
+  border-style: solid;
+  pointer-events: none;
+  z-index: 3;
+}
+.dl-cb-tl { top: 4px; left: 4px; border-width: 3px 0 0 3px; border-top-left-radius: 6px; }
+.dl-cb-tr { top: 4px; right: 4px; border-width: 3px 3px 0 0; border-top-right-radius: 6px; }
+.dl-cb-bl { bottom: 4px; left: 4px; border-width: 0 0 3px 3px; border-bottom-left-radius: 6px; }
+.dl-cb-br { bottom: 4px; right: 4px; border-width: 0 3px 3px 0; border-bottom-right-radius: 6px; }
+
+.dl-qr-instruction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--dl-muted);
+  margin-bottom: 22px;
+}
+
+.dl-qr-instruction span.icon {
+  font-size: 1.1rem;
+}
+
+/* ── Store Button ───────────────────────────────────────────── */
+.dl-store-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: #0f172a;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 14px;
+}
+
+.dl-store-btn:hover {
+  transform: translateY(-2px);
+  background: #1e293b;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+}
+
+.dl-store-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dl-store-btn-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.dl-store-btn-text .sub {
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.dl-store-btn-text .main {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.dl-meta-badge {
+  font-size: 0.78rem;
+  color: var(--dl-muted);
+  margin-bottom: 14px;
+}
+
+/* ── Quick Copy Link Trigger ────────────────────────────────── */
+.dl-copy-link-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dl-copy-btn {
+  background: transparent;
+  border: 1px dashed var(--dl-card-border);
+  color: var(--dl-muted);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.18s ease;
+}
+
+.dl-copy-btn:hover {
+  background: var(--dl-chip-bg);
+  color: var(--dl-chip-text);
+  border-color: currentColor;
+}
+
+/* ── Live Scanner Test Panel (Interactive feature) ──────────── */
+.dl-settings-panel {
+  background: var(--dl-card-bg);
+  border: 1px solid var(--dl-card-border);
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 48px;
+  box-shadow: var(--dl-shadow);
+}
+
+.dl-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dl-settings-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--dl-text);
+  margin: 0;
+}
+
+.dl-settings-desc {
+  font-size: 0.88rem;
+  color: var(--dl-muted);
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+
+.dl-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 700px) {
+  .dl-settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dl-input-group label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--dl-text);
+  margin-bottom: 6px;
+}
+
+.dl-input-group input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--dl-scanner-border);
+  background: var(--dl-bg);
+  color: var(--dl-text);
+  font-size: 0.88rem;
+  font-family: monospace;
+  outline: none;
+  transition: border-color 0.18s ease;
+}
+
+.dl-input-group input:focus {
+  border-color: var(--dl-accent);
+}
+
+/* ── App Features Strip ─────────────────────────────────────── */
+.dl-features-section {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.dl-features-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--dl-text);
+  margin-bottom: 24px;
+}
+
+.dl-features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .dl-features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .dl-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dl-feature-card {
+  background: var(--dl-card-bg);
+  border: 1px solid var(--dl-card-border);
+  border-radius: 18px;
+  padding: 22px 18px;
+  text-align: center;
+  box-shadow: var(--dl-shadow);
+}
+
+.dl-feature-icon {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+}
+
+.dl-feature-h {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dl-text);
+  margin: 0 0 6px;
+}
+
+.dl-feature-p {
+  font-size: 0.85rem;
+  color: var(--dl-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Footer Navigation ──────────────────────────────────────── */
+.dl-bottom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dl-back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: var(--dl-chip-bg);
+  color: var(--dl-chip-text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  transition: all 0.2s ease;
+}
+
+.dl-back-home-btn:hover {
+  background: var(--dl-accent);
+  color: #ffffff;
+}
+
+.dl-find-lawyer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3);
+}
+
+.dl-find-lawyer-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+

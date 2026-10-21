@@ -935,3 +935,42 @@ body {
     color: #444;
   }
 }
+
+
+/* ── Admin-Style SVG Icons in Privacy Policy ── */
+.legal-svg-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.legal-svg-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+}
+
+.pp-section-title span .legal-svg-icon {
+  color: var(--pp-color-primary);
+}
+
+.pp-nav-item .legal-svg-icon {
+  color: inherit;
+}
+
+.pp-nav-item.active .legal-svg-icon {
+  color: var(--pp-color-primary-dark);
+}
+
+.pp-summary-item .legal-svg-icon {
+  color: var(--pp-color-primary);
+}
+
+.pp-right-icon .legal-svg-icon {
+  color: #15803d;
+}
+
+.pp-hero-meta-item .legal-svg-icon {
+  color: rgba(255, 255, 255, 0.9);
+}

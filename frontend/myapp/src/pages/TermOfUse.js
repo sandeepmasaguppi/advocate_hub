@@ -1,595 +1,1466 @@
-// TermsOfUse.js — Advocate Hub Terms of Use
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+// TermOfUse.js — Advocate Hub Official Terms and Conditions (Bilingual EN / KN)
+// Compliant with Advocates Act 1961, BCI Rules, IT Act 2000, DPDP Act 2023, and Consumer Protection Act 2019
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import LegalIcon, { ADMIN_ICONS } from "../components/LegalIcons";
 import "./TermOfUse.css";
 
-const LAST_UPDATED  = "01 September 2026";
-const EFFECTIVE_DATE= "01 September 2026";
-const COMPANY       = "Advocate Hub Legal Technologies Pvt. Ltd.";
-const EMAIL         = "advocatehub.in@gmail.com";
-const INSTAGRAM     = "@advocate__hub";
-const ADDRESS       = "No. 42, 3rd Floor, Legal Hub Tower, MG Road, Bengaluru – 560001, Karnataka, India";
+const LAST_UPDATED = "01 September 2026";
+const EFFECTIVE_DATE = "01 September 2026";
+const TERMS_VERSION = "1.0";
+const EMAIL = "advocatehub.in@gmail.com";
+const PHONE = "+91 91087 17353";
+const INSTAGRAM = "@advocate__hub";
+const WEBSITE_URL = "https://advocate-hub.up.railway.app/";
 
-const SECTIONS = [
-  { id:"acceptance",        title:"1. Acceptance of Terms",                 icon:"✅" },
-  { id:"definitions",       title:"2. Definitions",                          icon:"📖" },
-  { id:"eligibility",       title:"3. Eligibility",                          icon:"👤" },
-  { id:"platform-desc",     title:"4. Platform Description",                 icon:"🏛️" },
-  { id:"registration",      title:"5. Account Registration",                 icon:"📝" },
-  { id:"advocate-terms",    title:"6. Advocate-Specific Terms",              icon:"⚖️" },
-  { id:"client-terms",      title:"7. Client-Specific Terms",               icon:"🙋" },
-  { id:"fees-payment",      title:"8. Fees and Payments",                   icon:"💰" },
-  { id:"prohibited",        title:"9. Prohibited Conduct",                  icon:"🚫" },
-  { id:"content",           title:"10. User Content & Intellectual Property",icon:"📄" },
-  { id:"disclaimers",       title:"11. Disclaimers",                         icon:"⚠️" },
-  { id:"liability",         title:"12. Limitation of Liability",             icon:"🛡️" },
-  { id:"indemnification",   title:"13. Indemnification",                    icon:"🤝" },
-  { id:"termination",       title:"14. Account Termination",                icon:"🔚" },
-  { id:"dispute",           title:"15. Dispute Resolution",                 icon:"🏛️" },
-  { id:"governing-law",     title:"16. Governing Law",                      icon:"📜" },
-  { id:"modifications",     title:"17. Modifications to Terms",             icon:"✏️" },
-  { id:"general",           title:"18. General Provisions",                 icon:"📋" },
-  { id:"contact",           title:"19. Contact Information",                icon:"📬" },
+export const SECTIONS_META = [
+  { id: "sec-1", num: 1, titleEn: "Introduction and Acceptance of Terms", titleKn: "ಪರಿಚಯ ಮತ್ತು ನಿಯಮಗಳ ಸ್ವೀಕಾರ", iconKey: "acceptance", icon: <LegalIcon name="acceptance" size={16} />, keywords: "acceptance agreement binding contract electronic 10a it act" },
+  { id: "sec-2", num: 2, titleEn: "About Advocate Hub and Its Services", titleKn: "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ ಮತ್ತು ಅದರ ಸೇವೆಗಳ ಬಗ್ಗೆ", iconKey: "platform", icon: <LegalIcon name="platform" size={16} />, keywords: "about platform marketplace intermediary section 79 bci rule 36 law firm" },
+  { id: "sec-3", num: 3, titleEn: "User Eligibility and Account Registration", titleKn: "ಬಳಕೆದಾರರ ಅರ್ಹತೆ ಮತ್ತು ಖಾತೆ ನೋಂದಣಿ", iconKey: "user", icon: <LegalIcon name="user" size={16} />, keywords: "eligibility 18 age contract credentials registration consent checkbox" },
+  { id: "sec-4", num: 4, titleEn: "Client Responsibilities", titleKn: "ಗ್ರಾಹಕರ ಜವಾಬ್ದಾರಿಗಳು", iconKey: "client", icon: <LegalIcon name="client" size={16} />, keywords: "client responsibility truthfulness preliminary consultation conduct" },
+  { id: "sec-5", num: 5, titleEn: "Advocate Registration and Professional Verification", titleKn: "ವಕೀಲರ ನೋಂದಣಿ ಮತ್ತು ವೃತ್ತಿಪರ ಪರಿಶೀಲನೆ", iconKey: "scale", icon: <LegalIcon name="scale" size={16} />, keywords: "advocate enrollment bar council sanad credentials impersonation verification" },
+  { id: "sec-6", num: 6, titleEn: "Administrator Review and Approval", titleKn: "ನಿರ್ವಾಹಕರ ಪರಿಶೀಲನೆ ಮತ್ತು ಅನುಮೋದನೆ", iconKey: "shieldCheck", icon: <LegalIcon name="shieldCheck" size={16} />, keywords: "admin approval pending verification reject suspend badges review" },
+  { id: "sec-7", num: 7, titleEn: "Advocate Profiles and Accuracy of Information", titleKn: "ವಕೀಲರ ಪ್ರೊಫೈಲ್‌ಗಳು ಮತ್ತು ಮಾಹಿತಿಯ ನಿಖರತೆ", iconKey: "profileAccuracy", icon: <LegalIcon name="profileAccuracy" size={16} />, keywords: "profile factual experience courts practice areas advertising prohibition" },
+  { id: "sec-8", num: 8, titleEn: "Consultation Requests, Chat and Communication", titleKn: "ಸಮಾಲೋಚನೆ ವಿನಂತಿಗಳು, ಚಾಟ್ ಮತ್ತು ಸಂವಹನ", iconKey: "chat", icon: <LegalIcon name="chat" size={16} />, keywords: "consultation chat real-time messages intake confidentiality recording" },
+  { id: "sec-9", num: 9, titleEn: "Fees, Payments, Cancellations and Refunds", titleKn: "ಶುಲ್ಕಗಳು, ಪಾವತಿಗಳು, ರದ್ದತಿ ಮತ್ತು ಮರುಪಾವತಿಗಳು", iconKey: "fees", icon: <LegalIcon name="fees" size={16} />, keywords: "fees payment platform charge advocate fee refund cancellation billing" },
+  { id: "sec-10", num: 10, titleEn: "Legal Disclaimer and No Guarantee of Results", titleKn: "ಕಾನೂನು ಹಕ್ಕುತ್ಯಾಗ ಮತ್ತು ಫಲಿತಾಂಶದ ಯಾವುದೇ ಭರವಸೆ ಇಲ್ಲ", iconKey: "disclaimer", icon: <LegalIcon name="disclaimer" size={16} />, keywords: "disclaimer guarantee warranty results outcome ai assistant bare acts" },
+  { id: "sec-11", num: 11, titleEn: "Advocate-Client Relationship", titleKn: "ವಕೀಲ-ಗ್ರಾಹಕ ಸಂಬಂಧ", iconKey: "relationship", icon: <LegalIcon name="relationship" size={16} />, keywords: "advocate client relationship vakalatnama independent intermediary safe harbor" },
+  { id: "sec-12", num: 12, titleEn: "Privacy, Confidentiality and Personal Data", titleKn: "ಗೌಪ್ಯತೆ, ರಹಸ್ಯತೆ ಮತ್ತು ವೈಯಕ್ತಿಕ ದತ್ತಾಂಶ", iconKey: "lock", icon: <LegalIcon name="lock" size={16} />, keywords: "privacy dpdp act data security scrypt hash encryption otp personal data" },
+  { id: "sec-13", num: 13, titleEn: "Uploaded Documents and Intellectual Property", titleKn: "ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ದಾಖಲೆಗಳು ಮತ್ತು ಬೌದ್ಧಿಕ ಆಸ್ತಿ", iconKey: "documents", icon: <LegalIcon name="documents" size={16} />, keywords: "documents case brief license intellectual property copyright trademarks" },
+  { id: "sec-14", num: 14, titleEn: "Prohibited Activities and Fraud Prevention", titleKn: "ನಿಷೇಧಿತ ಚಟುವಟಿಕೆಗಳು ಮತ್ತು ವಂಚನೆ ತಡೆಗಟ್ಟುವಿಕೆ", iconKey: "prohibited", icon: <LegalIcon name="prohibited" size={16} />, keywords: "prohibited conduct fraud hacking scraping fake credentials impersonation" },
+  { id: "sec-15", num: 15, titleEn: "Reporting, Complaints and Dispute Resolution", titleKn: "ವರದಿ ಮಾಡುವಿಕೆ, ದೂರುಗಳು ಮತ್ತು ವಿವಾದ ಪರಿಹಾರ", iconKey: "gavel", icon: <LegalIcon name="gavel" size={16} />, keywords: "grievance officer complaints dispute redressal consumer rights it rules" },
+  { id: "sec-16", num: 16, titleEn: "Account Suspension and Termination", titleKn: "ಖಾತೆ ಅಮಾನತು ಮತ್ತು ರದ್ದತಿ", iconKey: "termination", icon: <LegalIcon name="termination" size={16} />, keywords: "suspension termination deactivation disciplinary bar council closure" },
+  { id: "sec-17", num: 17, titleEn: "Service Availability and Third-Party Services", titleKn: "ಸೇವಾ ಲಭ್ಯತೆ ಮತ್ತು ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಸೇವೆಗಳು", iconKey: "availability", icon: <LegalIcon name="availability" size={16} />, keywords: "availability uptime maintenance sms whatsapp gateways hosting telecom" },
+  { id: "sec-18", num: 18, titleEn: "Limitation of Liability, subject to applicable law", titleKn: "ಹೊಣೆಗಾರಿಕೆಯ ಮಿತಿ", iconKey: "liability", icon: <LegalIcon name="liability" size={16} />, keywords: "liability limitation direct damages caps statutory exceptions consumer law" },
+  { id: "sec-19", num: 19, titleEn: "Amendments to Terms and Conditions", titleKn: "ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳಿಗೆ ತಿದ್ದುಪಡಿಗಳು", iconKey: "amendments", icon: <LegalIcon name="amendments" size={16} />, keywords: "amendments revisions updates notice changes modification version" },
+  { id: "sec-20", num: 20, titleEn: "Governing Law and Jurisdiction in India", titleKn: "ಭಾರತದಲ್ಲಿ ಆಡಳಿತ ಕಾನೂನು ಮತ್ತು ನ್ಯಾಯವ್ಯಾಪ್ತಿ", iconKey: "governingLaw", icon: <LegalIcon name="governingLaw" size={16} />, keywords: "governing law jurisdiction bengaluru karnataka courts india" },
+  { id: "sec-21", num: 21, titleEn: "Contact and Support Information", titleKn: "ಸಂಪರ್ಕ ಮತ್ತು ಬೆಂಬಲ ಮಾಹಿತಿ", iconKey: "contact", icon: <LegalIcon name="contact" size={16} />, keywords: "contact email phone support grievance officer helpdesk address" },
 ];
 
 export default function TermsOfUse() {
-  const navigate                   = useNavigate();
-  const [activeSection, setActive] = useState("acceptance");
-  const [showTOC,       setTOC]    = useState(false);
-  const [scrolled,      setScrolled]= useState(false);
-  const [accepted,      setAccepted]= useState(false);
-  const sectionRefs                = useRef({});
+  const navigate = useNavigate();
+  const [lang, setLang] = useState(() => {
+    try {
+      return localStorage.getItem("law4u_home_lang") || localStorage.getItem("law4u_terms_lang") || "en";
+    } catch {
+      return "en";
+    }
+  });
+  const [activeSection, setActive] = useState("sec-1");
+  const [showTOC, setTOC] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
+  const sectionRefs = useRef({});
+  const isKn = lang === "kn";
+
+  const toggleLanguage = () => {
+    const nextLang = isKn ? "en" : "kn";
+    setLang(nextLang);
+    try {
+      localStorage.setItem("law4u_home_lang", nextLang);
+      localStorage.setItem("law4u_terms_lang", nextLang);
+      window.dispatchEvent(new CustomEvent("law4u_lang_change", { detail: nextLang }));
+    } catch {}
+  };
+
+  // Scroll Progress and Back-To-Top listener
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        const currentProgress = (window.scrollY / totalHeight) * 100;
+        setScrollProgress(Math.min(100, Math.max(0, currentProgress)));
+      }
+      setShowBackToTop(window.scrollY > 350);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Intersection observer for sticky TOC highlighting
   useEffect(() => {
     const observer = new IntersectionObserver(
-      entries => entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); }),
-      { rootMargin: "-20% 0px -70% 0px" }
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -65% 0px" }
     );
-    Object.values(sectionRefs.current).forEach(ref => ref && observer.observe(ref));
+
+    Object.values(sectionRefs.current).forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
     return () => observer.disconnect();
   }, []);
 
-  const scrollTo = (id) => {
-    sectionRefs.current[id]?.scrollIntoView({ behavior:"smooth", block:"start" });
-    setTOC(false);
+  const scrollToSection = (id) => {
+    const element = sectionRefs.current[id];
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActive(id);
+      setTOC(false);
+    }
   };
-  const setRef = (id) => (el) => { sectionRefs.current[id] = el; };
 
-  const S = ({ children, style }) => (
-    <p style={{ fontSize:14, lineHeight:1.85, color:"#374151", marginBottom:13, ...style }}>{children}</p>
-  );
-  const B = ({ children, style }) => (
-    <div style={{ fontSize:14, fontWeight:700, color:"#1e293b", margin:"18px 0 8px", ...style }}>{children}</div>
-  );
-  const Li = ({ children }) => (
-    <div style={{ display:"flex", alignItems:"flex-start", gap:9, fontSize:13.5, color:"#374151", lineHeight:1.75, marginBottom:7 }}>
-      <span style={{ color:"#2563eb", fontSize:16, marginTop:2, flexShrink:0 }}>•</span>
-      <span>{children}</span>
-    </div>
-  );
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const copySectionLink = (id) => {
+    const url = `${window.location.origin}/terms-and-conditions#${id}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+      });
+    }
+  };
+
+  // Search filtering across the 21 sections
+  const filteredSections = useMemo(() => {
+    if (!searchQuery.trim()) return SECTIONS_META;
+    const q = searchQuery.toLowerCase().trim();
+    return SECTIONS_META.filter(
+      (s) =>
+        s.titleEn.toLowerCase().includes(q) ||
+        s.titleKn.toLowerCase().includes(q) ||
+        s.keywords.toLowerCase().includes(q) ||
+        String(s.num).includes(q)
+    );
+  }, [searchQuery]);
+
+  const currentSectionMeta = SECTIONS_META.find((s) => s.id === activeSection) || SECTIONS_META[0];
+
   return (
-    <div style={{ fontFamily:"'Inter','Segoe UI',system-ui,sans-serif", color:"#1e293b", background:"#f8fafc", minHeight:"100vh" }}>
-      <style>{`
-        .tu-section { scroll-margin-top:80px; }
-        .tu-card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:28px 32px; margin-bottom:24px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
-        .tu-sec-title { font-size:20px; font-weight:800; color:#1e293b; margin:0 0 16px; display:flex; align-items:center; gap:10px; }
-        .tu-nav-item { display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:7px; cursor:pointer; font-size:12.5px; border:none; background:transparent; text-align:left; width:100%; transition:all .15s; color:#64748b; }
-        .tu-nav-item:hover { background:#f1f5f9; color:#1e293b; }
-        .tu-nav-item.active { background:#dbeafe; color:#1d4ed8; font-weight:600; }
-        .tu-def-row { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:13.5px; }
-        .tu-def-row:last-child { border-bottom:none; }
-        .tu-def-term { font-weight:700; color:#1d4ed8; min-width:130px; flex-shrink:0; }
-        .tu-def-val { color:#374151; line-height:1.65; }
-        .tu-highlight { background:#fff7ed; border:1px solid #fed7aa; border-radius:9px; padding:14px 18px; margin:14px 0; font-size:13.5px; color:#9a3412; line-height:1.7; }
-        .tu-info-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:9px; padding:12px 16px; font-size:13px; color:#1d4ed8; margin:12px 0; line-height:1.6; }
-        .tu-warning-box { background:#fef2f2; border:1px solid #fecaca; border-radius:9px; padding:12px 16px; font-size:13px; color:#7f1d1d; margin:12px 0; line-height:1.6; }
-        .tu-success-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:9px; padding:12px 16px; font-size:13px; color:#14532d; margin:12px 0; line-height:1.6; }
-        .tu-table { width:100%; border-collapse:collapse; font-size:13.5px; margin:12px 0; }
-        .tu-table th { background:#f1f5f9; padding:10px 14px; text-align:left; font-weight:700; color:#64748b; border-bottom:2px solid #e2e8f0; }
-        .tu-table td { padding:10px 14px; border-bottom:1px solid #f1f5f9; color:#374151; vertical-align:top; }
-        .tu-table tr:hover td { background:#fafbff; }
-        .tu-prohibited-item { display:flex; gap:12px; padding:11px 14px; border-radius:9px; background:#fef2f2; border:1px solid #fecaca; margin-bottom:8px; }
-        .tu-proh-icon { font-size:20px; flex-shrink:0; }
-        .tu-proh-title { font-size:13.5px; font-weight:700; color:#7f1d1d; margin-bottom:3px; }
-        .tu-proh-desc { font-size:13px; color:#991b1b; line-height:1.6; }
-        .tu-contact-row { display:flex; align-items:flex-start; gap:12px; padding:9px 0; border-bottom:1px solid #e2e8f0; font-size:13.5px; }
-        .tu-contact-row:last-child { border-bottom:none; }
-        @media(max-width:900px){ .tu-layout{ flex-direction:column!important; } .tu-sidebar{ display:none; } }
-      `}</style>
+    <div className="tu-page-container">
+      {/* ── STICKY READING SUB-BAR ── */}
+      <nav className="tu-reading-bar" aria-label="Terms sub-navigation">
+        <div className="tu-progress-line" style={{ width: `${scrollProgress}%` }} />
+        <div className="tu-reading-bar-inner">
+          <div className="tu-nav-left">
+            <button
+              type="button"
+              className="tu-back-link"
+              onClick={() => navigate("/")}
+              title={isKn ? "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ" : "Back to Home"}
+            >
+              <LegalIcon name="arrowLeft" size={13} />
+              <span>{isKn ? "ಮುಖಪುಟ" : "Home"}</span>
+            </button>
+            <div className="tu-active-section-pill">
+              <LegalIcon name={currentSectionMeta.iconKey || "acceptance"} size={15} />
+              <span>
+                {isKn ? "ವಿಭಾಗ: " : "Viewing: "}
+                <strong>
+                  {currentSectionMeta.num}. {isKn ? currentSectionMeta.titleKn : currentSectionMeta.titleEn}
+                </strong>
+              </span>
+            </div>
+          </div>
 
-      {/* Top bar */}
-      <div style={{ position:"sticky", top:0, zIndex:100, background: scrolled ? "rgba(255,255,255,.95)" : "#fff", backdropFilter:"blur(8px)", borderBottom:"1px solid #e2e8f0", padding:"0 24px", height:56, display:"flex", alignItems:"center", justifyContent:"space-between", boxShadow: scrolled ? "0 2px 8px rgba(0,0,0,.08)" : "none", transition:"all .2s" }}>
-        <button onClick={() => navigate(-1)} style={{ background:"none", border:"none", cursor:"pointer", color:"#2563eb", fontSize:13.5, fontWeight:600, display:"flex", alignItems:"center", gap:6, fontFamily:"inherit" }}>
-          ← Back
-        </button>
-        <div style={{ fontWeight:800, fontSize:16 }}>
-          <span style={{ color:"#2563eb" }}>Advocate</span>
-          <span style={{ color:"#0f766e", marginLeft:4 }}>Hub</span>
-          <span style={{ color:"#64748b", fontSize:13, fontWeight:400, marginLeft:8 }}>Terms of Use</span>
+          <div className="tu-nav-right">
+            {/* Bilingual Switcher */}
+            <button
+              type="button"
+              className="tu-lang-btn"
+              onClick={toggleLanguage}
+              title={isKn ? "Switch to English" : "ಕನ್ನಡಕ್ಕೆ ಬದಲಿಸಿ"}
+            >
+              <LegalIcon name="availability" size={14} />
+              <span>{isKn ? "English" : "ಕನ್ನಡ"}</span>
+            </button>
+
+            <button
+              type="button"
+              className="tu-tool-btn"
+              onClick={() => window.print()}
+              title={isKn ? "ಮುದ್ರಿಸಿ" : "Print Document"}
+            >
+              <LegalIcon name="printer" size={14} />
+              <span className="tu-hide-mobile">{isKn ? "ಮುದ್ರಿಸಿ" : "Print"}</span>
+            </button>
+
+            <button
+              type="button"
+              className="tu-tool-btn tu-tool-btn-primary"
+              onClick={() => setTOC((prev) => !prev)}
+              title={isKn ? "ವಿಷಯ ಸೂಚಿ ತೆರೆಯಿರಿ" : "Open Table of Contents"}
+            >
+              <LegalIcon name="toc" size={14} />
+              <span>{isKn ? "ಸೂಚಿ" : "TOC"} ({SECTIONS_META.length})</span>
+            </button>
+          </div>
         </div>
-        <button onClick={() => setTOC(p => !p)} style={{ background:"#eff6ff", border:"1px solid #bfdbfe", borderRadius:7, padding:"6px 14px", color:"#1d4ed8", fontSize:12.5, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
-          ☰ Contents
-        </button>
+      </nav>
+
+      {/* ── HERO BANNER ── */}
+      <header className="tu-hero">
+        <div className="tu-hero-inner">
+          <div className="tu-hero-badge">
+            <LegalIcon name="scale" size={15} />
+            <span>{isKn ? "ಅಧಿಕೃತ ಕಾನೂನು ಒಪ್ಪಂದ" : "Official Legal Terms & Agreement"}</span>
+          </div>
+          <h1 className="tu-hero-title">
+            {isKn ? "ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು" : "Terms and Conditions"}
+          </h1>
+          <p className="tu-hero-company">
+            Advocate Hub Legal Services Platform •{" "}
+            <span className="tu-placeholder-tag">[Entity Registration: Advocate Hub]</span>
+          </p>
+
+          <div className="tu-hero-meta-row">
+            <div className="tu-hero-meta-pill">
+              <LegalIcon name="calendar" size={14} />
+              <span>{isKn ? "ಕೊನೆಯ ನವೀಕರಣ: " : "Last Updated: "}<strong>{LAST_UPDATED}</strong></span>
+            </div>
+            <div className="tu-hero-meta-pill">
+              <LegalIcon name="pin" size={14} />
+              <span>{isKn ? "ಆವೃತ್ತಿ: " : "Version: "}<strong>{TERMS_VERSION}</strong></span>
+            </div>
+            <div className="tu-hero-meta-pill">
+              <LegalIcon name="check" size={14} />
+              <span>{isKn ? "ಜಾರಿಗೆ ಬಂದ ದಿನಾಂಕ: " : "Effective Date: "}<strong>{EFFECTIVE_DATE}</strong></span>
+            </div>
+            <div className="tu-hero-meta-pill">
+              <LegalIcon name="platform" size={14} />
+              <span>{isKn ? "ಭಾರತೀಯ ಕಾಯ್ದೆಗಳ ಅನ್ವಯ" : "Governed by Indian Law"}</span>
+            </div>
+            <div className="tu-hero-meta-pill">
+              <LegalIcon name="clock" size={14} />
+              <span>{isKn ? "ಓದುವ ಸಮಯ: ~12 ನಿಮಿಷ" : "~12 min read"}</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ── TRUST & COMPLIANCE HIGHLIGHTS STRIP ── */}
+      <section className="tu-trust-bar">
+        <div className="tu-trust-bar-inner">
+          <div className="tu-trust-item">
+            <LegalIcon name="indiaBadge" size={16} />
+            <span>{isKn ? "ಭಾರತೀಯ ಕಾನೂನುಗಳ ಅನ್ವಯಿಕತೆ" : "Governed by Laws of India"}</span>
+          </div>
+          <div className="tu-trust-item">
+            <LegalIcon name="scale" size={16} />
+            <span>{isKn ? "ಬಾರ್ ಕೌನ್ಸಿಲ್ ನಿಯಮಾವಳಿಗಳಿಗೆ ಬದ್ಧ" : "BCI Rules & Ethics Aligned"}</span>
+          </div>
+          <div className="tu-trust-item">
+            <LegalIcon name="shieldCheck" size={16} />
+            <span>{isKn ? "ಐಟಿ ಕಾಯ್ದೆ ಕಲಂ 79 ರಕ್ಷಣೆ" : "IT Act Sec 79 Intermediary"}</span>
+          </div>
+          <div className="tu-trust-item">
+            <LegalIcon name="lock" size={16} />
+            <span>{isKn ? "ದತ್ತಾಂಶ ರಕ್ಷಣೆ (DPDP Act 2023)" : "DPDP Act 2023 Compliant"}</span>
+          </div>
+          <div className="tu-trust-item">
+            <LegalIcon name="contact" size={16} />
+            <span>{isKn ? "ದೂರು ಪರಿಹಾರ ಅಧಿಕಾರಿ ಲಭ್ಯತೆ" : "Statutory Grievance Officer"}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── MAIN LAYOUT: SIDEBAR + CONTENT ── */}
+      <div className="tu-layout">
+        {/* DESKTOP/LAPTOP STICKY SIDEBAR */}
+        <aside className="tu-sidebar" aria-label="Table of Contents">
+          <div className="tu-sidebar-card">
+            <div className="tu-sidebar-header">
+              <div className="tu-sidebar-title-row">
+                <span className="tu-sidebar-title">
+                  {isKn ? "ಪೂರ್ಣ ವಿಷಯ ಸೂಚಿ" : "Table of Contents"}
+                </span>
+                <span className="tu-sidebar-count">{filteredSections.length} / 21</span>
+              </div>
+              <div className="tu-search-box">
+                <span className="tu-search-icon"><LegalIcon name="search" size={14} /></span>
+                <input
+                  type="text"
+                  className="tu-search-input"
+                  placeholder={isKn ? "ವಿಭಾಗ ಹುಡುಕಿ (ಉದಾ: ಶುಲ್ಕ, ಪರಿಶೀಲನೆ)..." : "Filter sections (e.g. fees, verification)..."}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Filter sections"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="tu-search-clear"
+                    onClick={() => setSearchQuery("")}
+                    title="Clear filter"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <nav className="tu-nav-list">
+              {filteredSections.map((sec) => (
+                <button
+                  type="button"
+                  key={sec.id}
+                  className={`tu-nav-item ${activeSection === sec.id ? "active" : ""}`}
+                  onClick={() => scrollToSection(sec.id)}
+                  title={isKn ? sec.titleKn : sec.titleEn}
+                >
+                  <span className="tu-nav-icon"><LegalIcon name={sec.iconKey} size={15} /></span>
+                  <span className="tu-nav-label">
+                    {sec.num}. {isKn ? sec.titleKn : sec.titleEn}
+                  </span>
+                </button>
+              ))}
+
+              {filteredSections.length === 0 && (
+                <div style={{ padding: "16px 8px", textAlign: "center", fontSize: "0.82rem", color: "var(--tu-text-light)" }}>
+                  {isKn ? `ಯಾವುದೇ ವಿಭಾಗ ಕಂಡುಬಂದಿಲ್ಲ "${searchQuery}"` : `No sections match "${searchQuery}"`}
+                </div>
+              )}
+            </nav>
+
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--tu-border-subtle)", display: "flex", flexDirection: "column", gap: 6 }}>
+              <Link to="/privacy" className="tu-back-link" style={{ justifyContent: "center" }}>
+                <LegalIcon name="lock" size={14} />
+                <span>{isKn ? "ಗೌಪ್ಯತಾ ನೀತಿ ವೀಕ್ಷಿಸಿ" : "View Privacy Policy"}</span>
+              </Link>
+              <Link to="/Contact" className="tu-back-link" style={{ justifyContent: "center" }}>
+                <LegalIcon name="contact" size={14} />
+                <span>{isKn ? "ಸಂಪರ್ಕ ಬೆಂಬಲ" : "Contact Support"}</span>
+              </Link>
+            </div>
+          </div>
+        </aside>
+
+        {/* MAIN LEGAL DOCUMENT CONTENT */}
+        <main className="tu-content">
+          {/* STATUTORY LEGAL REVIEW NOTICE CALLOUT */}
+          <section className="tu-legal-review-banner" aria-label="Legal Review Disclaimer">
+            <div className="tu-legal-review-icon"><LegalIcon name="scale" size={24} /></div>
+            <div className="tu-legal-review-body">
+              <div className="tu-legal-review-title">
+                {isKn ? "ಕಾನೂನು ಮತ್ತು ನಿಯಂತ್ರಕ ಪರಿಶೀಲನಾ ಸೂಚನೆ (Legal & Regulatory Review Notice)" : "Legal & Regulatory Review Notice (Operational Indian Law Draft)"}
+              </div>
+              <p style={{ margin: "0 0 6px" }}>
+                {isKn
+                  ? "ಈ ದಾಖಲೆಯನ್ನು ಭಾರತದ ಅನ್ವಯವಾಗುವ ಮಾಹಿತಿ ತಂತ್ರಜ್ಞಾನ ಕಾಯ್ದೆ ೨೦೦೦, ವಕೀಲರ ಕಾಯ್ದೆ ೧೯೬೧, ಬಾರ್ ಕೌನ್ಸಿಲ್ ಆಫ್ ಇಂಡಿಯಾ ನಿಯಮಾವಳಿಗಳು, ಡಿಜಿಟಲ್ ವೈಯಕ್ತಿಕ ದತ್ತಾಂಶ ಸಂರಕ್ಷಣಾ ಕಾಯ್ದೆ ೨೦೨೩ ಮತ್ತು ಗ್ರಾಹಕ ಸಂರಕ್ಷಣಾ ಕಾಯ್ದೆ ೨೦೧೯ ರ ಮಾನದಂಡಗಳಿಗೆ ಅನುಗುಣವಾಗಿ ರಚಿಸಲಾಗಿದೆ. ವೃತ್ತಿಪರ ವಕೀಲರ ಪ್ರಚಾರ ನಿರ್ಬಂಧಗಳು, ಮಧ್ಯವರ್ತಿ ಸುರಕ್ಷಾ ನಿಯಮಗಳು ಹಾಗೂ ವಿವಾದ ಪರಿಹಾರ ಷರತ್ತುಗಳ ಕುರಿತು ಅರ್ಹ ಭಾರತೀಯ ವಕೀಲರಿಂದ ಅಂತಿಮ ಕಾನೂನು ಪರಿಶೀಲನೆ ಬಾಕಿಯಿದೆ."
+                  : "This terms document is drafted for operational deployment in the Republic of India under the Information Technology Act, 2000, Advocates Act, 1961, Bar Council of India (BCI) Rules, Digital Personal Data Protection Act, 2023 (DPDP), and Consumer Protection Act, 2019. This draft does not claim final judicial certification; all provisions—specifically advocate advertising prohibitions, platform intermediary liabilities, professional verification protocols, fee structures, and dispute resolution—remain subject to formal review by a qualified Indian legal counsel."}
+              </p>
+              <div style={{ fontSize: "0.8rem", color: "var(--tu-text-muted)" }}>
+                {isKn
+                  ? "ಯಾವುದೇ ಅಸಹಜ ಮಧ್ಯಸ್ಥಿಕೆ ಅಥವಾ ಗ್ರಾಹಕರ ಹಕ್ಕುಗಳ ವಜಾಗೊಳಿಸುವಿಕೆಯನ್ನು ಈ ಕರಡಿನಲ್ಲಿ ಸೇರಿಸಲಾಗಿಲ್ಲ."
+                  : "No automatic forced arbitration, blanket consumer rights waiver, or unlawful limitation of statutory liability has been included."}
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 1: Introduction and Acceptance of Terms
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-1" className="tu-section" ref={(el) => (sectionRefs.current["sec-1"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="acceptance" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    1. {isKn ? "ಪರಿಚಯ ಮತ್ತು ನಿಯಮಗಳ ಸ್ವೀಕಾರ" : "Introduction and Acceptance of Terms"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-1")}
+                  title="Copy link to Section 1"
+                >
+                  {copiedId === "sec-1" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? `ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ ("Advocate Hub", "ವೇದಿಕೆ", "ನಾವು" ಅಥವಾ "ನಮ್ಮ") ವೆಬ್‌ಸೈಟ್ (${WEBSITE_URL}) ಮತ್ತು ಮೊಬೈಲ್ ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ನಿಮ್ಮನ್ನು ಸ್ವಾಗತಿಸುತ್ತೇವೆ. ಈ ವೇದಿಕೆಯನ್ನು [ಸಂಸ್ಥೆಯ ಹೆಸರು: Advocate Hub / Entity Registration Pending] ನಿರ್ವಹಿಸುತ್ತಿದೆ.`
+                    : `Welcome to Advocate Hub ("Advocate Hub", "Platform", "we", "us", or "our"), available at ${WEBSITE_URL} and affiliated mobile interfaces. The Platform is owned, maintained, and operated by [Entity Name: Advocate Hub / Entity Registration Pending] having its operational focal point in Bengaluru, Karnataka, India.`}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ಈ ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು (\"ನಿಯಮಗಳು\") ಮಾಹಿತಿ ತಂತ್ರಜ್ಞಾನ ಕಾಯ್ದೆ, ೨೦೦೦ ರ ಕಲಂ ೧೦ಎ ಹಾಗೂ ಭಾರತೀಯ ಗುತ್ತಿಗೆ ಕಾಯ್ದೆ, ೧೮೭೨ ರ ಅಡಿಯಲ್ಲಿ ರಚಿಸಲಾದ ಕಾನೂನುಬದ್ಧ ಎಲೆಕ್ಟ್ರಾನಿಕ್ ಒಪ್ಪಂದವಾಗಿದೆ. ಈ ವೇದಿಕೆಯನ್ನು ಪ್ರವೇಶಿಸುವ, ಬ್ರೌಸ್ ಮಾಡುವ ಅಥವಾ ನೋಂದಾಯಿಸಿಕೊಳ್ಳುವ ಮೂಲಕ ನೀವು ಈ ಎಲ್ಲಾ ನಿಯಮಗಳನ್ನು ಯಾವುದೇ ಬದಲಾವಣೆ ಇಲ್ಲದೆ ಸಂಪೂರ್ಣವಾಗಿ ಸ್ವೀಕರಿಸುತ್ತೀರಿ."
+                    : "These Terms and Conditions (\"Terms\") constitute a legally binding electronic contract executed pursuant to Section 10A of the Information Technology Act, 2000 and the Indian Contract Act, 1872. By accessing, browsing, registering an account, utilizing the AI legal guidance features, or engaging in communication with legal professionals through Advocate Hub, you unconditionally acknowledge that you have read, understood, and agreed to be governed by these Terms and our companion Privacy Policy."}
+                </p>
+
+                <div className="tu-callout tu-callout-info">
+                  <div className="tu-callout-icon"><LegalIcon name="info" size={18} /></div>
+                  <div className="tu-callout-text">
+                    <strong>{isKn ? "ಅಸಮ್ಮತಿಯ ಸಂದರ್ಭದಲ್ಲಿ: " : "Non-Acceptance Notice: "}</strong>
+                    {isKn
+                      ? "ನೀವು ಈ ನಿಯಮಗಳು ಅಥವಾ ಗೌಪ್ಯತಾ ನೀತಿಯ ಯಾವುದೇ ಷರತ್ತನ್ನು ಒಪ್ಪದಿದ್ದರೆ, ದಯವಿಟ್ಟು ಈ ವೇದಿಕೆಯನ್ನು ಬಳಸಬೇಡಿ ಮತ್ತು ನಿಮ್ಮ ಖಾತೆಯನ್ನು ತಕ್ಷಣ ರದ್ದುಗೊಳಿಸಿ."
+                      : "If you do not agree with any provision contained in these Terms or our Privacy Policy, you must refrain from accessing, browsing, or creating an account on Advocate Hub immediately."}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 2: About Advocate Hub and Its Services
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-2" className="tu-section" ref={(el) => (sectionRefs.current["sec-2"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="platform" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    2. {isKn ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ ಮತ್ತು ಅದರ ಸೇವೆಗಳ ಬಗ್ಗೆ" : "About Advocate Hub and Its Services"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-2")}
+                  title="Copy link to Section 2"
+                >
+                  {copiedId === "sec-2" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ ಒಂದು ಡಿಜಿಟಲ್ ತಂತ್ರಜ್ಞಾನ ವೇದಿಕೆಯಾಗಿದ್ದು (Electronic Intermediary), ಇದು ನಾಗರಿಕರು/ಗ್ರಾಹಕರಿಗೆ ಭಾರತದ ವಿವಿಧ ನ್ಯಾಯಾಲಯಗಳಲ್ಲಿ ನೋಂದಾಯಿತ ವಕೀಲರನ್ನು ಹುಡುಕಲು ಮತ್ತು ಅವರೊಂದಿಗೆ ನೇರ ಸಂಪರ್ಕ ಸಾಧಿಸಲು ತಾಂತ್ರಿಕ ಸೌಲಭ್ಯವನ್ನು ಒದಗಿಸುತ್ತದೆ."
+                    : "Advocate Hub operates strictly as a digital legal marketplace and technology intermediary as defined under Section 2(1)(w) of the Information Technology Act, 2000. The Platform provides technological infrastructure facilitating discovery, profile indexing, initial intake coordination, legal information awareness (Bare Acts, legal news, situational clarity guides), and bi-directional communications between independent legal practitioners and individuals seeking legal assistance."}
+                </p>
+
+                <div className="tu-callout tu-callout-warning">
+                  <div className="tu-callout-icon"><LegalIcon name="scale" size={18} /></div>
+                  <div className="tu-callout-text">
+                    <strong>{isKn ? "ಪ್ರಮುಖ ಕಾನೂನು ಸ್ಪಷ್ಟೀಕರಣ: " : "Crucial Statutory Disclaimer: "}</strong>
+                    {isKn
+                      ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ ಯಾವುದೇ ಕಾನೂನು ಸಂಸ್ಥೆಯಲ್ಲ (Not a Law Firm). ನಾವು ನೇರವಾಗಿ ಯಾವುದೇ ನ್ಯಾಯಾಲಯದಲ್ಲಿ ವಕಾಲತ್ತು ವಹಿಸುವುದಿಲ್ಲ ಅಥವಾ ಕಾನೂನು ಸಲಹೆ ನೀಡುವುದಿಲ್ಲ. ಭಾರತೀಯ ಬಾರ್ ಕೌನ್ಸಿಲ್ (BCI) ನಿಯಮಾವಳಿಗಳ ಕಲಂ ೩೬ ರ ಪ್ರಕಾರ ಯಾವುದೇ ವಕೀಲರ ಪರವಾಗಿ ಜಾಹೀರಾತು ನೀಡುವುದು ಅಥವಾ ಕಕ್ಷಿದಾರರನ್ನು ಆಕರ್ಷಿಸುವುದು ನಮ್ಮ ಉದ್ದೇಶವಲ್ಲ."
+                      : "Advocate Hub is NOT a law firm and does NOT engage in the practice of law. We do not provide formal legal representation, solicit clients on behalf of any advocate, or split legal fees in violation of the Advocates Act, 1961 or Rule 36 of Chapter II, Part VI of the Bar Council of India (BCI) Rules. The Platform acts solely as a passive conduit and directory intermediary."}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 3: User Eligibility and Account Registration
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-3" className="tu-section" ref={(el) => (sectionRefs.current["sec-3"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="user" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    3. {isKn ? "ಬಳಕೆದಾರರ ಅರ್ಹತೆ ಮತ್ತು ಖಾತೆ ನೋಂದಣಿ" : "User Eligibility and Account Registration"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-3")}
+                  title="Copy link to Section 3"
+                >
+                  {copiedId === "sec-3" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ವೇದಿಕೆಯಲ್ಲಿ ಖಾತೆ ರಚಿಸಲು ನೀವು ಕನಿಷ್ಠ ೧೮ ವರ್ಷ ವಯಸ್ಸಿನವರಾಗಿರಬೇಕು ಮತ್ತು ಭಾರತೀಯ ಗುತ್ತಿಗೆ ಕಾಯ್ದೆ, ೧೮೭೨ ರ ಅಡಿಯಲ್ಲಿ ಒಪ್ಪಂದ ಮಾಡಿಕೊಳ್ಳಲು ಕಾನೂನುಬದ್ಧ ಅರ್ಹತೆ ಹೊಂದಿರಬೇಕು."
+                    : "To create an account or utilize services on Advocate Hub, you must be a natural person at least eighteen (18) years of age, mentally competent, and fully qualified to enter into legally enforceable contracts under the Indian Contract Act, 1872."}
+                </p>
+
+                <h3 className="tu-subhead">
+                  {isKn ? "ನೋಂದಣಿ ಮತ್ತು ಸಮ್ಮತಿ ಪರಿಶೀಲನೆ (Mandatory Consent)" : "Registration and Mandatory Consent Protocol"}
+                </h3>
+                <ul className="tu-list">
+                  <li>
+                    <strong>{isKn ? "ಸ್ಪಷ್ಟ ಸಮ್ಮತಿ ಚೆಕ್‌ಬಾಕ್ಸ್: " : "Mandatory Unchecked Consent: "}</strong>
+                    {isKn
+                      ? "ಖಾತೆಯನ್ನು ನೋಂದಾಯಿಸುವಾಗ ಬಳಕೆದಾರರು 'ನಾನು ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು ಹಾಗೂ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿದ್ದೇನೆ ಮತ್ತು ಒಪ್ಪುತ್ತೇನೆ' ಎಂಬ ಚೆಕ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಖುದ್ದಾಗಿ ಕ್ಲಿಕ್ ಮಾಡುವುದು ಕಡ್ಡಾಯವಾಗಿದೆ. ಈ ಚೆಕ್‌ಬಾಕ್ಸ್ ಪೂರ್ವನಿಯೋಜಿತವಾಗಿ ಆಯ್ಕೆಯಾಗಿರುವುದಿಲ್ಲ (Unchecked by default)."
+                      : "All users (both clients and advocates) must actively and voluntarily check the affirmative consent box: \"I have read and agree to the Terms and Conditions and Privacy Policy\". This checkbox is never pre-checked by default, and registration cannot proceed without this explicit user action."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ಸಮ್ಮತಿಯ ದಾಖಲಾತಿ: " : "Cryptographic Consent Logging: "}</strong>
+                    {isKn
+                      ? "ಬಳಕೆದಾರರು ನಿಯಮಗಳನ್ನು ಒಪ್ಪಿಕೊಂಡ ಸಮಯ, ದಿನಾಂಕ ಮತ್ತು ನಿಯಮಗಳ ಆವೃತ್ತಿಯನ್ನು (Version 1.0) ಹಿನ್ನೆಲೆ ದತ್ತಸಂಚಯದಲ್ಲಿ (Backend Database) ಶಾಶ್ವತವಾಗಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ."
+                      : "Upon submission, the Platform backend securely logs the affirmative consent flag (`termsAccepted: true`), the exact ISO timestamp (`termsAcceptedAt`), and the corresponding document version (`termsVersion: '1.0'`) as an immutable compliance audit trail."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ಖಾತೆ ಭದ್ರತೆ: " : "Credential Confidentiality: "}</strong>
+                    {isKn
+                      ? "ಬಳಕೆದಾರರು ತಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ಮತ್ತು ಲಾಗಿನ್ ವಿವರಗಳ ರಹಸ್ಯತೆಯನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಲು ಸ್ವತಃ ಜವಾಬ್ದಾರರಾಗಿರುತ್ತಾರೆ. ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು ಕೇವಲ ಒನ್‌ವೇ scrypt ಹ್ಯಾಶ್‌ಗಳಾಗಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ."
+                      : "Users are exclusively responsible for safeguarding their login credentials. Passwords are encrypted as one-way scrypt hashes and never stored in plain-text. Any unauthorized session activity must be reported immediately."}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 4: Client Responsibilities
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-4" className="tu-section" ref={(el) => (sectionRefs.current["sec-4"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="client" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    4. {isKn ? "ಗ್ರಾಹಕರ ಜವಾಬ್ದಾರಿಗಳು" : "Client Responsibilities"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-4")}
+                  title="Copy link to Section 4"
+                >
+                  {copiedId === "sec-4" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ವೇದಿಕೆಯನ್ನು ಬಳಸುವ ಕಕ್ಷಿದಾರರು/ಗ್ರಾಹಕರು ಈ ಕೆಳಗಿನ ಜವಾಬ್ದಾರಿಗಳನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ಪಾಲಿಸಬೇಕು:"
+                    : "Clients using Advocate Hub to seek legal clarity or engage advocates undertake to adhere to the following operational commitments:"}
+                </p>
+
+                <ul className="tu-list">
+                  <li>
+                    <strong>{isKn ? "ಸತ್ಯವಾದ ವಿವರಗಳು: " : "Truthfulness of Inquiries: "}</strong>
+                    {isKn
+                      ? "ತಮ್ಮ ಕಾನೂನು ಪ್ರಶ್ನೆ ಅಥವಾ ವಿವಾದದ ವಿವರಗಳನ್ನು ನಿಖರವಾಗಿ, ಸತ್ಯವಾಗಿ ಮತ್ತು ಪ್ರಾಮಾಣಿಕವಾಗಿ ಒದಗಿಸಬೇಕು."
+                      : "Clients must submit truthful, accurate, and non-misleading factual narratives regarding their legal questions or ongoing legal disputes."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ಪ್ರಾಥಮಿಕ ಸಮಾಲೋಚನೆ ಮಿತಿ: " : "Preliminary Nature of Online Sessions: "}</strong>
+                    {isKn
+                      ? "ಆನ್‌ಲೈನ್ ಚಾಟ್ ಅಥವಾ ಪ್ರಾಥಮಿಕ ಸಮಾಲೋಚನೆಯು ಕೇವಲ ಮಾರ್ಗದರ್ಶನಕ್ಕಾಗಿ ಮಾತ್ರವಾಗಿದ್ದು, ವಕಾಲತ್ತುನಾಮೆ ಸಲ್ಲಿಸಿ ಅಧಿಕೃತವಾಗಿ ನಿಯೋಜಿಸುವವರೆಗೆ ನ್ಯಾಯಾಲಯದ ಪ್ರಾತಿನಿಧ್ಯವಾಗಿ ಪರಿಗಣಿಸಲಾಗುವುದಿಲ್ಲ."
+                      : "Clients recognize that platform discussions are exploratory and informational. A chat message or phone exchange does not constitute a formal court engagement until terms of retainer and appropriate Vakalatnama are mutually signed."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ವೃತ್ತಿಪರ ನಡವಳಿಕೆ: " : "Respectful Conduct: "}</strong>
+                    {isKn
+                      ? "ವಕೀಲರೊಂದಿಗೆ ವೃತ್ತಿಪರವಾಗಿ ಮತ್ತು ಗೌರವಯುತವಾಗಿ ಸಂವಹನ ನಡೆಸಬೇಕು. ನಿಂದನೀಯ ಭಾಷೆ, ಬೆದರಿಕೆ ಅಥವಾ ಅಸಭ್ಯ ವರ್ತನೆಯನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸಲಾಗಿದೆ."
+                      : "Clients must communicate respectfully with advocates. Abuse, harassment, offensive conduct, or defamation will result in immediate permanent account termination."}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 5: Advocate Registration and Professional Verification
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-5" className="tu-section" ref={(el) => (sectionRefs.current["sec-5"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="scale" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    5. {isKn ? "ವಕೀಲರ ನೋಂದಣಿ ಮತ್ತು ವೃತ್ತಿಪರ ಪರಿಶೀಲನೆ" : "Advocate Registration and Professional Verification"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-5")}
+                  title="Copy link to Section 5"
+                >
+                  {copiedId === "sec-5" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ವಕೀಲರಾಗಿ ನೋಂದಾಯಿಸಿಕೊಳ್ಳಲು ವ್ಯಕ್ತಿಯು ಭಾರತದ ಯಾವುದೇ ರಾಜ್ಯ ಬಾರ್ ಕೌನ್ಸಿಲ್‌ನಲ್ಲಿ (State Bar Council) ವಕೀಲರ ಕಾಯ್ದೆ ೧೯೬೧ ರ ಅಡಿಯಲ್ಲಿ ಮಾನ್ಯತೆ ಪಡೆದ ವಕೀಲರಾಗಿರಬೇಕು (Advocate on Rolls)."
+                    : "Individuals registering as Advocates on Advocate Hub warrant and represent that they are duly enrolled legal practitioners admitted to the rolls of a State Bar Council established under the Advocates Act, 1961, holding an active, unrevoked license to practice law in the Republic of India."}
+                </p>
+
+                <h3 className="tu-subhead">
+                  {isKn ? "ಕಡ್ಡಾಯ ವೃತ್ತಿಪರ ದಾಖಲೆಗಳು ಮತ್ತು ವಿವರಗಳು:" : "Mandatory Professional Credentials Required:"}
+                </h3>
+                <ul className="tu-list">
+                  <li>
+                    <strong>{isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ (Sanad ID): " : "Bar Enrollment Number: "}</strong>
+                    {isKn
+                      ? "ಮಾನ್ಯ ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ (ಉದಾ: KAR/1234/2018 ಅಥವಾ BCI ಮಾನ್ಯತೆ) ಸಲ್ಲಿಸುವುದು ಕಡ್ಡಾಯವಾಗಿದೆ."
+                      : "Advocates must provide their authentic Bar Council Enrollment Number (e.g., KAR/1234/2018 or corresponding State roll identifier)."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ವಕಾಲತ್ತು ನ್ಯಾಯಾಲಯ ಮತ್ತು ಕ್ಷೇತ್ರಗಳು: " : "Practice Courts and Fields: "}</strong>
+                    {isKn
+                      ? "ಅಭ್ಯಾಸ ನಡೆಸುವ ಜಿಲ್ಲೆ, ತಾಲೂಕು, ಹೈಕೋರ್ಟ್ ಪೀಠ ಮತ್ತು ಪರಿಣತಿ ಹೊಂದಿರುವ ಕಾನೂನು ಕ್ಷೇತ್ರಗಳನ್ನು ಸ್ಪಷ್ಟವಾಗಿ ನಮೂದಿಸಬೇಕು."
+                      : "Accurate details regarding jurisdictional courts (Supreme Court, High Court Benches, District & Sessions Courts, or Taluk JMFCs) and specialized practice areas must be submitted."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ಸುಳ್ಳು ಹಕ್ಕುಗಳ ನಿಷೇಧ: " : "Zero Impersonation Tolerance: "}</strong>
+                    {isKn
+                      ? "ವಕೀಲರಲ್ಲದ ವ್ಯಕ್ತಿಗಳು ವಕೀಲರೆಂದು ಸುಳ್ಳು ಹೇಳಿಕೊಳ್ಳುವುದನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸಲಾಗಿದೆ. ಅಂತಹ ದುಷ್ಕೃತ್ಯವು ಭಾರತೀಯ ನ್ಯಾಯ ಸಂಹಿತೆ (BNS) ಮತ್ತು ಮಾಹಿತಿ ತಂತ್ರಜ್ಞಾನ ಕಾಯ್ದೆಯಡಿ ಕ್ರಿಮಿನಲ್ ಅಪರಾಧವಾಗಿದೆ."
+                      : "Any false claim of advocate status or impersonation of a legal practitioner is strictly prohibited and constitutes an offence punishable under Section 66D of the IT Act, 2000 and Section 319 of Bharatiya Nyaya Sanhita (BNS). Violators will be immediately reported to law enforcement and the Bar Council."}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 6: Administrator Review and Approval
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-6" className="tu-section" ref={(el) => (sectionRefs.current["sec-6"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="shieldCheck" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    6. {isKn ? "ನಿರ್ವಾಹಕರ ಪರಿಶೀಲನೆ ಮತ್ತು ಅನುಮೋದನೆ" : "Administrator Review and Approval"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-6")}
+                  title="Copy link to Section 6"
+                >
+                  {copiedId === "sec-6" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ವಕೀಲರ ಖಾತೆಗಳ ಸುರಕ್ಷತೆ ಮತ್ತು ವಿಶ್ವಾಸಾರ್ಹತೆಗಾಗಿ ವೇದಿಕೆಯಲ್ಲಿ ಕಟ್ಟುನಿಟ್ಟಾದ ನಿರ್ವಾಹಕ ಪರಿಶೀಲನಾ ವ್ಯವಸ್ಥೆ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ:"
+                    : "To preserve institutional trust and comply with statutory standards, Advocate Hub enforces an administrative review protocol for all legal professional onboarding:"}
+                </p>
+
+                <ul className="tu-list">
+                  <li>
+                    <strong>{isKn ? "ಬಾಕಿ ಉಳಿದ ಸ್ಥಿತಿ (Pending Approval): " : "Mandatory Pending Approval State: "}</strong>
+                    {isKn
+                      ? "ಹೊಸದಾಗಿ ನೋಂದಾಯಿಸಿದ ಪ್ರತಿಯೊಂದು ವಕೀಲರ ಖಾತೆಯು ನಿರ್ವಾಹಕರು ಪರಿಶೀಲಿಸುವವರೆಗೆ 'Pending Approval' ಸ್ಥಿತಿಯಲ್ಲಿರುತ್ತದೆ. ಸಾರ್ವಜನಿಕ ಡೈರೆಕ್ಟರಿಯಲ್ಲಿ ಸಂಪೂರ್ಣ ವಿವರಗಳು ಗೋಚರಿಸುವುದಿಲ್ಲ."
+                      : "New advocate accounts display a 'Pending Approval' (`pending_admin_approval`) status until verified and approved by an administrator. Unapproved accounts cannot be discovered in public directories or accept bookings."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ಪರಿಶೀಲಿತ ಸ್ಥಿತಿ (Verified Status): " : "Verified Listing Restriction: "}</strong>
+                    {isKn
+                      ? "ನಿರ್ವಾಹಕರು ಬಾರ್ ಕೌನ್ಸಿಲ್ ದಾಖಲೆಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಅನುಮೋದಿಸಿದ ನಂತರವೇ ಖಾತೆಗೆ 'Verified' ಬ್ಯಾಡ್ಜ್ ನೀಡಲಾಗುತ್ತದೆ."
+                      : "Only advocates approved by an administrator receive the verified status badge and appear in verified search listings across the platform."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ತಿರಸ್ಕರಿಸುವ ಮತ್ತು ಅಮಾನತುಗೊಳಿಸುವ ಹಕ್ಕು: " : "Discretion to Reject or Suspend: "}</strong>
+                    {isKn
+                      ? "ದಾಖಲೆಗಳು ಅಸ್ಪಷ್ಟವಾಗಿದ್ದರೆ, ತಪ್ಪಾಗಿದ್ದರೆ ಅಥವಾ ಬಾರ್ ಕೌನ್ಸಿಲ್ ನಿಯಮಾವಳಿಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿದ್ದರೆ ನಿರ್ವಾಹಕರು ಅರ್ಜಿಯನ್ನು ತಿರಸ್ಕರಿಸುವ ಅಥವಾ ಹೆಚ್ಚಿನ ದಾಖಲೆಗಳನ್ನು ಕೇಳುವ ಅಧಿಕಾರ ಹೊಂದಿರುತ್ತಾರೆ."
+                      : "Platform administrators hold full authority to reject, suspend, or request supplemental verification documentation from applicants in accordance with published platform compliance guidelines."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ಯಾವುದೇ ದಕ್ಷತೆಯ ಖಾತರಿ ಇಲ್ಲ: " : "No Guarantee of Competence or Outcome: "}</strong>
+                    {isKn
+                      ? "ವೇದಿಕೆಯ ಪರಿಶೀಲನೆಯು ಕೇವಲ ಗುರುತು ಮತ್ತು ನೋಂದಣಿಯ ಪರಿಶೀಲನೆಯಾಗಿದ್ದು, ವಕೀಲರ ವೈಯಕ್ತಿಕ ದಕ್ಷತೆ, ನ್ಯಾಯಾಲಯದ ನಡವಳಿಕೆ ಅಥವಾ ಪ್ರಕರಣದ ಫಲಿತಾಂಶದ ಯಾವುದೇ ಗ್ಯಾರಂಟಿ ನೀಡುವುದಿಲ್ಲ."
+                      : "Verification by Advocate Hub represents an administrative review of submitted enrollment details and must NOT be interpreted as a guarantee, warranty, or endorsement of an advocate's legal competence, conduct, or case result."}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 7: Advocate Profiles and Accuracy of Information
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-7" className="tu-section" ref={(el) => (sectionRefs.current["sec-7"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="profileAccuracy" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    7. {isKn ? "ವಕೀಲರ ಪ್ರೊಫೈಲ್‌ಗಳು ಮತ್ತು ಮಾಹಿತಿಯ ನಿಖರತೆ" : "Advocate Profiles and Accuracy of Information"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-7")}
+                  title="Copy link to Section 7"
+                >
+                  {copiedId === "sec-7" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ವಕೀಲರ ಪ್ರೊಫೈಲ್‌ಗಳಲ್ಲಿ ಅವರ ನೈಜ ಅನುಭವ, ಅಭ್ಯಾಸ ಕ್ಷೇತ್ರಗಳು, ನ್ಯಾಯಾಲಯದ ಹಂತಗಳು ಮತ್ತು ಶೈಕ್ಷಣಿಕ ಮಾಹಿತಿಯನ್ನು ಮಾತ್ರ ಪ್ರದರ್ಶಿಸಲಾಗುತ್ತದೆ."
+                    : "Advocate profiles displayed on the platform are restricted to objective, factual professional data: name, enrollment year, designated bar council, recognized practice fields, primary courts of appearance, spoken languages, and contact channels."}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ಬಾರ್ ಕೌನ್ಸಿಲ್ ನಿಯಮ ೩೬ ರ ಪ್ರಕಾರ ಯಾವುದೇ ರೀತಿಯ ಸ್ವಯಂ-ಪ್ರಶಂಸೆ, ಅತಿಶಯೋಕ್ತಿ, 'ನಂಬರ್ ೧ ವಕೀಲ' ಅಥವಾ '೧೦೦% ಗೆಲುವಿನ ಖಾತರಿ' ಎಂಬಂತಹ ಜಾಹೀರಾತು ರೂಪದ ಪ್ರಚಾರಗಳನ್ನು ಪ್ರೊಫೈಲ್‌ನಲ್ಲಿ ಪ್ರಕಟಿಸುವುದನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸಲಾಗಿದೆ."
+                    : "In strict conformity with Bar Council of India standards, advocate profiles must avoid self-laudatory superlatives, comparative marketing, misleading win-rate assertions, or commercial solicitations. Advocates are legally responsible for maintaining the accuracy of all information displayed on their profiles."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 8: Consultation Requests, Chat and Communication
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-8" className="tu-section" ref={(el) => (sectionRefs.current["sec-8"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="chat" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    8. {isKn ? "ಸಮಾಲೋಚನೆ ವಿನಂತಿಗಳು, ಚಾಟ್ ಮತ್ತು ಸಂವಹನ" : "Consultation Requests, Chat and Communication"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-8")}
+                  title="Copy link to Section 8"
+                >
+                  {copiedId === "sec-8" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ವೇದಿಕೆಯು ಕಕ್ಷಿದಾರ ಮತ್ತು ವಕೀಲರ ನಡುವೆ ಸುರಕ್ಷಿತ ನೈಜ-ಸಮಯದ (Real-time Socket) ಚಾಟ್ ಮತ್ತು ಸಮಾಲೋಚನೆ ಸೌಲಭ್ಯವನ್ನು ಒದಗಿಸುತ್ತದೆ."
+                    : "Advocate Hub provides an integrated, bi-directional encrypted messaging environment allowing clients and advocates to coordinate consultations, transmit intake summaries, and discuss initial matters."}
+                </p>
+
+                <ul className="tu-list">
+                  <li>
+                    <strong>{isKn ? "ಸಂವಹನ ಗೌಪ್ಯತೆ: " : "Confidentiality & Session Access: "}</strong>
+                    {isKn
+                      ? "ಚಾಟ್ ಸಂದೇಶಗಳನ್ನು ಕೇವಲ ಸಂಬಂಧಪಟ್ಟ ಕಕ್ಷಿದಾರ ಮತ್ತು ವಕೀಲರಿಗೆ ಮಾತ್ರ ಪ್ರವೇಶಿಸಲು ಅವಕಾಶವಿರುತ್ತದೆ. ಯಾವುದೇ ಅನಧಿಕೃತ ಮೂರನೇ ವ್ಯಕ್ತಿಗೆ ಸಂದೇಶಗಳು ಗೋಚರಿಸುವುದಿಲ್ಲ."
+                      : "Messages are restricted to the authorized client and advocate participating in the active conversation thread. Unauthorized third parties cannot access private chat sessions."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ರೆಕಾರ್ಡಿಂಗ್ ಮತ್ತು ಹಂಚಿಕೆ ನಿಷೇಧ: " : "Prohibition on External Publication: "}</strong>
+                    {isKn
+                      ? "ಖಾಸಗಿ ಚಾಟ್ ಸಂದೇಶಗಳನ್ನು ಪರಸ್ಪರ ಲಿಖಿತ ಒಪ್ಪಿಗೆಯಿಲ್ಲದೆ ಸಾಮಾಜಿಕ ಮಾಧ್ಯಮಗಳಲ್ಲಿ ಅಥವಾ ಸಾರ್ವಜನಿಕವಾಗಿ ಹಂಚಿಕೊಳ್ಳುವುದನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸಲಾಗಿದೆ."
+                      : "Neither party may publish, screen-record, or broadcast private consultation communications on external public media without the explicit written authorization of the other party."}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 9: Fees, Payments, Cancellations and Refunds, if applicable
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-9" className="tu-section" ref={(el) => (sectionRefs.current["sec-9"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="fees" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    9. {isKn ? "ಶುಲ್ಕಗಳು, ಪಾವತಿಗಳು, ರದ್ದತಿ ಮತ್ತು ಮರುಪಾವತಿಗಳು" : "Fees, Payments, Cancellations and Refunds, if applicable"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-9")}
+                  title="Copy link to Section 9"
+                >
+                  {copiedId === "sec-9" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಶುಲ್ಕಗಳು ಮತ್ತು ಪಾವತಿಗಳಿಗೆ ಸಂಬಂಧಿಸಿದಂತೆ ಈ ಕೆಳಗಿನ ನಿಯಮಗಳು ಅನ್ವಯವಾಗುತ್ತವೆ:"
+                    : "Financial arrangements conducted on or through Advocate Hub are governed by transparent, unambiguous standards:"}
+                </p>
+
+                <ul className="tu-list">
+                  <li>
+                    <strong>{isKn ? "ತಂತ್ರಜ್ಞಾನ ವೇದಿಕೆ ಶುಲ್ಕ: " : "Platform Convenience Fees: "}</strong>
+                    {isKn
+                      ? "ಕ್ಲೌಡ್ ಸ್ಟೋರೇಜ್, ಸರ್ವರ್ ನಿರ್ವಹಣೆ ಮತ್ತು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಮಾಡಿದ ಚಾಟ್ ಸೌಲಭ್ಯಕ್ಕಾಗಿ ವೇದಿಕೆಯು ಕನಿಷ್ಠ ತಂತ್ರಜ್ಞಾನ ಸಕ್ರಿಯಗೊಳಿಸುವ ಶುಲ್ಕವನ್ನು ವಿಧಿಸಬಹುದು."
+                      : "Advocate Hub may charge a nominal technology convenience or document access fee to cover encrypted cloud transmission, database infrastructure, and maintenance."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ವಕೀಲರ ವೃತ್ತಿಪರ ಶುಲ್ಕ: " : "Independent Advocate Professional Fees: "}</strong>
+                    {isKn
+                      ? "ವಕೀಲರ ಸಮಾಲೋಚನೆ ಮತ್ತು ನ್ಯಾಯಾಲಯದ ಪ್ರಾತಿನಿಧ್ಯ ಶುಲ್ಕವನ್ನು ವಕೀಲರು ಸ್ವತಂತ್ರವಾಗಿ ನಿಗದಿಪಡಿಸುತ್ತಾರೆ ಅಥವಾ ಕಕ್ಷಿದಾರ ಮತ್ತು ವಕೀಲರ ನಡುವೆ ನೇರವಾಗಿ ತೀರ್ಮಾನಿಸಲಾಗುತ್ತದೆ."
+                      : "Professional consultation fees and court litigation charges are established independently by each advocate or mutually negotiated directly between advocate and client."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ರದ್ದತಿ ಮತ್ತು ಮರುಪಾವತಿ ನೀತಿ: " : "Refund & Cancellation Standard: "}</strong>
+                    {isKn
+                      ? "ಒಮ್ಮೆ ಸಮಾಲೋಚನೆ ಆರಂಭವಾದ ನಂತರ ಅಥವಾ ಡಿಜಿಟಲ್ ಕಾನೂನು ದಾಖಲೆ ಡೌನ್‌ಲೋಡ್ ಆದ ನಂತರ ಪಾವತಿಸಿದ ತಂತ್ರಜ್ಞಾನ ಶುಲ್ಕವನ್ನು ಮರುಪಾವತಿಸಲಾಗುವುದಿಲ್ಲ. ತಾಂತ್ರಿಕ ದೋಷದಿಂದ ಉಂಟಾದ ದ್ವಿಗುಣ ಕಡಿತಗಳನ್ನು ೭ ದಿನಗಳಲ್ಲಿ ಪರಿಶೀಲಿಸಿ ಮರುಪಾವತಿಸಲಾಗುತ್ತದೆ."
+                      : "Technology convenience fees are non-refundable once real-time consultation access is initiated or digital documents are delivered. Genuine duplicate deductions or technical failures will be reviewed and refunded within 7 business days upon notice to support."}
+                  </li>
+                </ul>
+
+                <p style={{ fontSize: "0.84rem", color: "var(--tu-text-muted)" }}>
+                  Billing Entity: <span className="tu-placeholder-tag">[Advocate Hub / GSTIN: Pending Registration / As Applicable]</span>
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 10: Legal Disclaimer and No Guarantee of Results
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-10" className="tu-section" ref={(el) => (sectionRefs.current["sec-10"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="disclaimer" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    10. {isKn ? "ಕಾನೂನು ಹಕ್ಕುತ್ಯಾಗ ಮತ್ತು ಫಲಿತಾಂಶದ ಯಾವುದೇ ಭರವಸೆ ಇಲ್ಲ" : "Legal Disclaimer and No Guarantee of Results"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-10")}
+                  title="Copy link to Section 10"
+                >
+                  {copiedId === "sec-10" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <div className="tu-callout tu-callout-danger">
+                  <div className="tu-callout-icon"><LegalIcon name="disclaimer" size={18} /></div>
+                  <div className="tu-callout-text">
+                    <strong>{isKn ? "ನ್ಯಾಯಾಲಯ ಫಲಿತಾಂಶದ ಯಾವುದೇ ಭರವಸೆ ಇಲ್ಲ: " : "NO GUARANTEE OF CASE RESULTS: "}</strong>
+                    {isKn
+                      ? "ಭಾರತದ ಯಾವುದೇ ನ್ಯಾಯಾಲಯ, ನ್ಯಾಯಾಧೀಕರಣ ಅಥವಾ ಅಧಿಕಾರ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ನಡೆಯುವ ಯಾವುದೇ ಪ್ರಕರಣ, ಜಾಮೀನು ಅರ್ಜಿ, ಸಿವಿಲ್ ಅಥವಾ ಕ್ರಿಮಿನಲ್ ದಾವೆಯ ಫಲಿತಾಂಶ ಅಥವಾ ತೀರ್ಪಿನ ಬಗ್ಗೆ ಯಾವುದೇ ವಕೀಲರು ಅಥವಾ ವೇದಿಕೆಯು ಖಾತರಿ ಅಥವಾ ಗ್ಯಾರಂಟಿ ನೀಡಲು ಸಾಧ್ಯವಿಲ್ಲ. ಯಾವುದೇ ವಕೀಲರು '೧೦೦% ಗೆಲುವು' ಎಂದು ಹೇಳಿಕೊಳ್ಳುವುದು ಕಾನೂನುಬಾಹಿರವಾಗಿದೆ."
+                      : "NO LAWYER, ADVOCATE, OR PLATFORM CAN GUARANTEE THE OUTCOME, DURATION, OR RESULT OF ANY LITIGATION, BAIL PETITION, TRIAL, APPEAL, OR ADMINISTRATIVE PROCEEDING BEFORE ANY COURT OR TRIBUNAL IN INDIA. Any representation promising a specific outcome or guaranteed judgment is void and legally impermissible."}
+                  </div>
+                </div>
+
+                <p>
+                  {isKn
+                    ? "ವೇದಿಕೆಯಲ್ಲಿ ಲಭ್ಯವಿರುವ ಕಾನೂನು ಕಾಯಿದೆಗಳು (Bare Acts), ಎಐ ಕಾನೂನು ಮಾರ್ಗದರ್ಶಿ ಮತ್ತು ಲೇಖನಗಳು ಕೇವಲ ಸಾರ್ವಜನಿಕ ಕಾನೂನು ಅರಿವಿಗಾಗಿ ಮಾತ್ರ ಒದಗಿಸಲಾಗಿದೆ. ಇದು ಅಧಿಕೃತ ಕಾನೂನು ಸಲಹೆಗೆ ಪರ್ಯಾಯವಲ್ಲ."
+                    : "All materials, statutes, legal guides, Bare Acts compilations, and AI legal assistant outputs hosted on Advocate Hub are provided strictly for general educational, academic, and situational awareness. None of the platform content constitutes legal advice or an authoritative legal opinion."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 11: Advocate-Client Relationship
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-11" className="tu-section" ref={(el) => (sectionRefs.current["sec-11"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="relationship" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    11. {isKn ? "ವಕೀಲ-ಗ್ರಾಹಕ ಸಂಬಂಧ" : "Advocate-Client Relationship"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-11")}
+                  title="Copy link to Section 11"
+                >
+                  {copiedId === "sec-11" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಕೇವಲ ವೇದಿಕೆಯನ್ನು ಬ್ರೌಸ್ ಮಾಡುವುದರಿಂದ, ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳುವುದರಿಂದ ಅಥವಾ ಎಐ ಸಹಾಯಕರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡುವುದರಿಂದ ಯಾವುದೇ ವಕೀಲ-ಕಕ್ಷಿದಾರ ಸಂಬಂಧ (Advocate-Client Relationship) ಸೃಷ್ಟಿಯಾಗುವುದಿಲ್ಲ."
+                    : "The mere access, exploration of the Platform, or interaction with AI legal tools does not create an advocate-client relationship between you and Advocate Hub or any participating advocate."}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ವಕೀಲ-ಕಕ್ಷಿದಾರ ಸಂಬಂಧವು ಕೇವಲ ವಕೀಲ ಮತ್ತು ಕಕ್ಷಿದಾರರ ನಡುವೆ ಪರಸ್ಪರ ಸಮ್ಮತಿಯೊಂದಿಗೆ ಅಧಿಕೃತ ವಕಾಲತ್ತುನಾಮೆ (Vakalatnama) ಅಥವಾ ಲಿಖಿತ ಒಪ್ಪಂದಕ್ಕೆ ಸಹಿ ಹಾಕಿದ ನಂತರವೇ ಉಂಟಾಗುತ್ತದೆ. ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ ಈ ಸಂಬಂಧದಲ್ಲಿ ಯಾವುದೇ ಪಾತ್ರ ಹೊಂದಿರುವುದಿಲ್ಲ ಮತ್ತು ಮಾಹಿತಿ ತಂತ್ರಜ್ಞಾನ ಕಾಯ್ದೆ ಕಲಂ ೭೯ ರ ಅಡಿಯಲ್ಲಿ ರಕ್ಷಣೆ ಹೊಂದಿದೆ."
+                    : "An advocate-client relationship is strictly created upon bilateral mutual agreement directly between the client and the respective advocate, formalized by the execution of a Vakalatnama, memorandum of appearance, or formal legal engagement retainer. Advocate Hub remains an intermediary safe harbor protected under Section 79 of the Information Technology Act, 2000."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 12: Privacy, Confidentiality and Personal Data
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-12" className="tu-section" ref={(el) => (sectionRefs.current["sec-12"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="lock" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    12. {isKn ? "ಗೌಪ್ಯತೆ, ರಹಸ್ಯತೆ ಮತ್ತು ವೈಯಕ್ತಿಕ ದತ್ತಾಂಶ" : "Privacy, Confidentiality and Personal Data"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-12")}
+                  title="Copy link to Section 12"
+                >
+                  {copiedId === "sec-12" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ವಿವರಗಳು ಮತ್ತು ದಾಖಲೆಗಳನ್ನು ಡಿಜಿಟಲ್ ವೈಯಕ್ತಿಕ ದತ್ತಾಂಶ ಸಂರಕ್ಷಣಾ ಕಾಯ್ದೆ ೨೦೨೩ (DPDP Act) ಮತ್ತು ಐಟಿ ನಿಯಮಾವಳಿಗಳಿಗೆ ಅನುಗುಣವಾಗಿ ಕಟ್ಟುನಿಟ್ಟಾಗಿ ರಕ್ಷಿಸಲಾಗುತ್ತದೆ."
+                    : "Advocate Hub handles personal information in accordance with the Information Technology Act, 2000, Information Technology (Reasonable Security Practices) Rules, 2011, and the Digital Personal Data Protection Act, 2023 (DPDP)."}
+                </p>
+
+                <ul className="tu-list">
+                  <li>
+                    <strong>{isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಭದ್ರತೆ: " : "Password Security: "}</strong>
+                    {isKn
+                      ? "ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು scrypt ಕ್ರಿಪ್ಟೋಗ್ರಾಫಿಕ್ ಹ್ಯಾಶ್ ಮೂಲಕ ರಕ್ಷಿಸಲಾಗಿದ್ದು, ಸರ್ವರ್‌ನಲ್ಲಿಯೂ ಸರಳ ಪಠ್ಯದಲ್ಲಿ ಲಭ್ಯವಿರುವುದಿಲ್ಲ."
+                      : "User passwords are stored strictly as salted scrypt hashes. Plain-text passwords are never stored or logged."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "OTP ಅವಧಿ ಮತ್ತು ಭದ್ರತೆ: " : "OTP Expiry: "}</strong>
+                    {isKn
+                      ? "ಪರಿಶೀಲನಾ ಕೋಡ್‌ಗಳು (OTP) ಕೇವಲ ೫ ನಿಮಿಷಗಳವರೆಗೆ ಮಾತ್ರ ಮಾನ್ಯವಾಗಿದ್ದು, HMAC-SHA256 ಎನ್‌ಕ್ರಿಪ್ಶನ್ ಮೂಲಕ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ."
+                      : "One-Time Passwords (OTPs) expire within 5 minutes, are hashed with HMAC-SHA256, and are invalidated immediately upon consumption."}
+                  </li>
+                  <li>
+                    <strong>{isKn ? "ಗೌಪ್ಯತಾ ನೀತಿ ಲಿಂಕ್: " : "Companion Privacy Policy: "}</strong>
+                    {isKn
+                      ? "ದತ್ತಾಂಶ ಸಂಗ್ರಹಣೆ ಮತ್ತು ಹಕ್ಕುಗಳ ಪೂರ್ಣ ವಿವರಗಳಿಗಾಗಿ ನಮ್ಮ ಪ್ರತ್ಯೇಕ "
+                      : "For detailed disclosures concerning data processing, storage durations, and rights, refer to our standalone "}
+                    <Link to="/privacy" style={{ color: "var(--tu-primary)", fontWeight: 700 }}>
+                      {isKn ? "ಗೌಪ್ಯತಾ ನೀತಿ (Privacy Policy)" : "Privacy Policy"}
+                    </Link>.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 13: Uploaded Documents and Intellectual Property
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-13" className="tu-section" ref={(el) => (sectionRefs.current["sec-13"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="documents" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    13. {isKn ? "ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ದಾಖಲೆಗಳು ಮತ್ತು ಬೌದ್ಧಿಕ ಆಸ್ತಿ" : "Uploaded Documents and Intellectual Property"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-13")}
+                  title="Copy link to Section 13"
+                >
+                  {copiedId === "sec-13" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಕಕ್ಷಿದಾರರು ಅಥವಾ ವಕೀಲರು ವೇದಿಕೆಗೆ ಅಪ್‌ಲೋಡ್ ಮಾಡುವ ಪ್ರಕರಣದ ಕಡತಗಳು ಮತ್ತು ಕಾನೂನು ದಾಖಲೆಗಳ ಮಾಲೀಕತ್ವವು ಬಳಕೆದಾರರಿಗೆ ಸೇರಿರುತ್ತದೆ."
+                    : "Users retain full title, ownership, and copyright over all case documents, pleadings, notices, or evidence uploaded to the platform."}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್‌ನ ಲೋಗೋ, ಸಾಫ್ಟ್‌ವೇರ್, ಕೋಡ್, ಬ್ರ್ಯಾಂಡಿಂಗ್ ಮತ್ತು ವಿನ್ಯಾಸದ ಎಲ್ಲಾ ಬೌದ್ಧಿಕ ಆಸ್ತಿ ಹಕ್ಕುಗಳು ವೇದಿಕೆಗೆ ಸೇರಿರುತ್ತವೆ."
+                    : "All trademarks, service marks, logos, brand elements, codebase, software, and compilation designs associated with Advocate Hub are the exclusive proprietary intellectual property of [Entity Name: Advocate Hub] and protected under the Indian Copyright Act, 1957 and Trade Marks Act, 1999."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 14: Prohibited Activities and Fraud Prevention
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-14" className="tu-section" ref={(el) => (sectionRefs.current["sec-14"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="prohibited" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    14. {isKn ? "ನಿಷೇಧಿತ ಚಟುವಟಿಕೆಗಳು ಮತ್ತು ವಂಚನೆ ತಡೆಗಟ್ಟುವಿಕೆ" : "Prohibited Activities and Fraud Prevention"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-14")}
+                  title="Copy link to Section 14"
+                >
+                  {copiedId === "sec-14" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ವೇದಿಕೆಯಲ್ಲಿ ಈ ಕೆಳಗಿನ ಚಟುವಟಿಕೆಗಳನ್ನು ಕಟ್ಟುನಿಟ್ಟಾಗಿ ನಿಷೇಧಿಸಲಾಗಿದೆ:"
+                    : "Users agree not to engage in any prohibited, unlawful, or disruptive activities, including but not limited to:"}
+                </p>
+
+                <ul className="tu-list">
+                  <li>
+                    {isKn
+                      ? "ಸುಳ್ಳು ಬಾರ್ ಕೌನ್ಸಿಲ್ ಐಡಿ ಅಥವಾ ದಾಖಲೆಗಳನ್ನು ಸಲ್ಲಿಸಿ ವಕೀಲರಂತೆ ನಟಿಸುವುದು."
+                      : "Submitting counterfeit Bar credentials, fake Sanad details, or impersonating legal officers."}
+                  </li>
+                  <li>
+                    {isKn
+                      ? "ವೇದಿಕೆಯ ದತ್ತಾಂಶವನ್ನು ಸ್ಕ್ರ್ಯಾಪಿಂಗ್ (Scraping), ರಿವರ್ಸ್ ಇಂಜಿನಿಯರಿಂಗ್ ಅಥವಾ ಹ್ಯಾಕ್ ಮಾಡಲು ಪ್ರಯತ್ನಿಸುವುದು."
+                      : "Automated scraping, bulk extraction of advocate contact directories, or reverse-engineering platform source code."}
+                  </li>
+                  <li>
+                    {isKn
+                      ? "ಅನಗತ್ಯ ಸ್ಪ್ಯಾಮ್ ಸಂದೇಶಗಳು, ವೈರಸ್ ಅಥವಾ ಮಾಲ್‌ವೇರ್ ಕಳುಹಿಸುವುದು."
+                      : "Transmitting viruses, ransomware, malicious files, or promotional spam over chat channels."}
+                  </li>
+                  <li>
+                    {isKn
+                      ? "ಯಾವುದೇ ವ್ಯಕ್ತಿಯನ್ನು ಬೆದರಿಸುವುದು, ನಿಂದಿಸುವುದು ಅಥವಾ ಸುಲಿಗೆ ಮಾಡುವುದು."
+                      : "Extorting, threatening, harassing, or defaming any user or legal practitioner."}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 15: Reporting, Complaints and Dispute Resolution
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-15" className="tu-section" ref={(el) => (sectionRefs.current["sec-15"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="gavel" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    15. {isKn ? "ವರದಿ ಮಾಡುವಿಕೆ, ದೂರುಗಳು ಮತ್ತು ವಿವಾದ ಪರಿಹಾರ" : "Reporting, Complaints and Dispute Resolution"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-15")}
+                  title="Copy link to Section 15"
+                >
+                  {copiedId === "sec-15" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಮಾಹಿತಿ ತಂತ್ರಜ್ಞಾನ (ಮಧ್ಯವರ್ತಿ ಮಾರ್ಗಸೂಚಿಗಳು) ನಿಯಮಗಳು ೨೦೨೧ ರ ಪ್ರಕಾರ ವೇದಿಕೆಯಲ್ಲಿ ಶಾಸನಬದ್ಧ ದೂರು ಪರಿಹಾರ ವ್ಯವಸ್ಥೆಯನ್ನು (Grievance Redressal Mechanism) ಕಲ್ಪಿಸಲಾಗಿದೆ."
+                    : "In compliance with Rule 3(2) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, Advocate Hub maintains an official Grievance Redressal Mechanism."}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ಯಾವುದೇ ದೂರುಗಳು ಅಥವಾ ಆಕ್ಷೇಪಾರ್ಹ ವಿಷಯಗಳಿದ್ದಲ್ಲಿ, ಬಳಕೆದಾರರು ನೇರವಾಗಿ ನಮ್ಮ ಶಾಸನಬದ್ಧ ದೂರು ಅಧಿಕಾರಿಗೆ ಲಿಖಿತವಾಗಿ ದೂರು ಸಲ್ಲಿಸಬಹುದು. ದೂರನ್ನು ೨೪ ಗಂಟೆಗಳ ಒಳಗೆ ಸ್ವೀಕರಿಸಿ, ೧೫ ದಿನಗಳ ಒಳಗೆ ಪರಿಹರಿಸಲಾಗುತ್ತದೆ."
+                    : "Any grievance concerning platform content, advocate misconduct, or operational dispute should be submitted in writing to the Designated Grievance Officer (contact details in Section 21). Grievances will be acknowledged within twenty-four (24) hours and resolved within fifteen (15) calendar days."}
+                </p>
+
+                <p style={{ fontSize: "0.85rem", color: "var(--tu-text-muted)" }}>
+                  {isKn
+                    ? "ಗಮನಿಸಿ: ಗ್ರಾಹಕ ಸಂರಕ್ಷಣಾ ಕಾಯ್ದೆ ೨೦೧೯ ರ ಅಡಿಯಲ್ಲಿ ಬಳಕೆದಾರರಿಗೆ ಲಭ್ಯವಿರುವ ಶಾಸನಬದ್ಧ ಹಕ್ಕುಗಳನ್ನು ಈ ನಿಯಮಗಳು ಯಾವುದೇ ರೀತಿಯಲ್ಲಿ ರದ್ದುಪಡಿಸುವುದಿಲ್ಲ."
+                    : "Nothing herein constitutes a waiver of non-excludable statutory rights under the Consumer Protection Act, 2019."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 16: Account Suspension and Termination
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-16" className="tu-section" ref={(el) => (sectionRefs.current["sec-16"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="termination" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    16. {isKn ? "ಖಾತೆ ಅಮಾನತು ಮತ್ತು ರದ್ದತಿ" : "Account Suspension and Termination"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-16")}
+                  title="Copy link to Section 16"
+                >
+                  {copiedId === "sec-16" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಬಳಕೆದಾರರು ಈ ನಿಯಮಗಳನ್ನು ಉಲ್ಲಂಘಿಸಿದರೆ, ಸುಳ್ಳು ಮಾಹಿತಿ ನೀಡಿದರೆ ಅಥವಾ ಬಾರ್ ಕೌನ್ಸಿಲ್‌ನಿಂದ ಶಿಸ್ತು ಕ್ರಮಕ್ಕೆ ಒಳಗಾಗಿದ್ದರೆ, ವೇದಿಕೆಯು ಅವರ ಖಾತೆಯನ್ನು ತಕ್ಷಣ ಅಮಾನತುಗೊಳಿಸುವ ಅಥವಾ ಶಾಶ್ವತವಾಗಿ ರದ್ದುಗೊಳಿಸುವ ಹಕ್ಕನ್ನು ಹೊಂದಿರುತ್ತದೆ."
+                    : "Advocate Hub reserves the right to immediately suspend or permanently terminate user accounts upon evidence of terms violation, fraudulent identity, disciplinary sanctions imposed by a State Bar Council, or compliance with court orders."}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ಬಳಕೆದಾರರು ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ತಮ್ಮ ಖಾತೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲು advocatehub.in@gmail.com ಗೆ ಇಮೇಲ್ ಕಳುಹಿಸಿ ವಿನಂತಿಸಬಹುದು."
+                    : "Users may voluntarily deactivate their accounts at any time by sending a verified deletion request to advocatehub.in@gmail.com."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 17: Service Availability and Third-Party Services
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-17" className="tu-section" ref={(el) => (sectionRefs.current["sec-17"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="availability" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    17. {isKn ? "ಸೇವಾ ಲಭ್ಯತೆ ಮತ್ತು ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಸೇವೆಗಳು" : "Service Availability and Third-Party Services"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-17")}
+                  title="Copy link to Section 17"
+                >
+                  {copiedId === "sec-17" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ವೇದಿಕೆಯನ್ನು 'ಯಥಾಸ್ಥಿತಿ' (AS IS) ಮತ್ತು 'ಲಭ್ಯವಿರುವಂತೆ' (AS AVAILABLE) ಆಧಾರದ ಮೇಲೆ ಒದಗಿಸಲಾಗಿದೆ."
+                    : "Advocate Hub and its accompanying features are provided on an 'AS IS' and 'AS AVAILABLE' basis without warranties of uninterrupted uptime."}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ಸರ್ವರ್ ನಿರ್ವಹಣೆ, ಇಂಟರ್ನೆಟ್ ಅಡೆತಡೆಗಳು ಅಥವಾ ಟೆಲಿಕಾಂ ಎಸ್‌ಎಂಎಸ್/ವಾಟ್ಸಾಪ್ ಗೇಟ್‌ವೇಗಳ ವಿಳಂಬಗಳಿಗೆ ವೇದಿಕೆಯು ಹೊಣೆಗಾರನಾಗಿರುವುದಿಲ್ಲ."
+                    : "While we implement high-availability cloud architecture, interruptions may occur due to routine maintenance, telecommunications carrier delays in SMS/WhatsApp OTP delivery, or force majeure events."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 18: Limitation of Liability, subject to applicable law
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-18" className="tu-section" ref={(el) => (sectionRefs.current["sec-18"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="liability" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    18. {isKn ? "ಹೊಣೆಗಾರಿಕೆಯ ಮಿತಿ" : "Limitation of Liability, subject to applicable law"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-18")}
+                  title="Copy link to Section 18"
+                >
+                  {copiedId === "sec-18" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಭಾರತೀಯ ಕಾನೂನಿನ ಗರಿಷ್ಠ ಮಿತಿಯೊಳಗೆ, ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್‌ನ ಒಟ್ಟು ಹೊಣೆಗಾರಿಕೆಯು ಘಟನೆ ಸಂಭವಿಸಿದ ಹಿಂದಿನ ಮೂರು (೩) ತಿಂಗಳುಗಳಲ್ಲಿ ಬಳಕೆದಾರರು ವೇದಿಕೆಗೆ ಪಾವತಿಸಿದ ಮೊತ್ತಕ್ಕೆ (ಅಥವಾ ₹೧,೦೦೦ ಭಾರತೀಯ ರೂಪಾಯಿ, ಯಾವುದು ಕಡಿಮೆಯೋ ಅದಕ್ಕೆ) ಸೀಮಿತವಾಗಿರುತ್ತದೆ."
+                    : "To the maximum extent permitted by applicable Indian law, the aggregate liability of Advocate Hub, its directors, developers, and administrators for direct losses arising out of platform use shall not exceed the actual fees paid by the user to the platform in the three (3) months preceding the incident or ₹1,000 INR (whichever is less)."}
+                </p>
+
+                <div className="tu-callout tu-callout-info">
+                  <div className="tu-callout-icon"><LegalIcon name="info" size={18} /></div>
+                  <div className="tu-callout-text">
+                    <strong>{isKn ? "ಕಾನೂನು ವಿನಾಯಿತಿಗಳು: " : "Statutory Exclusions: "}</strong>
+                    {isKn
+                      ? "ಭಾರತೀಯ ಕಾನೂನಿನಡಿಯಲ್ಲಿ ಸೀಮಿತಗೊಳಿಸಲಾಗದ ವಿಷಯಗಳಿಗೆ (ಉದಾಹರಣೆಗೆ ವಂಚನೆ, ತೀವ್ರ ನಿರ್ಲಕ್ಷ್ಯ ಅಥವಾ ಗ್ರಾಹಕ ಹಕ್ಕುಗಳು) ಈ ಮಿತಿ ಅನ್ವಯಿಸುವುದಿಲ್ಲ."
+                      : "Nothing in this agreement purports to exclude or limit liability for fraud, willful misconduct, or non-waivable statutory liabilities governed by the Consumer Protection Act, 2019."}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 19: Amendments to Terms and Conditions
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-19" className="tu-section" ref={(el) => (sectionRefs.current["sec-19"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="amendments" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    19. {isKn ? "ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳಿಗೆ ತಿದ್ದುಪಡಿಗಳು" : "Amendments to Terms and Conditions"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-19")}
+                  title="Copy link to Section 19"
+                >
+                  {copiedId === "sec-19" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಕಾನೂನು ಬದಲಾವಣೆಗಳು ಅಥವಾ ತಾಂತ್ರಿಕ ನವೀಕರಣಗಳಿಗೆ ಅನುಗುಣವಾಗಿ ಈ ನಿಯಮಗಳನ್ನು ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಮಾರ್ಪಡಿಸುವ ಹಕ್ಕನ್ನು ವೇದಿಕೆಯು ಕಾಯ್ದಿರಿಸಿಕೊಂಡಿದೆ."
+                    : "Advocate Hub reserves the right to amend, update, or revise these Terms periodically to reflect evolving legal precedents, BCI guidelines, statutory updates, or feature additions."}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ಪ್ರಮುಖ ಬದಲಾವಣೆಗಳನ್ನು ವೆಬ್‌ಸೈಟ್ ಸೂಚನೆ ಅಥವಾ ನೋಂದಾಯಿತ ಇಮೇಲ್ ಮೂಲಕ ತಿಳಿಸಲಾಗುವುದು. ಬದಲಾವಣೆಗಳ ನಂತರ ವೇದಿಕೆಯನ್ನು ಮುಂದುವರಿಸುವುದು ಹೊಸ ನಿಯಮಗಳ ಒಪ್ಪಿಗೆಯಾಗಿದೆ."
+                    : "Material changes will be notified via prominent website notification or registered email. Continued use of Advocate Hub following the posting of revisions constitutes formal acceptance of the updated terms."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 20: Governing Law and Jurisdiction in India
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-20" className="tu-section" ref={(el) => (sectionRefs.current["sec-20"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="governingLaw" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    20. {isKn ? "ಭಾರತದಲ್ಲಿ ಆಡಳಿತ ಕಾನೂನು ಮತ್ತು ನ್ಯಾಯವ್ಯಾಪ್ತಿ" : "Governing Law and Jurisdiction in India"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-20")}
+                  title="Copy link to Section 20"
+                >
+                  {copiedId === "sec-20" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಈ ಒಪ್ಪಂದ ಮತ್ತು ನಿಯಮಗಳು ಭಾರತ ಗಣರಾಜ್ಯದ ಕಾನೂನುಗಳಿಗೆ ಒಳಪಟ್ಟಿರುತ್ತವೆ."
+                    : "These Terms, rights, obligations, and any legal disputes arising out of or in connection with the Platform shall be governed by, construed, and enforced in accordance with the substantive laws of the Republic of India."}
+                </p>
+
+                <p>
+                  {isKn
+                    ? "ಈ ನಿಯಮಗಳಿಗೆ ಸಂಬಂಧಿಸಿದ ಯಾವುದೇ ವಿವಾದಗಳು ಅಥವಾ ಕಾನೂನು ಪ್ರಕ್ರಿಯೆಗಳಿಗೆ ಬೆಂಗಳೂರು, ಕರ್ನಾಟಕದ ನ್ಯಾಯಾಲಯಗಳು ಮಾತ್ರ ಪ್ರತ್ಯೇಕ ನ್ಯಾಯವ್ಯಾಪ್ತಿಯನ್ನು (Exclusive Jurisdiction) ಹೊಂದಿರುತ್ತವೆ."
+                    : "Subject to initial good-faith consultation and statutory grievance redressal, the competent courts situated in Bengaluru, Karnataka, India shall have exclusive jurisdiction over all claims, suits, or proceedings."}
+                </p>
+              </div>
+            </div>
+          </article>
+
+          {/* ══════════════════════════════════════════════════════════
+              SECTION 21: Contact and Support Information
+          ══════════════════════════════════════════════════════════ */}
+          <article id="sec-21" className="tu-section" ref={(el) => (sectionRefs.current["sec-21"] = el)}>
+            <div className="tu-card">
+              <div className="tu-sec-header">
+                <div className="tu-sec-title-group">
+                  <div className="tu-sec-icon-box"><LegalIcon name="contact" size={22} /></div>
+                  <h2 className="tu-sec-title">
+                    21. {isKn ? "ಸಂಪರ್ಕ ಮತ್ತು ಬೆಂಬಲ ಮಾಹಿತಿ" : "Contact and Support Information"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  className="tu-sec-share-btn"
+                  onClick={() => copySectionLink("sec-21")}
+                  title="Copy link to Section 21"
+                >
+                  {copiedId === "sec-21" ? <><LegalIcon name="check" size={13} /> Copied</> : <><LegalIcon name="share" size={13} /> Share</>}
+                </button>
+              </div>
+
+              <div className="tu-body">
+                <p>
+                  {isKn
+                    ? "ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳು, ಬೆಂಬಲ ವಿನಂತಿಗಳು ಅಥವಾ ಕಾನೂನು ವಿಚಾರಣೆಗಳಿಗಾಗಿ ನಮ್ಮ ಅಧಿಕೃತ ಸಂಪರ್ಕ ಮಾರ್ಗಗಳು:"
+                    : "For legal inquiries, compliance queries, or user support, contact Advocate Hub through official verified channels:"}
+                </p>
+
+                <div className="tu-grid-2">
+                  <div className="tu-contact-card">
+                    <div className="tu-contact-icon"><LegalIcon name="mail" size={20} /></div>
+                    <div className="tu-contact-info">
+                      <span className="tu-contact-label">{isKn ? "ಅಧಿಕೃತ ಇಮೇಲ್" : "Official Support Email"}</span>
+                      <a href={`mailto:${EMAIL}`} className="tu-contact-val">{EMAIL}</a>
+                    </div>
+                  </div>
+
+                  <div className="tu-contact-card">
+                    <div className="tu-contact-icon"><LegalIcon name="contact" size={20} /></div>
+                    <div className="tu-contact-info">
+                      <span className="tu-contact-label">{isKn ? "ದೂರವಾಣಿ ಸಹಾಯವಾಣಿ" : "Phone Helpline"}</span>
+                      <a href={`tel:${PHONE}`} className="tu-contact-val">{PHONE}</a>
+                    </div>
+                  </div>
+
+                  <div className="tu-contact-card">
+                    <div className="tu-contact-icon"><LegalIcon name="instagram" size={20} /></div>
+                    <div className="tu-contact-info">
+                      <span className="tu-contact-label">{isKn ? "ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್" : "Official Instagram"}</span>
+                      <a href="https://www.instagram.com/advocate__hub/" target="_blank" rel="noopener noreferrer" className="tu-contact-val">{INSTAGRAM}</a>
+                    </div>
+                  </div>
+
+                  <div className="tu-contact-card">
+                    <div className="tu-contact-icon"><LegalIcon name="availability" size={20} /></div>
+                    <div className="tu-contact-info">
+                      <span className="tu-contact-label">{isKn ? "ವೆಬ್‌ಸೈಟ್" : "Platform URL"}</span>
+                      <a href={WEBSITE_URL} target="_blank" rel="noopener noreferrer" className="tu-contact-val">advocate-hub.up.railway.app</a>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 20, padding: "14px 18px", background: "var(--tu-bg-subtle)", borderRadius: 12, border: "1px solid var(--tu-border)" }}>
+                  <div style={{ fontWeight: 750, color: "var(--tu-text-title)", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                    <LegalIcon name="scale" size={18} />
+                    <span>{isKn ? "ಶಾಸನಬದ್ಧ ದೂರು ಪರಿಹಾರ ಅಧಿಕಾರಿ (Grievance Redressal Officer):" : "Designated Grievance Redressal Officer (IT Rules, 2021):"}</span>
+                  </div>
+                  <div style={{ fontSize: "0.86rem", color: "var(--tu-text-main)", lineHeight: 1.6 }}>
+                    <div><strong>Designation:</strong> <span className="tu-placeholder-tag">[Grievance Officer, Legal Operations Division]</span></div>
+                    <div><strong>Entity:</strong> <span className="tu-placeholder-tag">[Advocate Hub / Registration Pending]</span></div>
+                    <div><strong>Email:</strong> <a href={`mailto:${EMAIL}`} style={{ color: "var(--tu-primary)" }}>{EMAIL}</a></div>
+                    <div><strong>Helpline:</strong> {PHONE}</div>
+                    <div><strong>Registered Address:</strong> <span className="tu-placeholder-tag">[Bengaluru, Karnataka, India - Full Corporate Address to be updated upon registration]</span></div>
+                    <div style={{ marginTop: 4, fontSize: "0.8rem", color: "var(--tu-text-muted)" }}>
+                      {isKn
+                        ? "ದೂರು ಸ್ವೀಕೃತಿ: ೨೪ ಗಂಟೆಗಳ ಒಳಗೆ | ಪರಿಹಾರ: ೧೫ ದಿನಗಳ ಒಳಗೆ"
+                        : "Statutory Acknowledgment: Within 24 hours | Resolution: Within 15 calendar days"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </main>
       </div>
 
-      {/* Mobile TOC */}
+      {/* ── MOBILE SLIDE-OVER DRAWER (TABLE OF CONTENTS) ── */}
       {showTOC && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.4)", zIndex:200 }} onClick={() => setTOC(false)}>
-          <div style={{ position:"absolute", right:0, top:0, bottom:0, width:280, background:"#fff", padding:"20px 14px", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontWeight:700, fontSize:14, color:"#1e293b", marginBottom:12 }}>Table of Contents</div>
-            {SECTIONS.map(s => (
-              <button key={s.id} className={`tu-nav-item ${activeSection === s.id ? "active" : ""}`} onClick={() => scrollTo(s.id)}>
-                <span>{s.icon}</span><span>{s.title}</span>
+        <div className="tu-drawer-backdrop" onClick={() => setTOC(false)}>
+          <div className="tu-drawer-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="tu-drawer-header">
+              <span className="tu-drawer-title">{isKn ? "ವಿಷಯ ಸೂಚಿ (21 ವಿಭಾಗಗಳು)" : "Table of Contents (21 Sections)"}</span>
+              <button
+                type="button"
+                className="tu-drawer-close"
+                onClick={() => setTOC(false)}
+                title="Close"
+              >
+                ×
               </button>
-            ))}
+            </div>
+            <div className="tu-drawer-search">
+              <input
+                type="text"
+                placeholder={isKn ? "ಹುಡುಕಿ..." : "Search sections..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="tu-search-input"
+              />
+            </div>
+            <div className="tu-drawer-body">
+              {filteredSections.map((sec) => (
+                <button
+                  type="button"
+                  key={sec.id}
+                  className={`tu-drawer-item ${activeSection === sec.id ? "active" : ""}`}
+                  onClick={() => scrollToSection(sec.id)}
+                >
+                  <LegalIcon name={sec.iconKey} size={15} />
+                  <span>{sec.num}. {isKn ? sec.titleKn : sec.titleEn}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Hero */}
-      <div style={{ background:"linear-gradient(135deg,#14532d,#16a34a,#22c55e)", color:"#fff", padding:"48px 24px 40px", textAlign:"center" }}>
-        <div style={{ fontSize:52, marginBottom:12 }}>📜</div>
-        <h1 style={{ fontSize:32, fontWeight:900, margin:"0 0 8px", letterSpacing:"-.5px" }}>Terms of Use</h1>
-        <p style={{ fontSize:15, opacity:.85, margin:"0 0 20px" }}>{COMPANY}</p>
-        <div style={{ display:"flex", justifyContent:"center", gap:24, flexWrap:"wrap", fontSize:13, opacity:.8 }}>
-          <span>📅 Last Updated: {LAST_UPDATED}</span>
-          <span>✅ Effective: {EFFECTIVE_DATE}</span>
-        </div>
-      </div>
+      {/* ── FLOATING BACK TO TOP BUTTON ── */}
+      {showBackToTop && (
+        <button
+          type="button"
+          className="tu-floating-top-btn"
+          onClick={scrollToTop}
+          title={isKn ? "ಮೇಲಕ್ಕೆ ಹೋಗಿ" : "Back to top"}
+          aria-label="Back to top"
+        >
+          <LegalIcon name="arrowUp" size={18} />
+        </button>
+      )}
 
-      {/* Quick info bar */}
-      <div style={{ background:"#fff", borderBottom:"1px solid #e2e8f0", padding:"14px 24px" }}>
-        <div style={{ maxWidth:1100, margin:"0 auto", display:"flex", gap:20, flexWrap:"wrap", justifyContent:"center" }}>
-          {[
-            { icon:"🇮🇳", text:"Governed by Indian Law" },
-            { icon:"⚖️",  text:"Advocates bound by BCI rules" },
-            { icon:"🔒",  text:"Secure platform" },
-            { icon:"📞",  text:"Dispute resolution support" },
-            { icon:"🚫",  text:"Not a law firm" },
-          ].map(item => (
-            <div key={item.text} style={{ display:"flex", alignItems:"center", gap:7, fontSize:13, color:"#374151", fontWeight:500 }}>
-              <span style={{ fontSize:16 }}>{item.icon}</span>{item.text}
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* ── MOBILE BOTTOM FIXED ACTION BAR ── */}
+      <div className="tu-mobile-action-bar">
+        <button
+          type="button"
+          className="tu-mobile-action-btn"
+          onClick={() => navigate("/")}
+        >
+          <LegalIcon name="home" size={18} />
+          <span>{isKn ? "ಮುಖಪುಟ" : "Home"}</span>
+        </button>
 
-      {/* Layout */}
-      <div className="tu-layout" style={{ maxWidth:1200, margin:"0 auto", padding:"28px 20px 60px", display:"flex", gap:28, alignItems:"flex-start" }}>
+        <button
+          type="button"
+          className="tu-mobile-action-btn"
+          onClick={toggleLanguage}
+        >
+          <LegalIcon name="availability" size={18} />
+          <span>{isKn ? "English" : "ಕನ್ನಡ"}</span>
+        </button>
 
-        {/* Sidebar */}
-        <aside className="tu-sidebar" style={{ width:250, flexShrink:0, position:"sticky", top:72 }}>
-          <div style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:12, padding:"14px 10px", boxShadow:"0 1px 4px rgba(0,0,0,.05)", maxHeight:"calc(100vh - 100px)", overflowY:"auto" }}>
-            <div style={{ fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:.5, padding:"0 12px", marginBottom:10 }}>Table of Contents</div>
-            {SECTIONS.map(s => (
-              <button key={s.id} className={`tu-nav-item ${activeSection === s.id ? "active" : ""}`} onClick={() => scrollTo(s.id)}>
-                <span style={{ fontSize:13 }}>{s.icon}</span>
-                <span style={{ fontSize:12 }}>{s.title}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
+        <button
+          type="button"
+          className="tu-mobile-action-btn tu-mobile-action-btn-primary"
+          onClick={() => setTOC(true)}
+        >
+          <LegalIcon name="toc" size={18} />
+          <span>{isKn ? "ಸೂಚಿ (21)" : "TOC (21)"}</span>
+        </button>
 
-        {/* Content */}
-        <main style={{ flex:1, minWidth:0 }}>
-
-          {/* 1. Acceptance */}
-          <div id="acceptance" className="tu-section" ref={setRef("acceptance")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">✅ 1. Acceptance of Terms</h2>
-              <div className="tu-highlight">⚠️ Please read these Terms of Use carefully before using the Advocate Hub platform. By accessing or using our services, you agree to be bound by these Terms. If you disagree with any part, please do not use the platform.</div>
-              <S>These Terms of Use ("Terms") constitute a legally binding agreement between you ("User") and {COMPANY} ("Advocate Hub", "we", "us", "our") governing your access to and use of the Advocate Hub website (www.advocatehub.in), mobile application, and all associated services (collectively, "the Platform").</S>
-              <S>These Terms apply to all users of the Platform, including registered advocates, clients seeking legal assistance, and visitors browsing the website. Additional terms may apply to specific services and will be presented to you at the time of use.</S>
-              <S>Your continued use of the Platform after any modification to these Terms constitutes your acceptance of the revised Terms. These Terms were last updated on {LAST_UPDATED} and are effective as of {EFFECTIVE_DATE}.</S>
-            </div>
-          </div>
-
-          {/* 2. Definitions */}
-          <div id="definitions" className="tu-section" ref={setRef("definitions")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">📖 2. Definitions</h2>
-              <S>For the purposes of these Terms, the following definitions shall apply:</S>
-              <div style={{ background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:10, padding:"6px 16px" }}>
-                {[
-                  { term:'"Platform"',       def:'The Advocate Hub website, mobile applications, APIs, and all related services operated by the Company.' },
-                  { term:'"User"',           def:'Any individual who accesses or uses the Platform, whether registered or not.' },
-                  { term:'"Advocate"',       def:'A lawyer or legal professional enrolled with a Bar Council in India who registers on the Platform to offer legal services.' },
-                  { term:'"Client"',         def:'An individual or entity who uses the Platform to seek legal advice, consultation, or assistance from an Advocate.' },
-                  { term:'"Services"',       def:'The legal marketplace, consultation, document drafting, Q&A, Bare Acts, and related features offered through the Platform.' },
-                  { term:'"Consultation"',   def:'A session (in-person, video, or phone) between an Advocate and a Client facilitated through the Platform.' },
-                  { term:'"Content"',        def:'All text, data, information, images, reviews, questions, answers, and other materials posted, uploaded, or transmitted through the Platform.' },
-                  { term:'"Fees"',           def:'Charges payable by a Client to an Advocate for consultation, and platform commission charged by Advocate Hub.' },
-                  { term:'"Account"',        def:'A registered profile created by a User on the Platform.' },
-                  { term:'"Verification"',   def:'The process by which Advocate Hub confirms an Advocate\'s credentials with Bar Council records.' },
-                ].map(row => (
-                  <div key={row.term} className="tu-def-row">
-                    <span className="tu-def-term">{row.term}</span>
-                    <span className="tu-def-val">{row.def}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Eligibility */}
-          <div id="eligibility" className="tu-section" ref={setRef("eligibility")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">👤 3. Eligibility</h2>
-              <S>To use the Advocate Hub Platform, you must meet the following eligibility requirements:</S>
-              <B>General Users (Clients)</B>
-              <Li>You must be at least 18 years of age or the age of majority in your jurisdiction.</Li>
-              <Li>You must have the legal capacity to enter into binding contracts under Indian law.</Li>
-              <Li>You must not be prohibited from using the Platform by applicable law.</Li>
-              <Li>You must provide accurate, complete, and current information during registration.</Li>
-              <B>Advocates</B>
-              <Li>You must be a duly enrolled advocate with a State Bar Council or the Bar Council of India.</Li>
-              <Li>You must hold a valid Certificate of Practice (Sanad) at the time of registration and throughout your use of the Platform.</Li>
-              <Li>You must not be under any suspension, disqualification, or disciplinary proceedings that would prevent you from practising law.</Li>
-              <Li>You must comply with the Bar Council of India Rules, 1975, and all applicable professional conduct rules.</Li>
-              <Li>You must submit accurate credentials and consent to verification of your Bar enrollment number.</Li>
-              <div className="tu-warning-box">⚠️ Advocate Hub reserves the right to terminate any account where eligibility requirements are found to be unmet, at any time and without notice.</div>
-            </div>
-          </div>
-
-          {/* 4. Platform Description */}
-          <div id="platform-desc" className="tu-section" ref={setRef("platform-desc")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">🏛️ 4. Platform Description</h2>
-              <div className="tu-info-box">ℹ️ Advocate Hub is a technology platform that connects clients with advocates. Advocate Hub is NOT a law firm and does NOT provide legal advice.</div>
-              <S>Advocate Hub operates as an online marketplace and technology intermediary that connects individuals seeking legal assistance ("Clients") with licensed legal professionals ("Advocates"). Advocate Hub facilitates this connection but is not a party to any client-advocate relationship or legal engagement.</S>
-              <B>What Advocate Hub Provides:</B>
-              <Li>A searchable directory of verified advocates categorised by speciality, location, and court experience.</Li>
-              <Li>Tools for scheduling consultations via video call, phone, or in-person meetings.</Li>
-              <Li>A secure messaging system for client-advocate communication.</Li>
-              <Li>Legal Q&A forums where users can post questions and advocates can provide answers.</Li>
-              <Li>Access to Bare Acts, legal documents, templates, and educational legal content.</Li>
-              <Li>Payment processing infrastructure for consultation fees.</Li>
-              <Li>Review and rating systems for advocates.</Li>
-              <B>What Advocate Hub Does NOT Provide:</B>
-              <Li>Legal advice, legal opinions, or representation of any kind.</Li>
-              <Li>Guarantee of the quality, accuracy, or outcome of any legal advice provided by advocates.</Li>
-              <Li>Attorney-client privilege as a platform intermediary.</Li>
-              <Li>Assurance of specific legal outcomes or results.</Li>
-            </div>
-          </div>
-
-          {/* 5. Account Registration */}
-          <div id="registration" className="tu-section" ref={setRef("registration")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">📝 5. Account Registration</h2>
-              <S>To access most features of the Platform, you must create an account. By registering, you agree to the following:</S>
-              <Li>You will provide accurate, complete, and current information during registration and keep it updated.</Li>
-              <Li>You will maintain the confidentiality of your account credentials and not share them with any third party.</Li>
-              <Li>You are responsible for all activities that occur under your account, whether authorised by you or not.</Li>
-              <Li>You will immediately notify Advocate Hub of any unauthorised use of your account at advocatehub.in@gmail.com.</Li>
-              <Li>You will not create multiple accounts without express permission from Advocate Hub.</Li>
-              <Li>You will not impersonate any person, advocate, or entity on the Platform.</Li>
-              <Li>You consent to receive service communications, notifications, and (optionally) promotional messages.</Li>
-              <div className="tu-highlight">Advocate Hub reserves the right to refuse registration, suspend, or terminate any account at its sole discretion, particularly in cases of suspected fraud, misrepresentation, or violation of these Terms.</div>
-            </div>
-          </div>
-
-          {/* 6. Advocate Terms */}
-          <div id="advocate-terms" className="tu-section" ref={setRef("advocate-terms")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">⚖️ 6. Advocate-Specific Terms</h2>
-              <S>Advocates registered on Advocate Hub are subject to these additional terms, in addition to the general terms applicable to all users.</S>
-              <B>6.1 Professional Conduct</B>
-              <Li>All advocates must comply with the Bar Council of India Rules on Professional Standards and Conduct of Advocates at all times.</Li>
-              <Li>Advocates must not engage in solicitation of clients in a manner that violates BCI Rules or any applicable law.</Li>
-              <Li>Advocates must maintain confidentiality of all client information in accordance with professional privilege.</Li>
-              <Li>Advocates must not guarantee specific legal outcomes to clients.</Li>
-              <Li>Advocates must disclose any conflicts of interest before accepting a client engagement.</Li>
-              <B>6.2 Profile and Credentials</B>
-              <Li>All information in an advocate's profile must be accurate and up-to-date.</Li>
-              <Li>Advocates consent to Advocate Hub verifying their credentials with Bar Council records at any time.</Li>
-              <Li>Advocates must promptly update their profiles upon any change in enrolment status, suspension, or disciplinary proceedings.</Li>
-              <Li>Falsification of credentials will result in immediate permanent suspension and may be reported to the relevant Bar Council.</Li>
-              <B>6.3 Consultations and Availability</B>
-              <Li>Advocates must honour confirmed consultation appointments. Repeated cancellations may result in account restrictions.</Li>
-              <Li>Advocates must maintain their stated availability on the Platform or update it in a timely manner.</Li>
-              <Li>Advocates must clearly communicate their fee structure to clients before commencing any paid service.</Li>
-              <B>6.4 Commission and Payments</B>
-              <Li>Advocate Hub charges a platform commission of up to 20% on consultation fees processed through the Platform.</Li>
-              <Li>Payouts to advocates are processed within 7 business days of completed consultation.</Li>
-              <Li>Advocates may not solicit direct payments outside the platform for services facilitated through the Platform.</Li>
-              <div className="tu-success-box">✅ Advocates who maintain high ratings, verified credentials, and compliance with these terms will be eligible for "Advocate Hub Verified" and "Advocate Hub Premier" badges.</div>
-            </div>
-          </div>
-
-          {/* 7. Client Terms */}
-          <div id="client-terms" className="tu-section" ref={setRef("client-terms")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">🙋 7. Client-Specific Terms</h2>
-              <S>Clients using Advocate Hub to seek legal assistance are subject to these additional terms:</S>
-              <B>7.1 Nature of Services</B>
-              <Li>The legal advice obtained through Advocate Hub is provided by independent advocates and does not create an attorney-client relationship with Advocate Hub.</Li>
-              <Li>Clients are responsible for evaluating the quality and suitability of advice received from advocates.</Li>
-              <Li>Advocate Hub does not endorse any specific advocate or guarantee the outcome of any legal matter.</Li>
-              <B>7.2 Responsibility for Decisions</B>
-              <Li>Clients make legal decisions independently and are not obligated to follow any advice received through the Platform.</Li>
-              <Li>Clients should verify the advice received through the Platform with a qualified advocate of their choice before taking any significant legal action.</Li>
-              <Li>Advocate Hub is not liable for any decisions made based on advice obtained through the Platform.</Li>
-              <B>7.3 Client Conduct</B>
-              <Li>Clients must be truthful and provide accurate information about their legal matters to advocates.</Li>
-              <Li>Clients must not use the Platform to harass, threaten, or intimidate advocates.</Li>
-              <Li>Clients must respect advocate availability and not contact advocates outside of the Platform for matters facilitated through Advocate Hub.</Li>
-              <Li>Clients must not post false or malicious reviews of advocates.</Li>
-              <div className="tu-info-box">ℹ️ If you are dissatisfied with an advocate, contact Advocate Hub support at advocatehub.in@gmail.com within 48 hours of the consultation for dispute resolution assistance.</div>
-            </div>
-          </div>
-
-          {/* 8. Fees and Payments */}
-          <div id="fees-payment" className="tu-section" ref={setRef("fees-payment")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">💰 8. Fees and Payments</h2>
-              <table className="tu-table">
-                <thead>
-                  <tr>
-                    <th>Fee Type</th>
-                    <th>Description</th>
-                    <th>Who Pays</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { type:"Consultation Fee",      desc:"Set by advocate. Varies by speciality and experience.",  who:"Client" },
-                    { type:"Platform Commission",   desc:"Up to 20% of consultation fee deducted from advocate payout.", who:"Advocate" },
-                    { type:"GST",                  desc:"18% GST applicable on platform commission as per Indian tax law.", who:"Advocate" },
-                    { type:"Premium Subscription", desc:"Optional plan for advocates — enhanced visibility, priority listing.", who:"Advocate" },
-                    { type:"Document Download",    desc:"Free for basic templates; fee applicable for premium documents.", who:"Client" },
-                  ].map(row => (
-                    <tr key={row.type}>
-                      <td style={{ fontWeight:600 }}>{row.type}</td>
-                      <td>{row.desc}</td>
-                      <td><span style={{ background:"#eff6ff", color:"#1d4ed8", padding:"2px 9px", borderRadius:12, fontSize:12, fontWeight:600 }}>{row.who}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <B>Refund Policy</B>
-              <Li>If an advocate fails to attend a scheduled consultation without notice, the client is entitled to a full refund.</Li>
-              <Li>Refunds for completed consultations are at Advocate Hub's discretion and subject to review of the circumstances.</Li>
-              <Li>No refunds are issued for no-shows by clients without prior cancellation of at least 2 hours.</Li>
-              <Li>Refund requests must be submitted within 48 hours of the scheduled consultation via advocatehub.in@gmail.com.</Li>
-              <Li>Refunds are processed within 5–10 business days to the original payment method.</Li>
-            </div>
-          </div>
-
-          {/* 9. Prohibited Conduct */}
-          <div id="prohibited" className="tu-section" ref={setRef("prohibited")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">🚫 9. Prohibited Conduct</h2>
-              <S>The following conduct is strictly prohibited on the Advocate Hub Platform:</S>
-              {[
-                { icon:"🪪", title:"Impersonation",            desc:"Impersonating any advocate, legal professional, Advocate Hub employee, or other person or entity." },
-                { icon:"❌", title:"False Credentials",        desc:"Providing false Bar enrollment numbers, fake qualifications, or misrepresenting professional status." },
-                { icon:"💸", title:"Fee Circumvention",        desc:"Attempting to arrange payments outside the Advocate Hub Platform for services facilitated through the Platform." },
-                { icon:"🤬", title:"Harassment",               desc:"Harassing, threatening, abusing, or intimidating any user, advocate, or Advocate Hub staff member." },
-                { icon:"🤖", title:"Automated Scraping",       desc:"Using bots, scrapers, or automated tools to extract data from the Platform without permission." },
-                { icon:"🔓", title:"Unauthorized Access",      desc:"Attempting to access another user's account, circumvent security measures, or exploit Platform vulnerabilities." },
-                { icon:"📢", title:"Spam & Solicitation",      desc:"Sending unsolicited messages, spam, or bulk communications to other users through the Platform." },
-                { icon:"💊", title:"Illegal Services",         desc:"Using the Platform to facilitate services that are illegal, fraudulent, or contrary to public policy." },
-                { icon:"🎭", title:"False Reviews",            desc:"Posting fake, misleading, or maliciously false reviews of advocates or clients." },
-                { icon:"🔞", title:"Inappropriate Content",   desc:"Posting obscene, defamatory, hateful, or sexually explicit content on any part of the Platform." },
-              ].map(item => (
-                <div key={item.title} className="tu-prohibited-item">
-                  <span className="tu-proh-icon">{item.icon}</span>
-                  <div>
-                    <div className="tu-proh-title">{item.title}</div>
-                    <div className="tu-proh-desc">{item.desc}</div>
-                  </div>
-                </div>
-              ))}
-              <div className="tu-warning-box">Violation of any of the above may result in immediate account suspension, permanent ban from the Platform, and/or legal action.</div>
-            </div>
-          </div>
-
-          {/* 10. Content & IP */}
-          <div id="content" className="tu-section" ref={setRef("content")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">📄 10. User Content & Intellectual Property</h2>
-              <B>10.1 Ownership of Advocate Hub Content</B>
-              <S>All content on the Advocate Hub Platform, including but not limited to the website design, logos, trademarks, software, text, graphics, and databases, is owned by or licensed to Advocate Hub and is protected by Indian and international intellectual property laws. You may not reproduce, distribute, or create derivative works from Advocate Hub's content without express written permission.</S>
-              <B>10.2 User-Generated Content</B>
-              <Li>By posting content on the Platform (reviews, Q&A answers, profile information), you grant Advocate Hub a non-exclusive, royalty-free, worldwide licence to use, display, and distribute that content for Platform purposes.</Li>
-              <Li>You represent that you own or have the rights to all content you post and that it does not infringe any third-party rights.</Li>
-              <Li>Advocate Hub may remove any user content that violates these Terms or is otherwise objectionable, without notice.</Li>
-              <B>10.3 Legal Documents and Templates</B>
-              <Li>Document templates on Advocate Hub are provided for reference purposes only. They must be reviewed and adapted by a qualified advocate before use in any legal proceeding.</Li>
-              <Li>Advocate Hub does not warrant the accuracy, completeness, or fitness for purpose of any document template.</Li>
-              <B>10.4 Bare Acts and Legal Information</B>
-              <Li>Bare Acts and legal information on the Platform are reproduced from publicly available official sources for informational purposes only.</Li>
-              <Li>Always verify against official government sources for the most current and authoritative text of any law.</Li>
-            </div>
-          </div>
-
-          {/* 11. Disclaimers */}
-          <div id="disclaimers" className="tu-section" ref={setRef("disclaimers")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">⚠️ 11. Disclaimers</h2>
-              <div className="tu-warning-box">⚠️ THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED.</div>
-              <Li>Advocate Hub does not warrant that the Platform will be available, uninterrupted, error-free, or free of viruses or other harmful components.</Li>
-              <Li>Advocate Hub does not warrant the accuracy, completeness, or reliability of any content on the Platform, including legal advice provided by advocates.</Li>
-              <Li>The legal information on the Platform is for general informational purposes only and does not constitute legal advice.</Li>
-              <Li>Advocate Hub is not responsible for the professional conduct, competence, or qualifications of any advocate listed on the Platform beyond the credential verification process.</Li>
-              <Li>Advocate Hub does not guarantee that any legal matter will be resolved successfully as a result of using the Platform.</Li>
-              <Li>The outcome of any legal consultation, advice, or representation facilitated through the Platform is the sole responsibility of the respective advocate.</Li>
-              <Li>Court listings, jurisdiction information, and legal updates on the Platform may not always reflect the most current legal position.</Li>
-            </div>
-          </div>
-
-          {/* 12. Limitation of Liability */}
-          <div id="liability" className="tu-section" ref={setRef("liability")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">🛡️ 12. Limitation of Liability</h2>
-              <S>To the maximum extent permitted by applicable law:</S>
-              <Li>Advocate Hub's total aggregate liability to any user for any claim arising out of or relating to these Terms or use of the Platform shall not exceed the greater of (a) ₹5,000 or (b) the total amount paid by the user to Advocate Hub in the 3 months preceding the claim.</Li>
-              <Li>Advocate Hub shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of the Platform.</Li>
-              <Li>Advocate Hub shall not be liable for any loss of profits, revenue, data, goodwill, or other intangible losses.</Li>
-              <Li>Advocate Hub shall not be liable for any damages arising from the conduct or advice of any advocate on the Platform.</Li>
-              <Li>Advocate Hub shall not be liable for any technical failures, data breaches, or platform outages beyond its reasonable control.</Li>
-              <div className="tu-info-box">ℹ️ Some jurisdictions do not allow the exclusion of certain warranties or limitation of liability. In such cases, our liability will be limited to the minimum extent permitted by law.</div>
-            </div>
-          </div>
-
-          {/* 13. Indemnification */}
-          <div id="indemnification" className="tu-section" ref={setRef("indemnification")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">🤝 13. Indemnification</h2>
-              <S>You agree to indemnify, defend, and hold harmless Advocate Hub, its directors, officers, employees, agents, licensors, and service providers from and against any claims, liabilities, damages, judgments, awards, losses, costs, expenses, or fees (including reasonable attorneys' fees) arising out of or relating to:</S>
-              <Li>Your violation of these Terms of Use.</Li>
-              <Li>Your violation of any applicable law or regulation.</Li>
-              <Li>Your user content or any infringement of intellectual property rights.</Li>
-              <Li>Your conduct as an advocate or client in connection with the Platform.</Li>
-              <Li>Any misrepresentation made by you to Advocate Hub or other users of the Platform.</Li>
-              <Li>Any claim by a third party arising from your use of the Platform.</Li>
-            </div>
-          </div>
-
-          {/* 14. Termination */}
-          <div id="termination" className="tu-section" ref={setRef("termination")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">🔚 14. Account Termination</h2>
-              <B>14.1 Termination by User</B>
-              <S>You may terminate your account at any time by contacting advocatehub.in@gmail.com or using the account deletion option in your settings. Upon account deletion, your profile will be removed from public view. Certain data will be retained as required by applicable law (see our Privacy Policy).</S>
-              <B>14.2 Termination by Advocate Hub</B>
-              <S>Advocate Hub reserves the right to suspend or permanently terminate your account, without notice or liability, if:</S>
-              <Li>You breach any provision of these Terms.</Li>
-              <Li>You provide false or misleading information during registration.</Li>
-              <Li>Your conduct causes harm to the Platform, other users, or third parties.</Li>
-              <Li>You engage in any prohibited conduct listed in Section 9.</Li>
-              <Li>Your Bar enrollment is suspended or cancelled (for advocates).</Li>
-              <Li>You receive consistently poor ratings or verified complaints of professional misconduct.</Li>
-              <B>14.3 Effect of Termination</B>
-              <Li>All licences granted to you under these Terms will immediately terminate.</Li>
-              <Li>Pending consultation fees owed to verified advocates will be paid out after deduction of any outstanding amounts.</Li>
-              <Li>Client consultation fees for cancelled consultations will be refunded in accordance with the Refund Policy in Section 8.</Li>
-            </div>
-          </div>
-
-          {/* 15. Dispute Resolution */}
-          <div id="dispute" className="tu-section" ref={setRef("dispute")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">🏛️ 15. Dispute Resolution</h2>
-              <B>15.1 Internal Resolution</B>
-              <S>Before commencing any formal dispute resolution process, you agree to first attempt to resolve any dispute with Advocate Hub through our internal grievance mechanism by contacting advocatehub.in@gmail.com. Advocate Hub will attempt to resolve the dispute within 30 days.</S>
-              <B>15.2 Mediation</B>
-              <S>If the dispute is not resolved through internal mechanisms within 30 days, the parties agree to attempt resolution through mediation before a mutually agreed mediator in Bengaluru, Karnataka.</S>
-              <B>15.3 Arbitration</B>
-              <S>Any dispute, controversy, or claim arising out of or relating to these Terms, or breach thereof, that cannot be resolved through mediation shall be referred to and finally resolved by arbitration in accordance with the Arbitration and Conciliation Act, 1996. The seat of arbitration shall be Bengaluru, Karnataka. The language of arbitration shall be English.</S>
-              <B>15.4 Jurisdiction for Court Proceedings</B>
-              <S>Notwithstanding the above, either party may seek injunctive or other equitable relief in the courts of Bengaluru, Karnataka, India. Both parties submit to the exclusive jurisdiction of the courts at Bengaluru for any such proceedings.</S>
-            </div>
-          </div>
-
-          {/* 16. Governing Law */}
-          <div id="governing-law" className="tu-section" ref={setRef("governing-law")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">📜 16. Governing Law</h2>
-              <S>These Terms of Use are governed by and construed in accordance with the laws of India, including but not limited to:</S>
-              <Li>The Information Technology Act, 2000 and rules thereunder.</Li>
-              <Li>The Digital Personal Data Protection Act, 2023.</Li>
-              <Li>The Consumer Protection Act, 2019.</Li>
-              <Li>The Indian Contract Act, 1872.</Li>
-              <Li>The Bharatiya Nyaya Sanhita, 2023 (for criminal offences committed through the Platform).</Li>
-              <Li>The Advocates Act, 1961 and Bar Council of India Rules (for advocate conduct).</Li>
-              <S>Any disputes shall be subject to the exclusive jurisdiction of competent courts in Bengaluru, Karnataka, India.</S>
-            </div>
-          </div>
-
-          {/* 17. Modifications */}
-          <div id="modifications" className="tu-section" ref={setRef("modifications")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">✏️ 17. Modifications to Terms</h2>
-              <S>Advocate Hub reserves the right to modify these Terms of Use at any time. We will provide notice of material changes through:</S>
-              <Li>Email notification to your registered email address at least 7 days before changes take effect.</Li>
-              <Li>Prominent notice on the Platform homepage or login page.</Li>
-              <Li>In-app notification through the Advocate Hub mobile application.</Li>
-              <S>Your continued use of the Platform after the effective date of revised Terms constitutes your acceptance of the changes. If you do not agree to the revised Terms, you must cease using the Platform and may request account deletion.</S>
-              <S>Previous versions of these Terms are maintained in our archive and may be requested by contacting advocatehub.in@gmail.com.</S>
-            </div>
-          </div>
-
-          {/* 18. General */}
-          <div id="general" className="tu-section" ref={setRef("general")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">📋 18. General Provisions</h2>
-              <B>Entire Agreement</B>
-              <S>These Terms, together with the Privacy Policy and any additional terms applicable to specific services, constitute the entire agreement between you and Advocate Hub regarding your use of the Platform and supersede all prior agreements.</S>
-              <B>Severability</B>
-              <S>If any provision of these Terms is found to be unenforceable or invalid, that provision shall be modified to the minimum extent necessary to make it enforceable, and the remaining provisions shall continue in full force and effect.</S>
-              <B>Waiver</B>
-              <S>Advocate Hub's failure to enforce any right or provision of these Terms shall not constitute a waiver of that right or provision unless acknowledged in writing by Advocate Hub.</S>
-              <B>Assignment</B>
-              <S>You may not assign or transfer your rights or obligations under these Terms without Advocate Hub's prior written consent. Advocate Hub may assign its rights and obligations under these Terms to any successor entity in connection with a merger, acquisition, or sale of assets.</S>
-              <B>Force Majeure</B>
-              <S>Advocate Hub shall not be liable for any failure or delay in performance resulting from causes beyond its reasonable control, including natural disasters, pandemics, government actions, internet failures, or power outages.</S>
-              <B>Language</B>
-              <S>These Terms are written in English. If translated into any other language, the English version shall prevail in case of any conflict.</S>
-            </div>
-          </div>
-
-          {/* 19. Contact */}
-          <div id="contact" className="tu-section" ref={setRef("contact")}>
-            <div className="tu-card">
-              <h2 className="tu-sec-title">📬 19. Contact Information</h2>
-              <S>For any questions, concerns, or notices regarding these Terms of Use, please contact us at:</S>
-              <div style={{ background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:12, padding:"18px 20px" }}>
-                {[
-                  { icon:"🏢", label:"Company",   val: COMPANY },
-                  { icon:"✉️", label:"Email",     val: EMAIL },
-                  { icon:"📸", label:"Instagram", val: INSTAGRAM },
-                  { icon:"📍", label:"Address",   val: ADDRESS },
-                  { icon:"⚖️", label:"Legal",     val: EMAIL },
-                  { icon:"🔒", label:"Privacy",   val: EMAIL },
-                  { icon:"🌐", label:"Website",   val: "www.advocatehub.in/terms" },
-                ].map(row => (
-                  <div key={row.label} className="tu-contact-row">
-                    <span style={{ fontSize:16 }}>{row.icon}</span>
-                    <span style={{ color:"#64748b", minWidth:80, flexShrink:0 }}>{row.label}</span>
-                    <span style={{ color:"#1e293b", fontWeight:500 }}>{row.val}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Acceptance banner */}
-          <div style={{ background: accepted ? "#f0fdf4" : "#fff", border:`2px solid ${accepted ? "#22c55e" : "#e2e8f0"}`, borderRadius:12, padding:"20px 24px", textAlign:"center" }}>
-            <div style={{ fontSize:16, fontWeight:700, color:"#1e293b", marginBottom:8 }}>
-              {accepted ? "✅ You have accepted the Terms of Use" : "Have you read the Terms?"}
-            </div>
-            <p style={{ fontSize:13, color:"#64748b", marginBottom:14 }}>
-              By using the Advocate Hub Platform, you agree to these Terms of Use effective {EFFECTIVE_DATE}.
-            </p>
-            {!accepted && (
-              <button
-                onClick={() => setAccepted(true)}
-                style={{ background:"#16a34a", color:"#fff", border:"none", borderRadius:9, padding:"11px 32px", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
-                I Accept the Terms of Use
-              </button>
-            )}
-            {accepted && (
-              <div style={{ fontSize:13, color:"#16a34a", fontWeight:600 }}>
-                Thank you. You can now use all features of the Advocate Hub Platform.
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:12, padding:"20px 24px", textAlign:"center", fontSize:13, color:"#64748b", lineHeight:1.7, marginTop:20 }}>
-            These Terms of Use are effective as of <strong>{EFFECTIVE_DATE}</strong> and were last updated on <strong>{LAST_UPDATED}</strong>.<br />
-            <span style={{ color:"#16a34a", fontWeight:600 }}>© 2026 {COMPANY}. All rights reserved.</span>
-          </div>
-
-        </main>
+        <button
+          type="button"
+          className="tu-mobile-action-btn"
+          onClick={scrollToTop}
+        >
+          <LegalIcon name="arrowUp" size={18} />
+          <span>{isKn ? "ಮೇಲಕ್ಕೆ" : "Top"}</span>
+        </button>
       </div>
     </div>
   );

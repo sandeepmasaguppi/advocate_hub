@@ -27,6 +27,7 @@ import TermsOfUse from "./pages/TermOfUse";
 import TalkToAdvocate from "./pages/TalkToAdvocate";
 import RegistrationStatus from "./pages/RegistrationStatus";
 import Chatbot from "./pages/Chatbot";
+import DownloadApps from "./pages/DownloadApps";
 import { getTheme, initTheme } from "./data/themeStore";
 
 function App() {
@@ -82,6 +83,7 @@ function App() {
         <Route path="/talk-to-advocate" element={<TalkToAdvocate />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfUse />} />
+        <Route path="/terms-and-conditions" element={<TermsOfUse />} />
         <Route path="/legal-advice" element={<Navigate to="/legal-advice/ask-question" replace />} />
         <Route path="/legal-advice/ask-question" element={<AskQuestion />} />
         <Route path="/legal-advice/documents" element={<LegalDocuments />} />
@@ -108,7 +110,9 @@ function App() {
         <Route path="/clarity-guide" element={<ClarityGuide />} />
         <Route path="/client-dashboard" element={<ClientDashboard />} />
         <Route path="/advocate-dashboard" element={<AdvocateDashboard />} />
-        <Route path="/download" element={<div style={{padding: "100px"}}>Download Apps Page Content</div>} />
+        <Route path="/download" element={<DownloadApps />} />
+        <Route path="/download-app" element={<DownloadApps />} />
+        <Route path="/download-apps" element={<DownloadApps />} />
       </Routes>
       <ErrorBoundary resetKey="global_chatbot">
         <Chatbot />

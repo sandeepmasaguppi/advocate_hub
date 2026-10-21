@@ -11,66 +11,67 @@
 import React, { useState, useEffect } from "react";
 import { addMessage } from "../data/MessageStore";
 import { getTheme } from "../data/themeStore";
+import LegalIcon from "../components/LegalIcons";
 import "./Contact.css";
 
 // ── Contact Information Cards (1-Tap Direct Working Links) ──
 const CONTACT_CARDS = [
   {
-    icon: "📞",
+    iconName: "phone",
     type: "phone",
     labelEn: "Direct Phone Line",
     labelKn: "ನೇರ ದೂರವಾಣಿ ಸಂಖ್ಯೆ",
     value: "+91 91087 17353",
-    actionTextEn: "Call Now →",
-    actionTextKn: "ಕರೆ ಮಾಡಿ →",
+    actionTextEn: "Call Now",
+    actionTextKn: "ಕರೆ ಮಾಡಿ",
     href: "tel:+919108717353",
     hintEn: "Mon–Sat, 9:00 AM – 7:00 PM IST",
     hintKn: "ಸೋಮವಾರ–ಶನಿವಾರ, ಬೆಳಿಗ್ಗೆ 9 ರಿಂದ ಸಂಜೆ 7"
   },
   {
-    icon: "💬",
+    iconName: "whatsapp",
     type: "whatsapp",
     labelEn: "Official WhatsApp",
     labelKn: "ಅಧಿಕೃತ ವಾಟ್ಸಾಪ್",
     value: "+91 91087 17353",
-    actionTextEn: "Chat on WhatsApp →",
-    actionTextKn: "ವಾಟ್ಸಾಪ್ ಸಂದೇಶ →",
+    actionTextEn: "Chat on WhatsApp",
+    actionTextKn: "ವಾಟ್ಸಾಪ್ ಸಂದೇಶ",
     href: "https://wa.me/919108717353?text=Hello%20Advocates%20Hub%20Support,%20I%20have%20an%20inquiry.",
     hintEn: "Instant reply for urgent inquiries",
     hintKn: "ತ್ವರಿತ ಸಂದೇಶ ಪ್ರತಿಕ್ರಿಯೆ"
   },
   {
-    icon: "✉️",
+    iconName: "mail",
     type: "email",
     labelEn: "Official Email",
     labelKn: "ಅಧಿಕೃತ ಇಮೇಲ್",
     value: "advocatehub.in@gmail.com",
-    actionTextEn: "Send Email →",
-    actionTextKn: "ಇಮೇಲ್ ಕಳುಹಿಸಿ →",
+    actionTextEn: "Send Email",
+    actionTextKn: "ಇಮೇಲ್ ಕಳುಹಿಸಿ",
     href: "mailto:advocatehub.in@gmail.com",
     hintEn: "We respond within 24 hours",
     hintKn: "24 ಗಂಟೆಗಳಲ್ಲಿ ಪ್ರತಿಕ್ರಿಯೆ"
   },
   {
-    icon: "📸",
+    iconName: "instagram",
     type: "instagram",
     labelEn: "Official Instagram",
     labelKn: "ಅಧಿಕೃತ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್",
     value: "@advocate__hub",
-    actionTextEn: "Follow on Instagram →",
-    actionTextKn: "ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ನೋಡಿ →",
+    actionTextEn: "Follow on Instagram",
+    actionTextKn: "ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್ ನೋಡಿ",
     href: "https://www.instagram.com/advocate__hub/",
     hintEn: "Legal updates & awareness",
     hintKn: "ದೈನಂದಿನ ಕಾನೂನು ಅಪ್‌ಡೇಟ್‌ಗಳು"
   },
   {
-    icon: "📍",
+    iconName: "pin",
     type: "office",
     labelEn: "Head Office",
     labelKn: "ಪ್ರಧಾನ ಕಚೇರಿ",
     value: "Bengaluru & Gokak, Karnataka",
-    actionTextEn: "View on Map →",
-    actionTextKn: "ವಿಳಾಸ ವಿವರ →",
+    actionTextEn: "View on Map",
+    actionTextKn: "ವಿಳಾಸ ವಿವರ",
     href: "https://maps.google.com/?q=Bengaluru,Karnataka,India",
     hintEn: "In-Chamber visits by prior appointment",
     hintKn: "ಮುಂಚಿತ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಮೂಲಕ ಭೇಟಿ"
@@ -224,7 +225,8 @@ export default function Contact() {
         <div className="ct-hero-container">
           <div className="ct-hero-badge">
             <span className="ct-hero-beacon"></span>
-            <span>{isKn ? "📩 ಅಧಿಕೃತ ಸಂಪರ್ಕ ಕೇಂದ್ರ" : "📩 ADVOCATES HUB • OFFICIAL CONNECT DESK"}</span>
+            <LegalIcon name="mail" size={13} className="ct-badge-svg" />
+            <span>{isKn ? "ಅಧಿಕೃತ ಸಂಪರ್ಕ ಕೇಂದ್ರ" : "ADVOCATES HUB • OFFICIAL CONNECT DESK"}</span>
           </div>
 
           <h1 className="ct-hero-title">
@@ -251,12 +253,14 @@ export default function Contact() {
 
       {/* ── 2. Main Content Container ── */}
       <main className="ct-container">
-        {/* 4 Direct Working Action Cards */}
+        {/* 5 Direct Working Action Cards */}
         <div className="ct-info-grid">
           {CONTACT_CARDS.map((card, idx) => (
             <div key={idx} className={`ct-info-card card-${card.type}`}>
               <div className="ct-info-top">
-                <span className="ct-info-icon">{card.icon}</span>
+                <span className="ct-info-icon">
+                  <LegalIcon name={card.iconName} size={20} />
+                </span>
                 <span className="ct-info-label">{isKn ? card.labelKn : card.labelEn}</span>
               </div>
               <div className="ct-info-value">{card.value}</div>
@@ -268,7 +272,8 @@ export default function Contact() {
                   rel={card.href.startsWith("http") ? "noreferrer" : undefined}
                   className="ct-info-action-btn"
                 >
-                  {isKn ? card.actionTextKn : card.actionTextEn}
+                  <span>{isKn ? card.actionTextKn : card.actionTextEn}</span>
+                  <LegalIcon name="arrowRight" size={13} />
                 </a>
               </div>
             </div>
@@ -281,7 +286,9 @@ export default function Contact() {
           <section className="ct-form-card">
             {sent ? (
               <div className="ct-sent">
-                <div className="ct-sent-icon">✅</div>
+                <div className="ct-sent-icon">
+                  <LegalIcon name="checkCircle" size={44} />
+                </div>
                 <h3 className="ct-sent-title">
                   {isKn ? "ಸಂದೇಶ ಯಶಸ್ವಿಯಾಗಿ ತಲುಪಿದೆ!" : "Inquiry Submitted Successfully!"}
                 </h3>
@@ -295,7 +302,8 @@ export default function Contact() {
                   className="ct-btn-primary ct-btn-sent-reset"
                   onClick={() => setSent(false)}
                 >
-                  {isKn ? "ಮತ್ತೊಂದು ಸಂದೇಶ ಕಳುಹಿಸಿ ↺" : "Send Another Message ↺"}
+                  <span>{isKn ? "ಮತ್ತೊಂದು ಸಂದೇಶ ಕಳುಹಿಸಿ" : "Send Another Message"}</span>
+                  <LegalIcon name="arrowRight" size={13} />
                 </button>
               </div>
             ) : (
@@ -324,7 +332,12 @@ export default function Contact() {
                       disabled={sending}
                       className={err.name ? "has-err" : ""}
                     />
-                    {err.name && <p className="ct-err">⚠ {err.name}</p>}
+                    {err.name && (
+                      <p className="ct-err">
+                        <LegalIcon name="alertCircle" size={13} />
+                        <span>{err.name}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div className="ct-field">
@@ -340,7 +353,12 @@ export default function Contact() {
                       disabled={sending}
                       className={err.phone ? "has-err" : ""}
                     />
-                    {err.phone && <p className="ct-err">⚠ {err.phone}</p>}
+                    {err.phone && (
+                      <p className="ct-err">
+                        <LegalIcon name="alertCircle" size={13} />
+                        <span>{err.phone}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -356,7 +374,12 @@ export default function Contact() {
                     disabled={sending}
                     className={err.email ? "has-err" : ""}
                   />
-                  {err.email && <p className="ct-err">⚠ {err.email}</p>}
+                  {err.email && (
+                    <p className="ct-err">
+                      <LegalIcon name="alertCircle" size={13} />
+                      <span>{err.email}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="ct-field">
@@ -392,7 +415,12 @@ export default function Contact() {
                     disabled={sending}
                     className={err.message ? "has-err" : ""}
                   />
-                  {err.message && <p className="ct-err">⚠ {err.message}</p>}
+                  {err.message && (
+                    <p className="ct-err">
+                      <LegalIcon name="alertCircle" size={13} />
+                      <span>{err.message}</span>
+                    </p>
+                  )}
                 </div>
 
                 <button
@@ -400,9 +428,12 @@ export default function Contact() {
                   className="ct-btn-primary ct-btn-lg"
                   disabled={sending}
                 >
-                  {sending
-                    ? (isKn ? "ಸಂದೇಶ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ..." : "Submitting Inquiry...")
-                    : (isKn ? "ಸಂದೇಶ ಕಳುಹಿಸಿ →" : "Send Inquiry Message →")}
+                  <span>
+                    {sending
+                      ? (isKn ? "ಸಂದೇಶ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ..." : "Submitting Inquiry...")
+                      : (isKn ? "ಸಂದೇಶ ಕಳುಹಿಸಿ" : "Send Inquiry Message")}
+                  </span>
+                  <LegalIcon name="arrowRight" size={15} />
                 </button>
               </form>
             )}
@@ -436,7 +467,9 @@ export default function Contact() {
                       <span className="ct-faq-q-text">
                         {isKn ? faq.qKn : faq.qEn}
                       </span>
-                      <span className="ct-faq-arrow">{isOpen ? "−" : "+"}</span>
+                      <span className="ct-faq-arrow">
+                        {isOpen ? <LegalIcon name="minus" size={13} /> : <LegalIcon name="plus" size={13} />}
+                      </span>
                     </button>
                     {isOpen && (
                       <div className="ct-faq-a">
@@ -450,7 +483,9 @@ export default function Contact() {
 
             {/* Quick Trust Verification Box */}
             <div className="ct-trust-box">
-              <span className="ct-trust-icon">🛡️</span>
+              <span className="ct-trust-icon">
+                <LegalIcon name="shieldCheck" size={20} />
+              </span>
               <div className="ct-trust-text">
                 <strong>{isKn ? "ಶಾಸನಬದ್ಧ ಕ್ಲೈಂಟ್ ಗೌಪ್ಯತೆ" : "Statutory Attorney-Client Privilege"}</strong>
                 <p>
@@ -466,7 +501,9 @@ export default function Contact() {
         {/* ── Official Company Channels Strip ── */}
         <section className="ct-company-strip">
           <div className="ct-company-strip-left">
-            <span className="ct-company-strip-seal">⚖️</span>
+            <span className="ct-company-strip-seal">
+              <LegalIcon name="scale" size={22} />
+            </span>
             <div>
               <h3 className="ct-company-strip-title">
                 {isKn ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ • ಅಧಿಕೃತ ಸಂಪರ್ಕ ಕೇಂದ್ರ" : "ADVOCATES HUB • OFFICIAL CONNECT DESK"}
@@ -484,7 +521,9 @@ export default function Contact() {
               className="ct-company-badge-link"
               title="Official Company Email"
             >
-              <span className="ct-cbl-icon">✉️</span>
+              <span className="ct-cbl-icon">
+                <LegalIcon name="mail" size={18} />
+              </span>
               <div className="ct-cbl-meta">
                 <span className="ct-cbl-sub">{isKn ? "ಅಧಿಕೃತ ಇಮೇಲ್" : "Official Company Email"}</span>
                 <strong className="ct-cbl-val">advocatehub.in@gmail.com</strong>
@@ -497,7 +536,9 @@ export default function Contact() {
               className="ct-company-badge-link ct-cbl-insta"
               title="Official Instagram @advocate__hub"
             >
-              <span className="ct-cbl-icon">📸</span>
+              <span className="ct-cbl-icon">
+                <LegalIcon name="instagram" size={18} />
+              </span>
               <div className="ct-cbl-meta">
                 <span className="ct-cbl-sub">{isKn ? "ಅಧಿಕೃತ ಇನ್‌ಸ್ಟಾಗ್ರಾಮ್" : "Official Instagram"}</span>
                 <strong className="ct-cbl-val">@advocate__hub</strong>

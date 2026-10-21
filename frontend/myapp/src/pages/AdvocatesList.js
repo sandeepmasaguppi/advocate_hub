@@ -625,15 +625,7 @@ export default function AdvocatesList({ lang: propLang } = {}) {
 
               return (
                 <article key={adv.id} className="fl-card">
-                  {/* Top Bar Badges */}
-                  <div className="fl-card-topbar">
-                    
-                    {adv.court && (
-                      <span className="fl-court-badge" title={adv.court}>
-                        🏛️ {adv.court.length > 22 ? adv.court.slice(0, 20) + "…" : adv.court}
-                      </span>
-                    )}
-                  </div>
+                 
 
                   {/* Header: Avatar, Name & Location */}
                   <div className="fl-card-header">
@@ -679,19 +671,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
                   </div>
 
 
-                  {/* Spoken Languages */}
-                  <div className="fl-card-languages">
-                    <span className="fl-lang-icon">🗣️</span>
-                    {(Array.isArray(adv.languages) && adv.languages.length > 0
-                      ? adv.languages
-                      : ["Kannada", "English", "Hindi"]
-                    ).map((langItem) => (
-                      <span key={langItem} className="fl-lang-tag">
-                        {langItem}
-                      </span>
-                    ))}
-                  </div>
-
                   {/* Action Buttons */}
                   <div className="fl-card-actions">
                     
@@ -724,39 +703,6 @@ export default function AdvocatesList({ lang: propLang } = {}) {
             </button>
           </div>
         )}
-      </section>
-
-      {/* ── FOOTER TRUST BANNER ── */}
-      <section className="fl-bottom-trust">
-        <div className="fl-bottom-inner">
-          <div className="fl-bottom-col">
-            <span className="fl-bottom-icon">🛡️</span>
-            <h4>{isKn ? "೧೦೦% ಬಾರ್ ಕೌನ್ಸಿಲ್ ಪರಿಶೀಲನೆ" : "Bar Council Certified Advocates"}</h4>
-            <p>
-              {isKn
-                ? "ನಮ್ಮ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್‌ನಲ್ಲಿರುವ ಪ್ರತಿಯೊಬ್ಬ ವಕೀಲರು ರಾಜ್ಯ ಬಾರ್ ಕೌನ್ಸಿಲ್ ದಾಖಲೆಗಳೊಂದಿಗೆ ಪರಿಶೀಲಿಸಲ್ಪಟ್ಟಿದ್ದಾರೆ."
-                : "Every advocate listed is vetted against official State Bar Council enrollment registers."}
-            </p>
-          </div>
-          <div className="fl-bottom-col">
-            <span className="fl-bottom-icon">💬</span>
-            <h4>{isKn ? "ನೇರ ಹಾಗೂ ಗೌಪ್ಯ ಸಮಾಲೋಚನೆ" : "Direct & Confidential Consultation"}</h4>
-            <p>
-              {isKn
-                ? "ಯಾವುದೇ ಮಧ್ಯವರ್ತಿಗಳಿಲ್ಲದೆ ನೇರವಾಗಿ ವಕೀಲರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಿ ಅಥವಾ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಕಾಯ್ದಿರಿಸಿ."
-                : "Connect 1-on-1 with counsel with statutory client-attorney confidentiality protection."}
-            </p>
-          </div>
-          <div className="fl-bottom-col">
-            <span className="fl-bottom-icon">⚖️</span>
-            <h4>{isKn ? "ನ್ಯಾಯಾಲಯದ ಸಂಪೂರ್ಣ ಪರಿಹಾರ" : "Full Representation & Filing"}</h4>
-            <p>
-              {isKn
-                ? "ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳು, ಹೈಕೋರ್ಟ್ ಮತ್ತು ನ್ಯಾಯಮಂಡಳಿಗಳಲ್ಲಿ ದಾವೆ ಸಲ್ಲಿಕೆ ಮತ್ತು ಪ್ರಾತಿನಿಧ್ಯ."
-                : "Complete trial and appellate representation across District Courts, High Court, and Tribunals."}
-            </p>
-          </div>
-        </div>
       </section>
     </div>
   );

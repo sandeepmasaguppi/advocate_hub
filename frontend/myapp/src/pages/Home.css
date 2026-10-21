@@ -1368,18 +1368,19 @@
   cursor: pointer;
 }
 
-/* ── SECTION 5: How It Works ── */
+/* ── SECTION 5: How It Works (Modern Responsive Redesign) ── */
 .lw-how-section {
-  background-color: #f8fafc;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   border-top: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
-  padding: 76px 20px;
+  padding: 84px 24px;
   position: relative;
+  overflow: hidden;
 }
 
 .lw-how-head {
   text-align: center;
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto 52px auto;
 }
 
@@ -1387,251 +1388,329 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 16px;
+  padding: 6px 18px;
   background: #e0f2fe;
   border: 1px solid #bae6fd;
   border-radius: 9999px;
   color: #0284c7;
   font-size: 0.82rem;
-  font-weight: 750;
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1);
 }
 
 .lw-how-eyebrow-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #0284c7;
-  box-shadow: 0 0 8px rgba(2, 132, 199, 0.6);
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.7);
+  animation: lwPulseDot 2s infinite ease-in-out;
 }
 
+@keyframes lwPulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* ── Flow Grid Layout: Engineered for Laptop & Mobile ── */
 .lw-how-flow-container {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  gap: 14px;
-  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
   max-width: 1240px;
-  margin: 0 auto 46px auto;
+  margin: 0 auto 36px auto;
+  position: relative;
+  align-items: stretch;
 }
 
-@media (max-width: 1040px) {
-  .lw-how-flow-container {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-  }
-  .lw-how-connector {
-    display: none !important;
-  }
+/* Eliminate awkward connector lines */
+.lw-how-connector {
+  display: none !important;
 }
 
-@media (max-width: 640px) {
-  .lw-how-flow-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-  .lw-how-connector {
-    display: flex !important;
-    flex-direction: row !important;
-    height: 32px !important;
-    width: 100% !important;
-    position: relative;
-    justify-content: center;
-    align-items: center;
-    margin: -2px 0;
-  }
-  .lw-how-connector-line {
-    top: 0 !important;
-    bottom: 0 !important;
-    left: 50% !important;
-    right: auto !important;
-    width: 2px !important;
-    height: 100% !important;
-    transform: translateX(-50%) !important;
-  }
-  .lw-how-connector-arrow {
-    transform: rotate(90deg) !important;
-  }
-  .lw-how-flow-container:hover .lw-how-connector-arrow {
-    transform: rotate(90deg) scale(1.08) !important;
-  }
-}
-
+/* ── Modern Step Card ── */
 .lw-how-card {
   position: relative;
-  flex: 1 1 0;
-  min-width: 0;
+  overflow: hidden;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
-  padding: 26px 24px;
+  padding: 30px 24px 22px 24px;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.24s ease,
-              border-color 0.22s ease,
-              background 0.22s ease;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s ease,
+              border-color 0.24s ease;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05);
   box-sizing: border-box;
   outline: none;
 }
 
+/* Subtle top accent gradient bar per step */
+.lw-how-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  transition: height 0.24s ease;
+}
+
+.lw-how-step-1::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.lw-how-step-2::before { background: linear-gradient(90deg, #4f46e5, #818cf8); }
+.lw-how-step-3::before { background: linear-gradient(90deg, #0d9488, #2dd4bf); }
+.lw-how-step-4::before { background: linear-gradient(90deg, #059669, #34d399); }
+
+.lw-how-card:hover::before,
+.lw-how-card:focus-visible::before {
+  height: 6px;
+}
+
 .lw-how-card:hover,
 .lw-how-card:focus-visible {
-  transform: translateY(-6px);
+  transform: translateY(-8px);
   border-color: #0284c7;
-  background: #ffffff;
-  box-shadow: 0 20px 42px -8px rgba(2, 132, 199, 0.18), 0 4px 12px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 20px 42px -8px rgba(2, 132, 199, 0.16), 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
+.lw-how-step-2:hover { border-color: #4f46e5; box-shadow: 0 20px 42px -8px rgba(79, 70, 229, 0.16); }
+.lw-how-step-3:hover { border-color: #0d9488; box-shadow: 0 20px 42px -8px rgba(13, 148, 136, 0.16); }
+.lw-how-step-4:hover { border-color: #059669; box-shadow: 0 20px 42px -8px rgba(5, 150, 105, 0.16); }
+
+/* Watermark Step Number in Card Background */
+.lw-how-card-watermark {
+  position: absolute;
+  right: 18px;
+  top: 14px;
+  font-size: 3.6rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #0f172a;
+  opacity: 0.04;
+  user-select: none;
+  pointer-events: none;
+  letter-spacing: -0.04em;
+  font-family: inherit;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.lw-how-card:hover .lw-how-card-watermark {
+  opacity: 0.09;
+  transform: scale(1.08) translateY(-2px);
+}
+
+/* Card Top Section */
 .lw-how-card-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
 }
 
+/* Refined Icon Box */
 .lw-how-icon-box {
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  color: #0284c7;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1);
+}
+
+.lw-how-step-1 .lw-how-icon-box {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
+}
+.lw-how-step-2 .lw-how-icon-box {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #4f46e5;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+}
+.lw-how-step-3 .lw-how-icon-box {
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  color: #0d9488;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.12);
+}
+.lw-how-step-4 .lw-how-icon-box {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12);
+}
+
+.lw-how-card:hover .lw-how-icon-box {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+.lw-how-step-1:hover .lw-how-icon-box {
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.38);
+}
+.lw-how-step-2:hover .lw-how-icon-box {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.38);
+}
+.lw-how-step-3:hover .lw-how-icon-box {
+  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+  color: #ffffff;
+  border-color: #0d9488;
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.38);
+}
+.lw-how-step-4:hover .lw-how-icon-box {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.38);
 }
 
 .lw-how-svg-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
 }
 
 .lw-how-svg-icon svg {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   stroke: currentColor;
 }
 
-.lw-how-card:hover .lw-how-icon-box {
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
-  color: #ffffff;
-  border-color: #0284c7;
-  transform: scale(1.08) rotate(-2deg);
-  box-shadow: 0 8px 22px rgba(2, 132, 199, 0.38);
-}
-
+/* Badge Group & Step Pill */
 .lw-how-badge-group {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .lw-how-step-num {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  color: #ffffff;
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
   padding: 4px 10px;
   border-radius: 9999px;
-  letter-spacing: 0.04em;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   line-height: 1;
 }
+
+.lw-how-step-1 .lw-how-step-num { background: #e0f2fe; color: #0369a1; }
+.lw-how-step-2 .lw-how-step-num { background: #e0e7ff; color: #4338ca; }
+.lw-how-step-3 .lw-how-step-num { background: #ccfbf1; color: #0f766e; }
+.lw-how-step-4 .lw-how-step-num { background: #d1fae5; color: #065f46; }
 
 .lw-how-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 9999px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   color: #475569;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .lw-how-emoji {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   line-height: 1;
 }
 
+/* Card Body */
 .lw-how-body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .lw-how-label {
-  font-size: 1.22rem;
+  font-size: 1.25rem;
   font-weight: 750;
   color: #0f172a;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
   margin: 0 0 10px 0;
   transition: color 0.18s ease;
+  line-height: 1.3;
 }
 
 .lw-how-card:hover .lw-how-label {
   color: #0284c7;
 }
 
+.lw-how-step-2:hover .lw-how-label { color: #4f46e5; }
+.lw-how-step-3:hover .lw-how-label { color: #0d9488; }
+.lw-how-step-4:hover .lw-how-label { color: #059669; }
+
 .lw-how-desc {
   font-size: 0.92rem;
-  line-height: 1.55;
+  line-height: 1.6;
   color: #64748b;
-  margin: 0 0 22px 0;
+  margin: 0 0 20px 0;
   flex: 1;
   transition: color 0.18s ease;
 }
 
+/* Card Footer */
 .lw-how-footer {
   margin-top: auto;
   padding-top: 15px;
   border-top: 1px solid #f1f5f9;
+  position: relative;
+  z-index: 1;
 }
 
 .lw-how-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.93rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #0284c7;
   letter-spacing: -0.01em;
-  transition: color 0.18s ease;
+  transition: color 0.18s ease, transform 0.2s ease;
 }
+
+.lw-how-step-2 .lw-how-cta { color: #4f46e5; }
+.lw-how-step-3 .lw-how-cta { color: #0d9488; }
+.lw-how-step-4 .lw-how-cta { color: #059669; }
 
 .lw-how-arrow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 17px;
-  height: 17px;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 16px;
+  height: 16px;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .lw-how-arrow svg {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   stroke: currentColor;
 }
 
@@ -1639,59 +1718,122 @@
   transform: translateX(6px);
 }
 
-/* ── Connector Between Steps ── */
-.lw-how-connector {
+/* ── Trust Markers Bar ── */
+.lw-how-trust-badges {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
-  position: relative;
-  width: 32px;
-  flex-shrink: 0;
-  z-index: 2;
-  align-self: center;
-}
-
-.lw-how-connector-line {
-  position: absolute;
-  top: 50%;
-  left: -8px;
-  right: -8px;
-  height: 2px;
-  background: #cbd5e1;
-  transform: translateY(-50%);
-  z-index: 1;
-}
-
-.lw-how-connector-arrow {
-  position: relative;
-  z-index: 2;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  align-items: center;
+  gap: 12px 28px;
+  margin: 32px auto 38px auto;
+  max-width: 980px;
+  padding: 14px 24px;
   background: #ffffff;
-  border: 2px solid #cbd5e1;
-  color: #0284c7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 800;
-  line-height: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
 }
 
-.lw-how-flow-container:hover .lw-how-connector-arrow {
-  border-color: #0284c7;
-  color: #0284c7;
-  transform: scale(1.08);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+.lw-how-trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.lw-how-trust-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ── RESPONSIVE: Laptop Layout (1024px to 1180px) ── */
+@media (max-width: 1180px) {
+  .lw-how-flow-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    max-width: 860px;
+  }
+}
+
+/* ── RESPONSIVE: Tablet & Small Laptops (768px to 1024px) ── */
+@media (max-width: 1024px) {
+  .lw-how-section {
+    padding: 68px 20px;
+  }
+  .lw-how-head {
+    margin-bottom: 42px;
+  }
+}
+
+/* ── RESPONSIVE: Mobile Layout (<= 767px) ── */
+@media (max-width: 767px) {
+  .lw-how-section {
+    padding: 50px 16px;
+  }
+
+  .lw-how-head {
+    margin-bottom: 34px;
+  }
+
+  .lw-how-flow-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 500px;
+  }
+
+  .lw-how-card {
+    padding: 22px 20px;
+    border-radius: 18px;
+  }
+
+  .lw-how-card-watermark {
+    font-size: 3rem;
+    right: 14px;
+    top: 10px;
+  }
+
+  .lw-how-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+  }
+
+  .lw-how-svg-icon,
+  .lw-how-svg-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .lw-how-label {
+    font-size: 1.15rem;
+    margin-bottom: 8px;
+  }
+
+  .lw-how-desc {
+    font-size: 0.88rem;
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+
+  .lw-how-trust-badges {
+    border-radius: 16px;
+    padding: 16px 18px;
+    gap: 12px 18px;
+    justify-content: flex-start;
+  }
+
+  .lw-how-trust-item {
+    font-size: 0.82rem;
+  }
 }
 
 /* ── Dark Theme Overrides for How It Works ── */
 [data-theme="dark"] .lw-how-section,
 .theme-dark .lw-how-section {
-  background: #0b1320 !important;
+  background: linear-gradient(180deg, #0b1320 0%, #0d1726 100%) !important;
   border-color: #1e293b !important;
 }
 
@@ -1700,12 +1842,13 @@
   background: #132238 !important;
   border-color: #253d5e !important;
   color: #5eead4 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-theme="dark"] .lw-how-eyebrow-dot,
 .theme-dark .lw-how-eyebrow-dot {
   background: #5eead4 !important;
-  box-shadow: 0 0 8px rgba(94, 234, 212, 0.8) !important;
+  box-shadow: 0 0 10px rgba(94, 234, 212, 0.8) !important;
 }
 
 [data-theme="dark"] .lw-how-card,
@@ -1713,38 +1856,52 @@
   background: #111c2e !important;
   border-color: #1e293b !important;
   color: #f8fafc !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-theme="dark"] .lw-how-card:hover,
 .theme-dark .lw-how-card:hover {
-  background: #18273f !important;
-  border-color: #38bdf8 !important;
-  box-shadow: 0 20px 44px -8px rgba(56, 189, 248, 0.25), 0 0 16px rgba(56, 189, 248, 0.12) !important;
+  background: #16243a !important;
+  box-shadow: 0 20px 44px -8px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.15) !important;
+}
+
+[data-theme="dark"] .lw-how-step-1:hover { border-color: #38bdf8 !important; }
+[data-theme="dark"] .lw-how-step-2:hover { border-color: #818cf8 !important; }
+[data-theme="dark"] .lw-how-step-3:hover { border-color: #2dd4bf !important; }
+[data-theme="dark"] .lw-how-step-4:hover { border-color: #34d399 !important; }
+
+[data-theme="dark"] .lw-how-card-watermark,
+.theme-dark .lw-how-card-watermark {
+  color: #ffffff !important;
+  opacity: 0.05 !important;
+}
+
+[data-theme="dark"] .lw-how-card:hover .lw-how-card-watermark,
+.theme-dark .lw-how-card:hover .lw-how-card-watermark {
+  opacity: 0.1 !important;
 }
 
 [data-theme="dark"] .lw-how-icon-box,
 .theme-dark .lw-how-icon-box {
   background: #0b1320 !important;
   border-color: #1e293b !important;
-  color: #38bdf8 !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
 }
 
-[data-theme="dark"] .lw-how-card:hover .lw-how-icon-box,
-.theme-dark .lw-how-card:hover .lw-how-icon-box {
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
-  border-color: #38bdf8 !important;
-  color: #ffffff !important;
-  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.45) !important;
-}
+[data-theme="dark"] .lw-how-step-1 .lw-how-icon-box { color: #38bdf8 !important; }
+[data-theme="dark"] .lw-how-step-2 .lw-how-icon-box { color: #a5b4fc !important; }
+[data-theme="dark"] .lw-how-step-3 .lw-how-icon-box { color: #5eead4 !important; }
+[data-theme="dark"] .lw-how-step-4 .lw-how-icon-box { color: #6ee7b7 !important; }
 
 [data-theme="dark"] .lw-how-step-num,
 .theme-dark .lw-how-step-num {
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4) !important;
+  background: #1e293b !important;
 }
+
+[data-theme="dark"] .lw-how-step-1 .lw-how-step-num { color: #38bdf8 !important; }
+[data-theme="dark"] .lw-how-step-2 .lw-how-step-num { color: #a5b4fc !important; }
+[data-theme="dark"] .lw-how-step-3 .lw-how-step-num { color: #5eead4 !important; }
+[data-theme="dark"] .lw-how-step-4 .lw-how-step-num { color: #6ee7b7 !important; }
 
 [data-theme="dark"] .lw-how-badge,
 .theme-dark .lw-how-badge {
@@ -1788,24 +1945,16 @@
   color: #7dd3fc !important;
 }
 
-[data-theme="dark"] .lw-how-connector-line,
-.theme-dark .lw-how-connector-line {
-  background: #334155 !important;
-}
-
-[data-theme="dark"] .lw-how-connector-arrow,
-.theme-dark .lw-how-connector-arrow {
+[data-theme="dark"] .lw-how-trust-badges,
+.theme-dark .lw-how-trust-badges {
   background: #111c2e !important;
-  border-color: #334155 !important;
-  color: #38bdf8 !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+  border-color: #1e293b !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
 }
 
-[data-theme="dark"] .lw-how-flow-container:hover .lw-how-connector-arrow,
-.theme-dark .lw-how-flow-container:hover .lw-how-connector-arrow {
-  border-color: #38bdf8 !important;
-  color: #7dd3fc !important;
-  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4) !important;
+[data-theme="dark"] .lw-how-trust-item,
+.theme-dark .lw-how-trust-item {
+  color: #cbd5e1 !important;
 }
 
 /* ── FAQ section ── */
@@ -2315,4 +2464,3 @@
     transition: none;
   }
 }
-

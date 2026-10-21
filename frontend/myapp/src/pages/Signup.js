@@ -22,6 +22,7 @@ import {
   buildTargetCourt,
 } from "../data/CourtsData";
 import { getTheme, toggleTheme } from "../data/themeStore";
+import { formatBarEnrollment, isValidBarEnrollment } from "../data/barEnrollmentHelper";
 import "./Signup.css";
 
 // ── Data from JSON ────────────────────────────────────────────
@@ -309,12 +310,12 @@ const EXPERIENCE_YEARS = [
 ];
 
 const ADVOCATES_JSON = [
-  { name:"Adv. Rajesh Kumar",  email:"rajesh.kumar@advocatehub.in",  phone:"9876543210", city:"Delhi",     speciality:"Criminal Law",  experience:"10–15 years", barId:"BCI/DL/2012/1234", court:"High Court",     fee:"₹2000/hr", bio:"15 years of experience in criminal defense and bail matters.",   initials:"RK", color:"#2563eb" },
-  { name:"Adv. Priya Sharma",  email:"priya.sharma@advocatehub.in",  phone:"9823456781", city:"Bengaluru", speciality:"Family Law",    experience:"5–10 years",  barId:"BCI/KA/2016/4321", court:"Family Court",   fee:"₹1500/hr", bio:"Specialist in divorce, child custody and matrimonial disputes.", initials:"PS", color:"#16a34a" },
-  { name:"Adv. Amit Verma",    email:"amit.verma@advocatehub.in",    phone:"9812345670", city:"Mumbai",    speciality:"Property Law",  experience:"15–20 years", barId:"BCI/MH/2008/7654", court:"High Court",     fee:"₹3000/hr", bio:"Expert in property disputes, title verification and RERA.",      initials:"AV", color:"#7c3aed" },
-  { name:"Adv. Sneha Nair",    email:"sneha.nair@advocatehub.in",    phone:"9801234567", city:"Chennai",   speciality:"Corporate Law", experience:"5–10 years",  barId:"BCI/TN/2015/2345", court:"High Court",     fee:"₹2500/hr", bio:"Corporate lawyer specializing in company law and compliance.",   initials:"SN", color:"#dc2626" },
-  { name:"Adv. Rohit Gupta",   email:"rohit.gupta@advocatehub.in",   phone:"9890123456", city:"Hyderabad", speciality:"Civil Law",     experience:"10–15 years", barId:"BCI/TS/2011/3456", court:"Civil Court",    fee:"₹1800/hr", bio:"Civil suits, injunctions and recovery matters specialist.",      initials:"RG", color:"#ea580c" },
-  { name:"Adv. Ananya Singh",  email:"ananya.singh@advocatehub.in",  phone:"9879012345", city:"Pune",      speciality:"Tax Law",       experience:"5–10 years",  barId:"BCI/MH/2017/5678", court:"District Court", fee:"₹2000/hr", bio:"GST, income tax and corporate taxation consultant.",             initials:"AS", color:"#0891b2" },
+  { name:"Adv. Rajesh Kumar",  email:"rajesh.kumar@advocatehub.in",  phone:"9876543210", city:"Delhi",     speciality:"Criminal Law",  experience:"10–15 years", barId:"KAR/1234/2012", court:"High Court",     fee:"₹2000/hr", bio:"15 years of experience in criminal defense and bail matters.",   initials:"RK", color:"#2563eb" },
+  { name:"Adv. Priya Sharma",  email:"priya.sharma@advocatehub.in",  phone:"9823456781", city:"Bengaluru", speciality:"Family Law",    experience:"5–10 years",  barId:"KAR/1424/2016", court:"Family Court",   fee:"₹1500/hr", bio:"Specialist in divorce, child custody and matrimonial disputes.", initials:"PS", color:"#16a34a" },
+  { name:"Adv. Amit Verma",    email:"amit.verma@advocatehub.in",    phone:"9812345670", city:"Mumbai",    speciality:"Property Law",  experience:"15–20 years", barId:"KAR/7654/2008", court:"High Court",     fee:"₹3000/hr", bio:"Expert in property disputes, title verification and RERA.",      initials:"AV", color:"#7c3aed" },
+  { name:"Adv. Sneha Nair",    email:"sneha.nair@advocatehub.in",    phone:"9801234567", city:"Chennai",   speciality:"Corporate Law", experience:"5–10 years",  barId:"KAR/2345/2015", court:"High Court",     fee:"₹2500/hr", bio:"Corporate lawyer specializing in company law and compliance.",   initials:"SN", color:"#dc2626" },
+  { name:"Adv. Rohit Gupta",   email:"rohit.gupta@advocatehub.in",   phone:"9890123456", city:"Hyderabad", speciality:"Civil Law",     experience:"10–15 years", barId:"KAR/3456/2011", court:"Civil Court",    fee:"₹1800/hr", bio:"Civil suits, injunctions and recovery matters specialist.",      initials:"RG", color:"#ea580c" },
+  { name:"Adv. Ananya Singh",  email:"ananya.singh@advocatehub.in",  phone:"9879012345", city:"Pune",      speciality:"Tax Law",       experience:"5–10 years",  barId:"KAR/5678/2017", court:"District Court", fee:"₹2000/hr", bio:"GST, income tax and corporate taxation consultant.",             initials:"AS", color:"#0891b2" },
 ];
 
 // ── Bilingual UI Dictionary (English & Kannada) ───────────────
@@ -1141,7 +1142,13 @@ export default function Signup({ defaultTab = "" }) {
     if (!adv.phone.trim()) { e.phone = isKn ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Phone is required"; if (!firstErrStep) firstErrStep = 1; }
     else if (!isValidPhone(adv.phone)) { e.phone = isKn ? "೧೦-ಅಂಕಿಯ ಮಾನ್ಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ" : "Enter valid 10-digit phone"; if (!firstErrStep) firstErrStep = 1; }
 
-    if (!adv.barId.trim()) { e.barId = isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Bar enrollment number is required"; if (!firstErrStep) firstErrStep = 2; }
+    if (!adv.barId.trim()) {
+      e.barId = isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Bar enrollment number is required";
+      if (!firstErrStep) firstErrStep = 2;
+    } else if (!isValidBarEnrollment(adv.barId)) {
+      e.barId = isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ KAR/1424/2016 ಸ್ವರೂಪದಲ್ಲಿರಬೇಕು (ಉದಾ: KAR/1424/2016)" : "Bar enrollment number must be in KAR/1424/2016 format (e.g. KAR/1424/2016)";
+      if (!firstErrStep) firstErrStep = 2;
+    }
     
     const specsList = (adv.specialities && adv.specialities.length > 0)
       ? adv.specialities
@@ -1165,7 +1172,7 @@ export default function Signup({ defaultTab = "" }) {
     if (!adv.password) { e.password = isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಅಗತ್ಯವಿದೆ" : "Password is required"; if (!firstErrStep) firstErrStep = 7; }
     else if (adv.password.length < 6) { e.password = isKn ? "ಕನಿಷ್ಠ ೬ ಅಕ್ಷರಗಳಿರಬೇಕು" : "Min 6 characters"; if (!firstErrStep) firstErrStep = 7; }
     if (adv.password !== adv.confirmPw) { e.confirmPw = isKn ? "ಪಾಸ್‌ವರ್ಡ್ ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ" : "Passwords do not match"; if (!firstErrStep) firstErrStep = 7; }
-    if (!adv.agreeTerms) { e.agreeTerms = isKn ? "ದಯವಿಟ್ಟು ನಿಯಮಗಳನ್ನು ಒಪ್ಪಿಕೊಳ್ಳಿ" : "Please accept terms"; if (!firstErrStep) firstErrStep = 7; }
+    if (!adv.agreeTerms) { e.agreeTerms = isKn ? "ದಯವಿಟ್ಟು ನಿಯಮಗಳು ಮತ್ತು ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ ಒಪ್ಪಿಕೊಳ್ಳಿ" : "You must read and agree to the Terms and Conditions and Privacy Policy"; if (!firstErrStep) firstErrStep = 7; }
     
     setAdvErr(e);
     if (firstErrStep) {
@@ -1184,7 +1191,11 @@ export default function Signup({ defaultTab = "" }) {
       if (!adv.email.trim()) e.email = isKn ? "ಇಮೇಲ್ ವಿಳಾಸ ಅಗತ್ಯವಿದೆ" : "Email is required";
       else if (!isValidEmail(adv.email)) e.email = isKn ? "ಮಾನ್ಯ ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿ" : "Invalid email format";
     } else if (stepNumber === 2) {
-      if (!adv.barId.trim()) e.barId = isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Bar enrollment number is required";
+      if (!adv.barId.trim()) {
+        e.barId = isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ" : "Bar enrollment number is required";
+      } else if (!isValidBarEnrollment(adv.barId)) {
+        e.barId = isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ KAR/1424/2016 ಸ್ವರೂಪದಲ್ಲಿರಬೇಕು (ಉದಾ: KAR/1424/2016)" : "Bar enrollment number must be in KAR/1424/2016 format (e.g. KAR/1424/2016)";
+      }
     } else if (stepNumber === 3) {
       const specsList = (adv.specialities && adv.specialities.length > 0)
         ? adv.specialities
@@ -1321,6 +1332,8 @@ export default function Signup({ defaultTab = "" }) {
         avatarData:    adv.avatarData,
         verificationMethod: "admin_approval",
         verificationChannel: "admin_approval",
+        termsAccepted: Boolean(adv.agreeTerms),
+        termsVersion: "1.0",
       });
 
       setSuccessName(adv.fullName);
@@ -1405,6 +1418,8 @@ export default function Signup({ defaultTab = "" }) {
         otp:           cleanCode,
         verificationMethod: otpChannel,
         verificationChannel: otpChannel,
+        termsAccepted: Boolean(adv.agreeTerms),
+        termsVersion: "1.0",
       });
 
       setSuccessName(adv.fullName);
@@ -1435,7 +1450,7 @@ export default function Signup({ defaultTab = "" }) {
       title: isKn ? "ವೃತ್ತಿಪರ ವಿವರಗಳು" : "Professional Details",
       shortTitle: isKn ? "ವೃತ್ತಿ ವಿವರ" : "Professional",
       icon: ADMIN_ICONS.badge,
-      isCompleted: Boolean(adv.barId.trim()),
+      isCompleted: Boolean(adv.barId.trim() && isValidBarEnrollment(adv.barId)),
       hasError: Boolean(advErr.barId || advErr.barCouncil),
       valuePreview: adv.barId ? adv.barId : "",
     },
@@ -2388,13 +2403,15 @@ export default function Signup({ defaultTab = "" }) {
                           label={isKn ? "ಬಾರ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ" : "Bar Enrollment Number"}
                           required
                           error={advErr.barId}
-                          hint={isKn ? "ಉದಾ: KAR/1234/2018" : "e.g. KAR/1234/2018 or BCI/KA/2016/4321"}
+                          hint={isKn ? "ಸ್ವರೂಪ: ೩ ದೊಡ್ಡ ಅಕ್ಷರಗಳು / ೪ ಸಂಖ್ಯೆಗಳು / ೪ ಸಂಖ್ಯೆಗಳು (ಉದಾ: KAR/1424/2016)" : "Format: 3 capital letters / 4 digits / 4 digits (e.g. KAR/1424/2016)"}
                         >
                           <Input
                             icon={ADMIN_ICONS.badge}
-                            placeholder="e.g. KAR/1234/2018"
+                            placeholder="KAR/1424/2016"
                             value={adv.barId}
-                            onChange={(e) => setA("barId", e.target.value)}
+                            maxLength={13}
+                            onChange={(e) => setA("barId", formatBarEnrollment(e.target.value))}
+                            rightEl={isValidBarEnrollment(adv.barId) ? <span className="su-valid" title="Valid Bar Enrollment Format">{ADMIN_ICONS.check}</span> : null}
                             error={advErr.barId}
                             disabled={loading}
                           />
@@ -2952,18 +2969,18 @@ export default function Signup({ defaultTab = "" }) {
                           onChange={(e) => setA("agreeTerms", e.target.checked)}
                         />
                         <span>
-                          {isKn ? "ನಾನು ಸೇವಾ ನಿಯಮಗಳು, ಗೌಪ್ಯತಾ ನೀತಿ ಮತ್ತು ವಕೀಲರ ಮಾರ್ಗಸೂಚಿಗಳನ್ನು ಒಪ್ಪುತ್ತೇನೆ: " : "I agree to the "}
-                          <a href="/terms" target="_blank" rel="noreferrer">
-                            {isKn ? "ಸೇವಾ ನಿಯಮಗಳು" : "Terms of Service"}
-                          </a>
-                          ,{" "}
+                          {isKn ? "ನಾನು ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು ಹಾಗೂ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿದ್ದೇನೆ ಮತ್ತು ಒಪ್ಪುತ್ತೇನೆ: " : "I have read and agree to the "}
+                          <a href="/terms-and-conditions" target="_blank" rel="noreferrer">
+                            {isKn ? "ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು" : "Terms and Conditions"}</a>
+
+                          {" "}{isKn ? "ಮತ್ತು " : "and "}{" "}
                           <a href="/privacy" target="_blank" rel="noreferrer">
-                            {isKn ? "ಗೌಪ್ಯತಾ ನೀತಿ" : "Privacy Policy"}
-                          </a>{" "}
-                          {isKn ? "ಮತ್ತು " : "and "}
-                          <a href="/advocate-terms" target="_blank" rel="noreferrer">
-                            {isKn ? "ವಕೀಲರ ಮಾರ್ಗಸೂಚಿಗಳು" : "Advocate Guidelines"}
-                          </a>
+                            {isKn ? "ಗೌಪ್ಯತಾ ನೀತಿ" : "Privacy Policy"}</a>.
+
+
+
+
+
                         </span>
                       </label>
                       {advErr.agreeTerms && <p className="su-field-err">⚠ {advErr.agreeTerms}</p>}

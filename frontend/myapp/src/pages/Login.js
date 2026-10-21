@@ -238,6 +238,9 @@ export default function Login() {
         <p className="am-alt-sub">
           Are you a client? <Link to="/client-login">Client Login here</Link>
         </p>
+        <p className="am-alt-sub" style={{ fontSize: "0.8rem", marginTop: 12 }}>
+          By continuing, you agree to our <Link to="/terms-and-conditions">Terms &amp; Conditions</Link> and <Link to="/privacy">Privacy Policy</Link>.
+        </p>
 
         <Link to="/" className="am-back-link">
           ← Back to site

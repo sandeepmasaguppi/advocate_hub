@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import LegalIcon from "../components/LegalIcons";
 import "./Aboutus.css";
 import chetanImg from "../images/chetan.png";
 import sandeepImg from "../images/sandeep.jpeg";
@@ -21,7 +22,7 @@ import { getTheme } from "../data/themeStore";
 // ── Impact Statistics ──
 const STATS = [
   {
-    icon: "⚖️",
+    iconName: "scale",
     value: "50+",
     labelEn: "Verified Advocates",
     labelKn: "ಪರಿಶೀಲಿತ ವಕೀಲರು",
@@ -29,7 +30,7 @@ const STATS = [
     descKn: "ಕರ್ನಾಟಕ ಬಾರ್ ಕೌನ್ಸಿಲ್ ಮಾನ್ಯತೆ ಪಡೆದವರು"
   },
   {
-    icon: "🏛️",
+    iconName: "platform",
     value: "18+",
     labelEn: "Judicial Districts",
     labelKn: "ನ್ಯಾಯಾಂಗ ಜಿಲ್ಲೆಗಳು",
@@ -37,7 +38,7 @@ const STATS = [
     descKn: "ಹೈಕೋರ್ಟ್ ಪೀಠಗಳು ಮತ್ತು ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳು"
   },
   {
-    icon: "📁",
+    iconName: "documents",
     value: "5,000+",
     labelEn: "Legal Matters Handled",
     labelKn: "ಪರಿಹರಿಸಲಾದ ಕಾನೂನು ವಿಷಯಗಳು",
@@ -45,7 +46,7 @@ const STATS = [
     descKn: "ಸಿವಿಲ್, ಕ್ರಿಮಿನಲ್, ಆಸ್ತಿ ಮತ್ತು ಕಾರ್ಪೊರೇಟ್"
   },
   {
-    icon: "⭐",
+    iconName: "star",
     value: "4.9 / 5",
     labelEn: "Client Trust Rating",
     labelKn: "ಗ್ರಾಹಕರ ವಿಶ್ವಾಸಾರ್ಹತೆ ರೇಟಿಂಗ್",
@@ -57,7 +58,7 @@ const STATS = [
 // ── Core Pillars of Excellence ──
 const PILLARS = [
   {
-    icon: "🛡️",
+    iconName: "shieldCheck",
     titleEn: "100% Bar Council Verified Credentials",
     titleKn: "100% ಬಾರ್ ಕೌನ್ಸಿಲ್ ಪರಿಶೀಲಿತ ಪ್ರಮಾಣಪತ್ರಗಳು",
     descEn:
@@ -66,7 +67,7 @@ const PILLARS = [
       "ನಮ್ಮ ವೇದಿಕೆಯಲ್ಲಿರುವ ಪ್ರತಿಯೊಬ್ಬ ವಕೀಲರ ಬಾರ್ ಕೌನ್ಸಿಲ್ ನೋಂದಣಿ ಸಂಖ್ಯೆ, ಪ್ರಾಕ್ಟಿಸ್ ಪ್ರಮಾಣಪತ್ರ ಮತ್ತು ನ್ಯಾಯಾಲಯದ ಸಕ್ರಿಯ ಸೇವೆಯನ್ನು ಪರಿಶೀಲಿಸಿದ ನಂತರವೇ ಸಾರ್ವಜನಿಕ ಸಮಾಲೋಚನೆಗೆ ಅನುಮೋದಿಸಲಾಗುತ್ತದೆ."
   },
   {
-    icon: "🌐",
+    iconName: "availability",
     titleEn: "Bilingual Legal Accessibility (English & ಕನ್ನಡ)",
     titleKn: "ದ್ವಿಭಾಷಾ ಕಾನೂನು ಸೇವೆ (ಇಂಗ್ಲಿಷ್ ಮತ್ತು ಕನ್ನಡ)",
     descEn:
@@ -75,7 +76,7 @@ const PILLARS = [
       "ನ್ಯಾಯ ಪಡೆಯಲು ಭಾಷೆ ಎಂದಿಗೂ ತಡೆಯಾಗಬಾರದು. ಹೈಕೋರ್ಟ್ ಹಾಗೂ ಜಿಲ್ಲಾ ನ್ಯಾಯಾಲಯಗಳಲ್ಲಿ ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲಿಷ್ ಎರಡರಲ್ಲೂ ನಿರರ್ಗಳವಾಗಿ ಕಾರ್ಯನಿರ್ವಹಿಸುವ ಪರಿಣಿತ ವಕೀಲರನ್ನು ನಾವು ಸಂಪರ್ಕಿಸುತ್ತೇವೆ."
   },
   {
-    icon: "💎",
+    iconName: "gem",
     titleEn: "Transparent, Upfront Fixed Fees",
     titleKn: "ಸ್ಪಷ್ಟ ಮತ್ತು ನಿಗದಿತ ಪಾರದರ್ಶಕ ಶುಲ್ಕ",
     descEn:
@@ -84,7 +85,7 @@ const PILLARS = [
       "ಯಾವುದೇ ಅನಿರೀಕ್ಷಿತ ಅಥವಾ ಗುಪ್ತ ಶುಲ್ಕಗಳಿಲ್ಲ. ಸಮಾಲೋಚನೆ, ದಸ್ತಾವೇಜುಗಳ ರಚನೆ ಮತ್ತು ವಕಾಲತ್ತಿಗೆ ಮುಂಚಿತವಾಗಿಯೇ ನಿಖರ ಶುಲ್ಕದ ಸ್ಪಷ್ಟತೆ ಮತ್ತು ಡಿಜಿಟಲ್ ರಸೀದಿ ನೀಡಲಾಗುತ್ತದೆ."
   },
   {
-    icon: "🔒",
+    iconName: "lock",
     titleEn: "Absolute Attorney-Client Privilege",
     titleKn: "ಸಂಪೂರ್ಣ ವಕೀಲ-ಕ್ಲೈಂಟ್ ಕಾನೂನುಬದ್ಧ ಗೌಪ್ಯತೆ",
     descEn:
@@ -277,7 +278,7 @@ const MILESTONES = [
     statusEn: "Completed & Verified",
     statusKn: "ಯಶಸ್ವಿಯಾಗಿ ಪೂರ್ಣಗೊಂಡಿದೆ",
     statusType: "completed",
-    icon: "🏛️",
+    iconName: "platform",
     titleEn: "Platform Launch & Advocate Verification",
     titleKn: "ವೇದಿಕೆ ಪ್ರಾರಂಭ ಮತ್ತು ವಕೀಲರ ಪರಿಶೀಲನೆ",
     taglineEn: "Founded in Karnataka with our signature 3-tier advocate credential verification protocol.",
@@ -299,7 +300,7 @@ const MILESTONES = [
     statusEn: "Active & Scaling",
     statusKn: "ಪ್ರಸ್ತುತ ಸಕ್ರಿಯವಾಗಿದೆ",
     statusType: "active",
-    icon: "⚡",
+    iconName: "zap",
     titleEn: "18+ Districts & Online Legal Drafting",
     titleKn: "18+ ಜಿಲ್ಲೆಗಳಿಗೆ ವಿಸ್ತರಣೆ ಮತ್ತು ದಸ್ತಾವೇಜು ಸೇವೆ",
     taglineEn: "Expanded coverage across 18+ Karnataka cities with instant digital legal document drafting.",
@@ -321,7 +322,7 @@ const MILESTONES = [
     statusEn: "Current Innovation",
     statusKn: "ನವೀನ ತಂತ್ರಜ್ಞಾನ",
     statusType: "current",
-    icon: "🚀",
+    iconName: "rocket",
     titleEn: "New Criminal Laws & Live Consultations",
     titleKn: "ಹೊಸ ಕ್ರಿಮಿನಲ್ ಕಾನೂನುಗಳು ಮತ್ತು ನೇರ ಸಮಾಲೋಚನೆ",
     taglineEn: "Integrated IPC to BNS/BNSS criminal converter, Supreme Court briefings, and live booking.",
@@ -437,10 +438,11 @@ export default function AboutUs() {
           <div className="ab-hero-content">
             <div className="ab-hero-prestige-badge">
               <span className="ab-badge-beacon"></span>
+              <LegalIcon name="platform" size={13} className="ab-badge-svg" />
               <span>
                 {isKn
-                  ? "🏛️ ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ • ಭಾರತದಾದ್ಯಂತ ಕಾನೂನು ಸೇವೆಯನ್ನು ಸುಲಭಗೊಳಿಸುವುದು"
-                  : "🏛️ ADVOCATES HUB • DEMOCRATIZING LEGAL ACCESS ACROSS INDIA"}
+                  ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ • ಭಾರತದಾದ್ಯಂತ ಕಾನೂನು ಸೇವೆಯನ್ನು ಸುಲಭಗೊಳಿಸುವುದು"
+                  : "ADVOCATES HUB • DEMOCRATIZING LEGAL ACCESS ACROSS INDIA"}
               </span>
             </div>
 
@@ -467,19 +469,19 @@ export default function AboutUs() {
             {/* Quick Trust Highlights */}
             <div className="ab-trust-strip">
               <div className="ab-ts-item">
-                <span className="ab-ts-icon">🛡️</span>
+                <LegalIcon name="shieldCheck" size={16} className="ab-ts-icon-svg" />
                 <span>{isKn ? "100% ಬಾರ್ ಕೌನ್ಸಿಲ್ ಪರಿಶೀಲಿತ" : "100% Bar Council Verified"}</span>
               </div>
               <div className="ab-ts-item">
-                <span className="ab-ts-icon">⚡</span>
+                <LegalIcon name="zap" size={16} className="ab-ts-icon-svg" />
                 <span>{isKn ? "ತ್ವರಿತ ನೇಮಕಾತಿ & ಸಮಾಲೋಚನೆ" : "Instant Booking & Advice"}</span>
               </div>
               <div className="ab-ts-item">
-                <span className="ab-ts-icon">🔒</span>
+                <LegalIcon name="lock" size={16} className="ab-ts-icon-svg" />
                 <span>{isKn ? "256-ಬಿಟ್ ಗೌಪ್ಯತೆ ಸಂರಕ್ಷಣೆ" : "256-Bit Encrypted Data"}</span>
               </div>
               <div className="ab-ts-item">
-                <span className="ab-ts-icon">🇮🇳</span>
+                <LegalIcon name="indiaBadge" size={16} className="ab-ts-icon-svg" />
                 <span>{isKn ? "ಕರ್ನಾಟಕ ಮತ್ತು ರಾಷ್ಟ್ರವ್ಯಾಪಿ ಸೇವೆ" : "Pan-Karnataka & National Reach"}</span>
               </div>
             </div>
@@ -487,10 +489,12 @@ export default function AboutUs() {
             {/* Hero CTA Buttons */}
             <div className="ab-hero-actions">
               <Link to="/find-lawyer" className="ab-btn-hero-primary">
-                {isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ →" : "Find an Advocate Now →"}
+                <span>{isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ" : "Find an Advocate Now"}</span>
+                <LegalIcon name="arrowRight" size={15} />
               </Link>
               <Link to="/legal-advice/ask-question" className="ab-btn-hero-secondary">
-                {isKn ? "ಉಚಿತ ಕಾನೂನು ಪ್ರಶ್ನೆ ಕೇಳಿ 💬" : "Ask a Free Legal Question 💬"}
+                <LegalIcon name="chat" size={15} />
+                <span>{isKn ? "ಉಚಿತ ಕಾನೂನು ಪ್ರಶ್ನೆ ಕೇಳಿ" : "Ask a Free Legal Question"}</span>
               </Link>
             </div>
           </div>
@@ -504,7 +508,7 @@ export default function AboutUs() {
             {STATS.map((s, idx) => (
               <div key={idx} className="ab-stat-card">
                 <div className="ab-stat-icon-wrap">
-                  <span className="ab-stat-icon">{s.icon}</span>
+                  <LegalIcon name={s.iconName} size={22} className="ab-stat-icon-svg" />
                 </div>
                 <div className="ab-stat-value">{s.value}</div>
                 <div className="ab-stat-label">{isKn ? s.labelKn : s.labelEn}</div>
@@ -539,15 +543,15 @@ export default function AboutUs() {
 
               <div className="ab-checklist">
                 <div className="ab-cl-item">
-                  <span className="ab-cl-check">✓</span>
+                  <span className="ab-cl-check"><LegalIcon name="check" size={13} /></span>
                   <span>{isKn ? "ನೈಜ ಬಾರ್ ನೋಂದಣಿ ಮತ್ತು ಸಕ್ರಿಯ ಪ್ರಾಕ್ಟಿಸ್ ಪರಿಶೀಲನೆ" : "Verified State Bar Council Enrollment & Active Standing"}</span>
                 </div>
                 <div className="ab-cl-item">
-                  <span className="ab-cl-check">✓</span>
+                  <span className="ab-cl-check"><LegalIcon name="check" size={13} /></span>
                   <span>{isKn ? "ಕನ್ನಡ ಮತ್ತು ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿ ಸಂಪೂರ್ಣ ದ್ವಿಭಾಷಾ ನೆರವು" : "Full English & Kannada Bilingual Capabilities"}</span>
                 </div>
                 <div className="ab-cl-item">
-                  <span className="ab-cl-check">✓</span>
+                  <span className="ab-cl-check"><LegalIcon name="check" size={13} /></span>
                   <span>{isKn ? "ನೇರ ಯುಪಿಐ ಪಾವತಿ ಮತ್ತು ತ್ವರಿತ ಡಿಜಿಟಲ್ ರಸೀದಿ" : "Instant UPI Digital Payments & Transparent Invoicing"}</span>
                 </div>
               </div>
@@ -556,7 +560,9 @@ export default function AboutUs() {
             <div className="ab-narrative-right">
               <div className="ab-platform-box">
                 <div className="ab-pb-header">
-                  <span className="ab-pb-icon">⚖️</span>
+                  <div className="ab-pb-icon">
+                    <LegalIcon name="scale" size={20} />
+                  </div>
                   <div>
                     <h4>{isKn ? "ಸಮಗ್ರ ಕಾನೂನು ಸೇವಾ ವೇದಿಕೆ" : "The Complete Legal Infrastructure"}</h4>
                     <p>{isKn ? "4 ಪ್ರಮುಖ ವಿಭಾಗಗಳು ಒಂದೇ ಸೂರಿನಡಿ" : "4 Pillars Integrated Under One Platform"}</p>
@@ -617,7 +623,9 @@ export default function AboutUs() {
           <div className="ab-pillars-grid">
             {PILLARS.map((p, idx) => (
               <div key={idx} className="ab-pillar-card">
-                <div className="ab-pillar-icon-box">{p.icon}</div>
+                <div className="ab-pillar-icon-box">
+                  <LegalIcon name={p.iconName} size={22} />
+                </div>
                 <h3 className="ab-pillar-title">{isKn ? p.titleKn : p.titleEn}</h3>
                 <p className="ab-pillar-desc">{isKn ? p.descKn : p.descEn}</p>
               </div>
@@ -668,7 +676,10 @@ export default function AboutUs() {
                   >
                     ● {isKn ? member.departmentKn : member.department}
                   </span>
-                  <span className="ab-tc-verified-pill">🛡️ {isKn ? "ಪರಿಶೀಲಿತ" : "Verified"}</span>
+                  <span className="ab-tc-verified-pill">
+                    <LegalIcon name="shieldCheck" size={13} className="ab-tc-badge-svg" />
+                    <span>{isKn ? "ಪರಿಶೀಲಿತ" : "Verified"}</span>
+                  </span>
                 </div>
 
                 {/* Avatar Portrait with Active Beacon & Ambient Halo */}
@@ -706,7 +717,10 @@ export default function AboutUs() {
                 <div className="ab-tc-role" style={{ color: member.color }}>
                   {isKn ? member.designationKn : member.designation}
                 </div>
-                <div className="ab-tc-location">📍 {isKn ? member.locationKn : member.location}</div>
+                <div className="ab-tc-location">
+                  <LegalIcon name="pin" size={13} className="ab-tc-loc-svg" />
+                  <span>{isKn ? member.locationKn : member.location}</span>
+                </div>
 
                 {/* 1-Line Simple Client Summary */}
                 <p className="ab-tc-simple-desc">
@@ -720,7 +734,7 @@ export default function AboutUs() {
                     className="ab-tc-qc-btn call"
                     title={`Call ${member.phoneDisplay || "+91 " + member.phone}`}
                   >
-                    <span className="ab-qc-icon">📞</span>
+                    <span className="ab-qc-icon"><LegalIcon name="phone" size={13} /></span>
                     <span>{isKn ? "ಕರೆ" : "Call"}</span>
                   </a>
                   <a
@@ -730,7 +744,7 @@ export default function AboutUs() {
                     className="ab-tc-qc-btn whatsapp"
                     title="Chat on WhatsApp"
                   >
-                    <span className="ab-qc-icon">💬</span>
+                    <span className="ab-qc-icon"><LegalIcon name="whatsapp" size={13} /></span>
                     <span>WhatsApp</span>
                   </a>
                   <a
@@ -738,7 +752,7 @@ export default function AboutUs() {
                     className="ab-tc-qc-btn email"
                     title={`Email ${member.email}`}
                   >
-                    <span className="ab-qc-icon">✉️</span>
+                    <span className="ab-qc-icon"><LegalIcon name="mail" size={13} /></span>
                     <span>{isKn ? "ಇಮೇಲ್" : "Email"}</span>
                   </a>
                 </div>
@@ -750,7 +764,8 @@ export default function AboutUs() {
                     className="ab-tc-btn-view"
                     onClick={() => setSelectedMember(member)}
                   >
-                    <span>{isKn ? "ಪೂರ್ಣ ವಿವರಗಳು (View Details) →" : "View Full Profile & Bio →"}</span>
+                    <span>{isKn ? "ಪೂರ್ಣ ವಿವರಗಳು (View Details)" : "View Full Profile & Bio"}</span>
+                    <LegalIcon name="arrowRight" size={13} />
                   </button>
                 </div>
               </article>
@@ -775,7 +790,7 @@ export default function AboutUs() {
             {/* Modal Top Prestige Header */}
             <div className="ab-cm-header">
               <div className="ab-cm-header-left">
-                <span className="ab-cm-seal">⚖️</span>
+                <span className="ab-cm-seal"><LegalIcon name="scale" size={16} /></span>
                 <span className="ab-cm-badge">
                   {isKn ? "ಅಡ್ವೊಕೇಟ್ಸ್ ಹಬ್ • ನಾಯಕತ್ವ ಪ್ರೊಫೈಲ್" : "ADVOCATES HUB • LEADERSHIP PROFILE"}
                 </span>
@@ -820,8 +835,14 @@ export default function AboutUs() {
 
                 <div className="ab-cm-profile-info">
                   <div className="ab-cm-meta-top">
-                    <span className="ab-cm-status-tag">🛡️ {isKn ? "ಪರಿಶೀಲಿತ ನಾಯಕತ್ವ" : "Verified Leadership"}</span>
-                    <span className="ab-cm-loc">📍 {isKn ? selectedMember.locationKn : selectedMember.location}</span>
+                    <span className="ab-cm-status-tag">
+                      <LegalIcon name="shieldCheck" size={13} />
+                      <span>{isKn ? "ಪರಿಶೀಲಿತ ನಾಯಕತ್ವ" : "Verified Leadership"}</span>
+                    </span>
+                    <span className="ab-cm-loc">
+                      <LegalIcon name="pin" size={13} />
+                      <span>{isKn ? selectedMember.locationKn : selectedMember.location}</span>
+                    </span>
                   </div>
                   <h2 className="ab-cm-name">{selectedMember.name}</h2>
                   <div className="ab-cm-role" style={{ color: selectedMember.color }}>
@@ -836,7 +857,8 @@ export default function AboutUs() {
               {/* What His Work Is */}
               <div className="ab-cm-work-box" style={{ borderLeftColor: selectedMember.color }}>
                 <div className="ab-cm-work-label">
-                  <span>💼</span> {isKn ? "ಕಾರ್ಯ ಮತ್ತು ಜವಾಬ್ದಾರಿ" : "Role Focus & Responsibilities"}
+                  <LegalIcon name="briefcase" size={15} />
+                  <span>{isKn ? "ಕಾರ್ಯ ಮತ್ತು ಜವಾಬ್ದಾರಿ" : "Role Focus & Responsibilities"}</span>
                 </div>
                 <p className="ab-cm-work-text">
                   {isKn ? selectedMember.simpleRoleKn : selectedMember.simpleRoleEn}
@@ -846,17 +868,21 @@ export default function AboutUs() {
               {/* Executive Direct Communication Desk */}
               <div className="ab-cm-contact-desk">
                 <h4 className="ab-cm-desk-title">
-                  <span>📞</span> {isKn ? "ನೇರ ಸಂಪರ್ಕ ವಿವರಗಳು" : "Direct Executive Contact"}
+                  <LegalIcon name="phone" size={15} />
+                  <span>{isKn ? "ನೇರ ಸಂಪರ್ಕ ವಿವರಗಳು" : "Direct Executive Contact"}</span>
                 </h4>
 
                 <div className="ab-cm-desk-grid">
                   {/* Phone Call Card */}
                   <a href={`tel:${selectedMember.phone}`} className="ab-cm-desk-card phone">
-                    <div className="ab-cmd-icon">📞</div>
+                    <div className="ab-cmd-icon"><LegalIcon name="phone" size={18} /></div>
                     <div className="ab-cmd-details">
                       <span className="ab-cmd-label">{isKn ? "ದೂರವಾಣಿ ಸಂಖ್ಯೆ" : "Direct Phone Line"}</span>
                       <strong className="ab-cmd-value">{selectedMember.phoneDisplay || "+91 " + selectedMember.phone}</strong>
-                      <span className="ab-cmd-action">{isKn ? "ಕರೆ ಮಾಡಿ →" : "Call Now →"}</span>
+                      <span className="ab-cmd-action">
+                        <span>{isKn ? "ಕರೆ ಮಾಡಿ" : "Call Now"}</span>
+                        <LegalIcon name="arrowRight" size={12} />
+                      </span>
                     </div>
                   </a>
 
@@ -867,21 +893,27 @@ export default function AboutUs() {
                     rel="noreferrer"
                     className="ab-cm-desk-card whatsapp"
                   >
-                    <div className="ab-cmd-icon">💬</div>
+                    <div className="ab-cmd-icon"><LegalIcon name="whatsapp" size={18} /></div>
                     <div className="ab-cmd-details">
                       <span className="ab-cmd-label">{isKn ? "ವಾಟ್ಸಾಪ್ ಸಂದೇಶ" : "Official WhatsApp"}</span>
                       <strong className="ab-cmd-value">{selectedMember.phoneDisplay || "+91 " + selectedMember.phone}</strong>
-                      <span className="ab-cmd-action">{isKn ? "ಸಂದೇಶ ಕಳುಹಿಸಿ →" : "Chat on WhatsApp →"}</span>
+                      <span className="ab-cmd-action">
+                        <span>{isKn ? "ಸಂದೇಶ ಕಳುಹಿಸಿ" : "Chat on WhatsApp"}</span>
+                        <LegalIcon name="arrowRight" size={12} />
+                      </span>
                     </div>
                   </a>
 
                   {/* Email Card */}
                   <a href={`mailto:${selectedMember.email}`} className="ab-cm-desk-card email">
-                    <div className="ab-cmd-icon">✉️</div>
+                    <div className="ab-cmd-icon"><LegalIcon name="mail" size={18} /></div>
                     <div className="ab-cmd-details">
                       <span className="ab-cmd-label">{isKn ? "ಅಧಿಕೃತ ಇಮೇಲ್" : "Official Email"}</span>
                       <strong className="ab-cmd-value">{selectedMember.email}</strong>
-                      <span className="ab-cmd-action">{isKn ? "ಇಮೇಲ್ ಕಳುಹಿಸಿ →" : "Send Email →"}</span>
+                      <span className="ab-cmd-action">
+                        <span>{isKn ? "ಇಮೇಲ್ ಕಳುಹಿಸಿ" : "Send Email"}</span>
+                        <LegalIcon name="arrowRight" size={12} />
+                      </span>
                     </div>
                   </a>
                 </div>
@@ -934,7 +966,9 @@ export default function AboutUs() {
 
                 {/* Header with Icon & Title */}
                 <div className="ab-rmc-header">
-                  <div className="ab-rmc-icon">{m.icon}</div>
+                  <div className="ab-rmc-icon">
+                    <LegalIcon name={m.iconName} size={20} />
+                  </div>
                   <h3 className="ab-rmc-title">{isKn ? m.titleKn : m.titleEn}</h3>
                 </div>
 
@@ -945,7 +979,9 @@ export default function AboutUs() {
                 <div className="ab-rmc-highlights">
                   {(isKn ? m.highlightsKn : m.highlightsEn).map((hl, hIdx) => (
                     <div key={hIdx} className="ab-rmc-hl-item">
-                      <span className="ab-rmc-hl-check">✓</span>
+                      <span className="ab-rmc-hl-check">
+                        <LegalIcon name="check" size={11} />
+                      </span>
                       <span>{hl}</span>
                     </div>
                   ))}
@@ -988,7 +1024,9 @@ export default function AboutUs() {
                     aria-expanded={isOpen}
                   >
                     <span className="ab-faq-q-text">{isKn ? faq.qKn : faq.qEn}</span>
-                    <span className="ab-faq-toggle-icon">{isOpen ? "−" : "+"}</span>
+                    <span className="ab-faq-toggle-icon">
+                      {isOpen ? <LegalIcon name="minus" size={13} /> : <LegalIcon name="plus" size={13} />}
+                    </span>
                   </button>
                   {isOpen && (
                     <div className="ab-faq-answer">
@@ -1009,7 +1047,8 @@ export default function AboutUs() {
             <div className="ab-cta-glow"></div>
             <div className="ab-cta-content">
               <span className="ab-cta-pill">
-                {isKn ? "⚖️ ಈಗಲೇ ಆರಂಭಿಸಿ" : "⚖️ COMMENCE CONSULTATION"}
+                <LegalIcon name="scale" size={13} />
+                <span>{isKn ? "ಈಗಲೇ ಆರಂಭಿಸಿ" : "COMMENCE CONSULTATION"}</span>
               </span>
               <h2 className="ab-cta-title">
                 {isKn
@@ -1024,13 +1063,16 @@ export default function AboutUs() {
 
               <div className="ab-cta-btn-row">
                 <Link to="/find-lawyer" className="ab-btn-cta-primary">
-                  {isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ →" : "Find an Advocate Now →"}
+                  <span>{isKn ? "ವಕೀಲರನ್ನು ಹುಡುಕಿ" : "Find an Advocate Now"}</span>
+                  <LegalIcon name="arrowRight" size={15} />
                 </Link>
                 <Link to="/legal-advice/documents" className="ab-btn-cta-secondary">
-                  {isKn ? "ಕಾನೂನು ದಸ್ತಾವೇಜುಗಳು 📄" : "Draft Legal Documents 📄"}
+                  <LegalIcon name="documents" size={15} />
+                  <span>{isKn ? "ಕಾನೂನು ದಸ್ತಾವೇಜುಗಳು" : "Draft Legal Documents"}</span>
                 </Link>
                 <Link to="/contact" className="ab-btn-cta-ghost">
-                  {isKn ? "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ 📞" : "Contact Our Team 📞"}
+                  <LegalIcon name="phone" size={15} />
+                  <span>{isKn ? "ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ" : "Contact Our Team"}</span>
                 </Link>
               </div>
 
@@ -1041,7 +1083,7 @@ export default function AboutUs() {
                   className="ab-cta-chan-link"
                   title="Official Company Email"
                 >
-                  <span className="ab-ccl-icon">✉️</span>
+                  <span className="ab-ccl-icon"><LegalIcon name="mail" size={15} /></span>
                   <span>advocatehub.in@gmail.com</span>
                 </a>
                 <a
@@ -1051,7 +1093,7 @@ export default function AboutUs() {
                   className="ab-cta-chan-link ab-cta-chan-insta"
                   title="Official Instagram @advocate__hub"
                 >
-                  <span className="ab-ccl-icon">📸</span>
+                  <span className="ab-ccl-icon"><LegalIcon name="instagram" size={15} /></span>
                   <span>@advocate__hub</span>
                 </a>
                 <a
@@ -1059,7 +1101,7 @@ export default function AboutUs() {
                   className="ab-cta-chan-link"
                   title="Direct Phone Line"
                 >
-                  <span className="ab-ccl-icon">📞</span>
+                  <span className="ab-ccl-icon"><LegalIcon name="phone" size={15} /></span>
                   <span>+91 91087 17353</span>
                 </a>
               </div>

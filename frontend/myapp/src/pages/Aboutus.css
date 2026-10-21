@@ -2300,3 +2300,188 @@
     font-size: 11.5px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   ADMIN CONSOLE SVG ICON REFINEMENTS & INTEGRATION
+   ───────────────────────────────────────────────────────────── */
+.ab-page .legal-svg-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.ab-page .legal-svg-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ab-badge-svg {
+  color: #38bdf8;
+  margin-right: 4px;
+}
+
+.ab-ts-icon-svg {
+  color: #60a5fa;
+}
+
+.ab-stat-icon-svg {
+  color: #2563eb;
+}
+
+.ab-dark .ab-stat-icon-svg {
+  color: #60a5fa;
+}
+
+.ab-pillar-icon-box .legal-svg-icon {
+  color: #2563eb;
+}
+
+.ab-dark .ab-pillar-icon-box .legal-svg-icon {
+  color: #60a5fa;
+}
+
+.ab-tc-badge-svg {
+  color: #16a34a;
+}
+
+.ab-tc-loc-svg {
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.ab-dark .ab-tc-loc-svg {
+  color: #94a3b8;
+}
+
+.ab-tc-location {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.ab-tc-verified-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ab-qc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+.ab-btn-hero-primary,
+.ab-btn-hero-secondary,
+.ab-btn-cta-primary,
+.ab-btn-cta-secondary,
+.ab-btn-cta-ghost,
+.ab-tc-btn-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.ab-cm-seal .legal-svg-icon {
+  color: var(--member-accent, #2563eb);
+}
+
+.ab-cm-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ab-cm-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ab-cm-work-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ab-cm-desk-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ab-cmd-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ab-rmc-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ab-rmc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+}
+
+.status-active .ab-rmc-icon {
+  color: #eab308;
+}
+
+.status-current .ab-rmc-icon {
+  color: #8b5cf6;
+}
+
+.ab-rmc-hl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ab-rmc-hl-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.ab-faq-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.ab-dark .ab-faq-toggle-icon {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+}
+
+.ab-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ab-ccl-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}

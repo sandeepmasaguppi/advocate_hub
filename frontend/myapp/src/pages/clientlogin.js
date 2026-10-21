@@ -267,6 +267,9 @@ export default function ClientLogin() {
         <p className="am-alt-sub">
           Are you an advocate? <Link to="/login">Advocate Login here</Link>
         </p>
+        <p className="am-alt-sub" style={{ fontSize: "0.8rem", marginTop: 12 }}>
+          By continuing, you agree to our <Link to="/terms-and-conditions">Terms &amp; Conditions</Link> and <Link to="/privacy">Privacy Policy</Link>.
+        </p>
 
         <Link to="/" className="am-back-link">
           ← Back to site
