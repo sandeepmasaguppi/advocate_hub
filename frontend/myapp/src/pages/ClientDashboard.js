@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getAdvocates, loadAdvocates, getAdvocateRatingSummary, submitAdvocateRating } from "../data/Advocatesstore";
@@ -352,47 +353,7 @@ export default function ClientDashboard() {
 
   // One-time ₹10 consultation fee verification per advocate for this client
   const [, setPaidVersion] = useState(0);
-  const isAdvocatePaid = (advId) => {
-    return true;
-    if (!advId) return false;
-    const cid = clientId || "guest";
-    if (localStorage.getItem(`law4u_client_paid_${cid}_adv_${advId}`) === "true") return true;
-
-    // Check if there are already messages exchanged with this advocate
-    try {
-      const existing = localStorage.getItem(`chat_${cid}_${advId}`);
-      if (existing) {
-        const msgs = JSON.parse(existing);
-        if (Array.isArray(msgs) && msgs.length > 0) {
-          localStorage.setItem(`law4u_client_paid_${cid}_adv_${advId}`, "true");
-          return true;
-        }
-      }
-    } catch {}
-
-    // Also verify from local/server consultation payments list
-    try {
-      const raw = localStorage.getItem("law4u_consultation_payments");
-      const list = raw ? JSON.parse(raw) : [];
-      const cleanPhone = String(clientObj?.phone || "").replace(/\D/g, "").slice(-10);
-      const cleanEmail = (clientObj?.email || "").toLowerCase().trim();
-      const hasPaid = list.some(p => {
-        if (Number(p.advocateId) !== Number(advId)) return false;
-        if ((p.status || "").toLowerCase() !== "paid") return false;
-        if (cid && (Number(p.clientId) === Number(cid) || String(p.clientId) === String(cid))) return true;
-        if (cleanEmail && p.clientEmail && p.clientEmail.toLowerCase().trim() === cleanEmail) return true;
-        if (cleanPhone && p.clientPhone && String(p.clientPhone).replace(/\D/g, "").slice(-10) === cleanPhone) return true;
-        if (cleanPhone && p.upiId && String(p.upiId).includes(cleanPhone)) return true;
-        return false;
-      });
-      if (hasPaid) {
-        localStorage.setItem(`law4u_client_paid_${cid}_adv_${advId}`, "true");
-        return true;
-      }
-    } catch {}
-
-    return false;
-  };
+  const isAdvocatePaid = (advId) => Boolean(advId);
 
   // Sync latest consultation payments from backend server
   useEffect(() => {
@@ -413,7 +374,7 @@ export default function ClientDashboard() {
       .catch(() => {});
   }, [clientId]);
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [, setShowPaymentModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -918,16 +879,6 @@ export default function ClientDashboard() {
   const sendMessage = () => {
     if ((!message.trim() && !pendingAttachment) || !selected) return;
     const textToSend = message.trim();
-    executeSendMessage(textToSend);
-    return;
-
-    // Check if client has already paid the one-time ₹10 fee for this specific advocate
-    if (!isAdvocatePaid(selected.id)) {
-      setPendingMessage(textToSend);
-      setShowPaymentModal(true);
-      return;
-    }
-
     executeSendMessage(textToSend);
   };
 

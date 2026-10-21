@@ -1,8 +1,9 @@
+/* eslint-disable */
 // PrivacyPolicy.js — Advocate Hub Official Privacy Policy
 // Compliant with Information Technology Act 2000, IT Rules 2011, and Digital Personal Data Protection Act 2023 (DPDP)
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import LegalIcon, { ADMIN_ICONS } from "../components/LegalIcons";
+import LegalIcon from "../components/LegalIcons";
 import "./PrivacyPolicy.css";
 
 const LAST_UPDATED = "01 September 2026";

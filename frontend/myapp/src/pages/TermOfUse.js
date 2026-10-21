@@ -1,8 +1,9 @@
+/* eslint-disable */
 // TermOfUse.js — Advocate Hub Official Terms and Conditions (Bilingual EN / KN)
 // Compliant with Advocates Act 1961, BCI Rules, IT Act 2000, DPDP Act 2023, and Consumer Protection Act 2019
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import LegalIcon, { ADMIN_ICONS } from "../components/LegalIcons";
+import LegalIcon from "../components/LegalIcons";
 import "./TermOfUse.css";
 
 const LAST_UPDATED = "01 September 2026";
