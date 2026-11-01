@@ -1,0 +1,19 @@
+name = "advocate-hub"
+main = "cloudflare/worker.js"
+compatibility_date = "2024-04-01"
+
+account_id = "ae7c01580a124e31f7a13aba88731d3e"
+
+# R2 Bucket Binding to advocate-hub-media
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "advocate-hub-media"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "advocate-hub-media"
+
+[vars]
+ENVIRONMENT = "production"
+AUTH_SECRET = "00522df40733d8e616689e4053da3d06e565bdcf32ff8479a184c49ab65c249c"
+

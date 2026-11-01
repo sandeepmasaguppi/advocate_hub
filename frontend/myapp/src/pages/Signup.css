@@ -4433,4 +4433,40 @@ body {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+.su-direct-admin-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .su-direct-admin-card,
+.theme-dark .su-direct-admin-card,
+.su-dark .su-direct-admin-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(30, 58, 138, 0.22) 100%) !important;
+  border-color: rgba(52, 211, 153, 0.38) !important;
+}
+
+.su-direct-admin-info {
+  font-size: 0.86rem;
+  color: var(--su-muted, #475569);
+  line-height: 1.55;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px dashed rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="dark"] .su-direct-admin-info,
+.theme-dark .su-direct-admin-info,
+.su-dark .su-direct-admin-info {
+  background: rgba(15, 23, 42, 0.65) !important;
+  color: #cbd5e1 !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+}
+
 

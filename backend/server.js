@@ -33,6 +33,17 @@ const {
   deliverUndeliveredNotifications,
 } = require("./emailService");
 
+const {
+  uploadProfilePhoto,
+  uploadChatImage,
+  processChatAttachmentForR2,
+  fetchObjectFromR2,
+  deleteObjectFromR2,
+  generateR2PresignedUrl,
+  checkR2Health,
+  getR2Config,
+} = require("./cloudflareService");
+
 const PORT = Number(process.env.PORT) || 5000;
 const DATA_DIR = path.join(__dirname, "data");
 const UPLOAD_DIR = process.env.APP_UPLOAD_DIR
@@ -332,7 +343,29 @@ function deleteAvatarFilesForId(name, id, currentAvatarUrl) {
   });
 }
 
-function saveAvatar(name, avatarData, id, currentAvatarUrl = "") {
+async function saveAvatar(name, avatarData, id, currentAvatarUrl = "", userType = "advocate") {
+  if (!String(avatarData || "").startsWith("data:image/")) return null;
+
+  try {
+    const uploadRes = await uploadProfilePhoto({
+      dataUri: avatarData,
+      userType,
+      userId: id,
+      previousKeyOrUrl: currentAvatarUrl,
+      uploadDir: UPLOAD_DIR,
+    });
+    if (uploadRes && uploadRes.url) {
+      deleteAvatarFilesForId(name, id, currentAvatarUrl);
+      return uploadRes.url;
+    }
+  } catch (err) {
+    console.warn("[CloudflareR2] uploadProfilePhoto error, falling back to local file:", err.message);
+  }
+
+  return saveAvatarLocalFallback(name, avatarData, id, currentAvatarUrl, userType);
+}
+
+function saveAvatarLocalFallback(name, avatarData, id, currentAvatarUrl = "", userType = "advocate") {
   if (!String(avatarData || "").startsWith("data:image/")) return null;
   const match = String(avatarData).match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/);
   if (!match) throw new HttpError(400, "Unsupported avatar image format");
@@ -904,7 +937,7 @@ async function registerAdvocate(request, payload, { status = "pending", byAdmin 
     record.approvedBy = byAdmin ? "admin" : "system_auto_otp";
   }
 
-  const avatar = saveAvatar(record.name, payload.avatarData, id);
+  const avatar = await saveAvatar(record.name, payload.avatarData, id, "", "advocate");
   if (avatar) {
     record.avatar = avatar;
   } else if (!record.avatar) {
@@ -969,6 +1002,14 @@ async function registerClient(payload, { byAdmin = false } = {}) {
   };
 
   list.push(record);
+  if (payload.avatarData) {
+    try {
+      const clientAv = await saveAvatar(record.name, payload.avatarData, record.id, "", "client");
+      if (clientAv) record.avatar = clientAv;
+    } catch (e) {
+      console.warn("[CloudflareR2] Client avatar save error:", e.message);
+    }
+  }
   saveClients(list);
 
   if (!byAdmin) {
@@ -1293,7 +1334,7 @@ function adminLogin(payload) {
   return { token: signToken({ sub: "admin", role: "admin" }), email: ADMIN_EMAIL || email };
 }
 
-function updateAdvocate(id, payload) {
+async function updateAdvocate(id, payload) {
   const list = loadAdvocates();
   const index = list.findIndex((a) => Number(a.id) === Number(id));
   if (index === -1) throw new HttpError(404, "Advocate not found");
@@ -1317,7 +1358,7 @@ function updateAdvocate(id, payload) {
     removeUploadFile(current.avatar);
     merged.avatar = "";
   } else if (payload.avatarData) {
-    const avatar = saveAvatar(merged.name, payload.avatarData, current.id, current.avatar || "");
+    const avatar = await saveAvatar(merged.name, payload.avatarData, current.id, current.avatar || "", "advocate");
     if (avatar) merged.avatar = avatar;
   }
 
@@ -1328,9 +1369,9 @@ function updateAdvocate(id, payload) {
   return toPublic(merged);
 }
 
-function setAdvocateStatus(id, status) {
+async function setAdvocateStatus(id, status) {
   if (!["pending", "approved", "rejected"].includes(status)) throw new HttpError(400, "Invalid status");
-  return updateAdvocate(id, { status });
+  return await updateAdvocate(id, { status });
 }
 
 function deleteAdvocate(id) {
@@ -1399,6 +1440,134 @@ async function route(request, response) {
   if (method === "GET" && p.startsWith("/uploads/")) return serveUpload(request, response, p);
 
   if (method === "GET" && p === "/api/health") return send(request, response, 200, { ok: true });
+
+  // Cloudflare R2 Storage Status & Health Check
+  if (method === "GET" && (p === "/api/storage/status" || p === "/api/cloudflare/status")) {
+    const health = await checkR2Health();
+    return send(request, response, 200, {
+      service: "Cloudflare R2 Object Storage",
+      status: health.connected ? "connected" : (health.configured ? "error" : "fallback_local"),
+      r2: health,
+    });
+  }
+
+  // Upload endpoint for profile photos or chat attachments
+  if (method === "POST" && p === "/api/upload") {
+    const auth = authFromRequest(request);
+    const body = await readBody(request);
+    const dataUri = body.dataUri || body.image || body.file;
+    const uploadType = String(body.type || "profile").toLowerCase();
+    const userType = String(body.userType || (auth?.role || "advocate")).toLowerCase();
+    const userId = body.userId || auth?.sub || "user";
+    const convKey = body.conversationKey || body.key || "chat_general";
+
+    if (!dataUri) throw new HttpError(400, "Image data (base64 data URI) is required");
+
+    if (uploadType === "chat") {
+      const res = await uploadChatImage({
+        dataUri,
+        conversationKey: convKey,
+        uploadDir: UPLOAD_DIR,
+      });
+      return send(request, response, 200, res);
+    } else {
+      const res = await uploadProfilePhoto({
+        dataUri,
+        userType,
+        userId,
+        previousKeyOrUrl: body.currentAvatar || null,
+        uploadDir: UPLOAD_DIR,
+      });
+      return send(request, response, 200, res);
+    }
+  }
+
+  // Protected Chat Media Endpoint (Authorized Streaming from Cloudflare R2 / Local Disk)
+  if (method === "GET" && p === "/api/chat/media") {
+    const key = url.searchParams.get("key");
+    if (!key) throw new HttpError(400, "Missing media key parameter");
+
+    let auth = authFromRequest(request);
+    if (!auth && url.searchParams.get("token")) {
+      auth = verifyToken(url.searchParams.get("token"));
+    }
+
+    const convMatch = key.match(/chat-images\/chat_([^_]+)_([^/]+)\//);
+    if (convMatch && auth) {
+      const [, convCliId, convAdvId] = convMatch;
+      const isAuthorized =
+        auth.role === "admin" ||
+        (auth.role === "client" && String(auth.sub) === String(convCliId)) ||
+        (auth.role === "advocate" && String(auth.sub) === String(convAdvId));
+      if (!isAuthorized) {
+        throw new HttpError(403, "You are not authorized to view this private chat attachment");
+      }
+    }
+
+    const r2Config = getR2Config();
+    if (r2Config.isConfigured) {
+      try {
+        const obj = await fetchObjectFromR2(key);
+        response.writeHead(200, {
+          "Content-Type": obj.contentType || "image/jpeg",
+          "Content-Length": obj.length,
+          "Cache-Control": "private, max-age=3600",
+          ...corsHeaders(request),
+        });
+        return response.end(obj.buffer);
+      } catch (err) {
+        console.warn(`[CloudflareR2] Could not fetch ${key} from R2 (${err.message}), checking local storage`);
+      }
+    }
+
+    const localRel = key.replace(/^[/\\]+/, "");
+    const localPath = path.join(UPLOAD_DIR, localRel);
+    if (localPath.startsWith(UPLOAD_DIR) && fs.existsSync(localPath)) {
+      const ext = path.extname(localPath).toLowerCase();
+      response.writeHead(200, {
+        "Content-Type": MIME[ext] || "application/octet-stream",
+        "Cache-Control": "private, max-age=3600",
+        ...corsHeaders(request),
+      });
+      return fs.createReadStream(localPath).pipe(response);
+    }
+
+    throw new HttpError(404, "Chat attachment not found");
+  }
+
+  // Public Media Endpoint (e.g. Profile photos served from R2 / Local fallback)
+  const mediaMatch = p.match(/^\/api\/media\/(.+)$/);
+  if (mediaMatch && method === "GET") {
+    const rawKey = decodeURIComponent(mediaMatch[1]);
+    const r2Config = getR2Config();
+    if (r2Config.isConfigured) {
+      try {
+        const obj = await fetchObjectFromR2(rawKey);
+        response.writeHead(200, {
+          "Content-Type": obj.contentType || "image/jpeg",
+          "Content-Length": obj.length,
+          "Cache-Control": "public, max-age=86400",
+          ...corsHeaders(request),
+        });
+        return response.end(obj.buffer);
+      } catch (err) {
+        console.warn(`[CloudflareR2] Error fetching media ${rawKey}:`, err.message);
+      }
+    }
+
+    const localRel = rawKey.replace(/^[/\\]+/, "");
+    const localPath = path.join(UPLOAD_DIR, localRel);
+    if (localPath.startsWith(UPLOAD_DIR) && fs.existsSync(localPath)) {
+      const ext = path.extname(localPath).toLowerCase();
+      response.writeHead(200, {
+        "Content-Type": MIME[ext] || "application/octet-stream",
+        "Cache-Control": "public, max-age=86400",
+        ...corsHeaders(request),
+      });
+      return fs.createReadStream(localPath).pipe(response);
+    }
+    throw new HttpError(404, "Media not found");
+  }
 
   if (method === "POST" && p === "/api/chat") {
     const chatbotUrl = process.env.CHATBOT_URL;
@@ -2259,7 +2428,7 @@ async function route(request, response) {
       clientAvatar: body.clientAvatar || "",
       advocateName: body.advocateName || "",
       advocateAvatar: body.advocateAvatar || "",
-      attachment: body.attachment || null,
+      attachment: body.attachment ? await processChatAttachmentForR2(body.attachment, String(body.key || `chat_${cliId}_${advId}`), UPLOAD_DIR) : null,
       replyTo: body.replyTo || null,
       forwarded: Boolean(body.forwarded),
       forwardedFrom: body.forwardedFrom || null,
@@ -2348,6 +2517,10 @@ async function route(request, response) {
 
     const messages = loadMessages();
     const createdList = [];
+    let forwardedAttachment = attachment || null;
+    if (forwardedAttachment) {
+      forwardedAttachment = await processChatAttachmentForR2(forwardedAttachment, "chat_forwarded", UPLOAD_DIR);
+    }
 
     for (const dest of destinations) {
       const cliId = Number(dest.clientId) || dest.clientId;
@@ -2360,7 +2533,7 @@ async function route(request, response) {
         advocateId: advId,
         from: from === "advocate" ? "advocate" : "client",
         text: String(originalText || "").trim(),
-        attachment: attachment || null,
+        attachment: forwardedAttachment || null,
         forwarded: true,
         forwardedFrom: forwardedFrom || null,
         clientName: dest.clientName || "",
@@ -2547,12 +2720,12 @@ async function route(request, response) {
   const idMatch = p.match(/^\/api\/advocates\/(\d+)(\/status)?$/);
   if (idMatch) {
     const id = Number(idMatch[1]);
-    if (idMatch[2] && method === "POST") { requireAdmin(request); return send(request, response, 200, setAdvocateStatus(id, (await readBody(request)).status)); }
+    if (idMatch[2] && method === "POST") { requireAdmin(request); return send(request, response, 200, await setAdvocateStatus(id, (await readBody(request)).status)); }
     if (method === "PUT") {
       const auth = requireAdminOrSelf(request, id);
       const body = await readBody(request);
       if (auth.role !== "admin") { delete body.status; delete body.rating; delete body.cases; } // self-edits can't self-approve
-      return send(request, response, 200, updateAdvocate(id, body));
+      return send(request, response, 200, await updateAdvocate(id, body));
     }
     if (method === "DELETE") { requireAdmin(request); return send(request, response, 200, deleteAdvocate(id)); }
   }
@@ -2605,6 +2778,13 @@ async function route(request, response) {
       if (body.name !== undefined) clients[idx].name = String(body.name).trim();
       if (body.phone !== undefined) clients[idx].phone = body.phone || "";
       if (body.city !== undefined) clients[idx].city = body.city || "";
+      if (body.avatarData === null || body.avatar === null) {
+        removeUploadFile(clients[idx].avatar);
+        clients[idx].avatar = "";
+      } else if (body.avatarData) {
+        const clientAv = await saveAvatar(clients[idx].name, body.avatarData, id, clients[idx].avatar || "", "client");
+        if (clientAv) clients[idx].avatar = clientAv;
+      }
       if (body.status !== undefined) {
         if (!["approved","pending","rejected"].includes(body.status)) throw new HttpError(400, "Invalid status");
         clients[idx].status = body.status;
@@ -2760,7 +2940,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("send_message", (data, cb) => {
+  socket.on("send_message", async (data, cb) => {
     try {
       if (!data || (!data.text && !data.attachment)) {
         if (cb) cb({ error: "Message text or attachment is required" });
@@ -2784,7 +2964,7 @@ io.on("connection", (socket) => {
         clientAvatar: data.clientAvatar || "",
         advocateName: data.advocateName || "",
         advocateAvatar: data.advocateAvatar || "",
-        attachment: data.attachment || null,
+        attachment: data.attachment ? await processChatAttachmentForR2(data.attachment, String(data.key || `chat_${cliId}_${advId}`), UPLOAD_DIR) : null,
         replyTo: data.replyTo || null,
         forwarded: Boolean(data.forwarded),
         forwardedFrom: data.forwardedFrom || null,
@@ -2922,7 +3102,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("forward_message", (data, cb) => {
+  socket.on("forward_message", async (data, cb) => {
     try {
       const { originalText, attachment, destinations, from, forwardedFrom } = data || {};
       if (!Array.isArray(destinations) || destinations.length === 0) {
@@ -2931,6 +3111,10 @@ io.on("connection", (socket) => {
       }
       const messages = loadMessages();
       const created = [];
+      let forwardedAttachment = attachment || null;
+      if (forwardedAttachment) {
+        forwardedAttachment = await processChatAttachmentForR2(forwardedAttachment, "chat_forwarded", UPLOAD_DIR);
+      }
       for (const dest of destinations) {
         const cliId = Number(dest.clientId) || dest.clientId;
         const advId = Number(dest.advocateId) || dest.advocateId;
@@ -2942,7 +3126,7 @@ io.on("connection", (socket) => {
           advocateId: advId,
           from: from === "advocate" ? "advocate" : "client",
           text: String(originalText || "").trim(),
-          attachment: attachment || null,
+          attachment: forwardedAttachment || null,
           forwarded: true,
           forwardedFrom: forwardedFrom || null,
           clientName: dest.clientName || "",

@@ -771,7 +771,7 @@ export default function Signup({ defaultTab = "" }) {
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpErr, setOtpErr] = useState("");
-  const [otpChannel, setOtpChannel] = useState("email"); // "email" | "sms" | "whatsapp" | "admin_approval"
+  const [otpChannel, setOtpChannel] = useState("admin_approval"); // default to "admin_approval" for direct admin approval submission
   const [resendTimer, setResendTimer] = useState(60);
   const [advOtpSetupError, setAdvOtpSetupError] = useState("");
 
@@ -907,6 +907,7 @@ export default function Signup({ defaultTab = "" }) {
         if (!nextBench) nextBench = HIGH_COURT_BENCHES[0];
         nextCity = nextBench.includes("Dharwad") ? "Dharwad" : (nextBench.includes("Kalaburagi") ? "Kalaburagi" : "Bengaluru");
       } else {
+      // no-op
         nextBench = "";
         if (nextDistrict === "New Delhi") nextDistrict = "";
         if (nextTaluk === "New Delhi") nextTaluk = "";
@@ -1065,10 +1066,12 @@ export default function Signup({ defaultTab = "" }) {
     if (!file.type.startsWith("image/")) {
       setAdvErr((p) => ({ ...p, avatarData: "Please select an image file" }));
       return;
+
     }
     if (file.size > 2 * 1024 * 1024) {
       setAdvErr((p) => ({ ...p, avatarData: "Image must be smaller than 2 MB" }));
       return;
+
     }
 
     const reader = new FileReader();
@@ -1235,6 +1238,7 @@ export default function Signup({ defaultTab = "" }) {
       if (formTop) {
         formTop.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+    // no-op
     } else {
       showToast(isKn ? "ಮುಂದುವರಿಯಲು ದಯವಿಟ್ಟು ಅಗತ್ಯವಿರುವ ಕ್ಷೇತ್ರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ" : "Please fill required fields before proceeding", "error");
     }
@@ -1285,6 +1289,9 @@ export default function Signup({ defaultTab = "" }) {
         showToast(errorMessage, "error");
         setLoading(false);
         return;
+        showToast(errorMessage, "error");
+        setLoading(false);
+  
       }
 
       setOtpChannel(activeChan);
@@ -1365,9 +1372,29 @@ export default function Signup({ defaultTab = "" }) {
       return;
     }
 
-    if (otpChannel === "admin_approval") {
-      handleDirectAdminSubmit();
+    // Advocate signup: Direct submission for Administrator Approval (no OTP required)
+    handleDirectAdminSubmit();
+  };
+  const _ignoreOldSubmit = (e) => {
+    if (true) {
+      if (true) {
+    e?.preventDefault();
+    const valid = tab === "client" ? validateClient() : validateAdvocate();
+    if (!valid) return;
+
+    if (tab === "client") {
+      navigate("/client-register");
       return;
+    }
+      navigate("/client-register");
+
+    }
+
+    // Advocate signup: Direct submission for Administrator Approval (no OTP required)
+    handleDirectAdminSubmit();
+    return;
+
+
     }
 
     handleSendAdvOtp(otpChannel);
@@ -1384,6 +1411,7 @@ export default function Signup({ defaultTab = "" }) {
     if (!cleanCode || cleanCode.length !== 6 || !/^\d{6}$/.test(cleanCode)) {
       setOtpErr("Please enter the 6-digit numeric verification code");
       return;
+
     }
 
     setLoading(true);
@@ -1510,6 +1538,17 @@ export default function Signup({ defaultTab = "" }) {
       navigate("/client-login");
     } else {
       navigate("/login");
+    }
+  };
+  const _ignoreOldGoToLogin = () => {
+    if (true) {
+    if (tab === "client") {
+      navigate("/client-register");
+      return;
+    }
+
+    // no-op
+      // no-op
     }
   };
 
@@ -2323,7 +2362,7 @@ export default function Signup({ defaultTab = "" }) {
                   </div>
                   <div className="su-adv-trust-item">
                     <span className="su-adv-trust-icon">{ADMIN_ICONS.sparkle}</span>
-                    <span>{isKn ? "ತ್ವರಿತ ಒಟಿಪಿ ಪರಿಶೀಲನೆ" : "Instant OTP Verification"}</span>
+                    <span>{isKn ? "ನಿರ್ವಾಹಕರ ನೇರ ಪರಿಶೀಲನೆ" : "Direct Admin Review"}</span>
                   </div>
                 </div>
               </aside>
@@ -2849,92 +2888,68 @@ export default function Signup({ defaultTab = "" }) {
                         </Field>
                       </div>
 
-                      {/* Select Verification Channel Section */}
-                      <div className="su-verification-channel-section" style={{ margin: "20px 0 16px" }}>
+                      {/* Direct Submission for Administrator Approval */}
+                      <div className="su-verification-channel-section" style={{ margin: "22px 0 18px" }}>
+                        <div className="su-direct-admin-card">
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <span style={{ fontSize: "1.75rem" }}>🛡️</span>
+                              <div>
+                                <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "var(--su-text, #0f172a)" }}>
+                                  {isKn ? "ನೇರ ನಿರ್ವಾಹಕರ ಅನುಮೋದನೆಗೆ ಸಲ್ಲಿಕೆ" : "Direct Submission for Administrator Approval"}
+                                </h4>
+                                <span style={{ fontSize: "0.82rem", color: "var(--su-muted, #64748b)" }}>
+                                  {isKn ? "ಯಾವುದೇ OTP ಅಗತ್ಯವಿಲ್ಲ · ನೇರವಾಗಿ ನಿರ್ವಾಹಕರ ಪರಿಶೀಲನಾ ಸರದಿಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ" : "No OTP required · Sent directly to platform administrator review queue"}
+                                </span>
+                              </div>
+                            </div>
+                            <span
+                              style={{
+                                background: "#059669",
+                                color: "#ffffff",
+                                fontSize: "0.76rem",
+                                fontWeight: 700,
+                                padding: "4px 12px",
+                                borderRadius: 9999,
+                                letterSpacing: "0.5px",
+                                textTransform: "uppercase",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                            >
+                              ✓ {isKn ? "ನೇರ ಸಲ್ಲಿಕೆ ಸಕ್ರಿಯ" : "Direct Submit Active"}
+                            </span>
+                          </div>
+
+                          <div
+                            className="su-direct-admin-info"
+                            style={{
+                              fontSize: "0.86rem",
+                              color: "var(--su-muted, #475569)",
+                              lineHeight: 1.55,
+                              background: "rgba(255, 255, 255, 0.7)",
+                              padding: "10px 14px",
+                              borderRadius: 10,
+                              border: "1px dashed rgba(16, 185, 129, 0.35)",
+                              marginTop: 10,
+                            }}
+                          >
+                            {isKn
+                              ? "ನಿಮ್ಮ ವಕೀಲರ ನೋಂದಣಿ ವಿವರಗಳು ಮತ್ತು ಬಾರ್ ಕೌನ್ಸಿಲ್ ಮಾಹಿತಿಯನ್ನು ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ ನಿರ್ವಾಹಕರು ಪರಿಶೀಲಿಸುತ್ತಾರೆ. ಸಲ್ಲಿಕೆಯ ನಂತರ ನಿಮ್ಮ ಖಾತೆಯು ಪರಿಶೀಲನೆಗೆ ಒಳಗಾಗಲಿದ್ದು, ನಿರ್ವಾಹಕರು ಅನುಮೋದಿಸಿದ ತಕ್ಷಣ ಲಾಗಿನ್ ಸಕ್ರಿಯವಾಗುತ್ತದೆ."
+                              : "Your advocate profile and Bar Council enrollment details will be submitted directly to the administrator for review. No OTP verification is needed. Once reviewed and approved by the admin, your account will be activated for login."}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "none" }}>
                         <div className="su-channel-section-header">
                           <div className="su-channel-section-title">
                             <span>🛡️</span>
                             <h3>{isKn ? "ಪರಿಶೀಲನಾ ವಿಧಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ" : "Select Verification Channel"}</h3>
                           </div>
-                          <p className="su-channel-section-desc">
-                            {isKn
-                              ? "ಮುಂದುವರಿಯಲು ದಯವಿಟ್ಟು ಒಂದು ಪರಿಶೀಲನಾ ವಿಧಾನವನ್ನು ಆರಿಸಿ. OTP ವಿಧಾನಗಳು ಪರಿಶೀಲನೆಯ ನಂತರ ಖಾತೆಯನ್ನು ತಕ್ಷಣ ಸಕ್ರಿಯಗೊಳಿಸುತ್ತವೆ."
-                              : "Please select one verification method to activate your account. OTP methods are automatically approved upon successful verification."}
-                          </p>
                         </div>
 
                         <div className="su-channel-grid">
-                          {/* Option 1: Email OTP */}
-                          <div
-                            className={`su-channel-card ${otpChannel === "email" ? "selected" : ""}`}
-                            onClick={() => setOtpChannel("email")}
-                          >
-                            <div className="su-channel-radio-wrap">
-                              <input
-                                type="radio"
-                                id="adv-chan-email"
-                                name="advOtpChannel"
-                                checked={otpChannel === "email"}
-                                onChange={() => setOtpChannel("email")}
-                              />
-                            </div>
-                            <span className="su-channel-icon">✉️</span>
-                            <div className="su-channel-content">
-                              <div className="su-channel-title">{isKn ? "ಇಮೇಲ್ OTP ಪರಿಶೀಲನೆ" : "Email OTP Verification"}</div>
-                              <div className="su-channel-desc">
-                                {isKn ? "ನಿಮ್ಮ ನೋಂದಾಯಿತ ಇಮೇಲ್ ವಿಳಾಸಕ್ಕೆ ನೈಜ ೬-ಅಂಕಿಯ OTP ಕೋಡ್ ಕಳುಹಿಸಲಾಗುತ್ತದೆ." : "Receive a real 6-digit OTP code sent to your registered email address."}
-                              </div>
-                              <span className="su-channel-badge su-badge-auto">⚡ {isKn ? "ಸ್ವಯಂ ಅನುಮೋದನೆ" : "Auto-Approved"}</span>
-                            </div>
-                          </div>
-
-                          {/* Option 2: SMS OTP */}
-                          <div
-                            className={`su-channel-card ${otpChannel === "sms" ? "selected" : ""}`}
-                            onClick={() => setOtpChannel("sms")}
-                          >
-                            <div className="su-channel-radio-wrap">
-                              <input
-                                type="radio"
-                                id="adv-chan-sms"
-                                name="advOtpChannel"
-                                checked={otpChannel === "sms"}
-                                onChange={() => setOtpChannel("sms")}
-                              />
-                            </div>
-                            <span className="su-channel-icon">💬</span>
-                            <div className="su-channel-content">
-                              <div className="su-channel-title">{isKn ? "SMS OTP ಪರಿಶೀಲನೆ" : "SMS OTP Verification"}</div>
-                              <div className="su-channel-desc">
-                                {isKn ? "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಗೆ ೬-ಅಂಕಿಯ ಕೋಡ್ SMS ಮೂಲಕ ಕಳುಹಿಸಲಾಗುತ್ತದೆ." : "Receive a real 6-digit OTP code sent via SMS to your mobile."}
-                              </div>
-                              <span className="su-channel-badge su-badge-auto">⚡ {isKn ? "ಸ್ವಯಂ ಅನುಮೋದನೆ" : "Auto-Approved"}</span>
-                            </div>
-                          </div>
-
-                          {/* Option 3: WhatsApp OTP */}
-                          <div
-                            className={`su-channel-card ${otpChannel === "whatsapp" ? "selected" : ""}`}
-                            onClick={() => setOtpChannel("whatsapp")}
-                          >
-                            <div className="su-channel-radio-wrap">
-                              <input
-                                type="radio"
-                                id="adv-chan-whatsapp"
-                                name="advOtpChannel"
-                                checked={otpChannel === "whatsapp"}
-                                onChange={() => setOtpChannel("whatsapp")}
-                              />
-                            </div>
-                            <span className="su-channel-icon">🟢</span>
-                            <div className="su-channel-content">
-                              <div className="su-channel-title">{isKn ? "WhatsApp OTP ಪರಿಶೀಲನೆ" : "WhatsApp OTP Verification"}</div>
-                              <div className="su-channel-desc">
-                                {isKn ? "ನಿಮ್ಮ WhatsApp ಮೆಸೆಂಜರ್‌ಗೆ ನೇರವಾಗಿ ೬-ಅಂಕಿಯ OTP ಕಳುಹಿಸಲಾಗುತ್ತದೆ." : "Receive a real 6-digit OTP code sent directly on WhatsApp."}
-                              </div>
-                              <span className="su-channel-badge su-badge-auto">⚡ {isKn ? "ಸ್ವಯಂ ಅನುಮೋದನೆ" : "Auto-Approved"}</span>
-                            </div>
-                          </div>
 
                           {/* Option 4: Admin Approval */}
                           <div
@@ -2953,10 +2968,6 @@ export default function Signup({ defaultTab = "" }) {
                             <span className="su-channel-icon">🛡️</span>
                             <div className="su-channel-content">
                               <div className="su-channel-title">{isKn ? "ನಿರ್ವಾಹಕರ ಅನುಮೋದನೆ" : "Admin Approval"}</div>
-                              <div className="su-channel-desc">
-                                {isKn ? "OTP ಇಲ್ಲದೆ ನೇರವಾಗಿ ಸಲ್ಲಿಸಿ. ನಮ್ಮ ತಂಡವು ಬಾರ್ ಕೌನ್ಸಿಲ್ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಅನುಮೋದಿಸುತ್ತದೆ." : "Submit application directly for administrator review without OTP."}
-                              </div>
-                              <span className="su-channel-badge su-badge-admin">⏳ {isKn ? "ಹಸ್ತಚಾಲಿತ ಪರಿಶೀಲನೆ" : "Manual Approval Required"}</span>
                             </div>
                           </div>
                         </div>
@@ -2976,10 +2987,6 @@ export default function Signup({ defaultTab = "" }) {
                           {" "}{isKn ? "ಮತ್ತು " : "and "}{" "}
                           <a href="/privacy" target="_blank" rel="noreferrer">
                             {isKn ? "ಗೌಪ್ಯತಾ ನೀತಿ" : "Privacy Policy"}</a>.
-
-
-
-
 
                         </span>
                       </label>
@@ -3023,10 +3030,12 @@ export default function Signup({ defaultTab = "" }) {
                       >
                         {loading ? (
                           <><span className="su-spinner" /> {t.registering}</>
-                        ) : otpChannel === "admin_approval" ? (
+                        ) : (
+                        true ? (
                           <>{ADMIN_ICONS.shield} <span>{isKn ? "ನಿರ್ವಾಹಕರ ಅನುಮೋದನೆಗಾಗಿ ಸಲ್ಲಿಸಿ" : "Submit for Admin Approval"}</span> {ADMIN_ICONS.arrowRight}</>
                         ) : (
-                          <>{ADMIN_ICONS.sparkle} <span>{isKn ? `${otpChannel === "whatsapp" ? "WhatsApp" : otpChannel === "sms" ? "SMS" : "ಇಮೇಲ್"} OTP ಮೂಲಕ ಮುಂದುವರಿಯಿರಿ` : `Verify via ${otpChannel === "whatsapp" ? "WhatsApp" : otpChannel === "sms" ? "SMS" : "Email"} OTP`}</span> {ADMIN_ICONS.arrowRight}</>
+                          null
+                        )
                         )}
                       </button>
                     )}
