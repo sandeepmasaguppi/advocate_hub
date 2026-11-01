@@ -33,16 +33,21 @@ const {
   deliverUndeliveredNotifications,
 } = require("./emailService");
 
-const {
-  uploadProfilePhoto,
-  uploadChatImage,
-  processChatAttachmentForR2,
-  fetchObjectFromR2,
-  deleteObjectFromR2,
-  generateR2PresignedUrl,
-  checkR2Health,
-  getR2Config,
-} = require("./cloudflareService");
+let cloudflareService = null;
+try {
+  cloudflareService = require("./cloudflareService");
+} catch (cfLoadErr) {
+  console.warn("[CloudflareR2] Warning loading cloudflareService:", cfLoadErr.message);
+}
+
+const uploadProfilePhoto = cloudflareService?.uploadProfilePhoto || (async () => null);
+const uploadChatImage = cloudflareService?.uploadChatImage || (async () => null);
+const processChatAttachmentForR2 = cloudflareService?.processChatAttachmentForR2 || (async (att) => att);
+const fetchObjectFromR2 = cloudflareService?.fetchObjectFromR2 || (async () => { throw new Error("Cloudflare R2 service is currently unavailable"); });
+const deleteObjectFromR2 = cloudflareService?.deleteObjectFromR2 || (async () => false);
+const generateR2PresignedUrl = cloudflareService?.generateR2PresignedUrl || (() => null);
+const checkR2Health = cloudflareService?.checkR2Health || (async () => ({ configured: false, connected: false, error: "Cloudflare service module not loaded" }));
+const getR2Config = cloudflareService?.getR2Config || (() => ({ isConfigured: false }));
 
 const PORT = Number(process.env.PORT) || 5000;
 const DATA_DIR = path.join(__dirname, "data");

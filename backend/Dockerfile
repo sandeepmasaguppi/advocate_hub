@@ -5,7 +5,7 @@ ENV NODE_ENV=production
 
 COPY package.json package-lock.json ./
 RUN npm install --omit=dev
-COPY server.js dataStore.js emailService.js ./
+COPY server.js dataStore.js emailService.js cloudflareService.js migrate-images-to-r2.js *.js ./
 COPY data/ ./data/
 COPY uploads/ ./uploads/
 
