@@ -26,6 +26,10 @@ const {
   notifyAdminNewClient,
   notifyAdminNewAdvocate,
   sendOtpEmail,
+  sendAdvocateResetApprovedEmail,
+  sendAdvocateResetRejectedEmail,
+  sendClientResetOtpEmail,
+  sendPasswordChangedConfirmationEmail,
   sendWhatsappOtp,
   sendSmsOtp,
   checkTwilioPhoneVerification,
@@ -65,6 +69,7 @@ const DOCUMENTS_PURCHASE_FILE_COMMA = path.join(DATA_DIR, "documentspurchase,jso
 const DOCUMENTS_PURCHASE_FILE_DOT = path.join(DATA_DIR, "documentspurchase.json");
 const MESSAGES_FILE = path.join(DATA_DIR, "messages.json");
 const CONVERSATIONS_FILE = path.join(DATA_DIR, "conversations.json");
+const PASSWORD_RESET_REQUESTS_FILE = path.join(DATA_DIR, "password_reset_requests.json");
 const MAX_BODY = 5 * 1024 * 1024; // 5 MB (base64 avatars)
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:3000,http://localhost:3001")
@@ -229,6 +234,18 @@ function loadConversations() {
   return defaultConversations;
 }
 function saveConversations(list) { saveCollection("conversations", CONVERSATIONS_FILE, list); }
+function loadPasswordResetRequests() {
+  const stored = dataStore.getCollection("password_reset_requests");
+  if (stored) return stored;
+  const list = readJson(PASSWORD_RESET_REQUESTS_FILE, null);
+  if (Array.isArray(list)) return list;
+  const defaults = [];
+  writeJson(PASSWORD_RESET_REQUESTS_FILE, defaults);
+  return defaults;
+}
+function savePasswordResetRequests(list) {
+  saveCollection("password_reset_requests", PASSWORD_RESET_REQUESTS_FILE, list);
+}
 
 // ── Real-Time Streaming Socket (SSE) ───────────────────────────
 const sseConnections = new Set();
@@ -861,6 +878,491 @@ async function handleVerifyOtpEndpoint(payload) {
   const otp = payload.otp;
   await verifyOtpCode(email, otp);
   return { verified: true, message: "Email verification successful." };
+}
+
+// ── Password Reset Engine ─────────────────────────────────────
+const clientResetOtps = new Map();
+const forgotPasswordCooldowns = new Map();
+
+function validatePasswordRules(password) {
+  if (!password || typeof password !== "string") {
+    throw new HttpError(400, "Password is required");
+  }
+  if (password.length < 8) {
+    throw new HttpError(400, "Password must be at least 8 characters long");
+  }
+  if (!/[A-Z]/.test(password)) {
+    throw new HttpError(400, "Password must contain at least one uppercase letter (A-Z)");
+  }
+  if (!/[a-z]/.test(password)) {
+    throw new HttpError(400, "Password must contain at least one lowercase letter (a-z)");
+  }
+  if (!/[0-9]/.test(password)) {
+    throw new HttpError(400, "Password must contain at least one number (0-9)");
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
+    throw new HttpError(400, "Password must contain at least one special character (!@#$%^&* etc.)");
+  }
+}
+
+function hashResetToken(token) {
+  return crypto.createHmac("sha256", AUTH_SECRET).update(String(token).trim()).digest("hex");
+}
+
+function maskEmail(email) {
+  const norm = normalizeEmail(email);
+  const [local, domain] = norm.split("@");
+  if (!domain) return norm;
+  const visible = local.length > 2 ? local.slice(0, 2) + "***" : local[0] + "***";
+  return `${visible}@${domain}`;
+}
+
+async function handleForgotPasswordRequest(payload, request) {
+  const email = normalizeEmail(payload.email || payload.identifier);
+  if (!isValidEmail(email)) throw new HttpError(400, "A valid email address is required");
+
+  // 15-second rate-limiting cooldown per email to prevent spamming
+  const now = Date.now();
+  const lastReq = forgotPasswordCooldowns.get(email);
+  if (lastReq && now - lastReq < 15 * 1000) {
+    const waitSec = Math.ceil((15 * 1000 - (now - lastReq)) / 1000);
+    throw new HttpError(429, `Please wait ${waitSec} seconds before submitting another password reset request.`);
+  }
+
+  const advocates = loadAdvocates();
+  const clients = loadClients();
+
+  const advocateMatch = advocates.find((a) => normalizeEmail(a.email) === email);
+  const clientMatch = !advocateMatch ? clients.find((c) => normalizeEmail(c.email) === email) : null;
+
+  if (!advocateMatch && !clientMatch) {
+    return {
+      ok: false,
+      notFound: true,
+      message: "No registered account found with this email address. Please check your spelling or register a new account.",
+    };
+  }
+
+  forgotPasswordCooldowns.set(email, now);
+
+  // ── WORKFLOW 1: ADVOCATE (Admin Approval Required) ──────────
+  if (advocateMatch) {
+    if (advocateMatch.status === "rejected") {
+      throw new HttpError(403, "Your advocate registration was not approved. Please contact support.");
+    }
+
+    const resetRequests = loadPasswordResetRequests();
+
+    // Invalidate/supersede any existing pending requests for this email
+    for (const r of resetRequests) {
+      if (r.email === email && r.status === "pending") {
+        r.status = "superseded";
+        r.updatedAt = new Date().toISOString();
+      }
+    }
+
+    const requestId = `pwr_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const newRequest = {
+      id: requestId,
+      userId: advocateMatch.id,
+      userType: "advocate",
+      name: advocateMatch.name || "Advocate",
+      email: advocateMatch.email,
+      phone: advocateMatch.phone || "",
+      barId: advocateMatch.barId || "",
+      status: "pending", // Pending Admin Approval
+      requestedAt: new Date().toISOString(),
+      approvedAt: null,
+      approvedBy: null,
+      rejectedAt: null,
+      rejectedBy: null,
+      rejectionReason: null,
+      tokenHash: null,
+      tokenExpiresAt: null,
+      tokenUsedAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    resetRequests.unshift(newRequest);
+    savePasswordResetRequests(resetRequests);
+
+    console.log(`[PasswordReset] Created Advocate reset request ${requestId} for ${email} (Pending Admin Approval)`);
+
+    return {
+      ok: true,
+      role: "advocate",
+      status: "pending_admin_approval",
+      requestId,
+      message: "Your password reset request has been submitted successfully. Your request is waiting for administrator approval. You will receive an email notification once it is approved.",
+    };
+  }
+
+  // ── WORKFLOW 2: CLIENT (Email Verification OTP, No Admin Approval) ─
+  if (clientMatch) {
+    const otp = generateOtpCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otpHash = hashOtp(otp, email);
+
+    clientResetOtps.set(email, {
+      email,
+      otpHash,
+      attempts: 0,
+      expiresAt,
+      createdAt: new Date(),
+    });
+
+    try {
+      await sendClientResetOtpEmail({
+        to: email,
+        otp,
+        name: clientMatch.name,
+      });
+    } catch (err) {
+      console.error(`[PasswordReset] Failed to send client OTP to ${email}:`, err.message);
+      throw new HttpError(500, `Failed to deliver verification code: ${err.message}`);
+    }
+
+    console.log(`[PasswordReset] Sent 6-digit OTP to client ${email}`);
+
+    return {
+      ok: true,
+      role: "client",
+      status: "otp_sent",
+      email,
+      message: `A 6-digit verification code has been sent to ${maskEmail(email)}. Please enter it to reset your password.`,
+    };
+  }
+}
+
+async function handleVerifyClientResetEmail(payload) {
+  const email = normalizeEmail(payload.email);
+  const otp = String(payload.otp || "").trim();
+
+  if (!email || !otp) {
+    throw new HttpError(400, "Email and 6-digit verification code are required");
+  }
+
+  const record = clientResetOtps.get(email);
+  if (!record || Date.now() > record.expiresAt.getTime()) {
+    throw new HttpError(400, "Verification code has expired or was not requested. Please request a new code.");
+  }
+
+  if (record.attempts >= 5) {
+    clientResetOtps.delete(email);
+    throw new HttpError(400, "Too many failed attempts. Please request a new verification code.");
+  }
+
+  const expectedHash = record.otpHash;
+  const submittedHash = hashOtp(otp, email);
+  let isMatch = false;
+  try {
+    isMatch = crypto.timingSafeEqual(Buffer.from(expectedHash, "hex"), Buffer.from(submittedHash, "hex"));
+  } catch {
+    isMatch = expectedHash === submittedHash;
+  }
+
+  if (!isMatch) {
+    record.attempts = (record.attempts || 0) + 1;
+    const remaining = 5 - record.attempts;
+    throw new HttpError(400, `Incorrect verification code. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`);
+  }
+
+  const clients = loadClients();
+  const client = clients.find((c) => normalizeEmail(c.email) === email);
+  if (!client) throw new HttpError(404, "Client account not found");
+
+  // Sign a short-lived reset token (valid for 15 minutes)
+  const resetToken = signToken({
+    sub: client.id,
+    email,
+    role: "client",
+    purpose: "client_password_reset",
+  });
+
+  // Mark OTP used
+  clientResetOtps.delete(email);
+
+  return {
+    ok: true,
+    verified: true,
+    email,
+    resetToken,
+    message: "Email verified successfully. You may now set your new password.",
+  };
+}
+
+async function handleClientResetPassword(payload) {
+  const email = normalizeEmail(payload.email);
+  const resetToken = payload.resetToken;
+  const password = payload.password;
+
+  if (!password) throw new HttpError(400, "New password is required");
+  validatePasswordRules(password);
+
+  let verifiedClientId = null;
+
+  if (resetToken) {
+    const verified = verifyToken(resetToken);
+    if (!verified || verified.purpose !== "client_password_reset" || (email && verified.email !== email)) {
+      throw new HttpError(400, "Invalid or expired reset session. Please request a new verification code.");
+    }
+    verifiedClientId = verified.sub;
+  } else if (payload.otp) {
+    // Allow direct single-step verify + reset
+    await handleVerifyClientResetEmail({ email, otp: payload.otp });
+    const clients = loadClients();
+    const cl = clients.find((c) => normalizeEmail(c.email) === email);
+    if (cl) verifiedClientId = cl.id;
+  } else {
+    throw new HttpError(400, "Missing reset token or verification code");
+  }
+
+  const clients = loadClients();
+  const idx = clients.findIndex((c) => Number(c.id) === Number(verifiedClientId) || normalizeEmail(c.email) === email);
+  if (idx === -1) throw new HttpError(404, "Client account not found");
+
+  clients[idx].passwordHash = hashPassword(password);
+  clients[idx].sessionVersion = (Number(clients[idx].sessionVersion) || 0) + 1;
+  clients[idx].passwordUpdatedAt = new Date().toISOString();
+  saveClients(clients);
+
+  sendPasswordChangedConfirmationEmail({
+    to: clients[idx].email,
+    name: clients[idx].name,
+    role: "client",
+  }).catch(() => {});
+
+  console.log(`[PasswordReset] Client #${clients[idx].id} (${clients[idx].email}) password successfully reset.`);
+
+  return {
+    ok: true,
+    message: "Your password has been changed successfully. You may now log in with your new password.",
+  };
+}
+
+function handleGetAdminPasswordResetRequests() {
+  const requests = loadPasswordResetRequests();
+  const safe = requests.map((r) => ({
+    id: r.id,
+    userId: r.userId,
+    userType: r.userType,
+    name: r.name,
+    email: r.email,
+    phone: r.phone || "",
+    barId: r.barId || "",
+    status: r.status,
+    requestedAt: r.requestedAt,
+    approvedAt: r.approvedAt,
+    approvedBy: r.approvedBy,
+    rejectedAt: r.rejectedAt,
+    rejectedBy: r.rejectedBy,
+    rejectionReason: r.rejectionReason,
+    tokenExpiresAt: r.tokenExpiresAt,
+    tokenUsedAt: r.tokenUsedAt,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+  }));
+
+  // Sort: pending first, then newest requestedAt
+  safe.sort((a, b) => {
+    const aPending = a.status === "pending" ? 1 : 0;
+    const bPending = b.status === "pending" ? 1 : 0;
+    if (aPending !== bPending) return bPending - aPending;
+    return new Date(b.requestedAt || 0).getTime() - new Date(a.requestedAt || 0).getTime();
+  });
+
+  return safe;
+}
+
+function handleGetAdminPasswordResetRequestById(id) {
+  const requests = loadPasswordResetRequests();
+  const req = requests.find((r) => String(r.id) === String(id));
+  if (!req) throw new HttpError(404, "Password reset request not found");
+  const { tokenHash, ...safe } = req;
+  return safe;
+}
+
+async function handleAdminApprovePasswordReset(id, request) {
+  const requests = loadPasswordResetRequests();
+  const idx = requests.findIndex((r) => String(r.id) === String(id));
+  if (idx === -1) throw new HttpError(404, "Password reset request not found");
+
+  const req = requests[idx];
+  if (req.status === "completed") {
+    throw new HttpError(400, "This password reset request has already been completed.");
+  }
+
+  // Generate secure 32-byte hex token
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = hashResetToken(rawToken);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+
+  req.status = "approved";
+  req.tokenHash = tokenHash;
+  req.tokenExpiresAt = expiresAt.toISOString();
+  req.approvedAt = now.toISOString();
+  req.approvedBy = "admin";
+  req.updatedAt = now.toISOString();
+  delete req.rejectionReason;
+
+  savePasswordResetRequests(requests);
+
+  const frontendBase = (process.env.FRONTEND_URL || "").trim().replace(/\/+$/, "") ||
+    (request?.headers?.origin ? String(request.headers.origin).replace(/\/+$/, "") : "https://advocate-hub.up.railway.app");
+  const resetUrl = `${frontendBase}/reset-password?token=${rawToken}`;
+
+  try {
+    await sendAdvocateResetApprovedEmail({
+      to: req.email,
+      name: req.name,
+      resetUrl,
+      expiresInHours: 24,
+    });
+  } catch (err) {
+    console.error(`[PasswordReset] Failed to send approval email to ${req.email}:`, err.message);
+  }
+
+  console.log(`[PasswordReset] Admin approved reset request #${req.id} for ${req.email}`);
+
+  const { tokenHash: _, ...safe } = req;
+  return {
+    ok: true,
+    message: "Password reset request approved successfully. Reset link sent to advocate's email.",
+    request: safe,
+  };
+}
+
+async function handleAdminRejectPasswordReset(id, payload) {
+  const requests = loadPasswordResetRequests();
+  const idx = requests.findIndex((r) => String(r.id) === String(id));
+  if (idx === -1) throw new HttpError(404, "Password reset request not found");
+
+  const req = requests[idx];
+  const reason = String(payload?.reason || "Request could not be verified by administrator").trim();
+  const now = new Date().toISOString();
+
+  req.status = "rejected";
+  req.rejectionReason = reason;
+  req.rejectedAt = now;
+  req.rejectedBy = "admin";
+  req.updatedAt = now;
+
+  savePasswordResetRequests(requests);
+
+  try {
+    await sendAdvocateResetRejectedEmail({
+      to: req.email,
+      name: req.name,
+      reason,
+    });
+  } catch (err) {
+    console.warn(`[PasswordReset] Failed to send rejection email to ${req.email}:`, err.message);
+  }
+
+  console.log(`[PasswordReset] Admin rejected reset request #${req.id} for ${req.email}`);
+
+  const { tokenHash: _, ...safe } = req;
+  return {
+    ok: true,
+    message: "Password reset request rejected.",
+    request: safe,
+  };
+}
+
+function handleVerifyResetToken(token) {
+  if (!token || typeof token !== "string") {
+    return { valid: false, message: "Missing reset token" };
+  }
+
+  const tokenHash = hashResetToken(token);
+  const requests = loadPasswordResetRequests();
+  const req = requests.find((r) => r.tokenHash === tokenHash);
+
+  if (!req) {
+    return { valid: false, message: "Invalid password reset token." };
+  }
+
+  if (req.status !== "approved") {
+    return { valid: false, message: `This password reset request is ${req.status}. Admin approval is required.` };
+  }
+
+  if (req.tokenUsedAt) {
+    return { valid: false, message: "This password reset token has already been used." };
+  }
+
+  if (new Date(req.tokenExpiresAt).getTime() < Date.now()) {
+    return { valid: false, message: "This password reset link has expired (valid for 24 hours)." };
+  }
+
+  return {
+    valid: true,
+    email: maskEmail(req.email),
+    name: req.name,
+    role: req.userType || "advocate",
+  };
+}
+
+async function handleAdvocateResetPassword(payload) {
+  const token = String(payload.token || "").trim();
+  const password = payload.password;
+
+  if (!token) throw new HttpError(400, "Reset token is required");
+  if (!password) throw new HttpError(400, "New password is required");
+
+  validatePasswordRules(password);
+
+  const tokenHash = hashResetToken(token);
+  const requests = loadPasswordResetRequests();
+  const reqIdx = requests.findIndex((r) => r.tokenHash === tokenHash);
+
+  if (reqIdx === -1) {
+    throw new HttpError(400, "Invalid password reset token.");
+  }
+
+  const req = requests[reqIdx];
+  if (req.status !== "approved") {
+    throw new HttpError(400, `Cannot reset password: this request is currently ${req.status}. Admin approval is required.`);
+  }
+
+  if (req.tokenUsedAt) {
+    throw new HttpError(400, "This password reset token has already been used. Please submit a new request if needed.");
+  }
+
+  if (new Date(req.tokenExpiresAt).getTime() < Date.now()) {
+    throw new HttpError(400, "This password reset token has expired. Please submit a new request.");
+  }
+
+  const advocates = loadAdvocates();
+  const advIdx = advocates.findIndex((a) => Number(a.id) === Number(req.userId) || normalizeEmail(a.email) === normalizeEmail(req.email));
+  if (advIdx === -1) {
+    throw new HttpError(404, "Advocate account not found.");
+  }
+
+  // Update advocate password
+  advocates[advIdx].passwordHash = hashPassword(password);
+  advocates[advIdx].passwordUpdatedAt = new Date().toISOString();
+  saveAdvocates(advocates);
+
+  // Mark token used & completed
+  req.tokenUsedAt = new Date().toISOString();
+  req.status = "completed";
+  req.updatedAt = new Date().toISOString();
+  savePasswordResetRequests(requests);
+
+  sendPasswordChangedConfirmationEmail({
+    to: advocates[advIdx].email,
+    name: advocates[advIdx].name,
+    role: "advocate",
+  }).catch(() => {});
+
+  console.log(`[PasswordReset] Advocate #${advocates[advIdx].id} (${advocates[advIdx].email}) password successfully reset.`);
+
+  return {
+    ok: true,
+    message: "Your password has been changed successfully. You may now log in with your new password.",
+  };
 }
 
 // Public: advocate self-registration
@@ -2132,6 +2634,13 @@ async function route(request, response) {
   if (method === "POST" && p === "/api/auth/admin/login") return send(request, response, 200, adminLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/client/login") return send(request, response, 200, clientLogin(await readBody(request)));
   if (method === "POST" && p === "/api/auth/client/register") return send(request, response, 201, await registerClientAndLogin(await readBody(request)));
+
+  // Password Reset Workflows (Advocate: Admin Approval | Client: Direct OTP)
+  if (method === "POST" && p === "/api/auth/forgot-password") return send(request, response, 200, await handleForgotPasswordRequest(await readBody(request), request));
+  if (method === "POST" && p === "/api/auth/verify-reset-email") return send(request, response, 200, await handleVerifyClientResetEmail(await readBody(request)));
+  if (method === "POST" && p === "/api/auth/client/reset-password") return send(request, response, 200, await handleClientResetPassword(await readBody(request)));
+  if (method === "GET" && p === "/api/auth/verify-reset-token") return send(request, response, 200, handleVerifyResetToken(url.searchParams.get("token")));
+  if (method === "POST" && p === "/api/auth/advocate/reset-password") return send(request, response, 200, await handleAdvocateResetPassword(await readBody(request)));
   if (method === "GET" && p === "/api/auth/me") {
     const auth = authFromRequest(request);
     if (!auth) throw new HttpError(401, "Not logged in");
@@ -2157,6 +2666,12 @@ async function route(request, response) {
   // Registration (public)
   if (method === "POST" && p === "/api/advocates/register") return send(request, response, 201, await registerAdvocate(request, await readBody(request)));
   if (method === "POST" && p === "/api/clients/register") return send(request, response, 201, await registerClient(await readBody(request)));
+
+  // Admin: Password Reset Requests
+  if (method === "GET" && p === "/api/admin/password-reset-requests") {
+    requireAdmin(request);
+    return send(request, response, 200, handleGetAdminPasswordResetRequests());
+  }
 
   // Admin: Registration Approval Requests
   if (method === "GET" && p === "/api/admin/registration-requests") {
@@ -2691,6 +3206,26 @@ async function route(request, response) {
     }
     saveMessages(remaining);
     return send(request, response, 200, { ok: true, deleted: messages.length - remaining.length });
+  }
+
+  // Admin: Password Reset Requests (Approve / Reject / Get Details)
+  const pwrApproveMatch = p.match(/^\/api\/admin\/password-reset-requests\/([^/]+)\/approve$/);
+  if (pwrApproveMatch && (method === "POST" || method === "PUT")) {
+    requireAdmin(request);
+    return send(request, response, 200, await handleAdminApprovePasswordReset(pwrApproveMatch[1], request));
+  }
+
+  const pwrRejectMatch = p.match(/^\/api\/admin\/password-reset-requests\/([^/]+)\/reject$/);
+  if (pwrRejectMatch && (method === "POST" || method === "PUT")) {
+    requireAdmin(request);
+    const body = await readBody(request);
+    return send(request, response, 200, await handleAdminRejectPasswordReset(pwrRejectMatch[1], body));
+  }
+
+  const pwrIdMatch = p.match(/^\/api\/admin\/password-reset-requests\/([^/]+)$/);
+  if (pwrIdMatch && method === "GET") {
+    requireAdmin(request);
+    return send(request, response, 200, handleGetAdminPasswordResetRequestById(pwrIdMatch[1]));
   }
 
   // Admin Registration Requests: Approve / Reject

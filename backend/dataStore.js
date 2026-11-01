@@ -9,6 +9,7 @@ const COLLECTIONS = {
   clarity_guide: "clarityguide.json",
   document_purchases: "documentspurchase.json",
   admin_notifications: "admin_notifications.json",
+  password_reset_requests: "password_reset_requests.json",
   messages: "messages.json",
   conversations: "conversations.json",
 };

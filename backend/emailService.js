@@ -837,8 +837,345 @@ https://advocate-hub.up.railway.app
     text,
     html,
   });
-  console.log(`[EmailService] Registration OTP delivered to ${to} via ${result.provider}. MessageId: ${result.messageId || "ok"}`);
+}
+
+/**
+ * Sends password reset approval email to advocate with secure reset link.
+ */
+async function sendAdvocateResetApprovedEmail({ to, name, resetUrl, expiresInHours = 24 }) {
+  if (!to || !String(to).trim()) {
+    throw new Error("Recipient email address is required");
+  }
+
+  const recipientName = String(name || "Advocate").trim();
+  const safeName = recipientName.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+  const subject = "Advocate Hub – Password Reset Request Approved";
+
+  const text = `
+Hello ${recipientName},
+
+Your password reset request for your Advocate Hub account has been reviewed and APPROVED by the administrator.
+
+Please click the secure link below to create your new password:
+${resetUrl}
+
+⏱️ This link is valid for ${expiresInHours} hours and can only be used once.
+
+🔒 Security Notice:
+If you did not request a password reset, please ignore this email or contact our support team immediately at advocatehub.in@gmail.com.
+
+Best regards,
+The AdvocateHub Team
+https://advocate-hub.up.railway.app
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; margin: 0; padding: 28px 12px; color: #1e293b; }
+    .card { max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; }
+    .header { background: linear-gradient(135deg, #091224 0%, #1e1b4b 60%, #1e3a8a 100%); color: #ffffff; padding: 32px 30px; text-align: center; }
+    .header h1 { margin: 0 0 6px 0; font-size: 22px; font-weight: 800; color: #f8fafc; }
+    .header p { margin: 0; font-size: 13px; color: #94a3b8; }
+    .content { padding: 32px 30px; background: #ffffff; text-align: left; }
+    .greeting { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 12px 0; }
+    .instruction { font-size: 14px; color: #334155; line-height: 1.6; margin: 0 0 20px 0; }
+    .btn-wrap { text-align: center; margin: 26px 0; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff !important; font-size: 15px; font-weight: 700; padding: 14px 28px; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+    .link-alt { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-size: 12px; color: #64748b; word-break: break-all; margin: 18px 0; }
+    .security-notice { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px 16px; margin: 20px 0 0 0; }
+    .security-notice p { margin: 0; font-size: 12.5px; color: #92400e; line-height: 1.5; }
+    .footer { padding: 20px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div style="font-size: 32px; margin-bottom: 8px;">⚖️</div>
+      <h1>Advocate Hub</h1>
+      <p>Password Reset Request Approved</p>
+    </div>
+    <div class="content">
+      <div class="greeting">Hello ${safeName},</div>
+      <p class="instruction">
+        Your password reset request for your Advocate account has been <strong>approved by the administrator</strong>.
+      </p>
+      <p class="instruction">
+        Please click the button below to set your new password:
+      </p>
+      <div class="btn-wrap">
+        <a href="${resetUrl}" target="_blank" class="btn">Set New Password →</a>
+      </div>
+      <div class="link-alt">
+        If the button above does not work, copy and paste this URL into your browser:<br>
+        <a href="${resetUrl}" style="color: #2563eb;">${resetUrl}</a>
+      </div>
+      <div class="security-notice">
+        <p>
+          ⏱️ <strong>Validity:</strong> This link is valid for ${expiresInHours} hours and can only be used once.<br>
+          🔒 <strong>Security Warning:</strong> If you did not request a password reset, please contact us immediately at advocatehub.in@gmail.com.
+        </p>
+      </div>
+    </div>
+    <div class="footer">
+      Advocate Hub · Legal Technology Platform<br>
+      Support: <a href="mailto:advocatehub.in@gmail.com" style="color: #2563eb;">advocatehub.in@gmail.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  const result = await deliverEmail({ to, subject, text, html });
+  console.log(`[EmailService] Advocate password reset approved email delivered to ${to}`);
   return result;
+}
+
+/**
+ * Sends password reset rejection email to advocate.
+ */
+async function sendAdvocateResetRejectedEmail({ to, name, reason }) {
+  if (!to || !String(to).trim()) throw new Error("Recipient email address is required");
+
+  const recipientName = String(name || "Advocate").trim();
+  const safeName = recipientName.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+  const safeReason = String(reason || "Verification details could not be validated").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+
+  const subject = "Advocate Hub – Password Reset Request Update";
+  const text = `
+Hello ${recipientName},
+
+Your password reset request for Advocate Hub was reviewed by the administrator and could not be approved at this time.
+
+Reason: ${reason || "Verification details could not be validated."}
+
+Your existing password remains active and has not been changed.
+
+If you believe this was an error or need further assistance, please contact our support team at advocatehub.in@gmail.com.
+
+Best regards,
+The AdvocateHub Team
+https://advocate-hub.up.railway.app
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${subject}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; margin: 0; padding: 28px 12px; color: #1e293b; }
+    .card { max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; }
+    .header { background: linear-gradient(135deg, #091224 0%, #311010 60%, #991b1b 100%); color: #ffffff; padding: 32px 30px; text-align: center; }
+    .header h1 { margin: 0 0 6px 0; font-size: 22px; font-weight: 800; color: #f8fafc; }
+    .content { padding: 32px 30px; background: #ffffff; text-align: left; }
+    .reason-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 16px; margin: 18px 0; color: #991b1b; font-size: 14px; }
+    .footer { padding: 20px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div style="font-size: 32px; margin-bottom: 8px;">⚖️</div>
+      <h1>Advocate Hub</h1>
+      <p style="margin: 0; color: #fca5a5;">Password Reset Request Update</p>
+    </div>
+    <div class="content">
+      <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Hello ${safeName},</div>
+      <p style="font-size: 14px; color: #334155; line-height: 1.6;">
+        Your password reset request was reviewed by our administrative team and could not be approved at this time.
+      </p>
+      <div class="reason-box">
+        <strong>Reason for rejection:</strong><br>${safeReason}
+      </div>
+      <p style="font-size: 13.5px; color: #475569; line-height: 1.6;">
+        Your current password remains unchanged. If you need assistance accessing your account, please contact our support team.
+      </p>
+    </div>
+    <div class="footer">
+      Advocate Hub · Support: <a href="mailto:advocatehub.in@gmail.com" style="color: #2563eb;">advocatehub.in@gmail.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  const result = await deliverEmail({ to, subject, text, html });
+  console.log(`[EmailService] Advocate password reset rejection email delivered to ${to}`);
+  return result;
+}
+
+/**
+ * Sends client password reset verification OTP code.
+ */
+async function sendClientResetOtpEmail({ to, otp, name }) {
+  if (!to || !String(to).trim()) throw new Error("Recipient email address is required");
+  if (!otp) throw new Error("OTP code is required");
+
+  const recipientName = String(name || "Client").trim();
+  const safeName = recipientName.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+  const subject = `Advocate Hub – Password Reset Verification Code: ${otp}`;
+
+  const text = `
+Hello ${recipientName},
+
+Your verification code for resetting your Advocate Hub client password is:
+
+${otp}
+
+⏱️ This code is valid for 10 minutes.
+Please enter this code on the Forgot Password page to proceed with updating your password.
+
+🔒 Security Warning:
+Do not share this code with anyone. Advocate Hub will never ask for your verification code.
+
+If you did not request a password reset, please ignore this email.
+
+Best regards,
+The AdvocateHub Team
+https://advocate-hub.up.railway.app
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${subject}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; margin: 0; padding: 28px 12px; color: #1e293b; }
+    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; }
+    .header { background: linear-gradient(135deg, #091224 0%, #1e1b4b 60%, #1e3a8a 100%); color: #ffffff; padding: 32px 30px; text-align: center; }
+    .header h1 { margin: 0 0 6px 0; font-size: 22px; font-weight: 800; color: #f8fafc; }
+    .content { padding: 32px 30px; background: #ffffff; text-align: center; }
+    .otp-box { background: #f8fafc; border: 2px dashed #3b82f6; border-radius: 12px; padding: 20px 16px; margin: 20px 0; }
+    .otp-code { font-family: monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #1e3a8a; }
+    .footer { padding: 20px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div style="font-size: 32px; margin-bottom: 8px;">⚖️</div>
+      <h1>Advocate Hub</h1>
+      <p style="margin: 0; color: #94a3b8;">Client Password Reset Verification</p>
+    </div>
+    <div class="content">
+      <div style="font-size: 16px; font-weight: 700; color: #0f172a; text-align: left;">Hello ${safeName},</div>
+      <p style="font-size: 14px; color: #475569; text-align: left; line-height: 1.6; margin-top: 8px;">
+        Use the 6-digit verification code below to reset your client account password:
+      </p>
+      <div class="otp-box">
+        <span class="otp-code">${otp}</span>
+      </div>
+      <p style="font-size: 13px; color: #b91c1c; font-weight: 600; margin: 12px 0;">
+        ⏱️ Valid for 10 minutes · Single-use code
+      </p>
+      <p style="font-size: 12px; color: #64748b; text-align: left; line-height: 1.5;">
+        If you did not request a password reset, you can safely ignore this message. Your password remains unchanged.
+      </p>
+    </div>
+    <div class="footer">
+      Advocate Hub · Support: <a href="mailto:advocatehub.in@gmail.com" style="color: #2563eb;">advocatehub.in@gmail.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  const result = await deliverEmail({ to, subject, text, html });
+  console.log(`[EmailService] Client password reset OTP delivered to ${to}`);
+  return result;
+}
+
+/**
+ * Sends confirmation email after successful password change.
+ */
+async function sendPasswordChangedConfirmationEmail({ to, name, role = "advocate" }) {
+  if (!to || !String(to).trim()) return;
+
+  const recipientName = String(name || "User").trim();
+  const safeName = recipientName.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+  const roleLabel = role === "advocate" ? "Advocate" : "Client";
+  const subject = "Advocate Hub – Your Password Has Been Changed";
+
+  const text = `
+Hello ${recipientName},
+
+This is a confirmation that the password for your Advocate Hub ${roleLabel} account (${to}) was successfully updated.
+
+If you made this change, no further action is required.
+
+🔒 Security Notice:
+If you did NOT change your password, please contact our security team immediately at advocatehub.in@gmail.com to lock and protect your account.
+
+Best regards,
+The AdvocateHub Team
+https://advocate-hub.up.railway.app
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${subject}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; margin: 0; padding: 28px 12px; color: #1e293b; }
+    .card { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.18); border: 1px solid #e2e8f0; }
+    .header { background: linear-gradient(135deg, #091224 0%, #064e3b 60%, #059669 100%); color: #ffffff; padding: 28px 26px; text-align: center; }
+    .content { padding: 28px 26px; background: #ffffff; text-align: left; }
+    .footer { padding: 18px 26px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div style="font-size: 32px; margin-bottom: 6px;">🔒</div>
+      <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #ffffff;">Password Successfully Changed</h1>
+    </div>
+    <div class="content">
+      <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Hello ${safeName},</div>
+      <p style="font-size: 14px; color: #334155; line-height: 1.6;">
+        The password for your Advocate Hub <strong>${roleLabel}</strong> account was recently updated.
+      </p>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin: 18px 0; font-size: 13px; color: #166534;">
+        ✅ <strong>Security Update:</strong> All previous login sessions have been invalidated. Please log in using your new password.
+      </div>
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 14px; margin-top: 16px; font-size: 12.5px; color: #92400e;">
+        ⚠️ <strong>Did not make this change?</strong> Contact us immediately at <a href="mailto:advocatehub.in@gmail.com" style="color: #b45309; font-weight: 700;">advocatehub.in@gmail.com</a>.
+      </div>
+    </div>
+    <div class="footer">
+      Advocate Hub · Legal Technology Platform
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  try {
+    await deliverEmail({ to, subject, text, html });
+    console.log(`[EmailService] Password changed confirmation delivered to ${to}`);
+  } catch (err) {
+    console.warn(`[EmailService] Could not send password changed confirmation to ${to}:`, err.message);
+  }
 }
 
 module.exports = {
@@ -848,6 +1185,10 @@ module.exports = {
   notifyAdminNewAdvocate,
   sendOtpEmail,
   sendRegistrationOtpEmail: sendOtpEmail,
+  sendAdvocateResetApprovedEmail,
+  sendAdvocateResetRejectedEmail,
+  sendClientResetOtpEmail,
+  sendPasswordChangedConfirmationEmail,
   sendWhatsappOtp,
   sendSmsOtp,
   startTwilioPhoneVerification,

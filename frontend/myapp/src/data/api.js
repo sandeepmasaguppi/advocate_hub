@@ -77,6 +77,61 @@ export async function rejectRegistrationRequest(id, role, reason) {
   });
 }
 
+// ── Password Reset API Helpers ────────────────────────────────
+export async function requestForgotPassword(email) {
+  return api("/api/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export async function verifyResetEmail(email, otp) {
+  return api("/api/auth/verify-reset-email", {
+    method: "POST",
+    body: { email, otp },
+  });
+}
+
+export async function clientResetPassword({ email, resetToken, otp, password }) {
+  return api("/api/auth/client/reset-password", {
+    method: "POST",
+    body: { email, resetToken, otp, password },
+  });
+}
+
+export async function verifyResetToken(token) {
+  return api(`/api/auth/verify-reset-token?token=${encodeURIComponent(token)}`);
+}
+
+export async function advocateResetPassword({ token, password }) {
+  return api("/api/auth/advocate/reset-password", {
+    method: "POST",
+    body: { token, password },
+  });
+}
+
+export async function getAdminPasswordResetRequests() {
+  const token = getAdminToken();
+  return api("/api/admin/password-reset-requests", { token });
+}
+
+export async function approvePasswordResetRequest(id) {
+  const token = getAdminToken();
+  return api(`/api/admin/password-reset-requests/${id}/approve`, {
+    method: "POST",
+    token,
+  });
+}
+
+export async function rejectPasswordResetRequest(id, reason) {
+  const token = getAdminToken();
+  return api(`/api/admin/password-reset-requests/${id}/reject`, {
+    method: "POST",
+    body: { reason },
+    token,
+  });
+}
+
 // Avatar paths come back as "/uploads/x.png"; make them absolute when
 // the API lives on another origin.
 export function assetUrl(p) {

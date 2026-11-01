@@ -28,6 +28,8 @@ import TalkToAdvocate from "./pages/TalkToAdvocate";
 import RegistrationStatus from "./pages/RegistrationStatus";
 import Chatbot from "./pages/Chatbot";
 import DownloadApps from "./pages/DownloadApps";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { getTheme, initTheme } from "./data/themeStore";
 
 function App() {
@@ -66,10 +68,11 @@ function App() {
     location.pathname === '/client-main' ||
     location.pathname === '/client-mainpage' ||
     location.pathname === '/clarity-guide';
+  const isForgotOrReset = location.pathname === '/forgot-password' || location.pathname === '/reset-password';
 
   return (
     <div className={`App ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
-      {!isAdminPortal && !isAdvocatePortal && !isAdvocateLogin && !isClientLogin && !isClientPortal && !isSignupPage && (
+      {!isAdminPortal && !isAdvocatePortal && !isAdvocateLogin && !isClientLogin && !isClientPortal && !isSignupPage && !isForgotOrReset && (
         <ErrorBoundary resetKey={location.pathname}>
           <Navbar />
         </ErrorBoundary>
@@ -105,6 +108,8 @@ function App() {
         <Route path="/approval-status" element={<RegistrationStatus />} />
         <Route path="/login" element={<Login />} />
         <Route path="/client-login" element={<ClientLogin />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/client-main" element={<ClientMainPage />} />
         <Route path="/client-mainpage" element={<ClientMainPage />} />
         <Route path="/clarity-guide" element={<ClarityGuide />} />

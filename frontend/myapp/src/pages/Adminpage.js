@@ -27,6 +27,9 @@ import {
   getAdminRegistrationRequests,
   approveRegistrationRequest,
   rejectRegistrationRequest,
+  getAdminPasswordResetRequests,
+  approvePasswordResetRequest,
+  rejectPasswordResetRequest,
 } from "../data/api";
 import { createClient, updateClient, deleteClient, getClients, getLocalClients } from "../data/Clientsstore";
 import BrandLogo from "../components/BrandLogo";
@@ -841,6 +844,363 @@ function RegRequestDetailModal({ request, onClose, onApprove, onReject }) {
 // ─────────────────────────────────────────────────────────────
 //  CLIENT DETAIL MODAL — Full details of the selected client & chosen advocate
 // ─────────────────────────────────────────────────────────────
+function PasswordResetDetailModal({ request, onClose, onApprove, onReject }) {
+  const [copied, setCopied] = useState(false);
+  if (!request) return null;
+
+  const isPending = request.status === "pending";
+  const isApproved = request.status === "approved" || request.status === "completed";
+  const isRejected = request.status === "rejected";
+  const isCompleted = request.status === "completed" || !!request.usedAt;
+
+  const handleCopyLink = () => {
+    if (!request.resetUrl) return;
+    try {
+      navigator.clipboard?.writeText(request.resetUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,.65)",
+        zIndex: 700,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        className="am-modal"
+        style={{
+          background: "var(--adm-bg-card, #ffffff)",
+          color: "var(--adm-text, #0f172a)",
+          borderRadius: 16,
+          width: "100%",
+          maxWidth: 620,
+          maxHeight: "92vh",
+          overflowY: "auto",
+          boxShadow: "0 24px 64px rgba(0,0,0,.3)",
+          border: "1px solid var(--adm-border, #e2e8f0)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "18px 24px",
+            borderBottom: "1px solid var(--adm-border, #e2e8f0)",
+            background: "linear-gradient(135deg, #1e293b, #0f172a)",
+            color: "#fff",
+            borderRadius: "16px 16px 0 0",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 20,
+                color: "#fff",
+                fontWeight: 700,
+              }}
+            >
+              🔑
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontWeight: 800, fontSize: 17 }}>{request.advocateName || "Advocate"}</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: 99,
+                    background: "rgba(255,255,255,0.18)",
+                    color: "#fff",
+                  }}
+                >
+                  ⚖️ Advocate Account
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>
+                Request ID: {request.id}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: "rgba(255,255,255,.15)",
+              border: "none",
+              color: "#fff",
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              cursor: "pointer",
+              fontSize: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 18 }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              borderRadius: 10,
+              background: isPending
+                ? "rgba(245, 158, 11, 0.12)"
+                : isApproved
+                ? "rgba(16, 185, 129, 0.12)"
+                : isRejected ? "rgba(239, 68, 68, 0.12)" : "rgba(239, 68, 68, 0.12)",
+              border: isPending
+                ? "1px solid rgba(245, 158, 11, 0.3)"
+                : isApproved
+                ? "1px solid rgba(16, 185, 129, 0.3)"
+                : "1px solid rgba(239, 68, 68, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>{isPending ? "⏳" : isApproved ? "✅" : "❌"}</span>
+              <div>
+                <strong
+                  style={{
+                    fontSize: 14,
+                    color: isPending ? "#d97706" : isApproved ? "#059669" : "#dc2626",
+                  }}
+                >
+                  {isPending
+                    ? "Pending Admin Approval"
+                    : isCompleted
+                    ? "Approved & Password Updated"
+                    : isApproved
+                    ? "Approved · Reset Link Active"
+                    : "Request Rejected"}
+                </strong>
+                <div style={{ fontSize: 12, color: "var(--adm-muted, #64748b)" }}>
+                  {isPending
+                    ? "New password CANNOT be set until an administrator reviews and approves this request."
+                    : isApproved
+                    ? "A secure reset link was generated with 24-hour validity."
+                    : "This request was rejected. The advocate was notified."}
+                </div>
+              </div>
+            </div>
+            <span
+              style={{
+                fontSize: 11.5,
+                fontWeight: 700,
+                padding: "3px 10px",
+                borderRadius: 99,
+                background: isPending ? "#fef3c7" : isApproved ? "#dcfce7" : "#fee2e2",
+                color: isPending ? "#92400e" : isApproved ? "#14532d" : "#7f1d1d",
+              }}
+            >
+              {isPending ? "Pending" : isCompleted ? "Completed" : isApproved ? "Approved" : "Rejected"}
+            </span>
+          </div>
+
+          <div>
+            <h4 style={{ margin: "0 0 10px 0", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.6, color: "var(--adm-muted, #64748b)" }}>
+              📋 Account &amp; Request Information
+            </h4>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 12,
+                background: "var(--adm-bg, #f8fafc)",
+                padding: 14,
+                borderRadius: 10,
+                border: "1px solid var(--adm-border, #e2e8f0)",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Advocate Name</span>
+                <strong style={{ fontSize: 13.5 }}>{request.advocateName || "—"}</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Registered Email</span>
+                <strong style={{ fontSize: 13, wordBreak: "break-all" }}>{request.email || "—"}</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Advocate Account ID</span>
+                <strong style={{ fontSize: 13, color: "#2563eb" }}>#{request.advocateId || "—"}</strong>
+              </div>
+              {request.barEnrollmentNumber && (
+                <div>
+                  <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Bar Enrollment ID</span>
+                  <strong style={{ fontSize: 13 }}>{request.barEnrollmentNumber}</strong>
+                </div>
+              )}
+              <div>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Requested Timestamp</span>
+                <strong style={{ fontSize: 13 }}>{request.requestedAt ? formatDateTime(request.requestedAt) : "—"}</strong>
+              </div>
+              {request.approvedAt && (
+                <div>
+                  <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Approved At</span>
+                  <strong style={{ fontSize: 13, color: "#059669" }}>{formatDateTime(request.approvedAt)}</strong>
+                  {request.approvedBy && <span style={{ fontSize: 11, color: "var(--adm-muted)", display: "block" }}>By: {request.approvedBy}</span>}
+                </div>
+              )}
+              {request.expiresAt && (
+                <div>
+                  <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Token Expiry</span>
+                  <strong style={{ fontSize: 13 }}>{formatDateTime(request.expiresAt)}</strong>
+                </div>
+              )}
+              {request.usedAt && (
+                <div>
+                  <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)", display: "block" }}>Password Reset At</span>
+                  <strong style={{ fontSize: 13, color: "#059669" }}>{formatDateTime(request.usedAt)}</strong>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {request.resetUrl && (
+            <div
+              style={{
+                background: "rgba(37, 99, 235, 0.05)",
+                border: "1px solid rgba(37, 99, 235, 0.25)",
+                borderRadius: 10,
+                padding: "12px 14px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#2563eb" }}>🔗 Secure Password Reset Link:</span>
+                <span style={{ fontSize: 11, color: "var(--adm-muted, #64748b)" }}>24-hour validity</span>
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontFamily: "monospace",
+                  wordBreak: "break-all",
+                  background: "var(--adm-bg, #f8fafc)",
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  border: "1px solid var(--adm-border, #e2e8f0)",
+                  marginBottom: 10,
+                }}
+              >
+                {request.resetUrl}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="am-btn-secondary"
+                  onClick={handleCopyLink}
+                  style={{ fontSize: "0.82rem", padding: "6px 12px" }}
+                >
+                  {copied ? "✓ Copied to Clipboard!" : "📋 Copy Reset Link"}
+                </button>
+                <a
+                  href={request.resetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="am-btn am-btn-primary"
+                  style={{
+                    fontSize: "0.82rem",
+                    padding: "6px 12px",
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  ↗ Open Reset Link in New Tab
+                </a>
+              </div>
+            </div>
+          )}
+
+          {request.rejectionReason && (
+            <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, padding: 12, color: "#7f1d1d", fontSize: 13 }}>
+              <strong>Rejection Reason:</strong> {request.rejectionReason}
+              {request.rejectedAt && (
+                <div style={{ fontSize: 11, marginTop: 4, color: "#991b1b" }}>
+                  Rejected on {formatDateTime(request.rejectedAt)} {request.rejectedBy ? `by ${request.rejectedBy}` : ""}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTop: "1px solid var(--adm-border, #e2e8f0)",
+              paddingTop: 16,
+              flexWrap: "wrap",
+              gap: 10,
+            }}
+          >
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {isPending && (
+                <>
+                  <button
+                    type="button"
+                    className="am-btn-approve"
+                    onClick={() => {
+                      onApprove(request);
+                      onClose();
+                    }}
+                    style={{ padding: "8px 18px", fontSize: 13, fontWeight: 700 }}
+                  >
+                    ✓ Approve &amp; Send Reset Link
+                  </button>
+                  <button
+                    type="button"
+                    className="am-btn-reject"
+                    onClick={() => {
+                      onReject(request);
+                      onClose();
+                    }}
+                    style={{ padding: "8px 18px", fontSize: 13, fontWeight: 700 }}
+                  >
+                    ✕ Reject Request
+                  </button>
+                </>
+              )}
+            </div>
+            <button type="button" className="am-btn-secondary" onClick={onClose} style={{ padding: "8px 18px" }}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ClientDetailModal({ client, consultations, bookings, onClose, onEdit, onApprove, onReject, onDelete, onUpdateConsultStatus }) {
   if (!client) return null;
 
@@ -1600,6 +1960,7 @@ const RAIL_ICONS = {
   bookings:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>,
   requests:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" /></svg>,
   regRequests: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>,
+  passwordResets: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>,
   logout:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" /></svg>,
   collapse:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>,
   expand:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>,
@@ -2617,6 +2978,16 @@ export default function AdminPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [selectedRegRequestModal, setSelectedRegRequestModal] = useState(null);
 
+  // Password Reset Requests state (Advocate Admin Approval)
+  const [pwdResets, setPwdResets] = useState([]);
+  const [loadingPwdResets, setLoadingPwdResets] = useState(false);
+  const [pwdSearch, setPwdSearch] = useState("");
+  const [pwdStatusFilter, setPwdStatusFilter] = useState("all");
+  const [pwdRejectModalItem, setPwdRejectModalItem] = useState(null);
+  const [pwdRejectReason, setPwdRejectReason] = useState("");
+  const [selectedPwdModal, setSelectedPwdModal] = useState(null);
+  const [pwdActionLoading, setPwdActionLoading] = useState(false);
+
   // Restore a session if the stored token is still valid.
   useEffect(() => {
     const token = getAdminToken();
@@ -2674,6 +3045,19 @@ export default function AdminPage() {
   const refreshMessages  = () => setMessages(getMessages());
   const refreshQuestions = () => setQuestions(getQuestions());
 
+  const refreshPwdResets = useCallback(async () => {
+    setLoadingPwdResets(true);
+    try {
+      const data = await getAdminPasswordResetRequests();
+      const list = Array.isArray(data) ? data : (data?.requests || []);
+      setPwdResets(list);
+    } catch (err) {
+      console.error("Failed to load password reset requests:", err);
+    } finally {
+      setLoadingPwdResets(false);
+    }
+  }, []);
+
   const refreshRegRequests = useCallback(async () => {
     setLoadingRegRequests(true);
     try {
@@ -2690,10 +3074,14 @@ export default function AdminPage() {
   useEffect(() => {
     if (authed) {
       refreshRegRequests();
-      const interval = setInterval(refreshRegRequests, 12000);
+      refreshPwdResets();
+      const interval = setInterval(() => {
+        refreshRegRequests();
+        refreshPwdResets();
+      }, 12000);
       return () => clearInterval(interval);
     }
-  }, [authed, refreshRegRequests]);
+  }, [authed, refreshRegRequests, refreshPwdResets]);
 
   const handleApproveRegRequest = useCallback(async (item) => {
     try {
@@ -2752,6 +3140,69 @@ export default function AdminPage() {
       );
     });
   }, [regRequests, regRoleFilter, regStatusFilter, regChannelFilter, regSearch]);
+
+  const handleApprovePwdReset = useCallback(async (item) => {
+    if (!window.confirm(`Approve password reset request for Advocate ${item.advocateName || item.email}? A 24-hour reset link will be sent to their email.`)) {
+      return;
+    }
+    setPwdActionLoading(true);
+    try {
+      const res = await approvePasswordResetRequest(item.id);
+      showToast(`Password reset approved for ${item.advocateName || item.email}! Reset email sent.`);
+      await refreshPwdResets();
+      if (res?.resetUrl && item) {
+        setSelectedPwdModal(prev => (prev && prev.id === item.id ? { ...prev, status: "approved", resetUrl: res.resetUrl, approvedAt: new Date().toISOString() } : prev));
+      }
+    } catch (err) {
+      showToast(err.message || "Approval failed", "error");
+    } finally {
+      setPwdActionLoading(false);
+    }
+  }, [refreshPwdResets, showToast]);
+
+  const handleOpenRejectPwdModal = (item) => {
+    setPwdRejectModalItem(item);
+    setPwdRejectReason("");
+  };
+
+  const handleConfirmRejectPwdReset = useCallback(async () => {
+    if (!pwdRejectModalItem) return;
+    setPwdActionLoading(true);
+    try {
+      await rejectPasswordResetRequest(pwdRejectModalItem.id, pwdRejectReason);
+      showToast(`Password reset request for ${pwdRejectModalItem.advocateName || pwdRejectModalItem.email} rejected.`);
+      setPwdRejectModalItem(null);
+      setPwdRejectReason("");
+      await refreshPwdResets();
+    } catch (err) {
+      showToast(err.message || "Rejection failed", "error");
+    } finally {
+      setPwdActionLoading(false);
+    }
+  }, [pwdRejectModalItem, pwdRejectReason, refreshPwdResets, showToast]);
+
+  const pendingPwdResetsCount = useMemo(() => {
+    return pwdResets.filter(r => r.status === "pending").length;
+  }, [pwdResets]);
+
+  const filteredPwdResets = useMemo(() => {
+    return pwdResets.filter((req) => {
+      if (pwdStatusFilter !== "all") {
+        if (pwdStatusFilter === "pending" && req.status !== "pending") return false;
+        if (pwdStatusFilter === "approved" && req.status !== "approved" && req.status !== "completed") return false;
+        if (pwdStatusFilter === "rejected" && req.status !== "rejected") return false;
+      }
+      if (!pwdSearch.trim()) return true;
+      const q = pwdSearch.trim().toLowerCase();
+      return (
+        (req.advocateName || "").toLowerCase().includes(q) ||
+        (req.email || "").toLowerCase().includes(q) ||
+        (req.id || "").toLowerCase().includes(q) ||
+        String(req.advocateId || "").toLowerCase().includes(q) ||
+        (req.barEnrollmentNumber || "").toLowerCase().includes(q)
+      );
+    });
+  }, [pwdResets, pwdStatusFilter, pwdSearch]);
 
   const refreshConsultations = useCallback(() => {
     const DUMMY_EMAILS = new Set(["chetan@gmail.com", "giri@gmail.com", "gagan@gmail.com", "ajay@gmail.com", "man@gmail.com", "sandeep@gmail.com"]);
@@ -3108,6 +3559,7 @@ export default function AdminPage() {
         </Link>
         <RailButton id="pending"   label="Pending approvals" tab={tab} setTab={setTab} count={pending.length + pendingClients.length} />
         <RailButton id="regRequests" label="Registration Approvals" tab={tab} setTab={setTab} count={pendingRegRequestsCount} />
+        <RailButton id="passwordResets" label="Password Resets" tab={tab} setTab={setTab} count={pendingPwdResetsCount} />
         <RailButton id="all"       label="All advocates"     tab={tab} setTab={setTab} />
         <RailButton id="messages"  label="Messages"          tab={tab} setTab={setTab} count={unreadMessages.length} />
         <RailButton id="clients"   label="Clients"           tab={tab} setTab={setTab} count={clients.length} />
@@ -3203,6 +3655,9 @@ export default function AdminPage() {
           </button>
           <button className={`am-tab ${tab === "regRequests" ? "active" : ""}`} onClick={() => setTab("regRequests")}>
             🛡️ Registration Approval Requests {pendingRegRequestsCount > 0 && <span className="am-tab-badge" style={{ background: "#ea580c" }}>{pendingRegRequestsCount}</span>}
+          </button>
+          <button className={`am-tab ${tab === "passwordResets" ? "active" : ""}`} onClick={() => setTab("passwordResets")}>
+            🔑 Password Resets {pendingPwdResetsCount > 0 && <span className="am-tab-badge" style={{ background: "#dc2626" }}>{pendingPwdResetsCount}</span>}
           </button>
           <button className={`am-tab ${tab === "all" ? "active" : ""}`} onClick={() => setTab("all")}>
             All Advocates
@@ -4238,6 +4693,326 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* ── Password Reset Requests tab ── */}
+        {tab === "passwordResets" && (
+          <div className="am-section">
+            <div className="am-bk-header" style={{ marginBottom: 18 }}>
+              <div>
+                <h2 className="am-bk-title" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: 0 }}>
+                  🔑 Advocate Password Reset Requests
+                  <span className="am-count-pill" style={{ background: "rgba(220, 38, 38, 0.12)", color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.3)" }}>
+                    {pwdResets.length} Total Requests
+                  </span>
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "var(--adm-text-muted)" }}>
+                  Review and authorize password reset requests for Advocate accounts. Clients reset directly via email verification code and do not enter this queue.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="am-btn-secondary"
+                  onClick={refreshPwdResets}
+                  disabled={loadingPwdResets}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.82rem", padding: "7px 14px" }}
+                >
+                  🔄 {loadingPwdResets ? "Refreshing…" : "Refresh Queue"}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Summary Strip */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 18 }}>
+              <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11.5, color: "var(--adm-text-muted)", fontWeight: 600 }}>Total Requests</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--adm-text-main)", marginTop: 2 }}>{pwdResets.length}</div>
+              </div>
+              <div style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11.5, color: "#d97706", fontWeight: 700 }}>⏳ Pending Admin Approval</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#d97706", marginTop: 2 }}>
+                  {pwdResets.filter(r => r.status === "pending").length}
+                </div>
+              </div>
+              <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11.5, color: "#059669", fontWeight: 700 }}>✅ Approved / Active Links</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#059669", marginTop: 2 }}>
+                  {pwdResets.filter(r => r.status === "approved" || r.status === "completed").length}
+                </div>
+              </div>
+              <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11.5, color: "#dc2626", fontWeight: 700 }}>❌ Rejected</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#dc2626", marginTop: 2 }}>
+                  {pwdResets.filter(r => r.status === "rejected").length}
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Toolbar */}
+            <div className="am-toolbar" style={{ marginBottom: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <input
+                className="am-search"
+                style={{ flex: "1 1 240px" }}
+                placeholder="🔍 Search advocate name, email, advocate ID, Bar ID…"
+                value={pwdSearch}
+                onChange={(e) => setPwdSearch(e.target.value)}
+              />
+
+              <select
+                className="am-status-filter"
+                value={pwdStatusFilter}
+                onChange={(e) => setPwdStatusFilter(e.target.value)}
+              >
+                <option value="all">All Statuses ({pwdResets.length})</option>
+                <option value="pending">⏳ Pending Review ({pwdResets.filter(r => r.status === "pending").length})</option>
+                <option value="approved">✅ Approved ({pwdResets.filter(r => r.status === "approved" || r.status === "completed").length})</option>
+                <option value="rejected">❌ Rejected ({pwdResets.filter(r => r.status === "rejected").length})</option>
+              </select>
+            </div>
+
+            {/* List / Cards */}
+            {filteredPwdResets.length === 0 ? (
+              <div className="am-empty am-empty-rich">
+                <div className="am-empty-icon">🔑</div>
+                <div className="am-empty-title">No password reset requests found</div>
+                <div>No advocate password reset requests match the current search or status filter.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredPwdResets.map((req) => {
+                  const isPending = req.status === "pending";
+                  const isApproved = req.status === "approved" || req.status === "completed";
+                  const isRejected = req.status === "rejected";
+                  const isCompleted = req.status === "completed" || !!req.usedAt;
+
+                  return (
+                    <div
+                      key={req.id}
+                      style={{
+                        background: "var(--adm-bg-card)",
+                        border: isPending ? "1.5px solid rgba(245, 158, 11, 0.45)" : "1px solid var(--adm-border)",
+                        borderRadius: 14,
+                        padding: "16px 20px",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: 16,
+                        boxShadow: isPending ? "0 4px 14px rgba(245, 158, 11, 0.08)" : "none",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {/* Left: Advocate Details */}
+                      <div style={{ display: "flex", gap: 14, alignItems: "flex-start", flex: "1 1 300px" }}>
+                        <div
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: "50%",
+                            background: isPending
+                              ? "rgba(245, 158, 11, 0.15)"
+                              : isApproved
+                              ? "rgba(16, 185, 129, 0.15)"
+                              : "rgba(239, 68, 68, 0.15)",
+                            color: isPending ? "#d97706" : isApproved ? "#059669" : "#dc2626",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 18,
+                            fontWeight: 800,
+                            flexShrink: 0,
+                          }}
+                        >
+                          ⚖️
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <strong style={{ fontSize: "1rem", color: "var(--adm-text-main)" }}>
+                              {req.advocateName || "Advocate"}
+                            </strong>
+                            <span
+                              style={{
+                                fontSize: "0.72rem",
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 99,
+                                background: "rgba(37, 99, 235, 0.1)",
+                                color: "#2563eb",
+                                border: "1px solid rgba(37, 99, 235, 0.25)",
+                              }}
+                            >
+                              Advocate #{req.advocateId}
+                            </span>
+                            {req.barEnrollmentNumber && (
+                              <span
+                                style={{
+                                  fontSize: "0.72rem",
+                                  fontWeight: 600,
+                                  padding: "2px 8px",
+                                  borderRadius: 99,
+                                  background: "var(--adm-bg)",
+                                  color: "var(--adm-text-muted)",
+                                  border: "1px solid var(--adm-border)",
+                                }}
+                              >
+                                Bar ID: {req.barEnrollmentNumber}
+                              </span>
+                            )}
+                          </div>
+
+                          <div style={{ fontSize: "0.85rem", color: "var(--adm-text-muted)", display: "flex", gap: 14, flexWrap: "wrap", marginTop: 2 }}>
+                            <span>✉️ {req.email}</span>
+                            <span>📅 Requested: {fmtDateTime(req.requestedAt)}</span>
+                            <span style={{ fontSize: "0.78rem", color: "var(--adm-text-muted)" }}>ID: {req.id}</span>
+                          </div>
+
+                          {isApproved && req.approvedAt && (
+                            <div style={{ fontSize: "0.78rem", color: "#059669", marginTop: 2 }}>
+                              ✓ Approved on {fmtDateTime(req.approvedAt)} {req.approvedBy ? `by ${req.approvedBy}` : ""}
+                              {req.expiresAt && ` · Token active until ${fmtDateTime(req.expiresAt)}`}
+                            </div>
+                          )}
+
+                          {isCompleted && (
+                            <div style={{ fontSize: "0.78rem", color: "#059669", fontWeight: 700, marginTop: 2 }}>
+                              🎉 Password updated successfully by advocate on {fmtDateTime(req.usedAt)}
+                            </div>
+                          )}
+
+                          {isRejected && req.rejectionReason && (
+                            <div style={{ fontSize: "0.82rem", color: "#dc2626", marginTop: 4, background: "rgba(239, 68, 68, 0.08)", padding: "4px 8px", borderRadius: 6 }}>
+                              <strong>Rejection reason:</strong> {req.rejectionReason}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: Status badge & Action buttons */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, minWidth: 170 }}>
+                        {isPending && (
+                          <span
+                            className="am-status-pill"
+                            style={{
+                              background: "#fef3c7",
+                              color: "#92400e",
+                              border: "1px solid #fde047",
+                              padding: "4px 12px",
+                              fontSize: 12,
+                              fontWeight: 700,
+                            }}
+                          >
+                            <span className="am-status-icon">⏳</span> Pending Admin Approval
+                          </span>
+                        )}
+                        {isApproved && !isCompleted && (
+                          <span
+                            className="am-status-pill"
+                            style={{
+                              background: "#dcfce7",
+                              color: "#14532d",
+                              border: "1px solid #86efac",
+                              padding: "4px 12px",
+                              fontSize: 12,
+                              fontWeight: 700,
+                            }}
+                          >
+                            <span className="am-status-icon">✓</span> Approved · Link Sent
+                          </span>
+                        )}
+                        {isCompleted && (
+                          <span
+                            className="am-status-pill"
+                            style={{
+                              background: "#dcfce7",
+                              color: "#14532d",
+                              border: "1px solid #86efac",
+                              padding: "4px 12px",
+                              fontSize: 12,
+                              fontWeight: 700,
+                            }}
+                          >
+                            <span className="am-status-icon">✓</span> Reset Completed
+                          </span>
+                        )}
+                        {isRejected && (
+                          <span
+                            className="am-status-pill"
+                            style={{
+                              background: "#fee2e2",
+                              color: "#7f1d1d",
+                              border: "1px solid #fca5a5",
+                              padding: "4px 12px",
+                              fontSize: 12,
+                              fontWeight: 700,
+                            }}
+                          >
+                            <span className="am-status-icon">✕</span> Rejected
+                          </span>
+                        )}
+
+                        <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                          <button
+                            type="button"
+                            className="am-btn-secondary"
+                            onClick={() => setSelectedPwdModal(req)}
+                            style={{ padding: "6px 12px", fontSize: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}
+                          >
+                            👁️ View Details
+                          </button>
+
+                          {req.resetUrl && (
+                            <a
+                              href={req.resetUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="am-btn-secondary"
+                              style={{
+                                padding: "6px 12px",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                textDecoration: "none",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                              title="Open secure reset link in new tab"
+                            >
+                              ↗ Reset Link
+                            </a>
+                          )}
+
+                          {isPending && (
+                            <>
+                              <button
+                                type="button"
+                                className="am-btn-approve"
+                                onClick={() => handleApprovePwdReset(req)}
+                                disabled={pwdActionLoading}
+                                style={{ padding: "6px 12px", fontSize: 12, fontWeight: 700 }}
+                              >
+                                ✓ Approve
+                              </button>
+                              <button
+                                type="button"
+                                className="am-btn-reject"
+                                onClick={() => handleOpenRejectPwdModal(req)}
+                                disabled={pwdActionLoading}
+                                style={{ padding: "6px 12px", fontSize: 12, fontWeight: 700 }}
+                              >
+                                ✕ Reject
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         </div>{/* /am-panel */}
       </div>{/* /am-container */}
       </div>{/* /am-main */}
@@ -4401,6 +5176,52 @@ export default function AdminPage() {
           onReject={(item) => {
             handleOpenRejectModal(item);
             setSelectedRegRequestModal(null);
+          }}
+        />
+      )}
+      {pwdRejectModalItem && (
+        <div className="am-modal-overlay" onClick={() => setPwdRejectModalItem(null)}>
+          <div className="am-modal am-modal-sm" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="am-modal-header">
+              <h3 style={{ margin: 0, fontSize: 16 }}>✕ Reject Password Reset Request</h3>
+              <button className="am-modal-close" onClick={() => setPwdRejectModalItem(null)}>✕</button>
+            </div>
+            <div style={{ padding: "16px 20px" }}>
+              <p style={{ margin: "0 0 12px", fontSize: 14 }}>
+                Reject password reset request for <strong>{pwdRejectModalItem.advocateName || pwdRejectModalItem.email}</strong>?
+              </p>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--adm-text-muted)", display: "block", marginBottom: 6 }}>
+                  Reason for rejection (will be emailed to the advocate):
+                </label>
+                <textarea
+                  className="am-input"
+                  style={{ width: "100%", minHeight: 84, padding: 10, borderRadius: 8, border: "1px solid var(--adm-border)", resize: "vertical", fontFamily: "inherit", fontSize: 13 }}
+                  placeholder="e.g. Unverified identity request, pending bar council status, or please contact admin office."
+                  value={pwdRejectReason}
+                  onChange={(e) => setPwdRejectReason(e.target.value)}
+                />
+              </div>
+              <div className="am-modal-actions" style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                <button type="button" className="am-btn-secondary" onClick={() => setPwdRejectModalItem(null)} disabled={pwdActionLoading}>Cancel</button>
+                <button type="button" className="am-btn-delete-confirm" onClick={handleConfirmRejectPwdReset} disabled={pwdActionLoading}>
+                  {pwdActionLoading ? "Rejecting…" : "Confirm Rejection"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {selectedPwdModal && (
+        <PasswordResetDetailModal
+          request={selectedPwdModal}
+          onClose={() => setSelectedPwdModal(null)}
+          onApprove={(item) => {
+            handleApprovePwdReset(item);
+          }}
+          onReject={(item) => {
+            handleOpenRejectPwdModal(item);
+            setSelectedPwdModal(null);
           }}
         />
       )}
