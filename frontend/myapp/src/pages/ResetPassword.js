@@ -123,7 +123,7 @@ export default function ResetPassword() {
       setErr("Password must contain at least one number (0-9).");
       return;
     }
-    if (!/[^a-zA-Z0-9\s]/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
       setErr("Password must contain at least one special character (!@#$%^&* etc.).");
       return;
     }
@@ -273,8 +273,8 @@ export default function ResetPassword() {
               <div className={/[0-9]/.test(password) ? "fp-rule-ok" : "fp-rule-item"}>
                 {/[0-9]/.test(password) ? "✓" : "○"} At least one number (0-9)
               </div>
-              <div className={/[^a-zA-Z0-9\s]/.test(password) ? "fp-rule-ok" : "fp-rule-item"}>
-                {/[^a-zA-Z0-9\s]/.test(password) ? "✓" : "○"} At least one special character (!@#$)
+              <div className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) ? "fp-rule-ok" : "fp-rule-item"}>
+                {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password) ? "✓" : "○"} At least one special character (!@#$)
               </div>
             </div>
 
@@ -314,3 +314,4 @@ export default function ResetPassword() {
     </div>
   );
 }
+

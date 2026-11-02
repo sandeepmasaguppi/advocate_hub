@@ -194,7 +194,7 @@ export default function ForgotPassword() {
       setErr("Password must contain at least one number (0-9).");
       return;
     }
-    if (!/[^a-zA-Z0-9\s]/.test(newPassword)) {
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(newPassword)) {
       setErr("Password must contain at least one special character (!@#$%^&* etc.).");
       return;
     }
@@ -318,12 +318,6 @@ export default function ForgotPassword() {
                 <span className="fp-detail-label">Advocate Email:</span>
                 <span className="fp-detail-val">{email}</span>
               </div>
-              {advocateReqData?.requestId && (
-                <div className="fp-detail-row">
-                  <span className="fp-detail-label">Request ID:</span>
-                  <span className="fp-detail-val">{advocateReqData.requestId}</span>
-                </div>
-              )}
               <div className="fp-detail-row">
                 <span className="fp-detail-label">Status:</span>
                 <span className="fp-badge-pending">Pending Admin Approval</span>
@@ -487,8 +481,8 @@ export default function ForgotPassword() {
               <div className={/[0-9]/.test(newPassword) ? "fp-rule-ok" : "fp-rule-item"}>
                 {/[0-9]/.test(newPassword) ? "✓" : "○"} One number (0-9)
               </div>
-              <div className={/[^a-zA-Z0-9\s]/.test(newPassword) ? "fp-rule-ok" : "fp-rule-item"}>
-                {/[^a-zA-Z0-9\s]/.test(newPassword) ? "✓" : "○"} One special character (!@#$)
+              <div className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(newPassword) ? "fp-rule-ok" : "fp-rule-item"}>
+                {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(newPassword) ? "✓" : "○"} One special character (!@#$)
               </div>
             </div>
 
@@ -528,3 +522,4 @@ export default function ForgotPassword() {
     </div>
   );
 }
+
