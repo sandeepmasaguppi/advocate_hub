@@ -132,6 +132,20 @@ export async function rejectPasswordResetRequest(id, reason) {
   });
 }
 
+export async function getStorageStatus() {
+  const token = getAdminToken();
+  return api("/api/admin/storage/status", { token });
+}
+
+export async function runStorageMigration(options = {}) {
+  const token = getAdminToken();
+  return api("/api/admin/storage/migrate", {
+    method: "POST",
+    token,
+    body: options,
+  });
+}
+
 // Avatar paths come back as "/uploads/x.png"; make them absolute when
 // the API lives on another origin.
 export function assetUrl(p) {

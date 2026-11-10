@@ -89,7 +89,9 @@ function resolveLocalFilePath(avatarOrUrl) {
   return null;
 }
 
-async function runMigration() {
+async function runMigration(options = {}) {
+  const isDryRun = options.dryRun !== undefined ? options.dryRun : args.includes("--dry-run");
+  const deleteLocal = options.deleteLocal !== undefined ? options.deleteLocal : args.includes("--delete-local");
   console.log("============================================================");
   console.log(" Advocate Hub — Cloudflare R2 Image Migration Tool");
   console.log("============================================================");
@@ -107,20 +109,20 @@ async function runMigration() {
   console.log("------------------------------------------------------------");
 
   if (!r2Config.isConfigured) {
-    console.error("❌ ERROR: Cloudflare R2 credentials are not configured in environment.");
-    console.error("Please configure R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY in backend/.env or Railway.");
-    console.error("Migration cannot proceed without valid Cloudflare R2 credentials.");
-    process.exit(1);
+    const msg = "Cloudflare R2 credentials are not configured in environment. Please set R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY.";
+    console.error(`❌ ERROR: ${msg}`);
+    if (require.main === module) process.exit(1);
+    throw new Error(msg);
   }
 
   // Pre-flight health check
   console.log("Verifying connection to Cloudflare R2...");
   const health = await checkR2Health();
   if (!health.connected) {
-    console.error("❌ ERROR: Cloudflare R2 connectivity test failed!");
-    console.error(`Details: ${health.error}`);
-    console.error("Please verify your bucket name, access key ID, and secret access key.");
-    process.exit(1);
+    const msg = `Cloudflare R2 connectivity test failed: ${health.error || "Unknown connection error"}`;
+    console.error(`❌ ERROR: ${msg}`);
+    if (require.main === module) process.exit(1);
+    throw new Error(msg);
   }
   console.log(`✅ Cloudflare R2 connected successfully (${health.latencyMs}ms latency)`);
   console.log("------------------------------------------------------------\n");
@@ -320,10 +322,17 @@ async function runMigration() {
   console.log(`Skipped (Already on R2)     : ${stats.skippedAlreadyR2}`);
   console.log(`Total Errors                : ${stats.errors}`);
   console.log("============================================================\n");
+  return stats;
 }
 
-runMigration().catch((err) => {
-  console.error("Migration fatal error:", err);
-  process.exit(1);
-});
+if (require.main === module) {
+  runMigration().catch((err) => {
+    console.error("Migration fatal error:", err);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  runMigration,
+};
 

@@ -50,6 +50,16 @@ const processChatAttachmentForR2 = cloudflareService?.processChatAttachmentForR2
 const fetchObjectFromR2 = cloudflareService?.fetchObjectFromR2 || (async () => { throw new Error("Cloudflare R2 service is currently unavailable"); });
 const deleteObjectFromR2 = cloudflareService?.deleteObjectFromR2 || (async () => false);
 const generateR2PresignedUrl = cloudflareService?.generateR2PresignedUrl || (() => null);
+const signMediaUrl = cloudflareService?.signMediaUrl || ((k) => `/api/chat/media?key=${encodeURIComponent(k)}`);
+const verifySignedMediaUrl = cloudflareService?.verifySignedMediaUrl || (() => false);
+
+let migrateModule = null;
+try {
+  migrateModule = require("./migrate-images-to-r2");
+} catch (migLoadErr) {
+  console.warn("[CloudflareR2] Warning loading migrate-images-to-r2:", migLoadErr.message);
+}
+const runImageMigration = migrateModule?.runMigration || (async () => { throw new Error("Image migration tool not loaded"); });
 const checkR2Health = cloudflareService?.checkR2Health || (async () => ({ configured: false, connected: false, error: "Cloudflare service module not loaded" }));
 const getR2Config = cloudflareService?.getR2Config || (() => ({ isConfigured: false }));
 
@@ -2000,14 +2010,23 @@ async function route(request, response) {
     }
 
     const convMatch = key.match(/chat-images\/chat_([^_]+)_([^/]+)\//);
-    if (convMatch && auth) {
-      const [, convCliId, convAdvId] = convMatch;
-      const isAuthorized =
-        auth.role === "admin" ||
-        (auth.role === "client" && String(auth.sub) === String(convCliId)) ||
-        (auth.role === "advocate" && String(auth.sub) === String(convAdvId));
-      if (!isAuthorized) {
-        throw new HttpError(403, "You are not authorized to view this private chat attachment");
+    if (convMatch) {
+      const sig = url.searchParams.get("sig");
+      const exp = url.searchParams.get("exp");
+      const isSigned = sig && exp && verifySignedMediaUrl(key, exp, sig, JWT_SECRET);
+
+      if (!isSigned) {
+        if (!auth) {
+          throw new HttpError(401, "Authentication or valid temporary signature required to view private chat attachment");
+        }
+        const [, convCliId, convAdvId] = convMatch;
+        const isAuthorized =
+          auth.role === "admin" ||
+          (auth.role === "client" && String(auth.sub) === String(convCliId)) ||
+          (auth.role === "advocate" && String(auth.sub) === String(convAdvId));
+        if (!isAuthorized) {
+          throw new HttpError(403, "You are not authorized to view this private chat attachment");
+        }
       }
     }
 
@@ -2680,6 +2699,53 @@ async function route(request, response) {
     return send(request, response, 200, { ok: true, requests });
   }
 
+  // Admin: Cloudflare R2 Storage Status Diagnostic
+  if (method === "GET" && p === "/api/admin/storage/status") {
+    requireAdmin(request);
+    const health = await checkR2Health();
+    const config = getR2Config();
+    return send(request, response, 200, {
+      configured: config.isConfigured,
+      mode: health.mode,
+      connected: health.connected,
+      bucket: config.bucketName,
+      accountId: config.accountId ? `${config.accountId.slice(0, 4)}••••${config.accountId.slice(-4)}` : null,
+      endpoint: config.endpoint,
+      publicUrl: config.publicUrl || null,
+      latencyMs: health.latencyMs,
+      error: health.error,
+    });
+  }
+
+  // Admin: Cloudflare R2 Image Migration
+  if (method === "POST" && p === "/api/admin/storage/migrate") {
+    requireAdmin(request);
+    const body = await readBody(request).catch(() => ({}));
+    const dryRun = Boolean(body.dryRun);
+    const deleteLocal = Boolean(body.deleteLocal);
+
+    const r2Config = getR2Config();
+    if (!r2Config.isConfigured) {
+      throw new HttpError(400, "Cloudflare R2 is not configured. Please set R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY in Railway environment variables.");
+    }
+
+    const health = await checkR2Health();
+    if (!health.connected) {
+      throw new HttpError(502, `Cloudflare R2 connectivity test failed: ${health.error || "Unknown connection error"}`);
+    }
+
+    try {
+      const stats = await runImageMigration({ dryRun, deleteLocal, uploadDir: UPLOAD_DIR });
+      return send(request, response, 200, {
+        success: true,
+        stats,
+        message: `Migration completed successfully: ${stats.advocatesMigrated} advocate avatars, ${stats.clientsMigrated} client avatars, ${stats.messagesMigrated} chat images migrated to Cloudflare R2.`,
+      });
+    } catch (migErr) {
+      throw new HttpError(500, `Image migration failed: ${migErr.message}`);
+    }
+  }
+
   // Admin: get stored registration email notifications
   if (method === "GET" && p === "/api/notifications") {
     requireAdmin(request);
@@ -2883,6 +2949,17 @@ async function route(request, response) {
       }
       return m;
     });
+
+    for (const m of sanitized) {
+      if (m.attachment && (m.attachment.objectKey || (m.attachment.url && m.attachment.url.includes("/api/chat/media")))) {
+        const objKey = m.attachment.objectKey || (m.attachment.url.match(/key=([^&]+)/) ? decodeURIComponent(m.attachment.url.match(/key=([^&]+)/)[1]) : null);
+        if (objKey) {
+          const signed = signMediaUrl(objKey, JWT_SECRET, 7200);
+          m.attachment.url = signed;
+          m.attachment.dataUrl = signed;
+        }
+      }
+    }
 
     sanitized.sort((a, b) => new Date(a.t || a.createdAt).getTime() - new Date(b.t || b.createdAt).getTime());
     return send(request, response, 200, sanitized);

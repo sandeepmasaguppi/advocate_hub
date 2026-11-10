@@ -2328,7 +2328,7 @@ export default function ClientDashboard() {
                             {m.attachment.isImage ? (
                               <div style={{ borderRadius: "8px", overflow: "hidden", marginBottom: "4px" }}>
                                 <img
-                                  src={m.attachment.url || m.attachment.dataUrl}
+                                  src={assetUrl(m.attachment.url || m.attachment.dataUrl)}
                                   alt={m.attachment.fileName}
                                   style={{ maxWidth: "100%", maxHeight: "240px", objectFit: "cover", display: "block" }}
                                 />
@@ -2345,7 +2345,7 @@ export default function ClientDashboard() {
                               </div>
                             )}
                             <a
-                              href={m.attachment.url || m.attachment.dataUrl}
+                              href={assetUrl(m.attachment.url || m.attachment.dataUrl)}
                               download={m.attachment.fileName}
                               onClick={(e) => e.stopPropagation()}
                               style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", color: isClient ? "#008069" : "#2563eb", fontWeight: "700", marginTop: "4px", textDecoration: "none" }}

@@ -30,6 +30,8 @@ import {
   getAdminPasswordResetRequests,
   approvePasswordResetRequest,
   rejectPasswordResetRequest,
+  getStorageStatus,
+  runStorageMigration,
 } from "../data/api";
 import { createClient, updateClient, deleteClient, getClients, getLocalClients } from "../data/Clientsstore";
 import BrandLogo from "../components/BrandLogo";
@@ -1961,6 +1963,7 @@ const RAIL_ICONS = {
   requests:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" /></svg>,
   regRequests: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>,
   passwordResets: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>,
+  storage: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /><path d="M12 12v6M9 15l3-3 3 3" /></svg>,
   logout:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 4H5v16h5M14 8l4 4-4 4M18 12H9" /></svg>,
   collapse:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>,
   expand:    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>,
@@ -2988,6 +2991,14 @@ export default function AdminPage() {
   const [selectedPwdModal, setSelectedPwdModal] = useState(null);
   const [pwdActionLoading, setPwdActionLoading] = useState(false);
 
+  // Cloudflare R2 Storage management
+  const [storageStatus, setStorageStatus] = useState(null);
+  const [loadingStorage, setLoadingStorage] = useState(false);
+  const [migratingStorage, setMigratingStorage] = useState(false);
+  const [migrationResult, setMigrationResult] = useState(null);
+  const [dryRunMigration, setDryRunMigration] = useState(false);
+  const [deleteLocalAfterMigration, setDeleteLocalAfterMigration] = useState(false);
+
   // Restore a session if the stored token is still valid.
   useEffect(() => {
     const token = getAdminToken();
@@ -3203,6 +3214,45 @@ export default function AdminPage() {
       );
     });
   }, [pwdResets, pwdStatusFilter, pwdSearch]);
+
+  const fetchStorageStatus = useCallback(async () => {
+    setLoadingStorage(true);
+    try {
+      const res = await getStorageStatus();
+      setStorageStatus(res);
+    } catch (err) {
+      console.error("Failed to fetch storage status:", err);
+      setStorageStatus({ error: err.message || "Failed to load storage status" });
+    } finally {
+      setLoadingStorage(false);
+    }
+  }, []);
+
+  const handleRunMigration = async () => {
+    setMigratingStorage(true);
+    setMigrationResult(null);
+    try {
+      const res = await runStorageMigration({
+        dryRun: dryRunMigration,
+        deleteLocal: deleteLocalAfterMigration,
+      });
+      setMigrationResult(res);
+      showToast(`Storage migration finished! Migrated: ${res?.summary?.migrated || 0}, Skipped: ${res?.summary?.skipped || 0}, Failed: ${res?.summary?.failed || 0}`);
+      fetchStorageStatus();
+    } catch (err) {
+      console.error("Migration failed:", err);
+      setMigrationResult({ success: false, error: err.message || "Migration failed" });
+      showToast(`Migration error: ${err.message}`, "error");
+    } finally {
+      setMigratingStorage(false);
+    }
+  };
+
+  useEffect(() => {
+    if (authed && tab === "storage") {
+      fetchStorageStatus();
+    }
+  }, [authed, tab, fetchStorageStatus]);
 
   const refreshConsultations = useCallback(() => {
     const DUMMY_EMAILS = new Set(["chetan@gmail.com", "giri@gmail.com", "gagan@gmail.com", "ajay@gmail.com", "man@gmail.com", "sandeep@gmail.com"]);
@@ -3560,6 +3610,7 @@ export default function AdminPage() {
         <RailButton id="pending"   label="Pending approvals" tab={tab} setTab={setTab} count={pending.length + pendingClients.length} />
         <RailButton id="regRequests" label="Registration Approvals" tab={tab} setTab={setTab} count={pendingRegRequestsCount} />
         <RailButton id="passwordResets" label="Password Resets" tab={tab} setTab={setTab} count={pendingPwdResetsCount} />
+        <RailButton id="storage" label="Cloudflare R2" tab={tab} setTab={setTab} />
         <RailButton id="all"       label="All advocates"     tab={tab} setTab={setTab} />
         <RailButton id="messages"  label="Messages"          tab={tab} setTab={setTab} count={unreadMessages.length} />
         <RailButton id="clients"   label="Clients"           tab={tab} setTab={setTab} count={clients.length} />
@@ -3658,6 +3709,9 @@ export default function AdminPage() {
           </button>
           <button className={`am-tab ${tab === "passwordResets" ? "active" : ""}`} onClick={() => setTab("passwordResets")}>
             🔑 Password Resets {pendingPwdResetsCount > 0 && <span className="am-tab-badge" style={{ background: "#dc2626" }}>{pendingPwdResetsCount}</span>}
+          </button>
+          <button className={`am-tab ${tab === "storage" ? "active" : ""}`} onClick={() => { setTab("storage"); fetchStorageStatus(); }}>
+            ☁️ Cloudflare R2 Storage
           </button>
           <button className={`am-tab ${tab === "all" ? "active" : ""}`} onClick={() => setTab("all")}>
             All Advocates
@@ -5010,6 +5064,254 @@ export default function AdminPage() {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Cloudflare R2 Storage Management tab ── */}
+        {tab === "storage" && (
+          <div className="am-section">
+            <div className="am-bk-header" style={{ marginBottom: 18 }}>
+              <div>
+                <h2 className="am-bk-title" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: 0 }}>
+                  ☁️ Cloudflare R2 Object Storage
+                  <span
+                    className="am-count-pill"
+                    style={{
+                      background: storageStatus?.r2?.connected
+                        ? "rgba(16, 185, 129, 0.12)"
+                        : (storageStatus?.configured ? "rgba(239, 68, 68, 0.12)" : "rgba(245, 158, 11, 0.12)"),
+                      color: storageStatus?.r2?.connected
+                        ? "#059669"
+                        : (storageStatus?.configured ? "#dc2626" : "#d97706"),
+                      borderColor: storageStatus?.r2?.connected
+                        ? "rgba(16, 185, 129, 0.3)"
+                        : (storageStatus?.configured ? "rgba(239, 68, 68, 0.3)" : "rgba(245, 158, 11, 0.3)")
+                    }}
+                  >
+                    {storageStatus?.r2?.connected
+                      ? "● Connected to Cloudflare R2"
+                      : (storageStatus?.configured ? "✕ R2 Configured (Connection Error)" : "⚠️ Local Filesystem Fallback (R2 not configured)")}
+                  </span>
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "var(--adm-text-muted)" }}>
+                  Primary object storage engine for client/advocate profile photos and private chat attachments.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="am-btn-secondary"
+                  onClick={fetchStorageStatus}
+                  disabled={loadingStorage}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.82rem", padding: "7px 14px" }}
+                >
+                  🔄 {loadingStorage ? "Testing Connection…" : "Test Connection"}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Status Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 12, marginBottom: 20 }}>
+              <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11.5, color: "var(--adm-text-muted)", fontWeight: 600 }}>Active Storage Provider</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "var(--adm-text-main)", marginTop: 4 }}>
+                  {storageStatus?.storageProvider === "cloudflare-r2" ? "Cloudflare R2" : "Local Filesystem"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--adm-text-muted)", marginTop: 2 }}>
+                  {storageStatus?.storageProvider === "cloudflare-r2" ? "S3-compatible API" : "Ephemeral Railway disk"}
+                </div>
+              </div>
+
+              <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11.5, color: "var(--adm-text-muted)", fontWeight: 600 }}>R2 Bucket Name</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "var(--adm-text-main)", marginTop: 4 }}>
+                  {storageStatus?.r2?.bucket || "advocate-hub-media"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--adm-text-muted)", marginTop: 2 }}>
+                  Account: {storageStatus?.r2?.accountId ? `${storageStatus.r2.accountId.slice(0, 6)}…${storageStatus.r2.accountId.slice(-4)}` : "Not configured"}
+                </div>
+              </div>
+
+              <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11.5, color: "var(--adm-text-muted)", fontWeight: 600 }}>CDN / Public Delivery URL</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#2563eb", marginTop: 4, wordBreak: "break-all" }}>
+                  {storageStatus?.r2?.publicBaseUrl || "/api/media/:key (Proxy)"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--adm-text-muted)", marginTop: 2 }}>
+                  {storageStatus?.r2?.usingCustomDomain ? "Custom Cloudflare Domain" : "Direct Railway streaming proxy"}
+                </div>
+              </div>
+
+              <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11.5, color: "var(--adm-text-muted)", fontWeight: 600 }}>Latency & Local Files</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: storageStatus?.r2?.connected ? "#059669" : "var(--adm-text-main)", marginTop: 4 }}>
+                  {storageStatus?.r2?.latencyMs ? `${storageStatus.r2.latencyMs} ms` : "—"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--adm-text-muted)", marginTop: 2 }}>
+                  {storageStatus?.local?.fileCount || 0} local files in backend uploads
+                </div>
+              </div>
+            </div>
+
+            {/* Error banner if any */}
+            {storageStatus?.r2?.error && (
+              <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: 10, padding: "12px 16px", marginBottom: 20, color: "#dc2626", fontSize: 13 }}>
+                <strong>Cloudflare R2 Connection Notice:</strong> {storageStatus.r2.error}
+              </div>
+            )}
+
+            {/* Two-column layout: Migration Console + Architecture/Security */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 18, marginBottom: 20 }}>
+              
+              {/* Card 1: Migration Console */}
+              <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 12, padding: 20 }}>
+                <h3 style={{ margin: "0 0 10px 0", fontSize: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                  📦 Local-to-R2 Image Migration
+                </h3>
+                <p style={{ fontSize: 13, color: "var(--adm-text-muted)", margin: "0 0 14px 0", lineHeight: 1.5 }}>
+                  Scan existing local image files stored on Railway's container disk and automatically upload them to Cloudflare R2 with structured prefixes.
+                </p>
+
+                <div style={{ background: "rgba(0, 0, 0, 0.03)", border: "1px solid var(--adm-border)", borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, cursor: "pointer", marginBottom: 8, userSelect: "none" }}>
+                    <input
+                      type="checkbox"
+                      checked={dryRunMigration}
+                      onChange={(e) => setDryRunMigration(e.target.checked)}
+                      disabled={migratingStorage}
+                    />
+                    <span><strong>Dry Run Mode</strong> (Inspect and test scan without uploading or deleting)</span>
+                  </label>
+
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, cursor: "pointer", userSelect: "none" }}>
+                    <input
+                      type="checkbox"
+                      checked={deleteLocalAfterMigration}
+                      onChange={(e) => setDeleteLocalAfterMigration(e.target.checked)}
+                      disabled={migratingStorage || dryRunMigration}
+                    />
+                    <span><strong>Delete local files after successful upload</strong> (reclaims Railway disk space)</span>
+                  </label>
+                </div>
+
+                <button
+                  type="button"
+                  className="am-btn-primary"
+                  onClick={handleRunMigration}
+                  disabled={migratingStorage || (!storageStatus?.configured && !dryRunMigration)}
+                  style={{ width: "100%", padding: "10px 16px", fontSize: 13, fontWeight: 700, display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}
+                >
+                  {migratingStorage ? "⏳ Migrating Files to R2…" : "🚀 Start Migration"}
+                </button>
+
+                {!storageStatus?.configured && !dryRunMigration && (
+                  <p style={{ fontSize: 12, color: "#d97706", marginTop: 8, marginBottom: 0 }}>
+                    ⚠️ Configure Cloudflare R2 environment variables on Railway first or run in Dry Run mode.
+                  </p>
+                )}
+
+                {/* Migration Results */}
+                {migrationResult && (
+                  <div style={{ marginTop: 16, background: "rgba(16, 185, 129, 0.06)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: 8, padding: 14 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: migrationResult.success ? "#059669" : "#dc2626", marginBottom: 8 }}>
+                      {migrationResult.success ? "✅ Migration Completed" : "✕ Migration Reported Issues"}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12 }}>
+                      <div>Scanned: <strong>{migrationResult.summary?.scanned ?? 0}</strong></div>
+                      <div>Uploaded: <strong>{migrationResult.summary?.migrated ?? 0}</strong></div>
+                      <div>Skipped (Already in R2): <strong>{migrationResult.summary?.skipped ?? 0}</strong></div>
+                      <div>Failed: <strong style={{ color: (migrationResult.summary?.failed || 0) > 0 ? "#dc2626" : "inherit" }}>{migrationResult.summary?.failed ?? 0}</strong></div>
+                    </div>
+                    {migrationResult.summary?.details && migrationResult.summary.details.length > 0 && (
+                      <div style={{ marginTop: 10, maxHeight: 130, overflowY: "auto", fontSize: 11, background: "rgba(0,0,0,0.05)", padding: 8, borderRadius: 6 }}>
+                        {migrationResult.summary.details.map((item, idx) => (
+                          <div key={idx} style={{ padding: "2px 0", borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+                            <code>{item.file}</code> → <span style={{ color: item.status === "migrated" ? "#059669" : "#2563eb" }}>{item.status}</span> ({item.key || "—"})
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Card 2: Security & Routing Architecture */}
+              <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 12, padding: 20 }}>
+                <h3 style={{ margin: "0 0 10px 0", fontSize: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                  🔒 Storage Security Architecture
+                </h3>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--adm-text-main)", lineHeight: 1.6 }}>
+                  <li style={{ marginBottom: 8 }}>
+                    <strong>Public Profile Photos:</strong> Keys stored under <code>profile-images/clients/&lt;id&gt;/*</code> and <code>profile-images/advocates/&lt;id&gt;/*</code>. Served directly via Cloudflare CDN custom domain or Railway <code>/api/media/:key</code> streaming proxy.
+                  </li>
+                  <li style={{ marginBottom: 8 }}>
+                    <strong>Private Chat Images:</strong> Keys stored under <code>chat-images/&lt;conversationId&gt;/*</code>. <strong>Zero public access</strong>. Secured via short-lived HMAC-SHA256 signed tokens (2 hours) and conversation participant verification.
+                  </li>
+                  <li style={{ marginBottom: 8 }}>
+                    <strong>Zero Railway Disk Dependency:</strong> Direct buffer streaming to R2 ensures Railway containers remain stateless with no persistent image disk accumulation.
+                  </li>
+                  <li>
+                    <strong>Database Integrity:</strong> PostgreSQL/MongoDB on Railway continues holding application relational records and user authentication; R2 only stores binary image objects.
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+
+            {/* Card 3: Railway Environment Variables Reference */}
+            <div style={{ background: "var(--adm-bg)", border: "1px solid var(--adm-border)", borderRadius: 12, padding: 20 }}>
+              <h3 style={{ margin: "0 0 10px 0", fontSize: 15, display: "flex", alignItems: "center", gap: 8 }}>
+                ⚙️ Required Railway Service Variables
+              </h3>
+              <p style={{ fontSize: 12.5, color: "var(--adm-text-muted)", margin: "0 0 12px 0" }}>
+                Ensure these variables are configured in your Railway project settings (Advocate Hub Service &rarr; Variables):
+              </p>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, textAlign: "left" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--adm-border)", color: "var(--adm-text-muted)" }}>
+                      <th style={{ padding: "8px 12px" }}>Variable Name</th>
+                      <th style={{ padding: "8px 12px" }}>Required</th>
+                      <th style={{ padding: "8px 12px" }}>Description</th>
+                      <th style={{ padding: "8px 12px" }}>Current Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: "1px solid var(--adm-border)" }}>
+                      <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700 }}>R2_ACCOUNT_ID</td>
+                      <td style={{ padding: "8px 12px", color: "#dc2626" }}>Required</td>
+                      <td style={{ padding: "8px 12px" }}>Cloudflare Account ID (e.g. <code>ae7c01580a124e31f7a13aba88731d3e</code>)</td>
+                      <td style={{ padding: "8px 12px" }}>{storageStatus?.r2?.accountId ? "✅ Present" : "⚠️ Not set"}</td>
+                    </tr>
+                    <tr style={{ borderBottom: "1px solid var(--adm-border)" }}>
+                      <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700 }}>R2_ACCESS_KEY_ID</td>
+                      <td style={{ padding: "8px 12px", color: "#dc2626" }}>Required</td>
+                      <td style={{ padding: "8px 12px" }}>R2 API Token Access Key ID with Object Read &amp; Write permissions</td>
+                      <td style={{ padding: "8px 12px" }}>{storageStatus?.configured ? "✅ Configured" : "⚠️ Not set"}</td>
+                    </tr>
+                    <tr style={{ borderBottom: "1px solid var(--adm-border)" }}>
+                      <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700 }}>R2_SECRET_ACCESS_KEY</td>
+                      <td style={{ padding: "8px 12px", color: "#dc2626" }}>Required</td>
+                      <td style={{ padding: "8px 12px" }}>R2 API Token Secret Access Key (never exposed publicly)</td>
+                      <td style={{ padding: "8px 12px" }}>{storageStatus?.configured ? "✅ Configured" : "⚠️ Not set"}</td>
+                    </tr>
+                    <tr style={{ borderBottom: "1px solid var(--adm-border)" }}>
+                      <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700 }}>R2_BUCKET_NAME</td>
+                      <td style={{ padding: "8px 12px", color: "#059669" }}>Optional</td>
+                      <td style={{ padding: "8px 12px" }}>Target R2 bucket name (default: <code>advocate-hub-media</code>)</td>
+                      <td style={{ padding: "8px 12px" }}><code>{storageStatus?.r2?.bucket || "advocate-hub-media"}</code></td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: "8px 12px", fontFamily: "monospace", fontWeight: 700 }}>R2_PUBLIC_URL</td>
+                      <td style={{ padding: "8px 12px", color: "#059669" }}>Optional</td>
+                      <td style={{ padding: "8px 12px" }}>Custom Cloudflare Domain for public images (e.g. <code>https://media.advocatehub.in</code>)</td>
+                      <td style={{ padding: "8px 12px" }}>{storageStatus?.r2?.usingCustomDomain ? "✅ Custom Domain" : "Railway Proxy Fallback"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         )}
 

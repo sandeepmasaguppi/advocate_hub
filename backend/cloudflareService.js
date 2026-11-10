@@ -387,6 +387,30 @@ function generateR2PresignedUrl(key, expiresInSeconds = 3600) {
   return `https://${host}${canonicalUri}?${canonicalQuery}&X-Amz-Signature=${signature}`;
 }
 
+/**
+ * Signs a private media URL using HMAC-SHA256 for short-lived access
+ */
+function signMediaUrl(key, secret, expiresInSeconds = 7200) {
+  const exp = Date.now() + expiresInSeconds * 1000;
+  const data = `${key}:${exp}`;
+  const sig = crypto.createHmac("sha256", String(secret || "media-secret")).update(data).digest("hex");
+  return `/api/chat/media?key=${encodeURIComponent(key)}&exp=${exp}&sig=${sig}`;
+}
+
+/**
+ * Verifies a signed media URL's signature and expiration
+ */
+function verifySignedMediaUrl(key, exp, sig, secret) {
+  if (!key || !exp || !sig) return false;
+  if (Number(exp) < Date.now()) return false;
+  try {
+    const expected = crypto.createHmac("sha256", String(secret || "media-secret")).update(`${key}:${exp}`).digest("hex");
+    return crypto.timingSafeEqual(Buffer.from(sig, "hex"), Buffer.from(expected, "hex"));
+  } catch {
+    return false;
+  }
+}
+
 // ── Object Key Builders ──────────────────────────────────────
 function buildProfileObjectKey(userType, userId, ext) {
   const cleanType = userType === "client" ? "clients" : "advocates";
@@ -645,5 +669,7 @@ module.exports = {
   fetchObjectFromR2,
   deleteObjectFromR2,
   generateR2PresignedUrl,
+  signMediaUrl,
+  verifySignedMediaUrl,
   checkR2Health,
 };
